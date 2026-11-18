@@ -1,0 +1,1 @@
+document.querySelectorAll('[data-copy]').forEach(btn=>{btn.addEventListener('click',async()=>{const code=btn.closest('.copy-wrap')?.querySelector('code')?.innerText;if(code){await navigator.clipboard.writeText(code);btn.textContent='복사됨';setTimeout(()=>btn.textContent='복사',1200)}})});
