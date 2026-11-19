@@ -34,7 +34,7 @@
 </tr>
 </tbody></table>
 </div><p>분석 코어에서 합성 자원 충돌을 줄여 예측 시간이 절반이 되더라도 실기기 속도가 두 배가 된 것은 아니다. 반대로 실행 경로가 genuine EDF를 만들었다고 시뮬레이터의 비용 예측까지 검증된 것은 아니다. 각 결과의 <code>hardware_measured</code>, <code>source_kind</code>, 환경 지문을 함께 읽는다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/ARCHITECTURE.md">설계</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span> · <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/ir.py">IR(Intermediate Representation) 정의</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
-<figure class="diagram"><img src="../assets/diagrams/10-furyno5-architecture-cc3b87c6150e.svg" alt="FuryNo5의 실제 구조 · 도식 1" loading="lazy"><figcaption>도식 1 · FuryNo5의 실제 구조 — 설명을 위해 단순화한 관계도. 실제 호출 조건과 근거는 본문을 함께 읽으세요.</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
+<figure class="diagram"><img src="../assets/diagrams/10-furyno5-architecture-cc3b87c6150e.svg?v=cccc4ee08bcb" alt="FuryNo5의 실제 구조 · 도식 1" loading="lazy"><figcaption>도식 1 · FuryNo5의 실제 구조 — 설명을 위해 단순화한 관계도. 실제 호출 조건과 근거는 본문을 함께 읽으세요.</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
     A[&quot;모델 + 예제 입력 + 상태 계약&quot;] --&gt; B[&quot;capture와 의미 정규화&quot;]
     B --&gt; C[&quot;shape · dtype · layout 규칙&quot;]
     C --&gt; D[&quot;영역 선택과 TCL 생성&quot;]

@@ -44,7 +44,7 @@
 </tbody></table>
 </div><p>스키마의 예인 <code>add.Tensor(Tensor self, Tensor other, *, Scalar alpha=1) -&gt; Tensor</code>는 텐서끼리 더하는 계약이다. <code>add.Scalar</code>는 두 번째 인수가 스칼라인 다른 overload다. <code>add.out</code>은 결과 버퍼를 받는 형태이므로 메모리 변경 계약도 다르다. <strong>이들을 하나로 세는 표와 별개로 세는 표의 개수를 비교하면 안 된다.</strong> <a href="https://github.com/pytorch/pytorch/blob/449b1768410104d3ed79d3bcfe4ba1d65c7f22c0/aten/src/ATen/native/native_functions.yaml">고정된 native_functions.yaml</a></p>
 <h2 id="eager-호출에서는-어떤-일이-일어나는가"><a class="heading-anchor" href="#eager-호출에서는-어떤-일이-일어나는가">eager 호출에서는 어떤 일이 일어나는가</a></h2>
-<figure class="diagram"><img src="../assets/diagrams/09-torch-aten-afd250792aad.svg" alt="PyTorch와 ATen 디스패처 · 도식 1" loading="lazy"><figcaption>도식 1 · PyTorch와 ATen 디스패처 — 설명을 위해 단순화한 관계도. 실제 호출 조건과 근거는 본문을 함께 읽으세요.</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
+<figure class="diagram"><img src="../assets/diagrams/09-torch-aten-afd250792aad.svg?v=711951cbdf52" alt="PyTorch와 ATen 디스패처 · 도식 1" loading="lazy"><figcaption>도식 1 · PyTorch와 ATen 디스패처 — 설명을 위해 단순화한 관계도. 실제 호출 조건과 근거는 본문을 함께 읽으세요.</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
     A[&quot;torch.add(x, y)&quot;] --&gt; B[&quot;aten::add.Tensor&quot;]
     B --&gt; C[&quot;Dispatcher: tensor와 thread 상태&quot;]
     C --&gt; D[&quot;Autograd · Autocast 등의 처리&quot;]
@@ -86,7 +86,7 @@ print(torch.ops.handbook_demo.plus_one(x))  # tensor([3., 5.])
 <p>PrivateUse1 backend는 미구현 연산을 CPU로 보내는 fallback 함수를 <strong>등록할 수 있다</strong>. 공식 튜토리얼도 fallback 등록 코드를 별도로 제시한다. 이것은 PyTorch의 확장 수단이지, 모든 NPU가 EDF를 찾지 못하면 자동 CPU 실행을 한다는 보장이 아니다. fallback이 없거나 backend 정책이 오류를 선택하면 예외가 발생할 수 있다. <a href="https://docs.pytorch.org/tutorials/advanced/privateuseone.html">PrivateUse1 fallback</a></p>
 <p>FuryNo5의 공개 <code>optimize(..., fallback=&quot;error&quot;)</code>는 <code>&quot;error&quot;</code> 이외 값을 거부한다. 제한된 준비 경로는 <code>furiosa.torch.config.set_cpu_fallback(False)</code>도 설정한다. 선택적 CPU 기준 구현을 등록하는 <code>allow_cpu_reference</code>는 명시적 비교 기능이며, NPU에서 실패한 실행을 자동으로 CPU에 보내는 규칙이 아니다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tclmachine/__init__.py#L18-L23">공개 진입점</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span> · <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/aten_runtime.py#L59-L119">준비된 연산 등록</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
 <h2 id="torch-compile-backend와-dispatcher-backend는-다르다"><a class="heading-anchor" href="#torch-compile-backend와-dispatcher-backend는-다르다">torch.compile backend와 Dispatcher backend는 다르다</a></h2>
-<figure class="diagram"><img src="../assets/diagrams/09-torch-aten-6b61cc0bf954.svg" alt="PyTorch와 ATen 디스패처 · 도식 2" loading="lazy"><figcaption>도식 2 · PyTorch와 ATen 디스패처 — 설명을 위해 단순화한 관계도. 실제 호출 조건과 근거는 본문을 함께 읽으세요.</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
+<figure class="diagram"><img src="../assets/diagrams/09-torch-aten-6b61cc0bf954.svg?v=698266e2e551" alt="PyTorch와 ATen 디스패처 · 도식 2" loading="lazy"><figcaption>도식 2 · PyTorch와 ATen 디스패처 — 설명을 위해 단순화한 관계도. 실제 호출 조건과 근거는 본문을 함께 읽으세요.</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
     A[&quot;PyTorch 모델&quot;] --&gt; B[&quot;eager 실행&quot;]
     A --&gt; C[&quot;torch.compile 또는 torch.export&quot;]
     B --&gt; D[&quot;연산별 Dispatcher&quot;]

@@ -41,7 +41,7 @@
 <p>DP는 모델 복제본에 서로 다른 요청을 보낸다. 복제본 사이에서 한 토큰의 중간 activation을 계속 교환할 필요가 적으므로 서비스 처리량을 키우는 첫 후보가 된다. 대신 각 복제본의 가중치·요청 상태·cache가 필요하다.</p>
 <p>TP는 하나의 행렬 계산 등을 여러 처리 단위로 나눈다. 모델과 activation을 나눌 수 있지만 partial sum을 합치는 all-reduce, 잘린 결과를 모으는 all-gather 같은 통신이 연산 사이에 들어간다. 작은 batch에서 계산량이 작으면 이 통신이 상대적으로 커진다.</p>
 <p>PP는 layer 구간을 stage로 나눈다. 한 요청은 stage를 순서대로 지나가고 여러 microbatch가 서로 다른 stage에 들어가면 처리량을 높일 수 있다. stage 계산량이 다르면 느린 stage 앞에서 대기하고, 빈 stage 시간인 pipeline bubble이 생긴다. <a href="https://developer.furiosa.ai/v2026.4.0/en/furiosa_llm/model-parallelism.html">공식 TP·PP·DP 설명</a></p>
-<figure class="diagram"><img src="../assets/diagrams/15-multi-npu-4a0c9b3237f0.svg" alt="여러 NPU로 확장하기 · 도식 1" loading="lazy"><figcaption>도식 1 · 여러 NPU로 확장하기 — 설명을 위해 단순화한 관계도. 실제 호출 조건과 근거는 본문을 함께 읽으세요.</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
+<figure class="diagram"><img src="../assets/diagrams/15-multi-npu-4a0c9b3237f0.svg?v=7ba410dea3fd" alt="여러 NPU로 확장하기 · 도식 1" loading="lazy"><figcaption>도식 1 · 여러 NPU로 확장하기 — 설명을 위해 단순화한 관계도. 실제 호출 조건과 근거는 본문을 함께 읽으세요.</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
     R[&quot;여러 독립 요청&quot;] --&gt; Q[&quot;cache와 부하를 보는 라우터&quot;]
     Q --&gt; A[&quot;복제본 A: 모델 전체&quot;]
     Q --&gt; B[&quot;복제본 B: 모델 전체&quot;]

@@ -33,7 +33,7 @@
 </tr>
 </tbody></table>
 </div><p>위 표는 핸드북의 비교 기준이다. 텐서 연산 하나를 성공시킨 뒤 곧바로 임의 Hugging Face 모델의 서빙을 보장할 수 없는 이유를 설명한다. FuryNo5의 연산·그래프 생산 역할은 <a href="../chapter/10-furyno5-architecture.html">10장</a>, fxbX의 적재·실행계획은 <a href="../chapter/12-fxbx.html">12장</a>, 서빙 계약은 <a href="../chapter/14-serving-vllm.html">14장</a>과 연결된다.</p>
-<figure class="diagram"><img src="../assets/diagrams/18-npu-ecosystems-5e1143c505e1.svg" alt="다른 NPU의 PyTorch 지원 방식 · 도식 1" loading="lazy"><figcaption>도식 1 · 다른 NPU의 PyTorch 지원 방식 — 설명을 위해 단순화한 관계도. 실제 호출 조건과 근거는 본문을 함께 읽으세요.</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
+<figure class="diagram"><img src="../assets/diagrams/18-npu-ecosystems-5e1143c505e1.svg?v=026f70f33f36" alt="다른 NPU의 PyTorch 지원 방식 · 도식 1" loading="lazy"><figcaption>도식 1 · 다른 NPU의 PyTorch 지원 방식 — 설명을 위해 단순화한 관계도. 실제 호출 조건과 근거는 본문을 함께 읽으세요.</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
   A[&quot;PyTorch 모델&quot;] --&gt; B[&quot;ATen 디스패치 경로&quot;]
   A --&gt; C[&quot;FX · export 그래프 경로&quot;]
   A --&gt; D[&quot;모델별 어댑터&quot;]
@@ -117,7 +117,7 @@ prediction = restored(sample)
 <h2 id="4-tenstorrent-공통-ir과-고수준-의미를-함께-보존한다"><a class="heading-anchor" href="#4-tenstorrent-공통-ir과-고수준-의미를-함께-보존한다">4. Tenstorrent: 공통 IR과 고수준 의미를 함께 보존한다</a></h2>
 <p>TT-XLA는 PJRT(Portable JAX Runtime) 인터페이스를 통해 PyTorch/XLA·JAX의 StableHLO 그래프를 TT-MLIR 컴파일러로 전달한다. MLIR(Multi-Level Intermediate Representation)은 여러 수준의 표현을 다루는 컴파일러 기반이다. 조회한 공식 저장소는 PyTorch의 주 frontend로 TT-XLA를 안내하고 <strong>TT-Torch를 deprecated</strong>로 표시한다. 따라서 과거 <code>tt-torch</code> 소개를 최신 권장 경로로 복사하지 않았다. <a href="https://github.com/tenstorrent/tt-xla/blob/fdc3b7773674081b8f8c0698de3400d8d899dc8f/README.md">고정 README</a></p>
 <p>FuryNo5에 특히 참고할 부분은 <strong>분해하기 전에 연산의 의미를 남기는 방법</strong>이다. TT-XLA는 등록된 RMSNorm(Root Mean Square Normalization) 패턴과 shape 조건이 맞으면 여러 기본 연산을 FX 패턴으로 찾고 표준 정규화 연산으로 재결합한다. 이어 StableHLO composite 표식을 남겨, 후속 분해를 거친 뒤에도 TT-MLIR가 최적화된 연산으로 인식할 수 있게 한다. <a href="https://github.com/tenstorrent/tt-xla/blob/fdc3b7773674081b8f8c0698de3400d8d899dc8f/docs/source/fusing_and_composite_ops.md">Fusing and Composite Ops</a></p>
-<figure class="diagram"><img src="../assets/diagrams/18-npu-ecosystems-86ba05c530af.svg" alt="다른 NPU의 PyTorch 지원 방식 · 도식 2" loading="lazy"><figcaption>도식 2 · 다른 NPU의 PyTorch 지원 방식 — 설명을 위해 단순화한 관계도. 실제 호출 조건과 근거는 본문을 함께 읽으세요.</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
+<figure class="diagram"><img src="../assets/diagrams/18-npu-ecosystems-86ba05c530af.svg?v=0588ea0222f4" alt="다른 NPU의 PyTorch 지원 방식 · 도식 2" loading="lazy"><figcaption>도식 2 · 다른 NPU의 PyTorch 지원 방식 — 설명을 위해 단순화한 관계도. 실제 호출 조건과 근거는 본문을 함께 읽으세요.</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
   A[&quot;사용자 RMSNorm: 제곱 · 평균 · 역제곱근 · 곱&quot;] --&gt; B[&quot;FX 패턴 인식&quot;]
   B --&gt; C[&quot;표준 RMSNorm 표현&quot;]
   C --&gt; D[&quot;StableHLO composite로 의미 보존&quot;]

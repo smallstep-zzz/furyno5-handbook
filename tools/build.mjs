@@ -54,7 +54,7 @@ function page(c,index,raw){
     if(!fs.existsSync(svg)||process.argv.includes('--render')){
      execFileSync('python3',[path.join(root,'tools/render_diagrams.py'),mmd,svg],{stdio:'pipe'});
     }
-    return `<figure class="diagram"><img src="${prefix}${file}.svg" alt="${esc(c.title)} · 도식 ${diagramNo}" loading="lazy"><figcaption>도식 ${diagramNo} · ${esc(c.title)} — 설명을 위해 단순화한 관계도. 실제 호출 조건과 근거는 본문을 함께 읽으세요.</figcaption><details><summary>그림의 구조 보기</summary><pre>${esc(text)}</pre></details></figure>`;
+    return `<figure class="diagram"><img src="${prefix}${file}.svg?v=${assetVersion(file+'.svg')}" alt="${esc(c.title)} · 도식 ${diagramNo}" loading="lazy"><figcaption>도식 ${diagramNo} · ${esc(c.title)} — 설명을 위해 단순화한 관계도. 실제 호출 조건과 근거는 본문을 함께 읽으세요.</figcaption><details><summary>그림의 구조 보기</summary><pre>${esc(text)}</pre></details></figure>`;
    }
    codes++;
    return `<div class="codebox"><div class="codebar"><span>${esc(lang||'text')}</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-${esc(lang||'text')}">${esc(text)}\n</code></pre></div>\n`;

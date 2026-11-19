@@ -43,7 +43,7 @@
 </div><p>vISA는 성능이 중요한 작은 구간의 가설을 직접 실험할 때 유용하다. 모델 전체를 먼저 Rust로 다시 작성해야만 사용할 수 있다는 뜻은 아니다. 한편 TCL로 생성된 임의 EDF를 Rust vISA 원본으로 복원하거나 그대로 schedule JSON으로 변환하는 보편적인 공개 절차는 확인되지 않았다.</p>
 <h2 id="2-컴파일-도구와-실행-런타임"><a class="heading-anchor" href="#2-컴파일-도구와-실행-런타임">2. 컴파일 도구와 실행 런타임</a></h2>
 <p><strong>vISA는 컴파일 과정에서 다루는 중간 표현이며, 그 텍스트를 NPU에 전달해서 곧바로 실행하는 경로가 아니다.</strong> 공식 도구는 중간 vISA를 dump하는 기능과 커널을 컴파일하는 기능을 구분하고, 검증 문서는 최종 장치 실행물을 EDF(Executable Device Format)라고 부른다. 공개 opt 소스에서는 이 실행 단계에 사용하는 구체적인 객체로 compiler image와 device executable을 확인할 수 있다. <a href="https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/tools/kernel-optimizer.md">중간 vISA 출력</a>, <a href="https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/quick-start/kernel-validation.md">컴파일된 EDF의 실행</a>, <a href="https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-abi/README.md">공개 실행물 계약</a></p>
-<figure class="diagram"><img src="../assets/diagrams/08-eisa-visa-39c127bd1c8b.svg" alt="eISA 질문에서 vISA 실습으로 · 도식 1" loading="lazy"><figcaption>도식 1 · eISA 질문에서 vISA 실습으로 — 설명을 위해 단순화한 관계도. 실제 호출 조건과 근거는 본문을 함께 읽으세요.</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
+<figure class="diagram"><img src="../assets/diagrams/08-eisa-visa-39c127bd1c8b.svg?v=207fa0a852ad" alt="eISA 질문에서 vISA 실습으로 · 도식 1" loading="lazy"><figcaption>도식 1 · eISA 질문에서 vISA 실습으로 — 설명을 위해 단순화한 관계도. 실제 호출 조건과 근거는 본문을 함께 읽으세요.</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
     S[&quot;Rust device 함수&quot;] --&gt; C[&quot;cargo furiosa-opt&quot;]
     C --&gt; V[&quot;중간 vISA&quot;]
     V --&gt; E[&quot;컴파일된 장치 실행물&quot;]
@@ -97,7 +97,7 @@
 </code></pre></div>
 <p><a href="https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-rt/src/registry/load/mod.rs">출처: <code>registry::load</code> 호출부</a></p>
 <p><code>Function::load()</code>는 실행 bytes를 각 chip의 DRAM(Dynamic Random Access Memory)에 staging하고 반복 호출에 필요한 인수 slot을 준비한다. 실행 호출마다 binder가 실제 buffer를 연결하고, <code>function/table.rs</code>가 해당 device 주소를 inline 인수 또는 별도 operand table로 표현한다. 마지막으로 driver는 코드가 올라간 위치·길이·token과 준비된 인수를 cluster별 mailbox로 제출한다. <a href="https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-rt/src/function/mod.rs">실행 코드 적재</a>, <a href="https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-rt/src/function/table.rs">인수 주소 표현</a>, <a href="https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-rt/src/driver/mod.rs">실제 제출</a></p>
-<figure class="diagram"><img src="../assets/diagrams/08-eisa-visa-231a2e7ef908.svg" alt="eISA 질문에서 vISA 실습으로 · 도식 2" loading="lazy"><figcaption>도식 2 · eISA 질문에서 vISA 실습으로 — 설명을 위해 단순화한 관계도. 실제 호출 조건과 근거는 본문을 함께 읽으세요.</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
+<figure class="diagram"><img src="../assets/diagrams/08-eisa-visa-231a2e7ef908.svg?v=66120c800337" alt="eISA 질문에서 vISA 실습으로 · 도식 2" loading="lazy"><figcaption>도식 2 · eISA 질문에서 vISA 실습으로 — 설명을 위해 단순화한 관계도. 실제 호출 조건과 근거는 본문을 함께 읽으세요.</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
     I[&quot;Compiler image&quot;] --&gt; P[&quot;형식·topology 검사&quot;]
     P --&gt; M[&quot;상수·stack 메모리 준비&quot;]
     M --&gt; C[&quot;실행 코드 DRAM 적재&quot;]

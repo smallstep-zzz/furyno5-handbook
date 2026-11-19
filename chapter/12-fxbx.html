@@ -35,7 +35,7 @@
 </tr>
 </tbody></table>
 </div><p>현 생산자는 커스텀 계획의 출력에 <code>.fxb</code>와 <code>.fxbx</code>를 모두 허용한다. 따라서 <strong>파일 내부 schema와 해당 consumer를 확인하는 것이 확장자 확인보다 중요하다.</strong> 내부 <code>fxbex</code>, <code>tplmachine</code>, <code>tclmachine</code> 문자열은 호환성과 소스 위치를 보존한 이름이다. 사용자에게 보이는 프로젝트 이름은 fxbX와 FuryNo5를 사용한다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/fxb_export/model_export.py">출력 suffix 검사</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span> · <a href="https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/package.py">초기 schema 검사</a></p>
-<figure class="diagram"><img src="../assets/diagrams/12-fxbx-1ea45a5d09bf.svg" alt="fxbX의 포맷과 실행기 · 도식 1" loading="lazy"><figcaption>도식 1 · fxbX의 포맷과 실행기 — 설명을 위해 단순화한 관계도. 실제 호출 조건과 근거는 본문을 함께 읽으세요.</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
+<figure class="diagram"><img src="../assets/diagrams/12-fxbx-1ea45a5d09bf.svg?v=d7a90e26a07a" alt="fxbX의 포맷과 실행기 · 도식 1" loading="lazy"><figcaption>도식 1 · fxbX의 포맷과 실행기 — 설명을 위해 단순화한 관계도. 실제 호출 조건과 근거는 본문을 함께 읽으세요.</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
     A[&quot;FuryNo5: 그래프와 연산 계약&quot;] --&gt; B[&quot;genuine EDF와 실행 계획&quot;]
     B --&gt; C[&quot;fxbX: 무결성·ABI·버전 검사&quot;]
     C --&gt; D[&quot;외부 가중치와 요청 상태&quot;]

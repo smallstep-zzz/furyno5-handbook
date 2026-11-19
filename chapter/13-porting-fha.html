@@ -34,7 +34,7 @@
 </tbody></table>
 </div><p>FuryAwesome의 카탈로그 데이터가 연산 구현이나 컴파일러를 대신하지는 않는다. FHA 역시 별도 커널을 모델마다 복제하는 방식보다 FuryNo5의 공통 규칙을 보완하도록 구성되어 있다. 공식 컴파일러가 TCL을 EDF로 만드는 과정과 fxbX가 이를 실행하는 과정은 앞 장들의 장치·런타임 계약을 따른다. <a href="https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/docs/FHA_ROLE_TRANSITION.md">역할 분담</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span> · <a href="https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/forge_fxbex/native.py">FHA의 실제 위임</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
 <p>다음은 도구를 함께 사용하는 전체 흐름이다. 검증에 실패하면 입력 계약이나 공통 규칙으로 돌아간다. 마지막 공유 단계는 패키지 형식과 게시 도구의 지원 범위를 확인한 뒤 진행한다. 현재 구현의 구체적인 경계는 10절에서 다룬다.</p>
-<figure class="diagram"><img src="../assets/diagrams/13-porting-fha-46d4d57728c1.svg" alt="모델 포팅과 FHA·FuryAwesome · 도식 1" loading="lazy"><figcaption>도식 1 · 모델 포팅과 FHA·FuryAwesome — 설명을 위해 단순화한 관계도. 실제 호출 조건과 근거는 본문을 함께 읽으세요.</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
+<figure class="diagram"><img src="../assets/diagrams/13-porting-fha-46d4d57728c1.svg?v=7397bc97d845" alt="모델 포팅과 FHA·FuryAwesome · 도식 1" loading="lazy"><figcaption>도식 1 · 모델 포팅과 FHA·FuryAwesome — 설명을 위해 단순화한 관계도. 실제 호출 조건과 근거는 본문을 함께 읽으세요.</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
     A[&quot;FuryAwesome 모델·요청 찾기&quot;] --&gt; B[&quot;FHA 준비·진단&quot;]
     C[&quot;원본 모델과 입력 계약&quot;] --&gt; B
     B --&gt; D[&quot;FuryNo5 공통 규칙&quot;]
@@ -168,7 +168,7 @@ report = tclmachine.export_model(
 </code></pre></div>
 <p><code>state_dict</code>에는 parameter와 등록된 buffer가 들어가므로 원본 architecture와 forward 구현은 별도로 있어야 한다. 여기서는 파일을 만든 모델과 같은 layer·차원을 선언하고 <code>strict=True</code>로 parameter 이름의 누락·추가를 오류로 드러낸다. shape 불일치도 해결한 뒤 export해야 한다. BF16은 이 Tiny MLP의 입력·가중치 계약이며 모든 모델을 무조건 BF16으로 바꾸라는 뜻이 아니다. <a href="https://docs.pytorch.org/tutorials/beginner/saving_loading_models.html">PyTorch 모델 저장·적재 안내</a></p>
 <p>실행할 때는 앞 예제의 <code>GraphFXB</code> 부분을 <code>GraphFXB(&quot;tiny-from-checkpoint.fxbx&quot;, weights=restored.state_dict())</code>로 바꾸고 참조 출력도 <code>restored(x)</code>로 비교한다. 이 커스텀 export 경로의 <code>.fxbx</code>는 실행 계획과 EDF를 전달하며, 원본 가중치 파일의 역할까지 자동으로 대체하지 않는다. 원본 architecture·가중치 revision·입력 계약을 함께 보관해야 다시 적재하고 검증할 수 있다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/examples/native_execution_plan.py">가중치 전달 API 예제</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
-<figure class="diagram"><img src="../assets/diagrams/13-porting-fha-1723eecf96b5.svg" alt="모델 포팅과 FHA·FuryAwesome · 도식 2" loading="lazy"><figcaption>도식 2 · 모델 포팅과 FHA·FuryAwesome — 설명을 위해 단순화한 관계도. 실제 호출 조건과 근거는 본문을 함께 읽으세요.</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
+<figure class="diagram"><img src="../assets/diagrams/13-porting-fha-1723eecf96b5.svg?v=63e0e5d3cfbb" alt="모델 포팅과 FHA·FuryAwesome · 도식 2" loading="lazy"><figcaption>도식 2 · 모델 포팅과 FHA·FuryAwesome — 설명을 위해 단순화한 관계도. 실제 호출 조건과 근거는 본문을 함께 읽으세요.</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
     A[&quot;원본 모델과 대표 입력&quot;] --&gt; B[&quot;사전 분석&quot;]
     B --&gt; C[&quot;공통 규칙과 shape 계약&quot;]
     C --&gt; D[&quot;TCL 컴파일과 EDF&quot;]

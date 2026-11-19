@@ -4,7 +4,7 @@
 <h2 id="1-vllm은-무엇을-담당하는가"><a class="heading-anchor" href="#1-vllm은-무엇을-담당하는가">1. vLLM은 무엇을 담당하는가</a></h2>
 <p>vLLM은 LLM(Large Language Model) 추론과 서빙 프레임워크의 이름이다. 요청을 받고, 여러 sequence를 한 step에 배치하며, KV cache에 사용할 block을 정하고, 모델 결과로 다음 토큰을 고른다. 요청 처리·스케줄링과 모델의 수학 연산을 나눠야 같은 서빙 정책을 다른 하드웨어에서 사용할 수 있다. 외부 하드웨어는 platform plugin과 worker를 통해 연결한다. <a href="https://docs.vllm.ai/en/stable/design/plugin_system/">vLLM plugin interface</a></p>
 <p>여기서 cache block은 이전 토큰의 attention용 K와 V를 저장하는 단위다. EDF bucket은 컴파일된 실행 규격을 고르는 단위다. 둘 다 실행 효율에 중요하지만 같은 개념이 아니다. block table은 요청의 논리적 위치를 cache 저장 위치로 대응시키고, bucket 또는 엔진의 compiled row envelope는 한 번에 실행 가능한 계산량을 제한한다. <a href="https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/docs/engine/frameworks.md">요청과 block 변환</a> · <a href="https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/docs/engine/python.md">엔진 request 예</a></p>
-<figure class="diagram"><img src="../assets/diagrams/14-serving-vllm-fd70a06a7546.svg" alt="vLLM 서빙과 연결 과제 · 도식 1" loading="lazy"><figcaption>도식 1 · vLLM 서빙과 연결 과제 — 설명을 위해 단순화한 관계도. 실제 호출 조건과 근거는 본문을 함께 읽으세요.</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
+<figure class="diagram"><img src="../assets/diagrams/14-serving-vllm-fd70a06a7546.svg?v=02fb5291a04e" alt="vLLM 서빙과 연결 과제 · 도식 1" loading="lazy"><figcaption>도식 1 · vLLM 서빙과 연결 과제 — 설명을 위해 단순화한 관계도. 실제 호출 조건과 근거는 본문을 함께 읽으세요.</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
     A[&quot;HTTP 요청과 tokenizer&quot;] --&gt; B[&quot;vLLM scheduler&quot;]
     B --&gt; C[&quot;Furiosa platform과 worker&quot;]
     C --&gt; D[&quot;요청·block·sampling 변환&quot;]

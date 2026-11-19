@@ -46,7 +46,7 @@
 </tr>
 </tbody></table>
 </div><p>공식 스택 문서는 이 책임을 개념적으로 설명한다. <code>furiosa-llm</code> 네이티브 구현의 모든 내부 함수가 공개되어 있지는 않으므로, 아래에서 <strong>공개 소스로 따라갈 수 있는 Rust 경로</strong>와 <strong>공식 문서로 확인하는 SDK 경로</strong>를 구분한다. <a href="https://developer.furiosa.ai/v2026.4.0/en/overview/software_stack.html">공식 스택</a></p>
-<figure class="diagram"><img src="../assets/diagrams/03-driver-runtime-e6577b23a6f9.svg" alt="드라이버부터 런타임까지 · 도식 1" loading="lazy"><figcaption>도식 1 · 드라이버부터 런타임까지 — 설명을 위해 단순화한 관계도. 실제 호출 조건과 근거는 본문을 함께 읽으세요.</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
+<figure class="diagram"><img src="../assets/diagrams/03-driver-runtime-e6577b23a6f9.svg?v=df54a47c5ba3" alt="드라이버부터 런타임까지 · 도식 1" loading="lazy"><figcaption>도식 1 · 드라이버부터 런타임까지 — 설명을 위해 단순화한 관계도. 실제 호출 조건과 근거는 본문을 함께 읽으세요.</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
     M[&quot;모델·TCL&quot;] --&gt; C[&quot;컴파일러&quot;]
     C --&gt; A[&quot;실행 산출물&quot;]
     A --&gt; R[&quot;호스트 런타임&quot;]
@@ -186,7 +186,7 @@ furiosa-tcc --version
 <h3 id="행렬곱-하나에도-여러-결정이-필요한-이유"><a class="heading-anchor" href="#행렬곱-하나에도-여러-결정이-필요한-이유">행렬곱 하나에도 여러 결정이 필요한 이유</a></h3>
 <p>4장의 <code>left[M,K] × right[K,N] → output[M,N]</code>은 계산 의미를 정한다. 개발자가 <code>M=32, K=128, N=64</code>를 정하면 입력과 출력의 크기를 알 수 있지만, 그 사실만으로 <strong>어느 메모리에서 어느 타일을 읽고, 언제 부분합을 저장하며, 어떤 전송을 겹칠지</strong>까지 결정된 것은 아니다. 이것이 컴파일러에 맡기는 부분이다. 반대로 사용자가 vISA로 메모리와 mapping을 이미 지정한 경우에는 컴파일러가 선택할 수 있는 범위와 검사해야 할 제약이 달라진다. <a href="https://furiosa.ai/developers">TCL과 vISA의 역할</a>, <a href="https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/mapping-tensors/spatial-temporal-dimensions.md">mapping의 공간·시간 차원</a></p>
 <p>예를 들어 입력을 읽기 전에 계산을 시작할 수 없고, 누산이 끝나기 전에 최종 결과를 내보낼 수도 없다. 그러나 의존성이 없는 다음 타일의 전송은 현재 타일 계산과 겹칠 여지가 있다. 다음 그림은 <strong>이런 결정 관계를 설명하는 모형</strong>이며 특정 compiler pass의 출력 순서를 복제한 것이 아니다.</p>
-<figure class="diagram"><img src="../assets/diagrams/03-driver-runtime-e97039efd43d.svg" alt="드라이버부터 런타임까지 · 도식 2" loading="lazy"><figcaption>도식 2 · 드라이버부터 런타임까지 — 설명을 위해 단순화한 관계도. 실제 호출 조건과 근거는 본문을 함께 읽으세요.</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
+<figure class="diagram"><img src="../assets/diagrams/03-driver-runtime-e97039efd43d.svg?v=c4c07c03719b" alt="드라이버부터 런타임까지 · 도식 2" loading="lazy"><figcaption>도식 2 · 드라이버부터 런타임까지 — 설명을 위해 단순화한 관계도. 실제 호출 조건과 근거는 본문을 함께 읽으세요.</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
     A[&quot;수식·축·자료형&quot;] --&gt; B[&quot;계산 계약과 중간 표현&quot;]
     B --&gt; C[&quot;타일·배치·메모리 결정&quot;]
     C --&gt; D[&quot;의존성과 자원 스케줄&quot;]

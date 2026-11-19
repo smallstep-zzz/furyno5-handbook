@@ -30,7 +30,7 @@
 </tr>
 </tbody></table>
 </div><p>예를 들어 작은 학생 모델이 빨라졌다면 유용한 결과다. 그러나 이를 원래 대형 모델의 동일 연산을 더 빠르게 실행한 결과로 합쳐 보고하지 않는다. 또 MAC(Multiply–Accumulate) 수나 parameter 수는 장치 지연의 대리 지표일 뿐이다. NetAdapt는 이런 간접 지표를 줄여도 실제 지연·에너지가 줄지 않을 수 있어 대상 장치의 측정값으로 모델을 탐색해야 한다고 설명한다. 이 원리를 RNGD에서 검증하자는 것이 이 장의 출발점이다. <a href="https://arxiv.org/abs/1804.03230">NetAdapt 논문</a></p>
-<figure class="diagram"><img src="../assets/diagrams/19-model-optimization-1417305d5b38.svg" alt="모델과 실행 방식을 함께 최적화하기 · 도식 1" loading="lazy"><figcaption>도식 1 · 모델과 실행 방식을 함께 최적화하기 — 설명을 위해 단순화한 관계도. 실제 호출 조건과 근거는 본문을 함께 읽으세요.</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
+<figure class="diagram"><img src="../assets/diagrams/19-model-optimization-1417305d5b38.svg?v=d0a98749d522" alt="모델과 실행 방식을 함께 최적화하기 · 도식 1" loading="lazy"><figcaption>도식 1 · 모델과 실행 방식을 함께 최적화하기 — 설명을 위해 단순화한 관계도. 실제 호출 조건과 근거는 본문을 함께 읽으세요.</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
     O[&quot;공식 경로의 고정 기준선&quot;] --&gt; H[&quot;병목과 변환 가설&quot;]
     H --&gt; E[&quot;의미 보존 후보&quot;]
     H --&gt; A[&quot;품질 제한 후보&quot;]
@@ -103,7 +103,7 @@
 </tbody></table>
 </div><p>PyNetsPresso의 <code>compressor.py</code>에는 모델 업로드와 compression 작업 요청이 있고, <code>graph_optimizer.py</code>도 모델을 업로드해 서비스의 graph optimization 작업을 시작한다. 따라서 이 저장소만 설치하면 제품의 전체 압축·최적화 엔진을 독립적으로 로컬 실행할 수 있다고 설명하면 안 된다. 공개 client에 로컬 보조 기능과 학습 연결 코드가 있다는 사실도 함께 보아야 한다. <a href="https://github.com/Nota-NetsPresso/PyNetsPresso/blob/f0faa78114054f80f77e5af217e1f7df1a2c9027/netspresso/compressor/v2/compressor.py">압축 client 구현</a>, <a href="https://github.com/Nota-NetsPresso/PyNetsPresso/blob/f0faa78114054f80f77e5af217e1f7df1a2c9027/netspresso/graph_optimizer/graph_optimizer.py">graph optimizer 구현</a>, <a href="https://github.com/Nota-NetsPresso/netspresso-trainer/blob/d45731ca88051e2c701f27c26cdfdf60c874b152/README.md">Trainer</a></p>
 <p>실제 입력 계약을 읽으면 중요한 세부사항도 보인다. 확인한 PyNetsPresso commit의 graph optimizer는 ONNX(Open Neural Network Exchange) 입력을 <strong>batch size 1인 임시 모델로 바꾼 뒤</strong> 업로드한다. 그 결과가 원래의 모든 batch 조건을 보존한다고 가정하지 말고 원본·변환본의 입력 시그니처를 비교해야 한다. 이 동작을 모든 향후 NetsPresso 버전의 고정 규칙으로 일반화하지도 않는다. <a href="https://github.com/Nota-NetsPresso/PyNetsPresso/blob/f0faa78114054f80f77e5af217e1f7df1a2c9027/netspresso/graph_optimizer/graph_optimizer.py#L116-L146">batch 변경·업로드·작업 시작</a></p>
-<figure class="diagram"><img src="../assets/diagrams/19-model-optimization-0a9b55c8050e.svg" alt="모델과 실행 방식을 함께 최적화하기 · 도식 2" loading="lazy"><figcaption>도식 2 · 모델과 실행 방식을 함께 최적화하기 — 설명을 위해 단순화한 관계도. 실제 호출 조건과 근거는 본문을 함께 읽으세요.</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
+<figure class="diagram"><img src="../assets/diagrams/19-model-optimization-0a9b55c8050e.svg?v=00bc5a5781b5" alt="모델과 실행 방식을 함께 최적화하기 · 도식 2" loading="lazy"><figcaption>도식 2 · 모델과 실행 방식을 함께 최적화하기 — 설명을 위해 단순화한 관계도. 실제 호출 조건과 근거는 본문을 함께 읽으세요.</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
     M[&quot;사용자 모델&quot;] --&gt; T[&quot;공개 Trainer의 학습·평가&quot;]
     M --&gt; P[&quot;공개 Python client&quot;]
     P --&gt; S[&quot;NetsPresso 서비스 작업&quot;]
@@ -265,7 +265,7 @@ print({&quot;before_nodes&quot;: len(model.graph.node),
 <h2 id="8-고수준-의미를-보존하는-것도-최적화다"><a class="heading-anchor" href="#8-고수준-의미를-보존하는-것도-최적화다">8. 고수준 의미를 보존하는 것도 최적화다</a></h2>
 <p><strong>의미 보존은 공식 TCL(Tensor Contraction Language) 자체의 설계 목표이기도 하다.</strong> Furiosa의 SDK 2026.3 설명은 contraction과 축의 의미를 유지하고, compiler가 tiling·scheduling·fusion·hardware mapping을 수행하도록 설계했다고 명시한다. 따라서 여기의 과제는 공식 스택에 없던 원리를 새로 발명하는 것이 아니다. FuryNo5가 캡처·분해·영역 분할 과정에서 그 정보를 불필요하게 잃지 않고 공식 compiler에 전달하는지 점검하는 것이다. FuryNo5 내부의 개선이 확인되어도 공식 최적화 기준선을 넘어섰다는 결론은 별도 비교가 필요하다. <a href="https://furiosa.ai/blog/furiosa-sdk-2026-3-a-new-kernel-framework-and-the-models-it-unlocks">TCL의 공식 설계 배경</a></p>
 <p>모든 연산을 가장 작은 ATen(A Tensor Library) primitive로 분해하면 공통 규칙으로 다루기 쉬워진다. 반대로 RMSNorm(Root Mean Square Layer Normalization), attention, gated MLP(Multi-Layer Perceptron) 같은 의미 단위를 잃으면 해당 연산을 위한 좋은 실행 경로를 찾기 어려울 수 있다. TT-XLA는 사용자 RMSNorm 패턴을 표준 Torch 연산으로 바꾸고, composite 표시를 이용해 후속 분해에서도 그 의미를 보존하는 설계를 문서화했다. 이는 <strong>다른 backend에서 확인한 설계 사례</strong>이며 FuryNo5에 이미 같은 최적화가 있다는 뜻은 아니다. <a href="https://github.com/tenstorrent/tt-xla/blob/fdc3b7773674081b8f8c0698de3400d8d899dc8f/docs/source/fusing_and_composite_ops.md">고정 TT-XLA 설명</a>, <a href="../chapter/18-npu-ecosystems.html">18장</a></p>
-<figure class="diagram"><img src="../assets/diagrams/19-model-optimization-5e4ad3baa0de.svg" alt="모델과 실행 방식을 함께 최적화하기 · 도식 3" loading="lazy"><figcaption>도식 3 · 모델과 실행 방식을 함께 최적화하기 — 설명을 위해 단순화한 관계도. 실제 호출 조건과 근거는 본문을 함께 읽으세요.</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
+<figure class="diagram"><img src="../assets/diagrams/19-model-optimization-5e4ad3baa0de.svg?v=b3f977fc2db1" alt="모델과 실행 방식을 함께 최적화하기 · 도식 3" loading="lazy"><figcaption>도식 3 · 모델과 실행 방식을 함께 최적화하기 — 설명을 위해 단순화한 관계도. 실제 호출 조건과 근거는 본문을 함께 읽으세요.</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
     G[&quot;같은 모델 의미&quot;] --&gt; P[&quot;primitive 분해 후보&quot;]
     G --&gt; S[&quot;의미 영역 보존 후보&quot;]
     P --&gt; K[&quot;TCL 생성·컴파일&quot;]

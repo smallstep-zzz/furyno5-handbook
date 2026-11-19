@@ -1,147 +1,112 @@
-<svg role="img" aria-label="모델 또는 커널 작성 · 공식 모델 빌드 · PyTorch · FuryNo5 · TCL · Rust device 함수 · vISA 표현 · FXB · 컴파일된 EDF · TCC 계열 컴파일 · 컴파일된 EDF · FuryNo5 실행계획 구성 · furiosa-opt 컴파일 · 컴파일된 실행물 · EDF 계층 · Device Function Image · E · Furiosa-LLM 적재 · 실행 · SDK 적재 · Runnable 실행 · fxbX · P · furiosa-opt-rt 적재 · 실행 · I · 각 경로의 드라이버 · 펌웨어를 거쳐 RNGD" width="841pt" height="551pt"
- viewBox="0.00 0.00 840.80 550.80" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<svg role="img" aria-label="모델 또는 커널 작성 · 공식 모델 빌드 · PyTorch · FuryNo5 · TCL · Rust device 함수 · vISA 표현 · FXB · 컴파일된 EDF · TCC 계열 컴파일 · 컴파일된 EDF · FuryNo5 실행계획 구성 · furiosa-opt 컴파일 · 컴파일된 실행물 · EDF 계층 · Device Function Image · Furiosa-LLM 적재 · 실행 · SDK 적재 · Runnable 실행 · fxbX · furiosa-opt-rt 적재 · 실행 · 각 경로의 드라이버 · 펌웨어를 거쳐 RNGD" width="607pt" height="551pt"
+ viewBox="0.00 0.00 606.80 550.80" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(14.4 536.4)">
 <title>handbook</title>
 <g id="edge1" class="edge">
 <title>M&#45;&gt;A</title>
-<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M242.99,-485.86C213.39,-473.49 173.36,-456.75 142.39,-443.81"/>
-<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="143.33,-441.55 135.93,-441.11 141.44,-446.07 143.33,-441.55"/>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M245.94,-485.86C217.87,-473.54 179.95,-456.89 150.51,-443.97"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="151.38,-441.68 143.98,-441.11 149.41,-446.17 151.38,-441.68"/>
 </g>
 <g id="edge2" class="edge">
 <title>M&#45;&gt;B</title>
-<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M284,-485.86C284,-474.88 284,-460.48 284,-448.33"/>
-<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="286.45,-448.11 284,-441.11 281.55,-448.11 286.45,-448.11"/>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M285,-485.86C285,-474.88 285,-460.48 285,-448.33"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="287.45,-448.11 285,-441.11 282.55,-448.11 287.45,-448.11"/>
 </g>
 <g id="edge3" class="edge">
 <title>M&#45;&gt;C</title>
-<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M348.26,-486.25C393.22,-474.52 453.74,-458.75 502.59,-446.01"/>
-<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="503.24,-448.37 509.4,-444.23 502.01,-443.63 503.24,-448.37"/>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M327.75,-485.86C354.78,-475.02 390.18,-460.82 420.24,-448.77"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="421.38,-450.95 426.97,-446.07 419.56,-446.4 421.38,-450.95"/>
 </g>
 <g id="edge4" class="edge">
 <title>A&#45;&gt;AB</title>
-<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M88.71,-404.86C84.64,-393.78 79.29,-379.21 74.81,-366.99"/>
-<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="76.99,-365.84 72.28,-360.11 72.39,-367.52 76.99,-365.84"/>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M96.54,-404.86C91.02,-393.68 83.74,-378.93 77.67,-366.64"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="79.74,-365.3 74.45,-360.11 75.35,-367.47 79.74,-365.3"/>
 </g>
 <g id="edge5" class="edge">
 <title>B&#45;&gt;BC</title>
-<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M318.07,-404.86C342.34,-392.64 375.07,-376.17 400.66,-363.3"/>
-<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="401.85,-365.44 407,-360.11 399.65,-361.07 401.85,-365.44"/>
-</g>
-<g id="edge8" class="edge">
-<title>B&#45;&gt;BP</title>
-<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M284,-404.86C284,-393.88 284,-379.48 284,-367.33"/>
-<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="286.45,-367.11 284,-360.11 281.55,-367.11 286.45,-367.11"/>
-</g>
-<g id="edge15" class="edge">
-<title>B&#45;&gt;L</title>
-<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M249.04,-404.9C230.77,-394.31 209.47,-379.08 196,-360 181.53,-339.51 175.09,-311.2 172.24,-291.21"/>
-<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="174.67,-290.89 171.35,-284.26 169.81,-291.51 174.67,-290.89"/>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M269.59,-404.86C259.27,-393.37 245.56,-378.11 234.34,-365.63"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="235.88,-363.68 229.38,-360.11 232.23,-366.95 235.88,-363.68"/>
 </g>
 <g id="edge7" class="edge">
-<title>C&#45;&gt;BE</title>
-<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M573.17,-399.72C559.16,-378.42 535.89,-346.32 510,-324 493.42,-309.71 472.72,-297.21 454.46,-287.59"/>
-<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="455.2,-285.21 447.85,-284.17 452.95,-289.56 455.2,-285.21"/>
+<title>B&#45;&gt;BP</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M287.44,-404.82C291.35,-377.24 299.06,-322.98 303.54,-291.39"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="305.99,-291.53 304.55,-284.26 301.14,-290.84 305.99,-291.53"/>
 </g>
-<g id="edge9" class="edge">
+<g id="edge8" class="edge">
 <title>C&#45;&gt;CC</title>
-<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M601.21,-399.99C608.01,-389.46 616.15,-376.85 623.04,-366.17"/>
-<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="625.2,-367.34 626.94,-360.13 621.08,-364.68 625.2,-367.34"/>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M483.39,-399.99C484.03,-389.85 484.8,-377.79 485.46,-367.37"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="487.92,-367.27 485.92,-360.13 483.03,-366.96 487.92,-367.27"/>
 </g>
 <g id="edge11" class="edge">
-<title>C&#45;&gt;CE</title>
-<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M663.29,-399.88C682.99,-390.62 702.23,-377.73 715,-360 729.32,-340.11 730.95,-311.46 729.86,-291.23"/>
-<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="732.3,-290.99 729.35,-284.19 727.41,-291.34 732.3,-290.99"/>
-</g>
-<g id="edge14" class="edge">
 <title>AB&#45;&gt;L</title>
-<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M90.12,-323.84C104.95,-313.28 124.08,-299.67 139.9,-288.42"/>
-<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="141.73,-290.12 146.01,-284.07 138.89,-286.13 141.73,-290.12"/>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M68.5,-323.65C74.48,-282.12 89.64,-176.93 96.51,-129.21"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="98.97,-129.34 97.54,-122.06 94.12,-128.64 98.97,-129.34"/>
 </g>
 <g id="edge6" class="edge">
 <title>BC&#45;&gt;BE</title>
-<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M433.81,-323.84C429.66,-313.94 424.39,-301.35 419.86,-290.53"/>
-<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="422.12,-289.58 417.15,-284.07 417.6,-291.47 422.12,-289.58"/>
-</g>
-<g id="edge16" class="edge">
-<title>BE&#45;&gt;F</title>
-<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M410,-247.86C410,-238.33 410,-226.21 410,-215.23"/>
-<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="412.45,-215.22 410,-208.22 407.55,-215.22 412.45,-215.22"/>
-</g>
-<g id="edge18" class="edge">
-<title>BP&#45;&gt;F</title>
-<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M294.7,-323.92C306.97,-304.78 328.09,-273.14 349,-248 358.96,-236.03 370.79,-223.64 381.37,-213.11"/>
-<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="383.19,-214.76 386.45,-208.11 379.75,-211.27 383.19,-214.76"/>
-</g>
-<g id="edge10" class="edge">
-<title>CC&#45;&gt;CE</title>
-<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M658.64,-323.84C671.22,-313.38 687.42,-299.91 700.88,-288.71"/>
-<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="702.65,-290.43 706.47,-284.07 699.52,-286.66 702.65,-290.43"/>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M200.78,-323.84C192.94,-313.66 182.91,-300.63 174.42,-289.62"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="176.36,-288.12 170.15,-284.07 172.48,-291.11 176.36,-288.12"/>
 </g>
 <g id="edge12" class="edge">
-<title>CE&#45;&gt;CI</title>
-<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M700.31,-247.86C681.61,-235.85 656.52,-219.73 636.63,-206.96"/>
-<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="637.85,-204.83 630.64,-203.11 635.2,-208.95 637.85,-204.83"/>
-</g>
-<g id="edge20" class="edge">
-<title>CI&#45;&gt;O</title>
-<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M604,-166.86C604,-155.88 604,-141.48 604,-129.33"/>
-<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="606.45,-129.11 604,-122.11 601.55,-129.11 606.45,-129.11"/>
+<title>BE&#45;&gt;F</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M176.75,-247.86C188.45,-237.69 203.56,-224.58 216.84,-213.05"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="218.73,-214.66 222.41,-208.22 215.52,-210.96 218.73,-214.66"/>
 </g>
 <g id="edge13" class="edge">
-<title>E&#45;&gt;CI</title>
-<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M593.04,-247.86C594.98,-236.88 597.54,-222.48 599.69,-210.33"/>
-<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="602.16,-210.43 600.97,-203.11 597.33,-209.57 602.16,-210.43"/>
+<title>BP&#45;&gt;F</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M294.2,-247.86C286.81,-237.97 277.34,-225.28 268.9,-213.98"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="270.74,-212.36 264.59,-208.22 266.82,-215.29 270.74,-212.36"/>
+</g>
+<g id="edge9" class="edge">
+<title>CC&#45;&gt;CE</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M488.39,-323.84C489.18,-314.12 490.18,-301.82 491.04,-291.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="493.49,-291.25 491.62,-284.07 488.61,-290.85 493.49,-291.25"/>
+</g>
+<g id="edge10" class="edge">
+<title>CE&#45;&gt;CI</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M487.36,-247.86C483.71,-236.78 478.92,-222.21 474.89,-209.99"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="477.15,-208.99 472.63,-203.11 472.49,-210.52 477.15,-208.99"/>
+</g>
+<g id="edge14" class="edge">
+<title>CI&#45;&gt;O</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M456.37,-166.86C449.37,-155.57 440.12,-140.66 432.45,-128.3"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="434.38,-126.77 428.61,-122.11 430.22,-129.35 434.38,-126.77"/>
+</g>
+<g id="edge15" class="edge">
+<title>L&#45;&gt;N</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M132.11,-85.86C152.09,-75.2 178.13,-61.3 200.46,-49.38"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="201.63,-51.53 206.66,-46.07 199.33,-47.2 201.63,-51.53"/>
+</g>
+<g id="edge16" class="edge">
+<title>F&#45;&gt;N</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M248,-161.75C248,-133.45 248,-84.51 248,-53.22"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="250.45,-53.06 248,-46.06 245.55,-53.06 250.45,-53.06"/>
 </g>
 <g id="edge17" class="edge">
-<title>E&#45;&gt;F</title>
-<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M562.66,-253C537.41,-241.92 499.1,-225.1 467.17,-211.09"/>
-<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="467.86,-208.72 460.46,-208.15 465.89,-213.2 467.86,-208.72"/>
-</g>
-<g id="edge22" class="edge">
-<title>L&#45;&gt;N</title>
-<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M187.26,-247.67C228.43,-206.33 332.67,-101.66 382.56,-51.55"/>
-<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="384.59,-52.99 387.79,-46.3 381.12,-49.53 384.59,-52.99"/>
-</g>
-<g id="edge23" class="edge">
-<title>F&#45;&gt;N</title>
-<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M410,-161.75C410,-133.45 410,-84.51 410,-53.22"/>
-<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="412.45,-53.06 410,-46.06 407.55,-53.06 412.45,-53.06"/>
-</g>
-<g id="edge19" class="edge">
-<title>P&#45;&gt;F</title>
-<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M489.08,-247.86C475.97,-237.6 459.03,-224.35 444.19,-212.74"/>
-<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="445.43,-210.6 438.4,-208.22 442.41,-214.46 445.43,-210.6"/>
-</g>
-<g id="edge24" class="edge">
 <title>O&#45;&gt;N</title>
-<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M561.9,-85.86C535.28,-75.02 500.42,-60.82 470.82,-48.77"/>
-<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="471.6,-46.44 464.19,-46.07 469.75,-50.98 471.6,-46.44"/>
-</g>
-<g id="edge21" class="edge">
-<title>I&#45;&gt;O</title>
-<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M707.86,-167.63C687.8,-155.54 660.34,-138.98 638.7,-125.92"/>
-<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="639.73,-123.68 632.47,-122.17 637.2,-127.88 639.73,-123.68"/>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M381.11,-85.86C357.98,-75.11 327.75,-61.06 301.95,-49.07"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="302.87,-46.8 295.49,-46.07 300.81,-51.24 302.87,-46.8"/>
 </g>
 <g id="node1" class="node">
 <title>M</title>
-<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M336,-522C336,-522 232,-522 232,-522 226,-522 220,-516 220,-510 220,-510 220,-498 220,-498 220,-492 226,-486 232,-486 232,-486 336,-486 336,-486 342,-486 348,-492 348,-498 348,-498 348,-510 348,-510 348,-516 342,-522 336,-522"/>
-<text text-anchor="middle" x="284" y="-500.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">모델 또는 커널 작성</text>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M337,-522C337,-522 233,-522 233,-522 227,-522 221,-516 221,-510 221,-510 221,-498 221,-498 221,-492 227,-486 233,-486 233,-486 337,-486 337,-486 343,-486 349,-492 349,-498 349,-498 349,-510 349,-510 349,-516 343,-522 337,-522"/>
+<text text-anchor="middle" x="285" y="-500.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">모델 또는 커널 작성</text>
 </g>
 <g id="node2" class="node">
 <title>A</title>
-<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M134,-441C134,-441 56,-441 56,-441 50,-441 44,-435 44,-429 44,-429 44,-417 44,-417 44,-411 50,-405 56,-405 56,-405 134,-405 134,-405 140,-405 146,-411 146,-417 146,-417 146,-429 146,-429 146,-435 140,-441 134,-441"/>
-<text text-anchor="middle" x="95" y="-419.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">공식 모델 빌드</text>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M144,-441C144,-441 66,-441 66,-441 60,-441 54,-435 54,-429 54,-429 54,-417 54,-417 54,-411 60,-405 66,-405 66,-405 144,-405 144,-405 150,-405 156,-411 156,-417 156,-417 156,-429 156,-429 156,-435 150,-441 144,-441"/>
+<text text-anchor="middle" x="105" y="-419.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">공식 모델 빌드</text>
 </g>
 <g id="node3" class="node">
 <title>B</title>
-<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M356.5,-441C356.5,-441 211.5,-441 211.5,-441 205.5,-441 199.5,-435 199.5,-429 199.5,-429 199.5,-417 199.5,-417 199.5,-411 205.5,-405 211.5,-405 211.5,-405 356.5,-405 356.5,-405 362.5,-405 368.5,-411 368.5,-417 368.5,-417 368.5,-429 368.5,-429 368.5,-435 362.5,-441 356.5,-441"/>
-<text text-anchor="middle" x="284" y="-419.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">PyTorch · FuryNo5 · TCL</text>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M357.5,-441C357.5,-441 212.5,-441 212.5,-441 206.5,-441 200.5,-435 200.5,-429 200.5,-429 200.5,-417 200.5,-417 200.5,-411 206.5,-405 212.5,-405 212.5,-405 357.5,-405 357.5,-405 363.5,-405 369.5,-411 369.5,-417 369.5,-417 369.5,-429 369.5,-429 369.5,-435 363.5,-441 357.5,-441"/>
+<text text-anchor="middle" x="285" y="-419.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">PyTorch · FuryNo5 · TCL</text>
 </g>
 <g id="node4" class="node">
 <title>C</title>
-<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M652.5,-446C652.5,-446 521.5,-446 521.5,-446 515.5,-446 509.5,-440 509.5,-434 509.5,-434 509.5,-412 509.5,-412 509.5,-406 515.5,-400 521.5,-400 521.5,-400 652.5,-400 652.5,-400 658.5,-400 664.5,-406 664.5,-412 664.5,-412 664.5,-434 664.5,-434 664.5,-440 658.5,-446 652.5,-446"/>
-<text text-anchor="middle" x="587" y="-426.4" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">Rust device 함수 · vISA</text>
-<text text-anchor="middle" x="587" y="-413.4" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">표현</text>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M547.5,-446C547.5,-446 416.5,-446 416.5,-446 410.5,-446 404.5,-440 404.5,-434 404.5,-434 404.5,-412 404.5,-412 404.5,-406 410.5,-400 416.5,-400 416.5,-400 547.5,-400 547.5,-400 553.5,-400 559.5,-406 559.5,-412 559.5,-412 559.5,-434 559.5,-434 559.5,-440 553.5,-446 547.5,-446"/>
+<text text-anchor="middle" x="482" y="-426.4" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">Rust device 함수 · vISA</text>
+<text text-anchor="middle" x="482" y="-413.4" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">표현</text>
 </g>
 <g id="node5" class="node">
 <title>AB</title>
@@ -150,70 +115,55 @@
 </g>
 <g id="node6" class="node">
 <title>BC</title>
-<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M485.5,-360C485.5,-360 396.5,-360 396.5,-360 390.5,-360 384.5,-354 384.5,-348 384.5,-348 384.5,-336 384.5,-336 384.5,-330 390.5,-324 396.5,-324 396.5,-324 485.5,-324 485.5,-324 491.5,-324 497.5,-330 497.5,-336 497.5,-336 497.5,-348 497.5,-348 497.5,-354 491.5,-360 485.5,-360"/>
-<text text-anchor="middle" x="441" y="-338.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">TCC 계열 컴파일</text>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M258.5,-360C258.5,-360 169.5,-360 169.5,-360 163.5,-360 157.5,-354 157.5,-348 157.5,-348 157.5,-336 157.5,-336 157.5,-330 163.5,-324 169.5,-324 169.5,-324 258.5,-324 258.5,-324 264.5,-324 270.5,-330 270.5,-336 270.5,-336 270.5,-348 270.5,-348 270.5,-354 264.5,-360 258.5,-360"/>
+<text text-anchor="middle" x="214" y="-338.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">TCC 계열 컴파일</text>
 </g>
 <g id="node7" class="node">
 <title>BE</title>
-<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M447,-284C447,-284 373,-284 373,-284 367,-284 361,-278 361,-272 361,-272 361,-260 361,-260 361,-254 367,-248 373,-248 373,-248 447,-248 447,-248 453,-248 459,-254 459,-260 459,-260 459,-272 459,-272 459,-278 453,-284 447,-284"/>
-<text text-anchor="middle" x="410" y="-262.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">컴파일된 EDF</text>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M194,-284C194,-284 120,-284 120,-284 114,-284 108,-278 108,-272 108,-272 108,-260 108,-260 108,-254 114,-248 120,-248 120,-248 194,-248 194,-248 200,-248 206,-254 206,-260 206,-260 206,-272 206,-272 206,-278 200,-284 194,-284"/>
+<text text-anchor="middle" x="157" y="-262.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">컴파일된 EDF</text>
 </g>
 <g id="node8" class="node">
 <title>BP</title>
-<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M347.5,-360C347.5,-360 220.5,-360 220.5,-360 214.5,-360 208.5,-354 208.5,-348 208.5,-348 208.5,-336 208.5,-336 208.5,-330 214.5,-324 220.5,-324 220.5,-324 347.5,-324 347.5,-324 353.5,-324 359.5,-330 359.5,-336 359.5,-336 359.5,-348 359.5,-348 359.5,-354 353.5,-360 347.5,-360"/>
-<text text-anchor="middle" x="284" y="-338.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">FuryNo5 실행계획 구성</text>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M370.5,-284C370.5,-284 243.5,-284 243.5,-284 237.5,-284 231.5,-278 231.5,-272 231.5,-272 231.5,-260 231.5,-260 231.5,-254 237.5,-248 243.5,-248 243.5,-248 370.5,-248 370.5,-248 376.5,-248 382.5,-254 382.5,-260 382.5,-260 382.5,-272 382.5,-272 382.5,-278 376.5,-284 370.5,-284"/>
+<text text-anchor="middle" x="307" y="-262.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">FuryNo5 실행계획 구성</text>
 </g>
 <g id="node9" class="node">
 <title>CC</title>
-<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M690,-360C690,-360 586,-360 586,-360 580,-360 574,-354 574,-348 574,-348 574,-336 574,-336 574,-330 580,-324 586,-324 586,-324 690,-324 690,-324 696,-324 702,-330 702,-336 702,-336 702,-348 702,-348 702,-354 696,-360 690,-360"/>
-<text text-anchor="middle" x="638" y="-338.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">furiosa&#45;opt 컴파일</text>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M539,-360C539,-360 435,-360 435,-360 429,-360 423,-354 423,-348 423,-348 423,-336 423,-336 423,-330 429,-324 435,-324 435,-324 539,-324 539,-324 545,-324 551,-330 551,-336 551,-336 551,-348 551,-348 551,-354 545,-360 539,-360"/>
+<text text-anchor="middle" x="487" y="-338.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">furiosa&#45;opt 컴파일</text>
 </g>
 <g id="node10" class="node">
 <title>CE</title>
-<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M800,-284C800,-284 654,-284 654,-284 648,-284 642,-278 642,-272 642,-272 642,-260 642,-260 642,-254 648,-248 654,-248 654,-248 800,-248 800,-248 806,-248 812,-254 812,-260 812,-260 812,-272 812,-272 812,-278 806,-284 800,-284"/>
-<text text-anchor="middle" x="727" y="-262.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">컴파일된 실행물 · EDF 계층</text>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M566,-284C566,-284 420,-284 420,-284 414,-284 408,-278 408,-272 408,-272 408,-260 408,-260 408,-254 414,-248 420,-248 420,-248 566,-248 566,-248 572,-248 578,-254 578,-260 578,-260 578,-272 578,-272 578,-278 572,-284 566,-284"/>
+<text text-anchor="middle" x="493" y="-262.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">컴파일된 실행물 · EDF 계층</text>
 </g>
 <g id="node11" class="node">
 <title>CI</title>
-<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M670.5,-203C670.5,-203 537.5,-203 537.5,-203 531.5,-203 525.5,-197 525.5,-191 525.5,-191 525.5,-179 525.5,-179 525.5,-173 531.5,-167 537.5,-167 537.5,-167 670.5,-167 670.5,-167 676.5,-167 682.5,-173 682.5,-179 682.5,-179 682.5,-191 682.5,-191 682.5,-197 676.5,-203 670.5,-203"/>
-<text text-anchor="middle" x="604" y="-181.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">Device Function Image</text>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M533.5,-203C533.5,-203 400.5,-203 400.5,-203 394.5,-203 388.5,-197 388.5,-191 388.5,-191 388.5,-179 388.5,-179 388.5,-173 394.5,-167 400.5,-167 400.5,-167 533.5,-167 533.5,-167 539.5,-167 545.5,-173 545.5,-179 545.5,-179 545.5,-191 545.5,-191 545.5,-197 539.5,-203 533.5,-203"/>
+<text text-anchor="middle" x="467" y="-181.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">Device Function Image</text>
 </g>
 <g id="node12" class="node">
-<title>E</title>
-<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M605,-284C605,-284 575,-284 575,-284 569,-284 563,-278 563,-272 563,-272 563,-260 563,-260 563,-254 569,-248 575,-248 575,-248 605,-248 605,-248 611,-248 617,-254 617,-260 617,-260 617,-272 617,-272 617,-278 611,-284 605,-284"/>
-<text text-anchor="middle" x="590" y="-262.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">E</text>
+<title>L</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M167,-122C167,-122 33,-122 33,-122 27,-122 21,-116 21,-110 21,-110 21,-98 21,-98 21,-92 27,-86 33,-86 33,-86 167,-86 167,-86 173,-86 179,-92 179,-98 179,-98 179,-110 179,-110 179,-116 173,-122 167,-122"/>
+<text text-anchor="middle" x="100" y="-100.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">Furiosa&#45;LLM 적재 · 실행</text>
 </g>
 <g id="node13" class="node">
-<title>L</title>
-<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M237,-284C237,-284 103,-284 103,-284 97,-284 91,-278 91,-272 91,-272 91,-260 91,-260 91,-254 97,-248 103,-248 103,-248 237,-248 237,-248 243,-248 249,-254 249,-260 249,-260 249,-272 249,-272 249,-278 243,-284 237,-284"/>
-<text text-anchor="middle" x="170" y="-262.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">Furiosa&#45;LLM 적재 · 실행</text>
+<title>F</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M326,-208C326,-208 170,-208 170,-208 164,-208 158,-202 158,-196 158,-196 158,-174 158,-174 158,-168 164,-162 170,-162 170,-162 326,-162 326,-162 332,-162 338,-168 338,-174 338,-174 338,-196 338,-196 338,-202 332,-208 326,-208"/>
+<text text-anchor="middle" x="248" y="-188.4" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">SDK 적재 · Runnable 실행 ·</text>
+<text text-anchor="middle" x="248" y="-175.4" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">fxbX</text>
 </g>
 <g id="node14" class="node">
-<title>F</title>
-<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M488,-208C488,-208 332,-208 332,-208 326,-208 320,-202 320,-196 320,-196 320,-174 320,-174 320,-168 326,-162 332,-162 332,-162 488,-162 488,-162 494,-162 500,-168 500,-174 500,-174 500,-196 500,-196 500,-202 494,-208 488,-208"/>
-<text text-anchor="middle" x="410" y="-188.4" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">SDK 적재 · Runnable 실행 ·</text>
-<text text-anchor="middle" x="410" y="-175.4" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">fxbX</text>
+<title>O</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M488.5,-122C488.5,-122 347.5,-122 347.5,-122 341.5,-122 335.5,-116 335.5,-110 335.5,-110 335.5,-98 335.5,-98 335.5,-92 341.5,-86 347.5,-86 347.5,-86 488.5,-86 488.5,-86 494.5,-86 500.5,-92 500.5,-98 500.5,-98 500.5,-110 500.5,-110 500.5,-116 494.5,-122 488.5,-122"/>
+<text text-anchor="middle" x="418" y="-100.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">furiosa&#45;opt&#45;rt 적재 · 실행</text>
 </g>
 <g id="node15" class="node">
-<title>P</title>
-<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M526,-284C526,-284 496,-284 496,-284 490,-284 484,-278 484,-272 484,-272 484,-260 484,-260 484,-254 490,-248 496,-248 496,-248 526,-248 526,-248 532,-248 538,-254 538,-260 538,-260 538,-272 538,-272 538,-278 532,-284 526,-284"/>
-<text text-anchor="middle" x="511" y="-262.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">P</text>
-</g>
-<g id="node16" class="node">
-<title>O</title>
-<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M674.5,-122C674.5,-122 533.5,-122 533.5,-122 527.5,-122 521.5,-116 521.5,-110 521.5,-110 521.5,-98 521.5,-98 521.5,-92 527.5,-86 533.5,-86 533.5,-86 674.5,-86 674.5,-86 680.5,-86 686.5,-92 686.5,-98 686.5,-98 686.5,-110 686.5,-110 686.5,-116 680.5,-122 674.5,-122"/>
-<text text-anchor="middle" x="604" y="-100.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">furiosa&#45;opt&#45;rt 적재 · 실행</text>
-</g>
-<g id="node17" class="node">
-<title>I</title>
-<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M750,-203C750,-203 720,-203 720,-203 714,-203 708,-197 708,-191 708,-191 708,-179 708,-179 708,-173 714,-167 720,-167 720,-167 750,-167 750,-167 756,-167 762,-173 762,-179 762,-179 762,-191 762,-191 762,-197 756,-203 750,-203"/>
-<text text-anchor="middle" x="735" y="-181.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">I</text>
-</g>
-<g id="node18" class="node">
 <title>N</title>
-<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M502,-46C502,-46 318,-46 318,-46 312,-46 306,-40 306,-34 306,-34 306,-12 306,-12 306,-6 312,0 318,0 318,0 502,0 502,0 508,0 514,-6 514,-12 514,-12 514,-34 514,-34 514,-40 508,-46 502,-46"/>
-<text text-anchor="middle" x="410" y="-26.4" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">각 경로의 드라이버 · 펌웨어를 거쳐</text>
-<text text-anchor="middle" x="410" y="-13.4" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">RNGD</text>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M340,-46C340,-46 156,-46 156,-46 150,-46 144,-40 144,-34 144,-34 144,-12 144,-12 144,-6 150,0 156,0 156,0 340,0 340,0 346,0 352,-6 352,-12 352,-12 352,-34 352,-34 352,-40 346,-46 340,-46"/>
+<text text-anchor="middle" x="248" y="-26.4" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">각 경로의 드라이버 · 펌웨어를 거쳐</text>
+<text text-anchor="middle" x="248" y="-13.4" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">RNGD</text>
 </g>
 </g>
 </svg>

@@ -55,7 +55,7 @@ furiosa-tcc --target-npu renegade-8pe --no-compiler-cache \
   --output matmul.edf matmul.tc
 </code></pre></div>
 <p>이 호출 형태는 FuryNo5의 <code>tcl_compiler.py</code>와 <code>compile_job.py</code>에서 확인했다. <code>--no-compiler-cache</code>는 이 프로젝트 경로의 선택이며 모든 사용자에게 캐시를 꺼야 한다는 권고가 아니다. SDK에 따라 target 이름과 지원 옵션이 달라질 수 있으므로 <code>--help</code>가 기준이다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/tcl_compiler.py">컴파일 설정</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span>, <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/compile_job.py">실제 subprocess 명령</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
-<figure class="diagram"><img src="../assets/diagrams/04-tcl-edf-ebd582a28081.svg" alt="TCL에서 EDF까지 · 도식 1" loading="lazy"><figcaption>도식 1 · TCL에서 EDF까지 — 설명을 위해 단순화한 관계도. 실제 호출 조건과 근거는 본문을 함께 읽으세요.</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
+<figure class="diagram"><img src="../assets/diagrams/04-tcl-edf-ebd582a28081.svg?v=8a9974220b42" alt="TCL에서 EDF까지 · 도식 1" loading="lazy"><figcaption>도식 1 · TCL에서 EDF까지 — 설명을 위해 단순화한 관계도. 실제 호출 조건과 근거는 본문을 함께 읽으세요.</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
     P[&quot;Python TCL 커널&quot;] --&gt; S[&quot;축 크기 특수화&quot;]
     S --&gt; T[&quot;TCL 텍스트 IR&quot;]
     T --&gt; C[&quot;furiosa-tcc&quot;]
@@ -146,7 +146,7 @@ furiosa-tcc --target-npu renegade-8pe --no-compiler-cache \
 </tr>
 </tbody></table>
 </div><p><a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/tcl_compiler.py">EDF loader·ABI 검사</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span>, <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/direct_runtime.py">실제 SDK 실행 객체 사용</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
-<figure class="diagram"><img src="../assets/diagrams/04-tcl-edf-283c53b15280.svg" alt="TCL에서 EDF까지 · 도식 2" loading="lazy"><figcaption>도식 2 · TCL에서 EDF까지 — 설명을 위해 단순화한 관계도. 실제 호출 조건과 근거는 본문을 함께 읽으세요.</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
+<figure class="diagram"><img src="../assets/diagrams/04-tcl-edf-283c53b15280.svg?v=4439ab8dbab9" alt="TCL에서 EDF까지 · 도식 2" loading="lazy"><figcaption>도식 2 · TCL에서 EDF까지 — 설명을 위해 단순화한 관계도. 실제 호출 조건과 근거는 본문을 함께 읽으세요.</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
     E[&quot;EDF 바이트&quot;] --&gt; I[&quot;SDK IR 역직렬화&quot;]
     I --&gt; A[&quot;ABI와 장치 구성 확인&quot;]
     A --&gt; R[&quot;장치 Runnable 적재&quot;]

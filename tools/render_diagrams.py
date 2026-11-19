@@ -13,7 +13,7 @@ import textwrap
 from pathlib import Path
 
 NODE = re.compile(r'\b([A-Za-z][A-Za-z0-9_]*)\s*(\[\[.*?\]\]|\[.*?\]|\{.*?\}|\(.*?\))')
-EDGE = re.compile(r'([A-Za-z][A-Za-z0-9_]*)\s*(-->|---|==>|-\.->)(?:\s*\|([^|]*)\|)?\s*([A-Za-z][A-Za-z0-9_]*)')
+EDGE = re.compile(r'\b([A-Za-z][A-Za-z0-9_]*)\s*(-->|---|==>|-\.->)(?:\s*\|([^|]*)\|)?\s*([A-Za-z][A-Za-z0-9_]*)')
 
 def label_text(s):
     s = s.strip().strip('[]{}()').strip().strip('"').strip("'")
@@ -55,7 +55,7 @@ def render(source, out):
                 nodes.setdefault(a, (a, 'box'))
                 nodes.setdefault(b, (b, 'box'))
             # Chained arrows need a second scan starting at every endpoint.
-            for m in re.finditer(r'(?=([A-Za-z][A-Za-z0-9_]*\s*(?:-->|==>|-\.->)(?:\s*\|[^|]*\|)?\s*[A-Za-z][A-Za-z0-9_]*))', clean):
+            for m in re.finditer(r'\b(?=([A-Za-z][A-Za-z0-9_]*\s*(?:-->|==>|-\.->)(?:\s*\|[^|]*\|)?\s*[A-Za-z][A-Za-z0-9_]*))', clean):
                 e = EDGE.fullmatch(m.group(1))
                 if e:
                     a, arrow, label, b = e.groups()
