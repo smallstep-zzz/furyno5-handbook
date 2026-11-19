@@ -162,6 +162,10 @@ for node in ep.graph.nodes:
 
 모델 수, 관측 node 수, 지원 overload 수, 검증한 shape/dtype 수를 각각 기록하면 과장된 “지원율”을 피할 수 있다. 다음 장은 이 호출 경계를 FuryNo5 코드의 실제 파일에 연결한다.
 
+## 다른 하드웨어가 같은 경계를 사용하는 방법
+
+장치 연산을 `PrivateUse1`에 등록하는 방법 외에도 `torch.compile` 그래프를 받거나, Hugging Face 모델 어댑터를 통해 컴파일·적재를 연결하는 방법이 있다. Ascend, Rebellions, AWS Neuron, Tenstorrent가 이 경계를 어떻게 사용하는지는 [18장 다른 NPU의 PyTorch 지원 방식](18-npu-ecosystems.md)에서 공식 자료와 코드를 비교한다. 같은 Torch API를 호출해도 내부 컴파일 산출물과 CPU 폴백 정책은 backend마다 다르다.
+
 ## 출처
 
 | 자료 | 이 장에서 확인한 내용 |

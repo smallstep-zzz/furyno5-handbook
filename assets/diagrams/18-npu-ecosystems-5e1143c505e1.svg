@@ -1,0 +1,91 @@
+<svg role="img" aria-label="PyTorch 모델 · ATen 디스패치 경로 · FX · export 그래프 경로 · 모델별 어댑터 · 장치 연산 · 커널 구현 · 그래프 컴파일 · 장치 실행물 · 해당 업체의 런타임 · 드라이버 · 해당 업체의 가속기" width="362pt" height="445pt"
+ viewBox="0.00 0.00 361.80 444.80" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(14.4 430.4)">
+<title>handbook</title>
+<g id="edge1" class="edge">
+<title>A&#45;&gt;B</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M147.61,-379.84C132.92,-369.28 113.98,-355.67 98.31,-344.42"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="99.37,-342.16 92.26,-340.07 96.52,-346.14 99.37,-342.16"/>
+</g>
+<g id="edge2" class="edge">
+<title>A&#45;&gt;C</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M173.97,-379.67C177.25,-360.31 184.25,-328.47 197.5,-304 204.27,-291.5 214.23,-279.4 223.48,-269.59"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="225.41,-271.12 228.52,-264.39 221.89,-267.71 225.41,-271.12"/>
+</g>
+<g id="edge3" class="edge">
+<title>A&#45;&gt;D</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M191.91,-379.84C204.35,-369.38 220.36,-355.91 233.68,-344.71"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="235.42,-346.45 239.2,-340.07 232.27,-342.7 235.42,-346.45"/>
+</g>
+<g id="edge5" class="edge">
+<title>B&#45;&gt;E</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M68.5,-303.79C68.5,-277.12 68.5,-225.7 68.5,-195.26"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="70.95,-195.01 68.5,-188.01 66.05,-195.01 70.95,-195.01"/>
+</g>
+<g id="edge6" class="edge">
+<title>C&#45;&gt;F</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M247.5,-227.84C247.5,-218.12 247.5,-205.82 247.5,-195.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="249.95,-195.07 247.5,-188.07 245.05,-195.07 249.95,-195.07"/>
+</g>
+<g id="edge4" class="edge">
+<title>D&#45;&gt;C</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M256.72,-303.84C255.14,-294.12 253.15,-281.82 251.42,-271.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="253.81,-270.59 250.27,-264.07 248.97,-271.37 253.81,-270.59"/>
+</g>
+<g id="edge7" class="edge">
+<title>E&#45;&gt;G</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M89.14,-151.84C101.72,-141.38 117.92,-127.91 131.38,-116.71"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="133.15,-118.43 136.97,-112.07 130.02,-114.66 133.15,-118.43"/>
+</g>
+<g id="edge8" class="edge">
+<title>F&#45;&gt;G</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M226.63,-151.84C213.9,-141.38 197.53,-127.91 183.91,-116.71"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="185.22,-114.62 178.26,-112.07 182.11,-118.41 185.22,-114.62"/>
+</g>
+<g id="edge9" class="edge">
+<title>G&#45;&gt;H</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M157.5,-75.84C157.5,-66.12 157.5,-53.82 157.5,-43.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="159.95,-43.07 157.5,-36.07 155.05,-43.07 159.95,-43.07"/>
+</g>
+<g id="node1" class="node">
+<title>A</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M209,-416C209,-416 134,-416 134,-416 128,-416 122,-410 122,-404 122,-404 122,-392 122,-392 122,-386 128,-380 134,-380 134,-380 209,-380 209,-380 215,-380 221,-386 221,-392 221,-392 221,-404 221,-404 221,-410 215,-416 209,-416"/>
+<text text-anchor="middle" x="171.5" y="-394.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">PyTorch 모델</text>
+</g>
+<g id="node2" class="node">
+<title>B</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M121,-340C121,-340 16,-340 16,-340 10,-340 4,-334 4,-328 4,-328 4,-316 4,-316 4,-310 10,-304 16,-304 16,-304 121,-304 121,-304 127,-304 133,-310 133,-316 133,-316 133,-328 133,-328 133,-334 127,-340 121,-340"/>
+<text text-anchor="middle" x="68.5" y="-318.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">ATen 디스패치 경로</text>
+</g>
+<g id="node3" class="node">
+<title>C</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M312,-264C312,-264 183,-264 183,-264 177,-264 171,-258 171,-252 171,-252 171,-240 171,-240 171,-234 177,-228 183,-228 183,-228 312,-228 312,-228 318,-228 324,-234 324,-240 324,-240 324,-252 324,-252 324,-258 318,-264 312,-264"/>
+<text text-anchor="middle" x="247.5" y="-242.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">FX · export 그래프 경로</text>
+</g>
+<g id="node4" class="node">
+<title>D</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M297,-340C297,-340 222,-340 222,-340 216,-340 210,-334 210,-328 210,-328 210,-316 210,-316 210,-310 216,-304 222,-304 222,-304 297,-304 297,-304 303,-304 309,-310 309,-316 309,-316 309,-328 309,-328 309,-334 303,-340 297,-340"/>
+<text text-anchor="middle" x="259.5" y="-318.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">모델별 어댑터</text>
+</g>
+<g id="node5" class="node">
+<title>E</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M125,-188C125,-188 12,-188 12,-188 6,-188 0,-182 0,-176 0,-176 0,-164 0,-164 0,-158 6,-152 12,-152 12,-152 125,-152 125,-152 131,-152 137,-158 137,-164 137,-164 137,-176 137,-176 137,-182 131,-188 125,-188"/>
+<text text-anchor="middle" x="68.5" y="-166.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">장치 연산 · 커널 구현</text>
+</g>
+<g id="node6" class="node">
+<title>F</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M321,-188C321,-188 174,-188 174,-188 168,-188 162,-182 162,-176 162,-176 162,-164 162,-164 162,-158 168,-152 174,-152 174,-152 321,-152 321,-152 327,-152 333,-158 333,-164 333,-164 333,-176 333,-176 333,-182 327,-188 321,-188"/>
+<text text-anchor="middle" x="247.5" y="-166.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">그래프 컴파일 · 장치 실행물</text>
+</g>
+<g id="node7" class="node">
+<title>G</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M236.5,-112C236.5,-112 78.5,-112 78.5,-112 72.5,-112 66.5,-106 66.5,-100 66.5,-100 66.5,-88 66.5,-88 66.5,-82 72.5,-76 78.5,-76 78.5,-76 236.5,-76 236.5,-76 242.5,-76 248.5,-82 248.5,-88 248.5,-88 248.5,-100 248.5,-100 248.5,-106 242.5,-112 236.5,-112"/>
+<text text-anchor="middle" x="157.5" y="-90.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">해당 업체의 런타임 · 드라이버</text>
+</g>
+<g id="node8" class="node">
+<title>H</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M208,-36C208,-36 107,-36 107,-36 101,-36 95,-30 95,-24 95,-24 95,-12 95,-12 95,-6 101,0 107,0 107,0 208,0 208,0 214,0 220,-6 220,-12 220,-12 220,-24 220,-24 220,-30 214,-36 208,-36"/>
+<text text-anchor="middle" x="157.5" y="-14.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">해당 업체의 가속기</text>
+</g>
+</g>
+</svg>

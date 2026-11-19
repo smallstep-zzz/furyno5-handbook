@@ -4,15 +4,16 @@ RNGD의 하드웨어에서 모델 포팅·서빙까지 연결하는 한국어 �
 
 **읽기:** https://smallstep-zzz.github.io/furyno5-handbook/
 
-공식 자료와 FuryNo5·fxbX·Furiosa-Hug-Anything의 구현을 구분합니다. 지원 목표와 검증 결과, 정적 스케줄과 실제 측정, 공식 FXB와 비공식 확장을 섞지 않습니다.
+공식 자료와 FuryAwesome·FuryNo5·fxbX·Furiosa-Hug-Anything의 구현을 구분합니다. 지원 목표와 검증 결과, 정적 스케줄과 실제 측정, 공식 FXB와 비공식 확장을 섞지 않습니다.
 
 ## 구성
 
 - 01–03: RNGD, PE, 메모리, DMA, 드라이버, 런타임
 - 04–08: TCL, EDF, 실행그래프, 오류·폴백, 버킷, 최적화, vISA·furiosa-opt
 - 09–11: PyTorch·ATen, FuryNo5 구조·컴파일·재사용
-- 12–15: fxbX, 모델 포팅·FHA, vLLM 서빙, 여러 NPU
+- 12–15: fxbX, 모델 포팅·FHA·FuryAwesome, vLLM 서빙, 여러 NPU
 - 16–17: FuryBoost 기존 실측과 디버깅
+- 18–19: 다른 NPU의 PyTorch 통합, NetsPresso와 공개 모델 최적화 도구, RNGD 최적화 연구
 - 용어 사전, 출처와 버전, 개편 회고
 
 ## 원고와 생성
@@ -37,6 +38,8 @@ FuryNo5·FHA·FuryBoost는 조사 시점에 비공개 저장소였으므로 소�
 정적 사이트 검사와 Python 예제 구문 검사는 NPU 검증을 대신하지 않습니다. 이 편집 환경에서 RNGD 실행이나 새로운 성능 측정을 수행하지 않았습니다. FuryBoost 숫자는 명시한 저장소의 기존 실험에서 가져왔습니다.
 
 본문의 설명용 조절 도구는 측정값이나 장비 성능 예측이 아닙니다. 버킷 패딩, 이상적인 복사·계산 겹침, Amdahl의 법칙을 탐색합니다.
+
+EDF는 공식 Kernel Validation의 Executable Device Format 표기를 사용합니다. vISA 중간 표현, 컴파일된 실행물, Device Function Image, SDK와 opt의 적재·실행 API를 구분하며, 서로의 실행물을 교차 로딩할 수 있다고 주장하지 않습니다.
 
 ## 갱신 원칙
 

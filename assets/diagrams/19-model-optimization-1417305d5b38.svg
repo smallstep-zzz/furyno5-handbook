@@ -1,0 +1,96 @@
+<svg role="img" aria-label="공식 경로의 고정 기준선 · 병목과 변환 가설 · 의미 보존 후보 · 품질 제한 후보 · 수치·계약 검사 · 재학습·작업 품질 검사 · RNGD 컴파일·실행 검증 · 동일 조건의 전체 시간 측정 · 채택 또는 보류" width="303pt" height="521pt"
+ viewBox="0.00 0.00 303.30 520.80" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(14.4 506.4)">
+<title>handbook</title>
+<g id="edge1" class="edge">
+<title>O&#45;&gt;H</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M127,-455.84C127,-446.12 127,-433.82 127,-423.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="129.45,-423.07 127,-416.07 124.55,-423.07 129.45,-423.07"/>
+</g>
+<g id="edge2" class="edge">
+<title>H&#45;&gt;E</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M112.39,-379.84C103.72,-369.66 92.63,-356.63 83.26,-345.62"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="84.94,-343.81 78.53,-340.07 81.2,-346.99 84.94,-343.81"/>
+</g>
+<g id="edge3" class="edge">
+<title>H&#45;&gt;A</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M143.24,-379.84C152.95,-369.56 165.41,-356.39 175.89,-345.32"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="177.82,-346.84 180.85,-340.07 174.26,-343.47 177.82,-346.84"/>
+</g>
+<g id="edge4" class="edge">
+<title>E&#45;&gt;N</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M61.45,-303.84C60,-294.12 58.18,-281.82 56.59,-271.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="58.99,-270.63 55.54,-264.07 54.14,-271.35 58.99,-270.63"/>
+</g>
+<g id="edge5" class="edge">
+<title>A&#45;&gt;Q</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M198.39,-303.84C199.18,-294.12 200.18,-281.82 201.04,-271.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="203.49,-271.25 201.62,-264.07 198.61,-270.85 203.49,-271.25"/>
+</g>
+<g id="edge6" class="edge">
+<title>N&#45;&gt;C</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M70.4,-227.84C80.9,-217.47 94.4,-204.15 105.69,-193.02"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="107.44,-194.73 110.7,-188.07 104,-191.24 107.44,-194.73"/>
+</g>
+<g id="edge7" class="edge">
+<title>Q&#45;&gt;C</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M185.6,-227.84C175.1,-217.47 161.6,-204.15 150.31,-193.02"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="152,-191.24 145.3,-188.07 148.56,-194.73 152,-191.24"/>
+</g>
+<g id="edge8" class="edge">
+<title>C&#45;&gt;M</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M128,-151.84C128,-142.12 128,-129.82 128,-119.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="130.45,-119.07 128,-112.07 125.55,-119.07 130.45,-119.07"/>
+</g>
+<g id="edge9" class="edge">
+<title>M&#45;&gt;D</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M128,-75.84C128,-66.12 128,-53.82 128,-43.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="130.45,-43.07 128,-36.07 125.55,-43.07 130.45,-43.07"/>
+</g>
+<g id="node1" class="node">
+<title>O</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M190,-492C190,-492 64,-492 64,-492 58,-492 52,-486 52,-480 52,-480 52,-468 52,-468 52,-462 58,-456 64,-456 64,-456 190,-456 190,-456 196,-456 202,-462 202,-468 202,-468 202,-480 202,-480 202,-486 196,-492 190,-492"/>
+<text text-anchor="middle" x="127" y="-470.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">공식 경로의 고정 기준선</text>
+</g>
+<g id="node2" class="node">
+<title>H</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M171.5,-416C171.5,-416 82.5,-416 82.5,-416 76.5,-416 70.5,-410 70.5,-404 70.5,-404 70.5,-392 70.5,-392 70.5,-386 76.5,-380 82.5,-380 82.5,-380 171.5,-380 171.5,-380 177.5,-380 183.5,-386 183.5,-392 183.5,-392 183.5,-404 183.5,-404 183.5,-410 177.5,-416 171.5,-416"/>
+<text text-anchor="middle" x="127" y="-394.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">병목과 변환 가설</text>
+</g>
+<g id="node3" class="node">
+<title>E</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M103,-340C103,-340 25,-340 25,-340 19,-340 13,-334 13,-328 13,-328 13,-316 13,-316 13,-310 19,-304 25,-304 25,-304 103,-304 103,-304 109,-304 115,-310 115,-316 115,-316 115,-328 115,-328 115,-334 109,-340 103,-340"/>
+<text text-anchor="middle" x="64" y="-318.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">의미 보존 후보</text>
+</g>
+<g id="node4" class="node">
+<title>A</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M236,-340C236,-340 158,-340 158,-340 152,-340 146,-334 146,-328 146,-328 146,-316 146,-316 146,-310 152,-304 158,-304 158,-304 236,-304 236,-304 242,-304 248,-310 248,-316 248,-316 248,-328 248,-328 248,-334 242,-340 236,-340"/>
+<text text-anchor="middle" x="197" y="-318.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">품질 제한 후보</text>
+</g>
+<g id="node5" class="node">
+<title>N</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M94,-264C94,-264 12,-264 12,-264 6,-264 0,-258 0,-252 0,-252 0,-240 0,-240 0,-234 6,-228 12,-228 12,-228 94,-228 94,-228 100,-228 106,-234 106,-240 106,-240 106,-252 106,-252 106,-258 100,-264 94,-264"/>
+<text text-anchor="middle" x="53" y="-242.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">수치·계약 검사</text>
+</g>
+<g id="node6" class="node">
+<title>Q</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M262.5,-264C262.5,-264 143.5,-264 143.5,-264 137.5,-264 131.5,-258 131.5,-252 131.5,-252 131.5,-240 131.5,-240 131.5,-234 137.5,-228 143.5,-228 143.5,-228 262.5,-228 262.5,-228 268.5,-228 274.5,-234 274.5,-240 274.5,-240 274.5,-252 274.5,-252 274.5,-258 268.5,-264 262.5,-264"/>
+<text text-anchor="middle" x="203" y="-242.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">재학습·작업 품질 검사</text>
+</g>
+<g id="node7" class="node">
+<title>C</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M192.5,-188C192.5,-188 63.5,-188 63.5,-188 57.5,-188 51.5,-182 51.5,-176 51.5,-176 51.5,-164 51.5,-164 51.5,-158 57.5,-152 63.5,-152 63.5,-152 192.5,-152 192.5,-152 198.5,-152 204.5,-158 204.5,-164 204.5,-164 204.5,-176 204.5,-176 204.5,-182 198.5,-188 192.5,-188"/>
+<text text-anchor="middle" x="128" y="-166.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">RNGD 컴파일·실행 검증</text>
+</g>
+<g id="node8" class="node">
+<title>M</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M198,-112C198,-112 58,-112 58,-112 52,-112 46,-106 46,-100 46,-100 46,-88 46,-88 46,-82 52,-76 58,-76 58,-76 198,-76 198,-76 204,-76 210,-82 210,-88 210,-88 210,-100 210,-100 210,-106 204,-112 198,-112"/>
+<text text-anchor="middle" x="128" y="-90.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">동일 조건의 전체 시간 측정</text>
+</g>
+<g id="node9" class="node">
+<title>D</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M167,-36C167,-36 89,-36 89,-36 83,-36 77,-30 77,-24 77,-24 77,-12 77,-12 77,-6 83,0 89,0 89,0 167,0 167,0 173,0 179,-6 179,-12 179,-12 179,-24 179,-24 179,-30 173,-36 167,-36"/>
+<text text-anchor="middle" x="128" y="-14.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">채택 또는 보류</text>
+</g>
+</g>
+</svg>

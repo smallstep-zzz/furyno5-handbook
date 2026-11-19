@@ -22,10 +22,13 @@
 | FuryNo5 파일·함수·지원 범위·컴파일·재사용 | [10 구조](10-furyno5-architecture.md), [11 컴파일](11-furyno5-compiler.md) |
 | 비공식 fxbX 포맷, 공식 FXB와의 관계 | [12 fxbX](12-fxbx.md) |
 | 미지원 모델 포팅·FHA 자동화 | [13 포팅 실습](13-porting-fha.md) |
+| FuryAwesome의 발견·요청·카탈로그, FHA의 도구 연결과 게시 범위 | [13 생태계와 포팅](13-porting-fha.md) |
 | 공식 Furiosa-LLM과 opt-vLLM 서빙의 경계 | [14 서빙](14-serving-vllm.md) |
 | 여러 PE·카드·서버 최적화 | [15 여러 NPU](15-multi-npu.md) |
 | FuryBoost의 CPU 대비 결과와 다음 가설 | [16 실험 회고](16-furyboost.md) |
 | 비효율 진단과 측정 재현 | [17 디버깅](17-debugging.md) |
+| 다른 NPU의 Torch·모델 지원 방법 | [18 NPU 생태계 비교](18-npu-ecosystems.md) |
+| 공식 기준선보다 나은 결과를 연구하는 모델·실행 최적화 | [19 모델 사전 최적화와 연구](19-model-optimization.md) |
 
 ## 검토 중 바뀐 핵심 주장
 
@@ -62,6 +65,23 @@ FuryBoost는 저장된 실험의 설정·시각·준비 조건을 함께 읽었�
 | 지원 연산 범위 확대 | 이름뿐 아니라 shape·dtype·stride·상태 의미 | 새 Core 목록에 대한 검증 증거와 회귀 결과 |
 
 사용자마다 지연시간, 처리량, 컴파일 비용, 메모리, 구현 난이도의 우선순위가 다르다. 따라서 이 책은 하나의 최적화 순서를 공식 규칙처럼 고정하지 않는다. **어떤 증거로 다음 변경을 선택할지**를 공통 기준으로 둔다.
+
+## 추가 검토: 생태계, 컴파일러, EDF와 경로 그림
+
+사용자의 후속 질문에 따라 기존 장을 보강하고 비교·연구 장을 추가했다. 이번에도 문서 작성 환경에서 새 NPU 실행이나 성능 우위를 입증한 것은 아니다.
+
+| 후속 질문 | 반영한 내용 | 확인 수준 |
+|---|---|---|
+| FHA는 FuryAwesome·FuryNo5·fxbX를 어떻게 사용하는가? | 발견·요청 → 진단·변환 → 실행계획·패키지 → 검증 → 승인된 공유의 관계도와 실제 함수·명령 | 고정 소스 확인. 카탈로그 수용범위와 현재 FHA 자동 게시기의 legacy 포맷 범위는 다름 |
+| 컴파일러가 내부적으로 하는 일은? | shape·dtype·축, IR·lowering, fusion·tile·mapping, 메모리 수명, DMA·계산 스케줄, 코드 생성 | 공식 설명과 공개 검증 함수 확인. 비공개 pass의 구체적인 선택 알고리즘은 추정하지 않음 |
+| EDF는 바이너리인가? | Executable Device Format이라는 이름과 실행 바이너리 성격, 역직렬화·장치 적재·버퍼 연결의 차이 | 공식 Kernel Validation과 SDK 소개, 실제 loader 대조 |
+| vISA에서 runtime으로 바로 가는 그림이 맞는가? | 컴파일된 실행물과 Device Function Image를 추가하고 적재·실행 경계를 표시 | vISA는 중간 표현. SDK EDF와 opt Image의 포맷·ABI 동일성은 별도 미확인 |
+| 다른 NPU는 Torch를 어떻게 지원하는가? | Ascend, Rebellions, Neuron, Tenstorrent의 연산·그래프·모델 진입점 비교 | 해당 공식 경로의 문서·소스 비교. 업체별 전체 지원·성능 순위로 일반화하지 않음 |
+| 모델을 미리 바꿔 더 좋은 결과를 낼 수 있는가? | NetsPresso의 공개 범위와 오픈소스 도구, 의미 보존·품질 허용 변환, 하드웨어에 맞춘 연구 후보 | 라이브러리·논문·API 확인. RNGD에서의 이득은 후속 실측 과제 |
+
+처음 개편한 그림은 실행기 구분에 집중하면서 컴파일 산출물을 생략했다. 그 결과 Rust·vISA를 `furiosa-opt-rt`가 직접 해석하는 것처럼 읽힐 수 있었다. [홈의 새 그림](00-reading-map.md)은 컴파일·산출물·적재·실행을 분리하고, [08장](08-eisa-visa.md)은 공개 Image·Executable·Registry 구조와 실제 코드 적재·인수 연결을 설명한다. 같은 EDF 명칭을 사용하는 것에서 교차 로딩 성공을 추론하지 않는다.
+
+추가로 EDF 풀네임을 확인해 기존 “미확인” 표기를 수정했다. [공식 Kernel Validation의 고정 원문](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/quick-start/kernel-validation.md)은 Executable Device Format을 명시한다. 검토 결과가 바뀌면 이전의 불확실성도 근거와 함께 갱신한다.
 
 ## 문서를 유지하는 방법
 

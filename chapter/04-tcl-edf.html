@@ -1,8 +1,8 @@
 <!doctype html>
-<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="축과 데코레이터에서 시작해 컴파일된 프로그램을 실행하는 경로입니다."><meta name="theme-color" content="#fbfaf7"><title>TCL에서 EDF까지 · FuryNo5 개발 핸드북</title><link rel="icon" href="../assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="../assets/site.css?v=92d31956ba70"><script defer src="../assets/site.js?v=be0e24f7d782"></script></head>
-<body data-root="../" data-chapter="04-tcl-edf"><a class="skip" href="#content">본문으로 이동</a><header class="topbar"><button class="menu-toggle" type="button" aria-label="전체 목차 열기" aria-controls="sidebar" aria-expanded="false">☰</button><a class="brand" href="../index.html"><span class="brand-mark">Nº5</span>FuryNo5<small>DEVELOPER HANDBOOK</small></a><div class="top-actions"><a class="top-link" href="../sources.html">출처와 버전</a><button class="search-open" type="button" aria-label="핸드북 전체 검색"><span>전체 문서 검색</span><kbd>⌘ K</kbd></button></div></header><div class="progress" aria-hidden="true"></div><div class="mobile-shade"></div><aside class="sidebar" id="sidebar" aria-label="전체 목차"><nav><div class="nav-caption">시작하기</div><a class="nav-link"  href="../index.html"><span class="num">00</span><span>전체 지도와 읽는 방법</span></a><div class="nav-caption">I. 디바이스를 이해하기</div><a class="nav-link"  href="../chapter/01-hardware.html"><span class="num">01</span><span>RNGD · TCP · PE</span></a><a class="nav-link"  href="../chapter/02-memory-dma.html"><span class="num">02</span><span>메모리 · DMA · 배치</span></a><a class="nav-link"  href="../chapter/03-driver-runtime.html"><span class="num">03</span><span>드라이버와 공식 런타임</span></a><div class="nav-caption">II. 프로그램을 만들고 실행하기</div><a class="nav-link active" aria-current="page" href="../chapter/04-tcl-edf.html"><span class="num">04</span><span>TCL 작성 · 컴파일 · 실행</span></a><a class="nav-link"  href="../chapter/05-graphs-fallback.html"><span class="num">05</span><span>실행그래프 · 오류 · 폴백</span></a><a class="nav-link"  href="../chapter/06-buckets-shapes.html"><span class="num">06</span><span>Shape · 버킷 · 컴파일 비용</span></a><a class="nav-link"  href="../chapter/07-optimization.html"><span class="num">07</span><span>최적화의 축과 우선순위</span></a><a class="nav-link"  href="../chapter/08-eisa-visa.html"><span class="num">08</span><span>eISA · vISA · furiosa-opt</span></a><div class="nav-caption">III. FuryNo5를 해부하기</div><a class="nav-link"  href="../chapter/09-torch-aten.html"><span class="num">09</span><span>PyTorch · ATen · 등록</span></a><a class="nav-link"  href="../chapter/10-furyno5-architecture.html"><span class="num">10</span><span>FuryNo5 구조와 지원 범위</span></a><a class="nav-link"  href="../chapter/11-furyno5-compiler.html"><span class="num">11</span><span>FuryNo5 컴파일과 캐시</span></a><div class="nav-caption">IV. 모델 포팅과 서빙</div><a class="nav-link"  href="../chapter/12-fxbx.html"><span class="num">12</span><span>fxbX 포맷과 실행계획</span></a><a class="nav-link"  href="../chapter/13-porting-fha.html"><span class="num">13</span><span>모델 포팅 · FHA 자동화</span></a><a class="nav-link"  href="../chapter/14-serving-vllm.html"><span class="num">14</span><span>vLLM · 서빙 브리지</span></a><a class="nav-link"  href="../chapter/15-multi-npu.html"><span class="num">15</span><span>PE · 여러 카드 · 여러 서버</span></a><div class="nav-caption">V. 검증과 다음 개발</div><a class="nav-link"  href="../chapter/16-furyboost.html"><span class="num">16</span><span>FuryBoost 실측과 남은 과제</span></a><a class="nav-link"  href="../chapter/17-debugging.html"><span class="num">17</span><span>측정 · 추적 · 실패 재현</span></a><div class="nav-caption">참고와 검증</div><a class="nav-link"  href="../glossary.html"><span class="num">·</span><span>약어와 용어 사전</span></a><a class="nav-link"  href="../sources.html"><span class="num">·</span><span>출처 · 버전 · 접근 범위</span></a><a class="nav-link"  href="../review.html"><span class="num">·</span><span>검토 기록과 미해결 질문</span></a></nav><div class="side-foot">비공식 개발 핸드북 · 2026.11.19<br>공식 SDK와 프로젝트 구현을 구분합니다.<br><a href="https://github.com/smallstep-zzz/furyno5-handbook">원고와 변경 이력 ↗</a></div></aside><div class="shell"><main class="page" id="content"><div class="eyebrow">II. 프로그램을 만들고 실행하기 / CHAPTER 04</div><h1>TCL에서 EDF까지</h1><p class="dek">축과 데코레이터에서 시작해 컴파일된 프로그램을 실행하는 경로입니다.</p><div class="page-meta"><span>검토 2026.11.19</span><span>SDK 2026.4 계열 / 버전별 표기</span><span class="readtime">약 9분</span><span><a href="https://github.com/smallstep-zzz/furyno5-handbook/blob/main/content/04-tcl-edf.md">원고</a></span></div><details class="mobile-toc"><summary>이 장의 목차</summary><div><a class="" href="#실습-준비와-파일-배치">실습 준비와 파일 배치</a><a class="" href="#1-두-종류의-데코레이터">1. 두 종류의 데코레이터</a><a class="" href="#2-shape를-정하고-텍스트-ir을-만든다">2. shape를 정하고 텍스트 IR을 만든다</a><a class="" href="#3-컴파일러가-edf를-생성한다">3. 컴파일러가 EDF를 생성한다</a><a class="" href="#4-edf-로드와-장치-실행">4. EDF 로드와 장치 실행</a><a class="" href="#5-커널은-호출할-때마다-컴파일되는가">5. 커널은 호출할 때마다 컴파일되는가</a><a class="" href="#6-몇-개의-tcl을-합치면-항상-빨라지는가">6. 몇 개의 TCL을 합치면 항상 빨라지는가</a><a class="" href="#7-최신-기능을-2026-4-예제에-섞지-않는다">7. 최신 기능을 2026.4 예제에 섞지 않는다</a><a class="" href="#출처">출처</a></div></details><noscript><p class="noscript">본문과 그림은 JavaScript 없이 읽을 수 있습니다. 검색과 조절 실험에는 JavaScript가 필요합니다.</p></noscript><article class="article"><p>TCL(Tensor Contraction Language)은 Python에 포함된 eDSL(embedded Domain-Specific Language)이다. 일반 Python 함수처럼 보이지만, 커널이 기술한 계산을 컴파일러가 분석할 수 있는 표현으로 만든다. 텐서 contraction과 축의 의미를 남기는 것이 핵심이다. Python 반복문을 CPU에서 실행한 결과를 EDF로 저장하는 방식이 아니다. <a href="https://furiosa.ai/blog/furiosa-sdk-2026-3-a-new-kernel-framework-and-the-models-it-unlocks">공식 TCL 소개</a></p>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="축과 데코레이터에서 시작해 컴파일된 프로그램을 실행하는 경로입니다."><meta name="theme-color" content="#fbfaf7"><title>TCL에서 EDF까지 · FuryNo5 개발 핸드북</title><link rel="icon" href="../assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="../assets/site.css?v=92d31956ba70"><script defer src="../assets/site.js?v=b3207df84190"></script></head>
+<body data-root="../" data-chapter="04-tcl-edf" data-search-version="76d18c01bdf0"><a class="skip" href="#content">본문으로 이동</a><header class="topbar"><button class="menu-toggle" type="button" aria-label="전체 목차 열기" aria-controls="sidebar" aria-expanded="false">☰</button><a class="brand" href="../index.html"><span class="brand-mark">Nº5</span>FuryNo5<small>DEVELOPER HANDBOOK</small></a><div class="top-actions"><a class="top-link" href="../sources.html">출처와 버전</a><button class="search-open" type="button" aria-label="핸드북 전체 검색"><span>전체 문서 검색</span><kbd>⌘ K</kbd></button></div></header><div class="progress" aria-hidden="true"></div><div class="mobile-shade"></div><aside class="sidebar" id="sidebar" aria-label="전체 목차"><nav><div class="nav-caption">시작하기</div><a class="nav-link"  href="../index.html"><span class="num">00</span><span>전체 지도와 읽는 방법</span></a><div class="nav-caption">I. 디바이스를 이해하기</div><a class="nav-link"  href="../chapter/01-hardware.html"><span class="num">01</span><span>RNGD · TCP · PE</span></a><a class="nav-link"  href="../chapter/02-memory-dma.html"><span class="num">02</span><span>메모리 · DMA · 배치</span></a><a class="nav-link"  href="../chapter/03-driver-runtime.html"><span class="num">03</span><span>드라이버와 공식 런타임</span></a><div class="nav-caption">II. 프로그램을 만들고 실행하기</div><a class="nav-link active" aria-current="page" href="../chapter/04-tcl-edf.html"><span class="num">04</span><span>TCL 작성 · 컴파일 · 실행</span></a><a class="nav-link"  href="../chapter/05-graphs-fallback.html"><span class="num">05</span><span>실행그래프 · 오류 · 폴백</span></a><a class="nav-link"  href="../chapter/06-buckets-shapes.html"><span class="num">06</span><span>Shape · 버킷 · 컴파일 비용</span></a><a class="nav-link"  href="../chapter/07-optimization.html"><span class="num">07</span><span>최적화의 축과 우선순위</span></a><a class="nav-link"  href="../chapter/08-eisa-visa.html"><span class="num">08</span><span>eISA · vISA · furiosa-opt</span></a><div class="nav-caption">III. FuryNo5를 해부하기</div><a class="nav-link"  href="../chapter/09-torch-aten.html"><span class="num">09</span><span>PyTorch · ATen · 등록</span></a><a class="nav-link"  href="../chapter/10-furyno5-architecture.html"><span class="num">10</span><span>FuryNo5 구조와 지원 범위</span></a><a class="nav-link"  href="../chapter/11-furyno5-compiler.html"><span class="num">11</span><span>FuryNo5 컴파일과 캐시</span></a><div class="nav-caption">IV. 모델 포팅과 서빙</div><a class="nav-link"  href="../chapter/12-fxbx.html"><span class="num">12</span><span>fxbX 포맷과 실행계획</span></a><a class="nav-link"  href="../chapter/13-porting-fha.html"><span class="num">13</span><span>포팅 · FHA · FuryAwesome</span></a><a class="nav-link"  href="../chapter/14-serving-vllm.html"><span class="num">14</span><span>vLLM · 서빙 브리지</span></a><a class="nav-link"  href="../chapter/15-multi-npu.html"><span class="num">15</span><span>PE · 여러 카드 · 여러 서버</span></a><div class="nav-caption">V. 검증과 다음 개발</div><a class="nav-link"  href="../chapter/16-furyboost.html"><span class="num">16</span><span>FuryBoost 실측과 남은 과제</span></a><a class="nav-link"  href="../chapter/17-debugging.html"><span class="num">17</span><span>측정 · 추적 · 실패 재현</span></a><div class="nav-caption">VI. 생태계 비교와 최적화 연구</div><a class="nav-link"  href="../chapter/18-npu-ecosystems.html"><span class="num">18</span><span>다른 NPU의 지원 방식</span></a><a class="nav-link"  href="../chapter/19-model-optimization.html"><span class="num">19</span><span>모델 사전 최적화 · 연구</span></a><div class="nav-caption">참고와 검증</div><a class="nav-link"  href="../glossary.html"><span class="num">·</span><span>약어와 용어 사전</span></a><a class="nav-link"  href="../sources.html"><span class="num">·</span><span>출처 · 버전 · 접근 범위</span></a><a class="nav-link"  href="../review.html"><span class="num">·</span><span>검토 기록과 미해결 질문</span></a></nav><div class="side-foot">비공식 개발 핸드북 · 2026.11.19<br>공식 SDK와 프로젝트 구현을 구분합니다.<br><a href="https://github.com/smallstep-zzz/furyno5-handbook">원고와 변경 이력 ↗</a></div></aside><div class="shell"><main class="page" id="content"><div class="eyebrow">II. 프로그램을 만들고 실행하기 / CHAPTER 04</div><h1>TCL에서 EDF까지</h1><p class="dek">축과 데코레이터에서 시작해 컴파일된 프로그램을 실행하는 경로입니다.</p><div class="page-meta"><span>검토 2026.11.19</span><span>SDK 2026.4 계열 / 버전별 표기</span><span class="readtime">약 13분</span><span><a href="https://github.com/smallstep-zzz/furyno5-handbook/blob/main/content/04-tcl-edf.md">원고</a></span></div><details class="mobile-toc"><summary>이 장의 목차</summary><div><a class="" href="#실습-준비와-파일-배치">실습 준비와 파일 배치</a><a class="" href="#1-두-종류의-데코레이터">1. 두 종류의 데코레이터</a><a class="" href="#2-shape를-정하고-텍스트-ir을-만든다">2. shape를 정하고 텍스트 IR을 만든다</a><a class="" href="#3-컴파일러가-edf를-생성한다">3. 컴파일러가 EDF를 생성한다</a><a class="minor" href="#edf는-원시-명령어-배열인가-모델-패키지인가">EDF는 원시 명령어 배열인가, 모델 패키지인가</a><a class="minor" href="#가중치는-edf-안에-들어-있는가">가중치는 EDF 안에 들어 있는가</a><a class="" href="#4-edf-로드와-장치-실행">4. EDF 로드와 장치 실행</a><a class="" href="#5-커널은-호출할-때마다-컴파일되는가">5. 커널은 호출할 때마다 컴파일되는가</a><a class="" href="#6-몇-개의-tcl을-합치면-항상-빨라지는가">6. 몇 개의 TCL을 합치면 항상 빨라지는가</a><a class="" href="#7-최신-기능을-2026-4-예제에-섞지-않는다">7. 최신 기능을 2026.4 예제에 섞지 않는다</a><a class="" href="#출처">출처</a></div></details><noscript><p class="noscript">본문과 그림은 JavaScript 없이 읽을 수 있습니다. 검색과 조절 실험에는 JavaScript가 필요합니다.</p></noscript><article class="article"><p>TCL(Tensor Contraction Language)은 Python에 포함된 eDSL(embedded Domain-Specific Language)이다. 일반 Python 함수처럼 보이지만, 커널이 기술한 계산을 컴파일러가 분석할 수 있는 표현으로 만든다. 텐서 contraction과 축의 의미를 남기는 것이 핵심이다. 그 결과로 생성하는 <strong>EDF(Executable Device Format)는 컴파일된 장치 실행 바이너리</strong>다. Python 반복문을 CPU에서 실행한 결과를 저장하는 방식이 아니다. <a href="https://furiosa.ai/blog/furiosa-sdk-2026-3-a-new-kernel-framework-and-the-models-it-unlocks">공식 TCL 소개</a>, <a href="https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/quick-start/kernel-validation.md">EDF의 공식 명칭</a></p>
 <blockquote>
-<p><strong>EDF 표기</strong> · 공식 문서에서 EDF는 컴파일된 실행 바이너리를 가리킨다. 이 조사에서 EDF의 공식 영문 풀네임을 일관되게 확인하지 못했으므로 임의로 확장하지 않는다. <code>.edf</code>와 SDK <code>Runnable.serialize()</code>의 결과도 같은 파일 형식이라고 가정하지 않는다.</p>
+<p><strong>바이너리와 실행의 구분</strong> · EDF가 이미 컴파일되었다는 것과 NPU에서 실행할 준비가 끝났다는 것은 다르다. 호환 런타임의 역직렬화·적재, 현재 장치와 입출력 버퍼의 연결, 실행 제출이 필요하다. <code>.edf</code>와 SDK compiler 결과의 <code>compiled.serialize()</code> 산출물은 각기 대응하는 loader를 사용한다. 후자는 <code>sdk.ir.Runnable.deserialize()</code>로 복원한다.</p>
 </blockquote>
 <h2 id="실습-준비와-파일-배치"><a class="heading-anchor" href="#실습-준비와-파일-배치">실습 준비와 파일 배치</a></h2>
 <p>이 장은 <strong>설치된 SDK로 새 커널을 만드는 실습</strong>이다. 호환되는 <code>furiosa.tcl</code>, <code>furiosa.torch</code>, <code>torch</code>, <code>furiosa-tcc</code>가 같은 개발 환경에 있어야 하며, 실행 단계에는 정상 동작하는 RNGD와 드라이버가 필요하다. SDK 설치는 <a href="https://developer.furiosa.ai/v2026.4.0/en/get_started/prerequisites.html">공식 prerequisites</a>, 장치 확인은 <a href="../chapter/03-driver-runtime.html">3장</a>을 따른다. <code>kernels.py</code>, <code>emit_tcl.py</code>, <code>run_edf.py</code>를 새 작업 디렉터리에 만들고 <strong>세 파일이 있는 디렉터리에서</strong> 명령을 실행한다. 소스 파일을 읽는 eDSL 경로를 재현하도록 노트북 셀 대신 <code>.py</code> 파일을 사용한다.</p>
@@ -62,9 +62,98 @@ furiosa-tcc --target-npu renegade-8pe --no-compiler-cache \
     C --&gt; E[&quot;EDF&quot;]
     C --&gt; X[&quot;컴파일 진단·실패 로그&quot;]
     E --&gt; A[&quot;입출력 ABI 확인&quot;]
-    A --&gt; R[&quot;장치 런타임에 적재&quot;]</pre></details></figure><p>컴파일러 내부에서는 타일·엔진·배치·메모리·스케줄 선택이 필요하다. 순서와 패스 이름은 컴파일러 버전에 따라 달라질 수 있다. 생성된 EDF는 그 선택의 결과다. <code>TCL 문법이 맞음</code>, <code>EDF 생성 성공</code>, <code>장치 로드 성공</code>, <code>정답 일치</code>를 네 단계로 나누어 기록한다.</p>
+    A --&gt; R[&quot;장치 런타임에 적재&quot;]</pre></details></figure><p>컴파일러 내부에서는 타일·엔진·배치·메모리·스케줄 선택이 필요하다. 순서와 패스 이름은 컴파일러 버전에 따라 달라질 수 있다. 생성된 EDF는 그 선택의 결과다. 구체적인 결정과 공개 구현의 경계는 <a href="../chapter/03-driver-runtime.html">3장 컴파일러의 책임</a>을 참고한다. <code>TCL 문법이 맞음</code>, <code>EDF 생성 성공</code>, <code>장치 로드 성공</code>, <code>정답 일치</code>를 네 단계로 나누어 기록한다.</p>
+<h3 id="edf는-원시-명령어-배열인가-모델-패키지인가"><a class="heading-anchor" href="#edf는-원시-명령어-배열인가-모델-패키지인가">EDF는 원시 명령어 배열인가, 모델 패키지인가</a></h3>
+<p>공식 자료가 직접 확인해 주는 것은 <strong>TCL에서 생성하는 실행 바이너리</strong>라는 점과 SDK를 통해 장치에서 실행한다는 점이다. 이 사실만으로 SDK <code>.edf</code>의 바이트 전체가 NPU 명령어라고 결론 내릴 수는 없다. 코드와 메타데이터가 어떤 section으로 직렬화되는지, 장치 코드의 재배치표가 있는지, ELF(Executable and Linkable Format)인지 등은 이번에 확보한 SDK 공개 근거만으로 확정하지 않았다. 바이너리라는 말은 사람이 읽는 TCL 텍스트와 다른 저장 표현이라는 뜻이지, 파일의 모든 바이트를 계산 엔진이 그대로 명령어로 읽는다는 뜻이 아니다. <a href="https://furiosa.ai/blog/furiosa-sdk-2026-3-a-new-kernel-framework-and-the-models-it-unlocks">TCL과 실행 바이너리</a>, <a href="https://developer.furiosa.ai/furiosa-opt/book/quick-start/kernel-validation.html">SDK를 통한 EDF 실행</a></p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>산출물</th>
+<th>이 경로에서 확인한 의미</th>
+<th>읽는 경계</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>matmul.tc</code></td>
+<td>특수화한 TCL 텍스트 IR</td>
+<td><code>furiosa-tcc</code>의 입력</td>
+</tr>
+<tr>
+<td><code>matmul.edf</code></td>
+<td>커널의 컴파일된 장치 실행 바이너리</td>
+<td><code>sdk.ir.Runnable.from_serialized_edf(raw)</code></td>
+</tr>
+<tr>
+<td>SDK compiler 결과의 <code>compiled.serialize()</code></td>
+<td>SDK 고유 직렬화 표현. EDF와 같은 형식으로 취급하지 않음</td>
+<td>FuryNo5 direct 경로의 <code>sdk.ir.Runnable.deserialize(raw)</code></td>
+</tr>
+<tr>
+<td>공식 <code>.fxb</code></td>
+<td>manifest와 실행 EDF들을 묶은 bundle</td>
+<td>공식 FXB loader와 모델 자산 계약</td>
+</tr>
+<tr>
+<td>fxbX package</td>
+<td>사용자 프로젝트의 실행 계획·계약과 실행물 묶음</td>
+<td>fxbX loader가 계획과 EDF를 읽음</td>
+</tr>
+</tbody></table>
+</div><p>FuryNo5의 EDF 경로는 <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/tcl_compiler.py"><code>tcl_compiler.py</code></a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span>, SDK 직렬화 경로는 <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/direct_runtime.py"><code>direct_runtime.py</code></a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span>, package의 책임은 <a href="https://developer.furiosa.ai/v2026.4.0/en/furiosa_llm/fxb.html">공식 FXB 문서</a>와 <a href="../chapter/12-fxbx.html">fxbX 장</a>에서 확인한다. 파일 확장자를 바꾸는 것으로 이 loader들의 계약이 바뀌지는 않는다.</p>
+<h3 id="가중치는-edf-안에-들어-있는가"><a class="heading-anchor" href="#가중치는-edf-안에-들어-있는가">가중치는 EDF 안에 들어 있는가</a></h3>
+<p>이 장의 행렬곱은 <code>left</code>와 <code>right</code>를 실행 인수로 받는다. <code>right</code>를 모델 가중치로 사용하더라도 <strong>실제 값은 <code>run_edf.py</code>에서 따로 만든 뒤 전달</strong>한다. 따라서 이 예제에서 EDF가 존재한다는 것만으로 모델 checkpoint까지 준비된 것은 아니다.</p>
+<p>공식 Furiosa-LLM FXB는 model weights를 포함하지 않고, configuration·tokenizer·weights는 별도 모델 assets에서 읽는다고 명시한다. 한편 <a href="https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-abi/src/image.rs">공개 opt compiler image</a>에는 선택적인 weight bytes가 존재한다. 두 설명은 서로 다른 생성 경로와 계층에 관한 것이다. <strong>모델 전체 가중치, 컴파일할 때 넣은 상수·초기 데이터, 실행 시 바인딩할 tensor를 구분</strong>하고 해당 경로의 계약을 확인해야 한다. “모든 EDF에는 모든 가중치가 있다” 또는 “모든 EDF에는 어떤 상수도 없다”로 일반화하지 않는다. <a href="https://developer.furiosa.ai/v2026.4.0/en/furiosa_llm/fxb.html">공식 FXB의 외부 모델 자산</a></p>
 <h2 id="4-edf-로드와-장치-실행"><a class="heading-anchor" href="#4-edf-로드와-장치-실행">4. EDF 로드와 장치 실행</a></h2>
 <p>아래는 같은 버킷의 행렬곱 한 개를 실행하는 <strong>재현용 예제</strong>다. 호출 API는 저장소와 대조했으며, 이 핸드북 작성 환경에는 RNGD가 없어 실제 장치 실행 결과를 주장하지 않는다. Python 패키지·컴파일러·드라이버가 호환되는 RNGD 머신에서 실행한다.</p>
+<p>실행 경계를 먼저 나누어 보자. 아래 표는 바로 뒤 예제의 실제 호출에 대응한다. <code>sdk.ir.Runnable</code>이라는 이름에 <code>Runnable</code>이 들어 있어도, <strong>역직렬화한 IR 객체와 장치에서 호출하는 <code>sdk.Runnable</code> 객체는 구분</strong>해야 한다.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>단계</th>
+<th>예제의 호출</th>
+<th>그 단계에서 이해할 일</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>바이트 읽기</td>
+<td><code>Path(...).read_bytes()</code></td>
+<td>host 메모리에 파일을 읽는다. NPU 실행을 시작하지 않는다.</td>
+</tr>
+<tr>
+<td>역직렬화</td>
+<td><code>sdk.ir.Runnable.from_serialized_edf(...)</code></td>
+<td>EDF를 SDK 프로그램 표현으로 읽고 ABI 정보를 확인한다. 예제는 fusion과 입출력 개수를 추가 검사한다.</td>
+</tr>
+<tr>
+<td>실행 객체·장치 적재</td>
+<td><code>sdk.Runnable(ir).to(&quot;furiosa:0&quot;)</code></td>
+<td>현재 장치에서 사용할 실행 객체를 준비한다. 바이너리를 다른 모델로 재캡처하는 호출이 아니다.</td>
+</tr>
+<tr>
+<td>입력 준비</td>
+<td><code>left.to(...)</code>, <code>right.to(...)</code></td>
+<td>현재 호출의 데이터를 장치 tensor로 준비한다. 반복 실행에서는 불변 가중치 등의 재사용 여부가 중요하다.</td>
+</tr>
+<tr>
+<td>실행 호출</td>
+<td><code>program(left_device, right_device)</code></td>
+<td>준비된 프로그램에 실제 입출력 관계를 연결해 실행한다. 프로그램과 데이터가 모두 필요하다.</td>
+</tr>
+<tr>
+<td>결과 읽기·검증</td>
+<td><code>value.cpu()</code>, <code>assert_close(...)</code></td>
+<td>CPU에서 결과를 확인한다. 이 구간까지 잰 시간은 순수 장치 계산 시간과 다르다.</td>
+</tr>
+</tbody></table>
+</div><p><a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/tcl_compiler.py">EDF loader·ABI 검사</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span>, <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/direct_runtime.py">실제 SDK 실행 객체 사용</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
+<figure class="diagram"><img src="../assets/diagrams/04-tcl-edf-283c53b15280.svg" alt="TCL에서 EDF까지 · 도식 2" loading="lazy"><figcaption>도식 2 · TCL에서 EDF까지 — 설명을 위해 단순화한 관계도. 실제 호출 조건과 근거는 본문을 함께 읽으세요.</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
+    E[&quot;EDF 바이트&quot;] --&gt; I[&quot;SDK IR 역직렬화&quot;]
+    I --&gt; A[&quot;ABI와 장치 구성 확인&quot;]
+    A --&gt; R[&quot;장치 Runnable 적재&quot;]
+    W[&quot;가중치·입력·출력 버퍼&quot;] --&gt; B[&quot;현재 호출의 인수 연결&quot;]
+    R --&gt; B
+    B --&gt; N[&quot;런타임 제출과 NPU 실행&quot;]
+    N --&gt; O[&quot;완료와 결과 확인&quot;]</pre></details></figure><p>이 예제는 위 단계의 호출 경계를 보여준다. SDK 내부의 모든 메모리 할당·명령 패치·재배치 처리를 공개 소스 수준으로 해부했다는 뜻은 아니다. 실제 주소 바인딩과 host 실행 파일의 relocation을 구분할 수 있는 <strong>공개 opt 구현 사례</strong>는 <a href="../chapter/08-eisa-visa.html">8장</a>에 따로 설명한다.</p>
 <div class="codebox"><div class="codebar"><span>python</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-python"># run_edf.py — NPU와 호환 SDK가 필요하다.
 from pathlib import Path
 import torch
@@ -147,6 +236,18 @@ print(&quot;single-shape all-ones smoke check passed&quot;)
 <td><a href="https://developer.furiosa.ai/v2026.5.0b4/en/whatsnew/release-2026.5.0b0.html">2026.5 beta 변경</a></td>
 <td>비용 추정 기능의 버전 경계</td>
 </tr>
+<tr>
+<td><a href="https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/quick-start/kernel-validation.md">Kernel Validation</a></td>
+<td>EDF의 공식 풀네임, SDK를 통한 장치 실행</td>
+</tr>
+<tr>
+<td><a href="https://developer.furiosa.ai/v2026.4.0/en/furiosa_llm/fxb.html">공식 FXB 문서</a></td>
+<td>실행 bundle과 외부 weights·config·tokenizer의 구분</td>
+</tr>
+<tr>
+<td><a href="https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-abi/src/image.rs">공개 opt image 정의</a></td>
+<td>다른 공개 경로의 선택적 weight·메타데이터 존재</td>
+</tr>
 </tbody></table>
 </div><p>FuryNo5 소스 링크는 비공개 저장소 권한이 필요할 수 있다. 이 장의 예제는 실제 코드를 읽어 구성한 재현 절차이며 이 핸드북에서 NPU 실행 결과를 새로 얻은 것은 아니다.</p>
-</article><nav class="next-prev" aria-label="이전과 다음 장"><a href="../chapter/03-driver-runtime.html"><small>← 이전 장</small><b>드라이버부터 런타임까지</b></a><a href="../chapter/05-graphs-fallback.html"><small>다음 장 →</small><b>실행그래프와 실패 경계</b></a></nav><footer class="footer">FuryNo5 개발 핸드북 · 비공식 자료<br>공식 문서와 소스의 권리는 각 프로젝트에 있습니다. 코드 인용은 출처와 함께 표시합니다.<br><a href="../review.html">검토 기록과 남은 질문</a> · <a href="../sources.html">출처와 버전</a> · <a href="../glossary.html">용어 사전</a></footer></main></div><aside class="right-toc" aria-label="이 장의 목차"><h2>이 장에서 다루는 내용</h2><a class="" href="#실습-준비와-파일-배치">실습 준비와 파일 배치</a><a class="" href="#1-두-종류의-데코레이터">1. 두 종류의 데코레이터</a><a class="" href="#2-shape를-정하고-텍스트-ir을-만든다">2. shape를 정하고 텍스트 IR을 만든다</a><a class="" href="#3-컴파일러가-edf를-생성한다">3. 컴파일러가 EDF를 생성한다</a><a class="" href="#4-edf-로드와-장치-실행">4. EDF 로드와 장치 실행</a><a class="" href="#5-커널은-호출할-때마다-컴파일되는가">5. 커널은 호출할 때마다 컴파일되는가</a><a class="" href="#6-몇-개의-tcl을-합치면-항상-빨라지는가">6. 몇 개의 TCL을 합치면 항상 빨라지는가</a><a class="" href="#7-최신-기능을-2026-4-예제에-섞지-않는다">7. 최신 기능을 2026.4 예제에 섞지 않는다</a><a class="" href="#출처">출처</a></aside><dialog class="search-dialog" aria-label="문서 검색"><div class="search-head"><input type="search" aria-label="검색어" placeholder="DMA, EDF, 폴백, 버킷…" autocomplete="off"><button class="close-search" type="button">닫기</button></div><div class="search-status" role="status">용어나 함수 이름을 입력하세요.</div><div class="search-results"></div></dialog></body></html>
+</article><nav class="next-prev" aria-label="이전과 다음 장"><a href="../chapter/03-driver-runtime.html"><small>← 이전 장</small><b>드라이버부터 런타임까지</b></a><a href="../chapter/05-graphs-fallback.html"><small>다음 장 →</small><b>실행그래프와 실패 경계</b></a></nav><footer class="footer">FuryNo5 개발 핸드북 · 비공식 자료<br>공식 문서와 소스의 권리는 각 프로젝트에 있습니다. 코드 인용은 출처와 함께 표시합니다.<br><a href="../review.html">검토 기록과 남은 질문</a> · <a href="../sources.html">출처와 버전</a> · <a href="../glossary.html">용어 사전</a></footer></main></div><aside class="right-toc" aria-label="이 장의 목차"><h2>이 장에서 다루는 내용</h2><a class="" href="#실습-준비와-파일-배치">실습 준비와 파일 배치</a><a class="" href="#1-두-종류의-데코레이터">1. 두 종류의 데코레이터</a><a class="" href="#2-shape를-정하고-텍스트-ir을-만든다">2. shape를 정하고 텍스트 IR을 만든다</a><a class="" href="#3-컴파일러가-edf를-생성한다">3. 컴파일러가 EDF를 생성한다</a><a class="minor" href="#edf는-원시-명령어-배열인가-모델-패키지인가">EDF는 원시 명령어 배열인가, 모델 패키지인가</a><a class="minor" href="#가중치는-edf-안에-들어-있는가">가중치는 EDF 안에 들어 있는가</a><a class="" href="#4-edf-로드와-장치-실행">4. EDF 로드와 장치 실행</a><a class="" href="#5-커널은-호출할-때마다-컴파일되는가">5. 커널은 호출할 때마다 컴파일되는가</a><a class="" href="#6-몇-개의-tcl을-합치면-항상-빨라지는가">6. 몇 개의 TCL을 합치면 항상 빨라지는가</a><a class="" href="#7-최신-기능을-2026-4-예제에-섞지-않는다">7. 최신 기능을 2026.4 예제에 섞지 않는다</a><a class="" href="#출처">출처</a></aside><dialog class="search-dialog" aria-label="문서 검색"><div class="search-head"><input type="search" aria-label="검색어" placeholder="DMA, EDF, 폴백, 버킷…" autocomplete="off"><button class="close-search" type="button">닫기</button></div><div class="search-status" role="status">용어나 함수 이름을 입력하세요.</div><div class="search-results"></div></dialog></body></html>

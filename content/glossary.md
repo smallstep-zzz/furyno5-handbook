@@ -1,6 +1,6 @@
 # 용어사전: 장치에서 서빙까지
 
-이 책에서 자주 만나는 **68개 용어**를 정리했다. 약어에는 확인한 풀네임을 적고, 제품명·API 이름에는 임의의 어원을 붙이지 않았다. 특히 **EDF와 eISA는 공식 풀네임을 확인하지 못했다.** 아래의 “미확인”은 기능이 없다는 판정이 아니라 공개 근거의 경계를 뜻한다. 자세한 코드와 출처는 각 행의 장 링크에서 이어서 읽을 수 있다.
+이 책에서 자주 만나는 용어를 정리했다. 약어에는 확인한 풀네임을 적고, 제품명·API 이름에는 임의의 어원을 붙이지 않았다. **EDF는 추가 조사에서 Executable Device Format이라는 공식 근거를 확인해 갱신했다. eISA의 독립적인 공식 풀네임·공개 API는 여전히 확인하지 못했다.** 아래의 “미확인”은 기능이 없다는 판정이 아니라 공개 근거의 경계를 뜻한다. 자세한 코드와 출처는 각 행의 장 링크에서 이어서 읽을 수 있다.
 
 ## 장치와 메모리
 
@@ -41,10 +41,12 @@ RNGD의 구조는 [공식 하드웨어 개요](https://developer.furiosa.ai/v202
 | Compiler | Compiler | 모델 또는 커널 표현을 분석하고 장치 실행물과 스케줄을 만드는 도구. 컴파일 성공은 실행 정확성의 증명과 별개다. | [3장 소프트웨어 계층](03-driver-runtime.md), [11장 컴파일 경로](11-furyno5-compiler.md) |
 | Runtime | Runtime | 실행물을 적재하고 버퍼·장치·호출·완료를 관리하는 계층. 서비스의 요청 스케줄러와 장치 실행 런타임을 문맥에 맞게 구분한다. | [3장 소프트웨어 계층](03-driver-runtime.md), [5장 그래프와 폴백](05-graphs-fallback.md) |
 | Runnable | `furiosa.torch.Runnable` 등 API 이름 | 준비된 프로그램을 호출할 수 있게 감싸는 객체. SDK `Runnable`과 Rust `furiosa-opt-rt`의 공개 인터페이스를 같은 API라고 가정하지 않는다. | [3장 소프트웨어 계층](03-driver-runtime.md), [4장 TCL과 EDF](04-tcl-edf.md) |
-| EDF | 공식 풀네임 미확인 | TCL 등에서 컴파일한 장치 실행 바이너리를 가리키는 표기. `Runnable.serialize()` 결과나 fxbX 패키지 전체와 구분한다. | [4장 TCL과 EDF](04-tcl-edf.md), [5장 그래프와 폴백](05-graphs-fallback.md) |
+| EDF | Executable Device Format | 컴파일된 장치 실행물. SDK와 opt 문맥의 같은 명칭이 직렬화 포맷·ABI의 동일성이나 교차 적재 가능성을 보장하지 않는다. | [4장 TCL과 EDF](04-tcl-edf.md), [8장 vISA·Image](08-eisa-visa.md) |
+| Device Function Image | Device Function Image | opt runtime이 적재하는 장치 함수 이미지. 코드와 인수·topology 등 런타임 계약을 함께 확인해야 한다. | [8장 vISA·Image](08-eisa-visa.md) |
+| Relocation | Relocation | 미리 정하지 못한 주소 참조를 실제 배치에 맞게 연결·수정하는 처리. 공개 opt에서 확인한 것은 host 실행 파일의 registry 참조 relocation이며, 매 launch의 buffer 바인딩 및 SDK EDF 내부 코드 재배치와 구분한다. | [8장 relocation 범위](08-eisa-visa.md) |
 | NoC | Network-on-Chip | 칩 내부 구성 요소들을 연결하는 통신망. 메모리 병목·전송 충돌의 영향이 timeout 등으로 드러날 수 있다. | [2장 메모리와 DMA](02-memory-dma.md) |
 
-PERT의 공식 확장은 **PE Runtime**이다. [공식 소프트웨어 스택](https://developer.furiosa.ai/v2026.4.0/en/overview/software_stack.html)은 PE를 Processing Element로 풀고 펌웨어·PERT·host runtime의 책임을 구분한다. EDF는 같은 수준의 공식 풀네임 근거를 확보하지 못했으므로 단어를 만들어 넣지 않았다.
+PERT의 공식 확장은 **PE Runtime**이다. [공식 소프트웨어 스택](https://developer.furiosa.ai/v2026.4.0/en/overview/software_stack.html)은 PE를 Processing Element로 풀고 펌웨어·PERT·host runtime의 책임을 구분한다. EDF의 풀네임은 [공식 Kernel Validation](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/quick-start/kernel-validation.md)에서 확인했다. 이전 판의 “EDF 풀네임 미확인” 표기를 이 근거에 따라 수정했다.
 
 ## 커널·축·자료형
 
@@ -87,6 +89,7 @@ Torch 용어는 [ATen 문서](https://docs.pytorch.org/cppdocs/api/aten/index.ht
 | fxbX | fxbX, 프로젝트명 | FuryNo5가 만든 실행 계획과 실행물 등을 포장·검사·적재하는 사용자 프로젝트. 공식 FXB 지원과 동의어가 아니다. | [12장 fxbX](12-fxbx.md) |
 | FuryNo5 | FuryNo5, 프로젝트명 | Torch 그래프의 의미를 분석하고 TCL·EDF·실행 계획을 생산하는 프로젝트. 실제 import 이름은 `tclmachine`이며 현재 전체 ATen 구현 완료를 뜻하지 않는다. | [10장 FuryNo5 구조](10-furyno5-architecture.md) |
 | FHA | Furiosa-Hug-Anything | 모델 포팅 절차·연결·검증을 자동화하는 프로젝트. FuryNo5의 연산 생산자 및 fxbX의 실행 소비자 역할과 구분한다. | [13장 모델 포팅](13-porting-fha.md) |
+| FuryAwesome | FuryAwesome, 프로젝트명 | 포팅 모델의 사용법·배포 링크·검증 정보를 공유하고 요청을 모으는 카탈로그. 컴파일러나 장치 런타임이 아니다. | [13장 역할과 게시](13-porting-fha.md) |
 | Manifest | Manifest | 패키지의 구성 요소·속성·참조를 설명하는 메타데이터. 확장자보다 실제 schema와 계약을 검사한다. | [12장 fxbX](12-fxbx.md) |
 | Fingerprint | Fingerprint | 소스·컴파일 옵션·SDK·입출력 계약 등의 동일성을 판단하기 위해 기록하는 식별값. 파일 이름만 같은 캐시의 잘못된 재사용을 막는 데 쓴다. | [11장 컴파일 경로](11-furyno5-compiler.md) |
 | Execution plan | Execution plan | 이 책의 FuryNo5 문맥에서는 EDF 호출 순서와 tensor 연결·상태·수명을 표현한 계획. 서비스 요청 순서나 커널 내부 스케줄과 구분한다. | [5장 그래프와 폴백](05-graphs-fallback.md), [12장 fxbX](12-fxbx.md) |
@@ -111,6 +114,26 @@ Torch 용어는 [ATen 문서](https://docs.pytorch.org/cppdocs/api/aten/index.ht
 | Continuous batching | Continuous batching | 실행이 진행되는 동안 끝난 요청을 빼고 새 요청을 넣어 매 step의 배치를 조정하는 방식. 고정 batch 한 번의 실행과 다르다. | [14장 vLLM 서빙](14-serving-vllm.md) |
 
 병렬화 단위는 [Furiosa-LLM의 모델 병렬화 문서](https://developer.furiosa.ai/v2026.4.0/en/furiosa_llm/model-parallelism.html), opt plugin의 경계는 [고정 커밋의 vLLM 연결 문서](https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/docs/serving/vllm.md)와 실제 코드를 함께 확인한다. 같은 TP·DP라는 단어를 사용해도 설정 단위와 지원 조합이 같다는 보장은 없다.
+
+## 생태계 비교와 모델 사전 최적화
+
+| 용어 | 풀네임 또는 공식 표기 | 쉽게 읽는 의미 | 관련 장 |
+|---|---|---|---|
+| AOT | Ahead-of-Time compilation | 실행 요청 전에 미리 컴파일해 실행물을 준비하는 방식. 준비 비용과 반복 실행 비용을 분리한다. | [18장 다른 NPU](18-npu-ecosystems.md) |
+| JIT | Just-in-Time compilation | 실행 시 필요한 프로그램을 컴파일하는 방식. 첫 호출·새 shape·캐시 적중 조건을 확인한다. | [18장 다른 NPU](18-npu-ecosystems.md) |
+| ONNX | Open Neural Network Exchange | 모델 그래프와 연산 계약을 교환하는 형식. 해당 ONNX를 목표 컴파일러가 받아들여야 장치 실행물로 바뀐다. | [19장 사전 최적화](19-model-optimization.md) |
+| MLIR | Multi-Level Intermediate Representation | 여러 수준의 중간 표현을 함께 다루는 컴파일러 기반. 그것만으로 특정 NPU 지원이 생기는 것은 아니다. | [18장 TT-XLA](18-npu-ecosystems.md) |
+| PJRT | Portable JAX Runtime | frontend와 장치 backend를 연결하는 실행·컴파일 인터페이스. TT-XLA가 사용하는 통합 경계다. | [18장 TT-XLA](18-npu-ecosystems.md) |
+| StableHLO | Stable High Level Operations | 고수준 텐서 계산을 전달하는 안정적인 연산 표현. TT-XLA의 frontend와 컴파일러 사이에 사용된다. | [18장 TT-XLA](18-npu-ecosystems.md) |
+| NEFF | Neuron Executable File Format | AWS Neuron의 실행물 형식. Furiosa EDF와 호환되는 포맷이라는 뜻이 아니다. | [18장 Neuron](18-npu-ecosystems.md) |
+| Composite op | Composite operation | 여러 기본 계산에 높은 수준의 의미를 붙여 컴파일러가 하나의 패턴으로 다룰 수 있게 한 연산. | [18장 의미 보존](18-npu-ecosystems.md), [19장 최적화 연구](19-model-optimization.md) |
+| PTQ | Post-Training Quantization | 학습을 마친 모델의 가중치·활성값 표현을 양자화하는 방식. 보정 데이터·품질·실행 dtype 지원을 확인한다. | [19장 양자화](19-model-optimization.md) |
+| QAT | Quantization-Aware Training | 양자화 영향을 학습 과정에 반영하는 방식. 학습 산출물과 장치의 양자화 계약이 맞아야 한다. | [19장 양자화](19-model-optimization.md) |
+| Structured pruning | Structured pruning | 채널·head 등 구조 단위를 제거해 실제 dense 텐서 크기를 줄이는 방법. 0만 늘리는 방식과 다르다. | [19장 구조적 가지치기](19-model-optimization.md) |
+| Distillation | Knowledge distillation | 큰 모델 등의 출력·중간 지식을 작은 모델의 학습 목표로 활용하는 방법. 모델이 바뀌므로 과제 품질을 재검증한다. | [19장 모델 압축](19-model-optimization.md) |
+| NetsPresso | NetsPresso, Nota의 제품명 | 모델 압축·변환·프로파일링을 다루는 도구와 서비스. 공개 Python client와 전체 서비스 구현의 공개 범위를 구분한다. | [19장 NetsPresso](19-model-optimization.md) |
+
+이 표의 업체별 용어는 [18장의 공식 출처](18-npu-ecosystems.md), 모델 변환 도구와 지원 범위는 [19장의 라이브러리·공식 논문](19-model-optimization.md)에 연결했다.
 
 ## 출처
 

@@ -1,8 +1,8 @@
 {
-  "chapters": 21,
-  "diagrams": 23,
-  "code_blocks": 82,
-  "source_urls": 206,
+  "chapters": 23,
+  "diagrams": 32,
+  "code_blocks": 96,
+  "source_urls": 302,
   "generated_pages": [
     "index.html",
     "chapter/01-hardware.html",
@@ -22,6 +22,8 @@
     "chapter/15-multi-npu.html",
     "chapter/16-furyboost.html",
     "chapter/17-debugging.html",
+    "chapter/18-npu-ecosystems.html",
+    "chapter/19-model-optimization.html",
     "glossary.html",
     "sources.html",
     "review.html",

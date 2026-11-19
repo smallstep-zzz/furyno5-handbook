@@ -1,0 +1,71 @@
+<svg role="img" aria-label="Compiler image · 형식·topology 검사 · 상수·stack 메모리 준비 · 실행 코드 DRAM 적재 · 호출 buffer와 인수 연결 · 코드 위치와 인수 제출 · 장치 실행·완료 처리" width="179pt" height="521pt"
+ viewBox="0.00 0.00 178.80 520.80" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(14.4 506.4)">
+<title>handbook</title>
+<g id="edge1" class="edge">
+<title>I&#45;&gt;P</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M75,-455.84C75,-446.12 75,-433.82 75,-423.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="77.45,-423.07 75,-416.07 72.55,-423.07 77.45,-423.07"/>
+</g>
+<g id="edge2" class="edge">
+<title>P&#45;&gt;M</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M75,-379.84C75,-370.12 75,-357.82 75,-347.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="77.45,-347.07 75,-340.07 72.55,-347.07 77.45,-347.07"/>
+</g>
+<g id="edge3" class="edge">
+<title>M&#45;&gt;C</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M75,-303.84C75,-294.12 75,-281.82 75,-271.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="77.45,-271.07 75,-264.07 72.55,-271.07 77.45,-271.07"/>
+</g>
+<g id="edge4" class="edge">
+<title>C&#45;&gt;B</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M75,-227.84C75,-218.12 75,-205.82 75,-195.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="77.45,-195.07 75,-188.07 72.55,-195.07 77.45,-195.07"/>
+</g>
+<g id="edge5" class="edge">
+<title>B&#45;&gt;Q</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M75,-151.84C75,-142.12 75,-129.82 75,-119.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="77.45,-119.07 75,-112.07 72.55,-119.07 77.45,-119.07"/>
+</g>
+<g id="edge6" class="edge">
+<title>Q&#45;&gt;N</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M75,-75.84C75,-66.12 75,-53.82 75,-43.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="77.45,-43.07 75,-36.07 72.55,-43.07 77.45,-43.07"/>
+</g>
+<g id="node1" class="node">
+<title>I</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M122,-492C122,-492 28,-492 28,-492 22,-492 16,-486 16,-480 16,-480 16,-468 16,-468 16,-462 22,-456 28,-456 28,-456 122,-456 122,-456 128,-456 134,-462 134,-468 134,-468 134,-480 134,-480 134,-486 128,-492 122,-492"/>
+<text text-anchor="middle" x="75" y="-470.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">Compiler image</text>
+</g>
+<g id="node2" class="node">
+<title>P</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M130,-416C130,-416 20,-416 20,-416 14,-416 8,-410 8,-404 8,-404 8,-392 8,-392 8,-386 14,-380 20,-380 20,-380 130,-380 130,-380 136,-380 142,-386 142,-392 142,-392 142,-404 142,-404 142,-410 136,-416 130,-416"/>
+<text text-anchor="middle" x="75" y="-394.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">형식·topology 검사</text>
+</g>
+<g id="node3" class="node">
+<title>M</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M137.5,-340C137.5,-340 12.5,-340 12.5,-340 6.5,-340 0.5,-334 0.5,-328 0.5,-328 0.5,-316 0.5,-316 0.5,-310 6.5,-304 12.5,-304 12.5,-304 137.5,-304 137.5,-304 143.5,-304 149.5,-310 149.5,-316 149.5,-316 149.5,-328 149.5,-328 149.5,-334 143.5,-340 137.5,-340"/>
+<text text-anchor="middle" x="75" y="-318.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">상수·stack 메모리 준비</text>
+</g>
+<g id="node4" class="node">
+<title>C</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M132,-264C132,-264 18,-264 18,-264 12,-264 6,-258 6,-252 6,-252 6,-240 6,-240 6,-234 12,-228 18,-228 18,-228 132,-228 132,-228 138,-228 144,-234 144,-240 144,-240 144,-252 144,-252 144,-258 138,-264 132,-264"/>
+<text text-anchor="middle" x="75" y="-242.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">실행 코드 DRAM 적재</text>
+</g>
+<g id="node5" class="node">
+<title>B</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M138,-188C138,-188 12,-188 12,-188 6,-188 0,-182 0,-176 0,-176 0,-164 0,-164 0,-158 6,-152 12,-152 12,-152 138,-152 138,-152 144,-152 150,-158 150,-164 150,-164 150,-176 150,-176 150,-182 144,-188 138,-188"/>
+<text text-anchor="middle" x="75" y="-166.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">호출 buffer와 인수 연결</text>
+</g>
+<g id="node6" class="node">
+<title>Q</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M132.5,-112C132.5,-112 17.5,-112 17.5,-112 11.5,-112 5.5,-106 5.5,-100 5.5,-100 5.5,-88 5.5,-88 5.5,-82 11.5,-76 17.5,-76 17.5,-76 132.5,-76 132.5,-76 138.5,-76 144.5,-82 144.5,-88 144.5,-88 144.5,-100 144.5,-100 144.5,-106 138.5,-112 132.5,-112"/>
+<text text-anchor="middle" x="75" y="-90.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">코드 위치와 인수 제출</text>
+</g>
+<g id="node7" class="node">
+<title>N</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M128.5,-36C128.5,-36 21.5,-36 21.5,-36 15.5,-36 9.5,-30 9.5,-24 9.5,-24 9.5,-12 9.5,-12 9.5,-6 15.5,0 21.5,0 21.5,0 128.5,0 128.5,0 134.5,0 140.5,-6 140.5,-12 140.5,-12 140.5,-24 140.5,-24 140.5,-30 134.5,-36 128.5,-36"/>
+<text text-anchor="middle" x="75" y="-14.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">장치 실행·완료 처리</text>
+</g>
+</g>
+</svg>

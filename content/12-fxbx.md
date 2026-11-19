@@ -1,6 +1,8 @@
 # fxbX: 실행에 필요한 계약을 함께 배포한다
 
-FuryNo5가 연산을 컴파일해도 소비자에게는 “무슨 바이너리를 어떤 입력으로 어떤 순서에 실행할지”가 남는다. **fxbX는 이 계약과 실행기를 함께 제공하는 프로젝트다.** 공식 FXB(Furiosa Executable Bundle)를 대신하는 공식 표준은 아니다. 현재 소스에는 초기 SDK(Software Development Kit) Runnable 패키지와 실제 EDF(공식 풀네임 미확인, 컴파일된 장치 실행 바이너리)를 담는 실행 계획 패키지가 함께 있으므로, 확장자만 보고 내부를 추정하면 안 된다. 이 장은 fxbX 커밋 `03d993b`와 FuryNo5 `bba9efe`를 기준으로 한다. [fxbX README](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/README.md) · [포맷 판별 코드](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/graph_fxb.py)
+FuryNo5가 연산을 컴파일해도 소비자에게는 “무슨 바이너리를 어떤 입력으로 어떤 순서에 실행할지”가 남는다. **fxbX는 이 계약과 실행기를 함께 제공하는 프로젝트다.** 공식 FXB(Furiosa Executable Bundle)를 대신하는 공식 표준은 아니다. 현재 소스에는 초기 SDK(Software Development Kit) Runnable 패키지와 실제 EDF(Executable Device Format, 컴파일된 장치 실행 바이너리)를 담는 실행 계획 패키지가 함께 있으므로, 확장자만 보고 내부를 추정하면 안 된다. 이 장은 fxbX 커밋 `03d993b`와 FuryNo5 `bba9efe`를 기준으로 한다. [fxbX README](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/README.md) · [포맷 판별 코드](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/graph_fxb.py) · [EDF 공식 정의](https://developer.furiosa.ai/furiosa-opt/book/quick-start/kernel-validation.html)
+
+이 패키지를 찾고 사용법을 공유하는 카탈로그는 **FuryAwesome**, FuryNo5·fxbX와 진단·검증·게시 도구를 연결해 포팅 작업을 진행하는 쪽은 **FHA(Furiosa-Hug-Anything)**다. 카탈로그에 등록 가능한 패키지와 현재 FHA 자동 게시기가 허용하는 포맷은 범위가 다르므로 [13장의 역할·게시 조건](13-porting-fha.md)을 함께 읽는다.
 
 ## 1. 공식 FXB가 부족했다는 말의 정확한 뜻
 

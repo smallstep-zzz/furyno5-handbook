@@ -1,0 +1,12 @@
+flowchart TB
+    A["FuryAwesome 모델·요청 찾기"] --> B["FHA 준비·진단"]
+    C["원본 모델과 입력 계약"] --> B
+    B --> D["FuryNo5 공통 규칙"]
+    D --> E["TCL 컴파일과 EDF"]
+    E --> F["실행 계획과 fxbX 패키지"]
+    F --> G["fxbX 새 프로세스 실행"]
+    G --> H["수치·NPU Task·성능 검증"]
+    H --> B
+    H --> I["공유 범위와 게시 승인"]
+    I --> J["HF 파일·FuryAwesome 목록"]
+    J --> A

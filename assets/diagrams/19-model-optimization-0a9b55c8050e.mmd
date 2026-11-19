@@ -1,0 +1,9 @@
+flowchart TB
+    M["사용자 모델"] --> T["공개 Trainer의 학습·평가"]
+    M --> P["공개 Python client"]
+    P --> S["NetsPresso 서비스 작업"]
+    S --> A["변환 모델과 metadata"]
+    T --> A
+    A --> V["품질·shape·연산 계약 확인"]
+    V --> F["선택한 Furiosa 입력 경로"]
+    F --> R["RNGD에서 별도 측정"]

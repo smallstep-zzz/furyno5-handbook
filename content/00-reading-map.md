@@ -22,18 +22,30 @@
 
 ```mermaid
 flowchart TB
-  M["모델 또는 커널 작성"] --> A["공식 모델 · FXB"]
-  M --> B["PyTorch · FuryNo5"]
-  M --> C["Rust · vISA"]
-  A --> L["Furiosa-LLM"]
-  B --> F["SDK Runnable · fxbX"]
-  C --> O["furiosa-opt-rt"]
-  L --> N["드라이버와 RNGD"]
+  M["모델 또는 커널 작성"] --> A["공식 모델 빌드"]
+  M --> B["PyTorch · FuryNo5 · TCL"]
+  M --> C["Rust device 함수 · vISA 표현"]
+  A --> AB["FXB · 컴파일된 EDF"]
+  B --> BC["TCC 계열 컴파일"]
+  BC --> BE["컴파일된 EDF"]
+  B --> BP["FuryNo5 실행계획 구성"]
+  C --> CC["furiosa-opt 컴파일"]
+  CC --> CE["컴파일된 실행물 · EDF 계층"]
+  CE --> CI["Device Function Image"]
+  AB --> L["Furiosa-LLM 적재 · 실행"]
+  BE --> F["SDK 적재 · Runnable 실행 · fxbX"]
+  BP --> F
+  CI --> O["furiosa-opt-rt 적재 · 실행"]
+  L --> N["각 경로의 드라이버 · 펌웨어를 거쳐 RNGD"]
   F --> N
   O --> N
 ```
 
-이 그림의 마지막 상자는 계층 관계를 단순화했다. 세 실행기가 같은 비공개 내부 라이브러리나 동일한 큐 구현을 쓴다는 뜻은 아니다. 공식 모델 서빙은 [Furiosa-LLM과 FXB 문서](https://developer.furiosa.ai/v2026.4.0/en/furiosa_llm/fxb.html), 저수준 장치 함수 실행은 [공개 furiosa-opt 런타임](https://github.com/furiosa-ai/furiosa-opt/tree/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-rt)에서 확인한다. FuryNo5 경로는 [프로젝트 소스](https://github.com/smallstep-zzz/FuryNo5/tree/bba9efea8201aec48150514a35d0b637d29d107e)를 기준으로 설명한다.
+**vISA(Virtual Instruction Set Architecture)는 컴파일 중 다루는 표현이며, 런타임이 vISA 텍스트를 직접 실행한다는 뜻이 아니다.** 공식 Kernel Validation 문서는 컴파일된 EDF(Executable Device Format)를 SDK와 실제 장치로 실행한다고 설명한다. 공개 `furiosa-opt-rt`는 컴파일러가 만든 Device Function Image를 적재한다. 그림에는 이전 개요에서 생략했던 **컴파일 → 산출물 → 적재·실행** 경계를 보이게 했다. EDF 계층과 Image를 표시한 것은 논리적 역할 구분이며, 항상 별도 `.edf` 파일이 하나씩 나오는 구조나 SDK EDF와 opt Image의 동일 포맷을 보장하는 그림은 아니다. [EDF 공식 정의](https://developer.furiosa.ai/furiosa-opt/book/quick-start/kernel-validation.html) · [Image와 실행기 설계](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-rt/DESIGN.md)
+
+가운데 가지는 FuryNo5의 TCL·EDF export 경로를 나타낸다. SDK compiler 결과를 직접 준비하는 경로는 [04장](04-tcl-edf.md)에서 별도로 구분한다. 마지막 상자는 같은 RNGD 하드웨어에 도달한다는 뜻이다. 세 실행기가 같은 내부 라이브러리·큐·펌웨어 프로토콜을 사용하거나 서로의 바이너리를 바로 읽는다는 뜻은 아니다. 특히 **TCL 경로가 opt와 동일한 vISA·LIR 구현을 사용한다는 주장, opt Image를 `sdk.ir.Runnable`에 바로 넣을 수 있다는 주장은 확인하지 못했다.** `sdk.ir.Runnable`의 역직렬화, `sdk.Runnable`의 장치 실행, opt Image의 ABI(Application Binary Interface)는 04장과 [08장](08-eisa-visa.md)에서 분리해 설명한다.
+
+공식 모델 서빙은 [Furiosa-LLM과 FXB 문서](https://developer.furiosa.ai/v2026.4.0/en/furiosa_llm/fxb.html), FuryNo5 경로는 [프로젝트 소스](https://github.com/smallstep-zzz/FuryNo5/tree/bba9efea8201aec48150514a35d0b637d29d107e)를 기준으로 한다. 위 그림의 실행기들을 이용해 포팅 작업을 조직하는 역할은 FHA(Furiosa-Hug-Anything), 기존 모델과 포팅 요청·배포 정보를 모으는 역할은 FuryAwesome에 있다. 이 관계와 자동화 범위는 [13장 모델 포팅·FHA·FuryAwesome](13-porting-fha.md)에 이어진다.
 
 <!-- interactive:route -->
 
@@ -47,6 +59,8 @@ flowchart TB
 | PyTorch와 FuryNo5 | 09–11 | 어떤 ATen 호출이 어떤 파일·함수에서 변환되고, 무엇이 캐시되는가? |
 | 포팅과 서빙 | 12–15 | 실행 가능한 패키지와 서비스 가능한 모델 사이에 어떤 계약이 필요한가? |
 | 실험과 회고 | 16–17 | 기준선과 비교해 무엇이 실제로 좋아졌고, 다음 실험은 무엇인가? |
+| 다른 생태계에서 배우기 | [18](18-npu-ecosystems.md) | 다른 NPU는 PyTorch·모델·커널을 어느 경계에서 받아들이는가? |
+| 모델과 실행 방식을 함께 바꾸기 | [19](19-model-optimization.md) | 공식 기준선보다 나은 결과를 목표로 무엇을 바꾸고 어떤 품질·성능 검증을 해야 하는가? |
 
 한 번에 끝까지 읽기보다 **작은 연산 하나를 이 순서로 따라가는 방법**을 권한다. 예를 들어 행렬곱 뒤 ReLU(Rectified Linear Unit)를 붙인 모델을 택한다. CPU(Central Processing Unit) 기준값을 저장하고, shape·dtype·layout을 기록하고, 컴파일 산출물을 확인하고, NPU 출력과 비교한다. 이후 같은 모델을 연산별 EDF와 묶인 EDF로 실행해 경계 비용이 어떻게 변하는지 측정한다. 구체적 포팅 명령은 [13장](13-porting-fha.md)에 있다.
 

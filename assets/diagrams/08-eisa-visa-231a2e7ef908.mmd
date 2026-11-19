@@ -1,0 +1,7 @@
+flowchart TB
+    I["Compiler image"] --> P["형식·topology 검사"]
+    P --> M["상수·stack 메모리 준비"]
+    M --> C["실행 코드 DRAM 적재"]
+    C --> B["호출 buffer와 인수 연결"]
+    B --> Q["코드 위치와 인수 제출"]
+    Q --> N["장치 실행·완료 처리"]

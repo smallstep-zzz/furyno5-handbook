@@ -1,0 +1,18 @@
+flowchart TB
+  M["모델 또는 커널 작성"] --> A["공식 모델 빌드"]
+  M --> B["PyTorch · FuryNo5 · TCL"]
+  M --> C["Rust device 함수 · vISA 표현"]
+  A --> AB["FXB · 컴파일된 EDF"]
+  B --> BC["TCC 계열 컴파일"]
+  BC --> BE["컴파일된 EDF"]
+  B --> BP["FuryNo5 실행계획 구성"]
+  C --> CC["furiosa-opt 컴파일"]
+  CC --> CE["컴파일된 실행물 · EDF 계층"]
+  CE --> CI["Device Function Image"]
+  AB --> L["Furiosa-LLM 적재 · 실행"]
+  BE --> F["SDK 적재 · Runnable 실행 · fxbX"]
+  BP --> F
+  CI --> O["furiosa-opt-rt 적재 · 실행"]
+  L --> N["각 경로의 드라이버 · 펌웨어를 거쳐 RNGD"]
+  F --> N
+  O --> N

@@ -1,0 +1,8 @@
+flowchart TB
+    G["같은 모델 의미"] --> P["primitive 분해 후보"]
+    G --> S["의미 영역 보존 후보"]
+    P --> K["TCL 생성·컴파일"]
+    S --> K
+    K --> A["수치·ABI·상태 검증"]
+    A --> T["RNGD trace와 전체 시간"]
+    T --> R["shape별 후보 선택"]

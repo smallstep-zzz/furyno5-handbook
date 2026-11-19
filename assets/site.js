@@ -28,7 +28,7 @@
  window.addEventListener('scroll',()=>{if(!ticking){requestAnimationFrame(reading);ticking=true;}},{passive:true});reading();
  const dialog=$('.search-dialog'), input=$('input',dialog||document), results=$('.search-results'),status=$('.search-status');
  let index=null,indexPromise=null;
- async function loadIndex(){if(index)return index;if(!indexPromise)indexPromise=fetch((document.body.dataset.root||'./')+'search-index.json').then(r=>{if(!r.ok)throw Error('search');return r.json();}).then(data=>index=data).catch(error=>{indexPromise=null;throw error;});return indexPromise;}
+ async function loadIndex(){if(index)return index;if(!indexPromise)indexPromise=fetch((document.body.dataset.root||'./')+'search-index.json?v='+(document.body.dataset.searchVersion||'current')).then(r=>{if(!r.ok)throw Error('search');return r.json();}).then(data=>index=data).catch(error=>{indexPromise=null;throw error;});return indexPromise;}
  async function openSearch(){closeMenu();dialog.showModal();input.focus();try{await loadIndex();search();}catch{status.textContent='검색 색인을 불러오지 못했습니다. 목차나 브라우저 찾기를 사용해 주세요.';}}
  $$('.search-open').forEach(b=>b.addEventListener('click',openSearch));
  $('.close-search')?.addEventListener('click',()=>dialog.close());
@@ -47,7 +47,7 @@
   prepared:{steps:['준비 단계에서 ATen 대상과 입력 조건을 확인','TCL·EDF를 준비하고 custom op 구현을 등록','복사한 FX 그래프의 target을 준비된 op로 치환','forward에서 저장된 NPU 실행 객체 호출'],note:'준비 단계와 실행 단계를 구분합니다. ATen 전체를 전역으로 교체하거나 호출 때마다 TCL을 컴파일하는 구조가 아닙니다. 10·11장의 코드 경로를 확인하세요.'},
   export:{steps:['export_model이 모델 그래프와 입력 조건을 수집','지원 영역을 나누고 TCL·EDF와 바인딩을 준비','모델 단계·텐서 연결·상태가 담긴 실행계획 생성','fxbX 실행기가 계획을 검증하고 장치 프로그램 호출'],note:'EDF가 존재하는 것과 모델의 전체 실행계획이 완성된 것은 별개의 조건입니다. 계획 스키마·SDK·topology가 맞아야 합니다. 11·12장을 참고하세요.'},
   llm:{steps:['지원 모델의 설정·가중치와 호환되는 FXB를 로드','서빙 스케줄러가 요청·KV cache·버킷을 선택','준비된 커널과 입력을 런타임에 전달','결과·sampling·다음 decode 단계를 처리'],note:'공식 Furiosa-LLM의 모델·FXB 계약입니다. 임의 fxbX 파일을 전달한다고 새 모델 아키텍처가 자동으로 등록되지는 않습니다. 03·14장을 참고하세요.'},
-  opt:{steps:['Rust의 vISA 커널과 장치 함수를 작성','cargo furiosa-opt로 커널·장치 프로그램을 준비','furiosa-opt-rt가 장치 이미지와 메모리를 관리','호스트가 함수를 제출하고 완료를 기다림'],note:'furiosa-opt는 컴파일 도구이고 furiosa-opt-rt는 실행 경로입니다. 공개 근거 없이 SDK Runnable과 동일한 내부 실행기라고 단정하지 않습니다. 08장을 참고하세요.'}
+  opt:{steps:['Rust device 함수에서 vISA 계산·메모리 배치를 표현','cargo furiosa-opt가 표현을 장치 실행물로 컴파일','Device Function Image를 furiosa-opt-rt에 적재','버퍼를 바인딩하고 함수를 제출한 뒤 완료 확인'],note:'vISA는 중간 표현입니다. 공식 검증 문서는 컴파일된 EDF를 설명하며, opt 실행기는 Device Function Image를 받습니다. SDK EDF와 동일 포맷·ABI인지, 교차 적재할 수 있는지는 별도 검증이 필요합니다. 04·08장을 참고하세요.'}
  };
  for(const lab of $$('[data-lab]')){
   const type=lab.dataset.lab;

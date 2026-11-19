@@ -31,7 +31,11 @@ CLI(Command-Line Interface) 옵션은 설치본의 `--help`와 함께 확인한�
 | smallstep-zzz/FuryNo5 | [bba9efea8201](https://github.com/smallstep-zzz/FuryNo5/tree/bba9efea8201aec48150514a35d0b637d29d107e) | 사용자 프로젝트, **접근 권한 필요** | 실제 import 이름, 지원 경계, capture·TCL·EDF·cache·실행 계획 생산 |
 | smallstep-zzz/fxbX | [03d993b4d1b3](https://github.com/smallstep-zzz/fxbX/tree/03d993b4d1b36cdda209d61bbf447434c174b401) | 사용자 프로젝트, 공개 저장소 | package 검사·외부 weights·EDF 적재·실행 계획 소비·현재 서빙 경로 |
 | smallstep-zzz/Furiosa-Hug-Anything | [8fc675f48876](https://github.com/smallstep-zzz/Furiosa-Hug-Anything/tree/8fc675f488763bef7c779ee037e8393ddd9f856a) | 사용자 프로젝트, **접근 권한 필요** | 포팅 역할 분담, producer bridge, 검증·자동화 절차 |
+| smallstep-zzz/furyawesome | [c668ecbceac2](https://github.com/smallstep-zzz/furyawesome/tree/c668ecbceac2bedd04c6e539c1a5509a404a464d) | 사용자 프로젝트, 공개 저장소 | 모델 카탈로그·요청·사용법·HF 배포 참조와 게시 동기화 |
 | smallstep-zzz/FuryBoost | [62faf49a29cc](https://github.com/smallstep-zzz/FuryBoost/tree/62faf49a29cc40230ee3df271b8f91ad8488eb5d) | 사용자 프로젝트, **접근 권한 필요** | 트리 학습 구현, CPU 비교 원자료, 최적화 전후 결과 |
+| Ascend/pytorch | [2373dee2db39](https://github.com/Ascend/pytorch/tree/2373dee2db393489d91d44f5fbefd2d6cef30439) | 업체 공식 공개 소스 | TorchNPU·PrivateUse1·기본 장치 통합 |
+| RBLN-SW/optimum-rbln | [370e2c98e551](https://github.com/RBLN-SW/optimum-rbln/tree/370e2c98e5511373ca3f6454b444c327223822f7) | 업체 공식 공개 어댑터 | Hugging Face 모델과 컴파일·적재 경로 연결. 의존 compiler 공개와 구분 |
+| tenstorrent/tt-xla | [fdc3b7773674](https://github.com/tenstorrent/tt-xla/tree/fdc3b7773674081b8f8c0698de3400d8d899dc8f) | 업체 공식 공개 소스 | PJRT·StableHLO·fusion·composite와 TT-Torch 전환 안내 |
 
 fxbX가 공개 저장소라는 사실은 Furiosa의 공식 지원 형식이라는 뜻이 아니다. 반대로 비공개 프로젝트의 소스가 근거로 쓰였다는 사실은 독자에게 자동으로 해당 저장소의 접근 권한이 생긴다는 뜻도 아니다. 권한 없는 독자도 큰 흐름을 읽을 수 있도록 본문에 역할·핵심 코드·확인 범위를 설명했지만, 원본 전체를 독립적으로 재검토하려면 저장소 접근이 필요하다.
 
@@ -100,7 +104,15 @@ fxbX가 공개 저장소라는 사실은 Furiosa의 공식 지원 형식이라�
 
 새 버전의 지원 범위를 추가할 때는 기존 설명을 조용히 덮어쓰기보다 **변경된 버전·코드·검증 범위**를 같이 남긴다. 문서와 코드가 다르면 어느 쪽이 어떤 시점을 나타내는지 적는다. 최신 브랜치 링크만 남기면 같은 주장을 나중에 재검토하기 어려우므로 중요한 구현과 시험 결과는 커밋을 고정한다.
 
-공식 풀네임을 확인하지 못한 약어는 확장하지 않는다. EDF, eISA에 대한 이 책의 경계가 여기에 해당한다. TCL은 Tensor Contraction Language, PERT는 PE Runtime으로 공식 확인되었으며 [용어사전](glossary.md)에 명시했다. 새 근거가 생기면 출처와 함께 업데이트한다.
+공식 풀네임을 확인하지 못한 약어는 확장하지 않는다. eISA에 대한 이 책의 경계가 여기에 해당한다. **EDF는 추가 조사에서 공식 Kernel Validation의 Executable Device Format 표기를 확인하여 갱신했다.** TCL은 Tensor Contraction Language, PERT는 PE Runtime으로 확인했으며 [용어사전](glossary.md)에 명시했다. [EDF 이름의 고정 원문](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/quick-start/kernel-validation.md)
+
+## 추가 조사: 다른 NPU와 모델 사전 최적화
+
+[18장](18-npu-ecosystems.md)은 특정 공식 경로를 골라 비교한다. Neuron의 traced inference는 2.31.1 문서, NEFF 적재 구조의 예는 2.28 문서처럼 범위를 명시했다. 한 업체의 모든 최신 기능을 해당 예제로 대표하거나 NPU 간 성능 순위를 추론하지 않는다.
+
+[19장](19-model-optimization.md)은 NetsPresso 제품·공개 Python client·공개 trainer를 구분하고, 라이브러리별 GitHub와 고정 소스를 연결한다. 공개 라이브러리가 만드는 ONNX·양자화 tensor·다른 backend 실행물을 RNGD가 바로 읽는다는 뜻으로 사용하지 않는다. 원본 모델의 의미 보존, 품질 허용 범위, 목표 compiler의 수용, 실제 NPU 실행을 순서대로 대조해야 한다.
+
+홈의 경로 그림은 vISA를 직접 실행하는 것처럼 보이지 않도록 컴파일 산출물과 Image 적재를 추가했다. 검색 색인의 문구가 고정 소스나 현재 문서 본문과 다를 때는 그 문구만으로 내부 pass 순서·새 CLI 옵션을 확정하지 않았다. 구체적인 확인 범위와 교차 호환성 실험 제안은 [08장](08-eisa-visa.md)에 있다.
 
 ## 출처
 

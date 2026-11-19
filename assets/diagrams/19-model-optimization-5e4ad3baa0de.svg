@@ -1,0 +1,76 @@
+<svg role="img" aria-label="같은 모델 의미 · primitive 분해 후보 · 의미 영역 보존 후보 · TCL 생성·컴파일 · 수치·ABI·상태 검증 · RNGD trace와 전체 시간 · shape별 후보 선택" width="311pt" height="445pt"
+ viewBox="0.00 0.00 311.30 444.80" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(14.4 430.4)">
+<title>handbook</title>
+<g id="edge1" class="edge">
+<title>G&#45;&gt;P</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M123.64,-379.84C112.85,-369.47 99,-356.15 87.41,-345.02"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="89.01,-343.15 82.26,-340.07 85.61,-346.69 89.01,-343.15"/>
+</g>
+<g id="edge2" class="edge">
+<title>G&#45;&gt;S</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M159.36,-379.84C170.15,-369.47 184,-356.15 195.59,-345.02"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="197.39,-346.69 200.74,-340.07 193.99,-343.15 197.39,-346.69"/>
+</g>
+<g id="edge3" class="edge">
+<title>P&#45;&gt;K</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M82.36,-303.84C93.15,-293.47 107,-280.15 118.59,-269.02"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="120.39,-270.69 123.74,-264.07 116.99,-267.15 120.39,-270.69"/>
+</g>
+<g id="edge4" class="edge">
+<title>S&#45;&gt;K</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M200.64,-303.84C189.85,-293.47 176,-280.15 164.41,-269.02"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="166.01,-267.15 159.26,-264.07 162.61,-270.69 166.01,-267.15"/>
+</g>
+<g id="edge5" class="edge">
+<title>K&#45;&gt;A</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M141.5,-227.84C141.5,-218.12 141.5,-205.82 141.5,-195.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="143.95,-195.07 141.5,-188.07 139.05,-195.07 143.95,-195.07"/>
+</g>
+<g id="edge6" class="edge">
+<title>A&#45;&gt;T</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M141.5,-151.84C141.5,-142.12 141.5,-129.82 141.5,-119.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="143.95,-119.07 141.5,-112.07 139.05,-119.07 143.95,-119.07"/>
+</g>
+<g id="edge7" class="edge">
+<title>T&#45;&gt;R</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M141.5,-75.84C141.5,-66.12 141.5,-53.82 141.5,-43.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="143.95,-43.07 141.5,-36.07 139.05,-43.07 143.95,-43.07"/>
+</g>
+<g id="node1" class="node">
+<title>G</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M180.5,-416C180.5,-416 102.5,-416 102.5,-416 96.5,-416 90.5,-410 90.5,-404 90.5,-404 90.5,-392 90.5,-392 90.5,-386 96.5,-380 102.5,-380 102.5,-380 180.5,-380 180.5,-380 186.5,-380 192.5,-386 192.5,-392 192.5,-392 192.5,-404 192.5,-404 192.5,-410 186.5,-416 180.5,-416"/>
+<text text-anchor="middle" x="141.5" y="-394.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">같은 모델 의미</text>
+</g>
+<g id="node2" class="node">
+<title>P</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M117,-340C117,-340 12,-340 12,-340 6,-340 0,-334 0,-328 0,-328 0,-316 0,-316 0,-310 6,-304 12,-304 12,-304 117,-304 117,-304 123,-304 129,-310 129,-316 129,-316 129,-328 129,-328 129,-334 123,-340 117,-340"/>
+<text text-anchor="middle" x="64.5" y="-318.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">primitive 분해 후보</text>
+</g>
+<g id="node3" class="node">
+<title>S</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M270.5,-340C270.5,-340 166.5,-340 166.5,-340 160.5,-340 154.5,-334 154.5,-328 154.5,-328 154.5,-316 154.5,-316 154.5,-310 160.5,-304 166.5,-304 166.5,-304 270.5,-304 270.5,-304 276.5,-304 282.5,-310 282.5,-316 282.5,-316 282.5,-328 282.5,-328 282.5,-334 276.5,-340 270.5,-340"/>
+<text text-anchor="middle" x="218.5" y="-318.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">의미 영역 보존 후보</text>
+</g>
+<g id="node4" class="node">
+<title>K</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M187.5,-264C187.5,-264 95.5,-264 95.5,-264 89.5,-264 83.5,-258 83.5,-252 83.5,-252 83.5,-240 83.5,-240 83.5,-234 89.5,-228 95.5,-228 95.5,-228 187.5,-228 187.5,-228 193.5,-228 199.5,-234 199.5,-240 199.5,-240 199.5,-252 199.5,-252 199.5,-258 193.5,-264 187.5,-264"/>
+<text text-anchor="middle" x="141.5" y="-242.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">TCL 생성·컴파일</text>
+</g>
+<g id="node5" class="node">
+<title>A</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M195.5,-188C195.5,-188 87.5,-188 87.5,-188 81.5,-188 75.5,-182 75.5,-176 75.5,-176 75.5,-164 75.5,-164 75.5,-158 81.5,-152 87.5,-152 87.5,-152 195.5,-152 195.5,-152 201.5,-152 207.5,-158 207.5,-164 207.5,-164 207.5,-176 207.5,-176 207.5,-182 201.5,-188 195.5,-188"/>
+<text text-anchor="middle" x="141.5" y="-166.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">수치·ABI·상태 검증</text>
+</g>
+<g id="node6" class="node">
+<title>T</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M207,-112C207,-112 76,-112 76,-112 70,-112 64,-106 64,-100 64,-100 64,-88 64,-88 64,-82 70,-76 76,-76 76,-76 207,-76 207,-76 213,-76 219,-82 219,-88 219,-88 219,-100 219,-100 219,-106 213,-112 207,-112"/>
+<text text-anchor="middle" x="141.5" y="-90.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">RNGD trace와 전체 시간</text>
+</g>
+<g id="node7" class="node">
+<title>R</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M192,-36C192,-36 91,-36 91,-36 85,-36 79,-30 79,-24 79,-24 79,-12 79,-12 79,-6 85,0 91,0 91,0 192,0 192,0 198,0 204,-6 204,-12 204,-12 204,-24 204,-24 204,-30 198,-36 192,-36"/>
+<text text-anchor="middle" x="141.5" y="-14.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">shape별 후보 선택</text>
+</g>
+</g>
+</svg>

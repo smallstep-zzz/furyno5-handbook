@@ -1,0 +1,81 @@
+<svg role="img" aria-label="수식·축·자료형 · 계산 계약과 중간 표현 · 타일·배치·메모리 결정 · 의존성과 자원 스케줄 · 실행 바이너리 생성 · 런타임 적재와 인수 바인딩 · 현재 장치·가중치·입력 · 제출·완료·결과" width="336pt" height="521pt"
+ viewBox="0.00 0.00 335.80 520.80" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(14.4 506.4)">
+<title>handbook</title>
+<g id="edge1" class="edge">
+<title>A&#45;&gt;B</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M73,-455.84C73,-446.12 73,-433.82 73,-423.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="75.45,-423.07 73,-416.07 70.55,-423.07 75.45,-423.07"/>
+</g>
+<g id="edge2" class="edge">
+<title>B&#45;&gt;C</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M73,-379.84C73,-370.12 73,-357.82 73,-347.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="75.45,-347.07 73,-340.07 70.55,-347.07 75.45,-347.07"/>
+</g>
+<g id="edge3" class="edge">
+<title>C&#45;&gt;D</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M73,-303.84C73,-294.12 73,-281.82 73,-271.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="75.45,-271.07 73,-264.07 70.55,-271.07 75.45,-271.07"/>
+</g>
+<g id="edge4" class="edge">
+<title>D&#45;&gt;E</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M73,-227.84C73,-218.12 73,-205.82 73,-195.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="75.45,-195.07 73,-188.07 70.55,-195.07 75.45,-195.07"/>
+</g>
+<g id="edge5" class="edge">
+<title>E&#45;&gt;F</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M91.55,-151.84C102.76,-141.47 117.16,-128.15 129.2,-117.02"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="131.07,-118.62 134.55,-112.07 127.74,-115.02 131.07,-118.62"/>
+</g>
+<g id="edge7" class="edge">
+<title>F&#45;&gt;G</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M153,-75.84C153,-66.12 153,-53.82 153,-43.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="155.45,-43.07 153,-36.07 150.55,-43.07 155.45,-43.07"/>
+</g>
+<g id="edge6" class="edge">
+<title>I&#45;&gt;F</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M215.21,-151.84C203.87,-141.47 189.29,-128.15 177.1,-117.02"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="178.51,-114.98 171.68,-112.07 175.2,-118.6 178.51,-114.98"/>
+</g>
+<g id="node1" class="node">
+<title>A</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M116,-492C116,-492 30,-492 30,-492 24,-492 18,-486 18,-480 18,-480 18,-468 18,-468 18,-462 24,-456 30,-456 30,-456 116,-456 116,-456 122,-456 128,-462 128,-468 128,-468 128,-480 128,-480 128,-486 122,-492 116,-492"/>
+<text text-anchor="middle" x="73" y="-470.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">수식·축·자료형</text>
+</g>
+<g id="node2" class="node">
+<title>B</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M130.5,-416C130.5,-416 15.5,-416 15.5,-416 9.5,-416 3.5,-410 3.5,-404 3.5,-404 3.5,-392 3.5,-392 3.5,-386 9.5,-380 15.5,-380 15.5,-380 130.5,-380 130.5,-380 136.5,-380 142.5,-386 142.5,-392 142.5,-392 142.5,-404 142.5,-404 142.5,-410 136.5,-416 130.5,-416"/>
+<text text-anchor="middle" x="73" y="-394.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">계산 계약과 중간 표현</text>
+</g>
+<g id="node3" class="node">
+<title>C</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M134,-340C134,-340 12,-340 12,-340 6,-340 0,-334 0,-328 0,-328 0,-316 0,-316 0,-310 6,-304 12,-304 12,-304 134,-304 134,-304 140,-304 146,-310 146,-316 146,-316 146,-328 146,-328 146,-334 140,-340 134,-340"/>
+<text text-anchor="middle" x="73" y="-318.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">타일·배치·메모리 결정</text>
+</g>
+<g id="node4" class="node">
+<title>D</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M129,-264C129,-264 17,-264 17,-264 11,-264 5,-258 5,-252 5,-252 5,-240 5,-240 5,-234 11,-228 17,-228 17,-228 129,-228 129,-228 135,-228 141,-234 141,-240 141,-240 141,-252 141,-252 141,-258 135,-264 129,-264"/>
+<text text-anchor="middle" x="73" y="-242.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">의존성과 자원 스케줄</text>
+</g>
+<g id="node5" class="node">
+<title>E</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M123.5,-188C123.5,-188 22.5,-188 22.5,-188 16.5,-188 10.5,-182 10.5,-176 10.5,-176 10.5,-164 10.5,-164 10.5,-158 16.5,-152 22.5,-152 22.5,-152 123.5,-152 123.5,-152 129.5,-152 135.5,-158 135.5,-164 135.5,-164 135.5,-176 135.5,-176 135.5,-182 129.5,-188 123.5,-188"/>
+<text text-anchor="middle" x="73" y="-166.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">실행 바이너리 생성</text>
+</g>
+<g id="node6" class="node">
+<title>F</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M221.5,-112C221.5,-112 84.5,-112 84.5,-112 78.5,-112 72.5,-106 72.5,-100 72.5,-100 72.5,-88 72.5,-88 72.5,-82 78.5,-76 84.5,-76 84.5,-76 221.5,-76 221.5,-76 227.5,-76 233.5,-82 233.5,-88 233.5,-88 233.5,-100 233.5,-100 233.5,-106 227.5,-112 221.5,-112"/>
+<text text-anchor="middle" x="153" y="-90.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">런타임 적재와 인수 바인딩</text>
+</g>
+<g id="node7" class="node">
+<title>I</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M295,-188C295,-188 173,-188 173,-188 167,-188 161,-182 161,-176 161,-176 161,-164 161,-164 161,-158 167,-152 173,-152 173,-152 295,-152 295,-152 301,-152 307,-158 307,-164 307,-164 307,-176 307,-176 307,-182 301,-188 295,-188"/>
+<text text-anchor="middle" x="234" y="-166.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">현재 장치·가중치·입력</text>
+</g>
+<g id="node8" class="node">
+<title>G</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M196,-36C196,-36 110,-36 110,-36 104,-36 98,-30 98,-24 98,-24 98,-12 98,-12 98,-6 104,0 110,0 110,0 196,0 196,0 202,0 208,-6 208,-12 208,-12 208,-24 208,-24 208,-30 202,-36 196,-36"/>
+<text text-anchor="middle" x="153" y="-14.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">제출·완료·결과</text>
+</g>
+</g>
+</svg>

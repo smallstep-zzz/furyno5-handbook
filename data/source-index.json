@@ -1,22 +1,33 @@
 [
   {
-    "url": "https://developer.furiosa.ai/v2026.4.0/en/furiosa_llm/fxb.html",
+    "url": "https://developer.furiosa.ai/furiosa-opt/book/quick-start/kernel-validation.html",
     "chapters": [
       "00-reading-map",
-      "03-driver-runtime",
-      "05-graphs-fallback",
-      "06-buckets-shapes",
-      "12-fxbx",
-      "glossary",
-      "sources"
+      "04-tcl-edf",
+      "12-fxbx"
     ],
     "checked_on": "2026-11-19",
     "access": "public"
   },
   {
-    "url": "https://github.com/furiosa-ai/furiosa-opt/tree/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-rt",
+    "url": "https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-rt/DESIGN.md",
     "chapters": [
       "00-reading-map"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://developer.furiosa.ai/v2026.4.0/en/furiosa_llm/fxb.html",
+    "chapters": [
+      "00-reading-map",
+      "03-driver-runtime",
+      "04-tcl-edf",
+      "05-graphs-fallback",
+      "06-buckets-shapes",
+      "12-fxbx",
+      "glossary",
+      "sources"
     ],
     "checked_on": "2026-11-19",
     "access": "public"
@@ -65,6 +76,7 @@
     "chapters": [
       "01-hardware",
       "02-memory-dma",
+      "03-driver-runtime",
       "glossary"
     ],
     "checked_on": "2026-11-19",
@@ -131,7 +143,8 @@
     "url": "https://developer.furiosa.ai/furiosa-opt/book/moving-tensors/memory-performance.html",
     "chapters": [
       "02-memory-dma",
-      "07-optimization"
+      "07-optimization",
+      "19-model-optimization"
     ],
     "checked_on": "2026-11-19",
     "access": "public"
@@ -213,21 +226,78 @@
     "access": "public"
   },
   {
-    "url": "https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/tools/kernel-optimizer.md",
+    "url": "https://furiosa.ai/blog/furiosa-sdk-2026-3-a-new-kernel-framework-and-the-models-it-unlocks",
     "chapters": [
       "03-driver-runtime",
-      "05-graphs-fallback",
+      "04-tcl-edf",
+      "19-model-optimization",
+      "glossary",
+      "sources"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/quick-start/kernel-validation.md",
+    "chapters": [
+      "03-driver-runtime",
+      "04-tcl-edf",
+      "08-eisa-visa",
+      "glossary",
+      "sources",
+      "review"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-lower/src/lowering/mod.rs",
+    "chapters": [
+      "03-driver-runtime"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/scheduling/schedule.md",
+    "chapters": [
+      "03-driver-runtime"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://furiosa.ai/developers",
+    "chapters": [
+      "03-driver-runtime",
+      "04-tcl-edf",
       "08-eisa-visa"
     ],
     "checked_on": "2026-11-19",
     "access": "public"
   },
   {
-    "url": "https://furiosa.ai/blog/furiosa-sdk-2026-3-a-new-kernel-framework-and-the-models-it-unlocks",
+    "url": "https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-lower/src/lib.rs",
     "chapters": [
-      "04-tcl-edf",
-      "glossary",
-      "sources"
+      "03-driver-runtime"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-lower/src/verify/engine/contraction/time.rs",
+    "chapters": [
+      "03-driver-runtime"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/tools/kernel-optimizer.md",
+    "chapters": [
+      "03-driver-runtime",
+      "05-graphs-fallback",
+      "08-eisa-visa"
     ],
     "checked_on": "2026-11-19",
     "access": "public"
@@ -239,15 +309,6 @@
     ],
     "checked_on": "2026-11-19",
     "access": "repository permission required"
-  },
-  {
-    "url": "https://furiosa.ai/developers",
-    "chapters": [
-      "04-tcl-edf",
-      "08-eisa-visa"
-    ],
-    "checked_on": "2026-11-19",
-    "access": "public"
   },
   {
     "url": "https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/tcl_edf.py",
@@ -277,6 +338,15 @@
     ],
     "checked_on": "2026-11-19",
     "access": "repository permission required"
+  },
+  {
+    "url": "https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-abi/src/image.rs",
+    "chapters": [
+      "04-tcl-edf",
+      "08-eisa-visa"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
   },
   {
     "url": "https://developer.furiosa.ai/latest/en/whatsnew/release-2026.3.0.html",
@@ -318,7 +388,8 @@
   {
     "url": "https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/fxbx-producer/EXECUTION_PLAN.md",
     "chapters": [
-      "05-graphs-fallback"
+      "05-graphs-fallback",
+      "19-model-optimization"
     ],
     "checked_on": "2026-11-19",
     "access": "repository permission required"
@@ -398,7 +469,8 @@
   {
     "url": "https://developer.furiosa.ai/furiosa-opt/book/mapping-tensors/index.html",
     "chapters": [
-      "07-optimization"
+      "07-optimization",
+      "19-model-optimization"
     ],
     "checked_on": "2026-11-19",
     "access": "public"
@@ -415,7 +487,8 @@
     "url": "https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/tcl_region.py",
     "chapters": [
       "07-optimization",
-      "11-furyno5-compiler"
+      "11-furyno5-compiler",
+      "19-model-optimization"
     ],
     "checked_on": "2026-11-19",
     "access": "repository permission required"
@@ -507,6 +580,78 @@
     "access": "public"
   },
   {
+    "url": "https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-abi/README.md",
+    "chapters": [
+      "08-eisa-visa"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-abi/src/executable.rs",
+    "chapters": [
+      "08-eisa-visa"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-abi/src/registry.rs",
+    "chapters": [
+      "08-eisa-visa"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-rt/src/registry/load/mod.rs",
+    "chapters": [
+      "08-eisa-visa"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-rt/src/function/mod.rs",
+    "chapters": [
+      "08-eisa-visa"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-rt/src/function/table.rs",
+    "chapters": [
+      "08-eisa-visa"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-rt/src/driver/mod.rs",
+    "chapters": [
+      "08-eisa-visa"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/CHANGES.md",
+    "chapters": [
+      "08-eisa-visa"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-rt/bootloader/README.md",
+    "chapters": [
+      "08-eisa-visa"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
     "url": "https://developer.furiosa.ai/furiosa-opt/book/quick-start/setup-and-tooling.html",
     "chapters": [
       "08-eisa-visa",
@@ -552,6 +697,22 @@
   },
   {
     "url": "https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/scheduling/diagnosis.md",
+    "chapters": [
+      "08-eisa-visa"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/cargo-furiosa-opt/src/driver.rs",
+    "chapters": [
+      "08-eisa-visa"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-lower/build.rs",
     "chapters": [
       "08-eisa-visa"
     ],
@@ -661,7 +822,8 @@
   {
     "url": "https://docs.pytorch.org/tutorials/advanced/privateuseone.html",
     "chapters": [
-      "09-torch-aten"
+      "09-torch-aten",
+      "18-npu-ecosystems"
     ],
     "checked_on": "2026-11-19",
     "access": "public"
@@ -769,7 +931,8 @@
     "url": "https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/graph_capture.py#L188-L195",
     "chapters": [
       "10-furyno5-architecture",
-      "11-furyno5-compiler"
+      "11-furyno5-compiler",
+      "19-model-optimization"
     ],
     "checked_on": "2026-11-19",
     "access": "repository permission required"
@@ -1049,7 +1212,8 @@
   {
     "url": "https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/graph_capture.py",
     "chapters": [
-      "11-furyno5-compiler"
+      "11-furyno5-compiler",
+      "19-model-optimization"
     ],
     "checked_on": "2026-11-19",
     "access": "repository permission required"
@@ -1204,10 +1368,98 @@
     "access": "public"
   },
   {
+    "url": "https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/skills/rngd-model-porting/SKILL.md",
+    "chapters": [
+      "13-porting-fha"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "repository permission required"
+  },
+  {
+    "url": "https://github.com/smallstep-zzz/furyawesome/blob/c668ecbceac2bedd04c6e539c1a5509a404a464d/README.md",
+    "chapters": [
+      "13-porting-fha"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
     "url": "https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/docs/FHA_ROLE_TRANSITION.md",
     "chapters": [
       "13-porting-fha",
       "glossary"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "repository permission required"
+  },
+  {
+    "url": "https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/forge_fxbex/native.py",
+    "chapters": [
+      "13-porting-fha"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "repository permission required"
+  },
+  {
+    "url": "https://furyawesome.softandsweet5.chatgpt.site/",
+    "chapters": [
+      "13-porting-fha"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://github.com/smallstep-zzz/furyawesome/blob/c668ecbceac2bedd04c6e539c1a5509a404a464d/scripts/catalog_store.py#L133-L193",
+    "chapters": [
+      "13-porting-fha"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://github.com/smallstep-zzz/furyawesome/blob/c668ecbceac2bedd04c6e539c1a5509a404a464d/site/dist/catalog.js",
+    "chapters": [
+      "13-porting-fha"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://github.com/smallstep-zzz/furyawesome/blob/c668ecbceac2bedd04c6e539c1a5509a404a464d/usage/all-minilm-l6-v2.md",
+    "chapters": [
+      "13-porting-fha"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://github.com/smallstep-zzz/furyawesome/blob/c668ecbceac2bedd04c6e539c1a5509a404a464d/usage/depth-anything-v2-small-hf.md",
+    "chapters": [
+      "13-porting-fha"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://github.com/smallstep-zzz/furyawesome/blob/c668ecbceac2bedd04c6e539c1a5509a404a464d/CONTRIBUTING.md",
+    "chapters": [
+      "13-porting-fha"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/forge_fxbex/requests.py",
+    "chapters": [
+      "13-porting-fha"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "repository permission required"
+  },
+  {
+    "url": "https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/forge_fxbex/requests.py#L151-L231",
+    "chapters": [
+      "13-porting-fha"
     ],
     "checked_on": "2026-11-19",
     "access": "repository permission required"
@@ -1286,7 +1538,15 @@
     "access": "repository permission required"
   },
   {
-    "url": "https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/forge_fxbex/native.py",
+    "url": "https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/skills/rngd-model-porting/SKILL.md#L24-L39",
+    "chapters": [
+      "13-porting-fha"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "repository permission required"
+  },
+  {
+    "url": "https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/skills/rngd-model-porting/SKILL.md#L77-L139",
     "chapters": [
       "13-porting-fha"
     ],
@@ -1295,6 +1555,142 @@
   },
   {
     "url": "https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/docs/NATIVE_FXB_TRANSITION.md",
+    "chapters": [
+      "13-porting-fha"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "repository permission required"
+  },
+  {
+    "url": "https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/forge_fxbex/workflow.py",
+    "chapters": [
+      "13-porting-fha"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "repository permission required"
+  },
+  {
+    "url": "https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/forge_fxbex/furyawesome.py#L206-L239",
+    "chapters": [
+      "13-porting-fha"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "repository permission required"
+  },
+  {
+    "url": "https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/forge_fxbex/furyawesome.py#L215-L239",
+    "chapters": [
+      "13-porting-fha"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "repository permission required"
+  },
+  {
+    "url": "https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/forge_fxbex/publish.py#L49-L59",
+    "chapters": [
+      "13-porting-fha"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "repository permission required"
+  },
+  {
+    "url": "https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/forge_fxbex/publish.py#L171-L180",
+    "chapters": [
+      "13-porting-fha"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "repository permission required"
+  },
+  {
+    "url": "https://github.com/smallstep-zzz/furyawesome/blob/c668ecbceac2bedd04c6e539c1a5509a404a464d/scripts/catalog_store.py#L36-L65",
+    "chapters": [
+      "13-porting-fha"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/forge_fxbex/__main__.py",
+    "chapters": [
+      "13-porting-fha"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "repository permission required"
+  },
+  {
+    "url": "https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/forge_fxbex/publish.py#L109-L132",
+    "chapters": [
+      "13-porting-fha"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "repository permission required"
+  },
+  {
+    "url": "https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/forge_fxbex/publish.py#L195-L288",
+    "chapters": [
+      "13-porting-fha"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "repository permission required"
+  },
+  {
+    "url": "https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/forge_fxbex/publish.py#L214-L218",
+    "chapters": [
+      "13-porting-fha"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "repository permission required"
+  },
+  {
+    "url": "https://github.com/smallstep-zzz/furyawesome/blob/c668ecbceac2bedd04c6e539c1a5509a404a464d/model-catalog/embedding.json",
+    "chapters": [
+      "13-porting-fha"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/forge_fxbex/furyawesome.py#L293-L310",
+    "chapters": [
+      "13-porting-fha"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "repository permission required"
+  },
+  {
+    "url": "https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/forge_fxbex/publication_checks.py#L1-L18",
+    "chapters": [
+      "13-porting-fha"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "repository permission required"
+  },
+  {
+    "url": "https://github.com/smallstep-zzz/furyawesome/blob/c668ecbceac2bedd04c6e539c1a5509a404a464d/scripts/catalog_store.py",
+    "chapters": [
+      "13-porting-fha"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/forge_fxbex/publish.py",
+    "chapters": [
+      "13-porting-fha"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "repository permission required"
+  },
+  {
+    "url": "https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/forge_fxbex/publication_checks.py",
+    "chapters": [
+      "13-porting-fha"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "repository permission required"
+  },
+  {
+    "url": "https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/forge_fxbex/furyawesome.py",
     "chapters": [
       "13-porting-fha"
     ],
@@ -1680,6 +2076,367 @@
     "access": "repository permission required"
   },
   {
+    "url": "https://docs.pytorch.org/docs/stable/torch.compiler_custom_backends.html",
+    "chapters": [
+      "18-npu-ecosystems"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://github.com/Ascend/pytorch/blob/2373dee2db393489d91d44f5fbefd2d6cef30439/README.md",
+    "chapters": [
+      "18-npu-ecosystems"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://www.hiascend.com/document/detail/en/Pytorch/2610/userguide/torchcompile/docs/en/torch_compile/pytorch_torchair_ge_desc.md",
+    "chapters": [
+      "18-npu-ecosystems"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://docs.rbln.ai/latest/getting_started/quick_start.html",
+    "chapters": [
+      "18-npu-ecosystems"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://awsdocs-neuron.readthedocs-hosted.com/en/v2.31.1/frameworks/torch/torch-neuronx/api-reference-guide/inference/api-torch-neuronx-trace.html",
+    "chapters": [
+      "18-npu-ecosystems"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://awsdocs-neuron.readthedocs-hosted.com/en/v2.28.0/neuron-runtime/nrt-developer-guide.html",
+    "chapters": [
+      "18-npu-ecosystems"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://github.com/tenstorrent/tt-xla/blob/fdc3b7773674081b8f8c0698de3400d8d899dc8f/README.md",
+    "chapters": [
+      "18-npu-ecosystems"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://github.com/tenstorrent/tt-xla/blob/fdc3b7773674081b8f8c0698de3400d8d899dc8f/docs/source/fusing_and_composite_ops.md",
+    "chapters": [
+      "18-npu-ecosystems",
+      "19-model-optimization"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://github.com/RBLN-SW/optimum-rbln/blob/370e2c98e5511373ca3f6454b444c327223822f7/README.md",
+    "chapters": [
+      "18-npu-ecosystems"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://developer.furiosa.ai/v2026.4.1/en/overview/software_stack.html",
+    "chapters": [
+      "19-model-optimization"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://docs.pytorch.org/docs/2.10/generated/torch.nn.utils.fusion.fuse_conv_bn_eval.html",
+    "chapters": [
+      "19-model-optimization"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://openaccess.thecvf.com/content/CVPR2023/html/Fang_DepGraph_Towards_Any_Structural_Pruning_CVPR_2023_paper.html",
+    "chapters": [
+      "19-model-optimization"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://arxiv.org/abs/1503.02531",
+    "chapters": [
+      "19-model-optimization"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://arxiv.org/abs/1804.03230",
+    "chapters": [
+      "19-model-optimization"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://developer.furiosa.ai/v2026.4.1/en/furiosa_llm/models/qwen3.html",
+    "chapters": [
+      "19-model-optimization"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://netspresso.ai/platform",
+    "chapters": [
+      "19-model-optimization"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://github.com/Nota-NetsPresso/PyNetsPresso/blob/f0faa78114054f80f77e5af217e1f7df1a2c9027/netspresso/compressor/v2/compressor.py",
+    "chapters": [
+      "19-model-optimization"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://github.com/Nota-NetsPresso/PyNetsPresso/blob/f0faa78114054f80f77e5af217e1f7df1a2c9027/netspresso/graph_optimizer/graph_optimizer.py",
+    "chapters": [
+      "19-model-optimization"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://github.com/Nota-NetsPresso/netspresso-trainer/blob/d45731ca88051e2c701f27c26cdfdf60c874b152/README.md",
+    "chapters": [
+      "19-model-optimization"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://github.com/Nota-NetsPresso/PyNetsPresso/blob/f0faa78114054f80f77e5af217e1f7df1a2c9027/netspresso/graph_optimizer/graph_optimizer.py#L116-L146",
+    "chapters": [
+      "19-model-optimization"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://github.com/Nota-NetsPresso/PyNetsPresso/blob/f0faa78114054f80f77e5af217e1f7df1a2c9027/netspresso/enums/device.py",
+    "chapters": [
+      "19-model-optimization"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://benchmark.netspresso.ai/",
+    "chapters": [
+      "19-model-optimization"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://github.com/Nota-NetsPresso/PyNetsPresso/blob/f0faa78114054f80f77e5af217e1f7df1a2c9027/README.md",
+    "chapters": [
+      "19-model-optimization"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://github.com/pytorch/pytorch/blob/449b1768410104d3ed79d3bcfe4ba1d65c7f22c0/torch/nn/utils/fusion.py",
+    "chapters": [
+      "19-model-optimization"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://github.com/onnx/optimizer/blob/149a316813a9eca37755c0597c070c83f050db39/README.md",
+    "chapters": [
+      "19-model-optimization"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://github.com/onnxsim/onnxsim/blob/8b35932256e84743db1de14051e8aa717acbd4ec/README.md",
+    "chapters": [
+      "19-model-optimization"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://github.com/microsoft/Olive/blob/4af8b5d410d32101f790eebc335abdf9fcc93ad1/README.md",
+    "chapters": [
+      "19-model-optimization"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://github.com/pytorch/ao/blob/a791dcb26432500f99d40271c81ee8e2753cf99a/docs/source/workflows/inference.md",
+    "chapters": [
+      "19-model-optimization"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://github.com/openvinotoolkit/nncf/blob/0d605e5da7eb735aff96a14a3a771d84d90f88f8/README.md",
+    "chapters": [
+      "19-model-optimization"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://github.com/VainF/Torch-Pruning/blob/c3be4903186ddbf284c109dcb2147a380f26265e/README.md",
+    "chapters": [
+      "19-model-optimization"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://github.com/NVIDIA/Model-Optimizer/blob/d2d92b00ed34662d835b3854bc951599a55eb760/README.md",
+    "chapters": [
+      "19-model-optimization"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://github.com/openvinotoolkit/nncf/blob/0d605e5da7eb735aff96a14a3a771d84d90f88f8/docs/usage/post_training_compression/post_training_quantization/ONNX.md",
+    "chapters": [
+      "19-model-optimization"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://github.com/NVIDIA/Model-Optimizer/blob/d2d92b00ed34662d835b3854bc951599a55eb760/docs/source/guides/_onnx_quantization.rst#L1-L16",
+    "chapters": [
+      "19-model-optimization"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://github.com/microsoft/Olive/blob/4af8b5d410d32101f790eebc335abdf9fcc93ad1/olive/passes/onnx/transformer_optimization.py",
+    "chapters": [
+      "19-model-optimization"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://github.com/pytorch/ao/blob/a791dcb26432500f99d40271c81ee8e2753cf99a/README.md#L6-L19",
+    "chapters": [
+      "19-model-optimization"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://github.com/pytorch/pytorch/blob/449b1768410104d3ed79d3bcfe4ba1d65c7f22c0/torch/nn/utils/fusion.py#L20-L53",
+    "chapters": [
+      "19-model-optimization"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://github.com/onnx/optimizer/blob/149a316813a9eca37755c0597c070c83f050db39/README.md#L13-L22",
+    "chapters": [
+      "19-model-optimization"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://github.com/onnxsim/onnxsim/blob/8b35932256e84743db1de14051e8aa717acbd4ec/onnxsim/onnx_simplifier.py#L8916-L8989",
+    "chapters": [
+      "19-model-optimization"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://github.com/VainF/Torch-Pruning/blob/c3be4903186ddbf284c109dcb2147a380f26265e/README.md#L163-L190",
+    "chapters": [
+      "19-model-optimization"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://github.com/VainF/Torch-Pruning/blob/c3be4903186ddbf284c109dcb2147a380f26265e/README.md#L90-L115",
+    "chapters": [
+      "19-model-optimization"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://arxiv.org/abs/2205.14135",
+    "chapters": [
+      "19-model-optimization"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://github.com/Nota-NetsPresso/PyNetsPresso/blob/f0faa78114054f80f77e5af217e1f7df1a2c9027/LICENSE",
+    "chapters": [
+      "19-model-optimization"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://github.com/Nota-NetsPresso/netspresso-trainer/blob/d45731ca88051e2c701f27c26cdfdf60c874b152/LICENSE",
+    "chapters": [
+      "19-model-optimization"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://github.com/onnxsim/onnxsim/blob/8b35932256e84743db1de14051e8aa717acbd4ec/onnxsim/onnx_simplifier.py",
+    "chapters": [
+      "19-model-optimization"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://github.com/pytorch/ao/blob/a791dcb26432500f99d40271c81ee8e2753cf99a/README.md",
+    "chapters": [
+      "19-model-optimization"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
     "url": "https://docs.pytorch.org/tutorials/advanced/dispatcher.html",
     "chapters": [
       "glossary",
@@ -1729,12 +2486,44 @@
     "access": "repository permission required"
   },
   {
+    "url": "https://github.com/smallstep-zzz/furyawesome/tree/c668ecbceac2bedd04c6e539c1a5509a404a464d",
+    "chapters": [
+      "sources"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
     "url": "https://github.com/smallstep-zzz/FuryBoost/tree/62faf49a29cc40230ee3df271b8f91ad8488eb5d",
     "chapters": [
       "sources"
     ],
     "checked_on": "2026-11-19",
     "access": "repository permission required"
+  },
+  {
+    "url": "https://github.com/Ascend/pytorch/tree/2373dee2db393489d91d44f5fbefd2d6cef30439",
+    "chapters": [
+      "sources"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://github.com/RBLN-SW/optimum-rbln/tree/370e2c98e5511373ca3f6454b444c327223822f7",
+    "chapters": [
+      "sources"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
+  },
+  {
+    "url": "https://github.com/tenstorrent/tt-xla/tree/fdc3b7773674081b8f8c0698de3400d8d899dc8f",
+    "chapters": [
+      "sources"
+    ],
+    "checked_on": "2026-11-19",
+    "access": "public"
   },
   {
     "url": "https://github.com/smallstep-zzz/furyno5-handbook/tree/c0c116c68d3266ce162e69aa3e027da1851ddce4",

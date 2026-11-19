@@ -1,0 +1,8 @@
+flowchart TB
+  A["사용자 RMSNorm: 제곱 · 평균 · 역제곱근 · 곱"] --> B["FX 패턴 인식"]
+  B --> C["표준 RMSNorm 표현"]
+  C --> D["StableHLO composite로 의미 보존"]
+  D --> E["TT-MLIR의 전용 lowering"]
+  A --> F["의미 표식 없이 기본 연산으로 분해"]
+  F --> G["일반 연산 경로의 비용과 비교"]
+  E --> G

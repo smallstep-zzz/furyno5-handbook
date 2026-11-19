@@ -1,0 +1,86 @@
+<svg role="img" aria-label="사용자 모델 · 공개 Trainer의 학습·평가 · 공개 Python client · NetsPresso 서비스 작업 · 변환 모델과 metadata · 품질·shape·연산 계약 확인 · 선택한 Furiosa 입력 경로 · RNGD에서 별도 측정" width="367pt" height="521pt"
+ viewBox="0.00 0.00 367.30 520.80" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(14.4 506.4)">
+<title>handbook</title>
+<g id="edge1" class="edge">
+<title>M&#45;&gt;T</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M159.68,-455.79C143.47,-428.78 112.03,-376.39 93.87,-346.11"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="95.91,-344.75 90.2,-340.01 91.7,-347.27 95.91,-344.75"/>
+</g>
+<g id="edge2" class="edge">
+<title>M&#45;&gt;P</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M186.7,-455.84C196.7,-445.56 209.51,-432.39 220.29,-421.32"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="222.27,-422.8 225.39,-416.07 218.75,-419.38 222.27,-422.8"/>
+</g>
+<g id="edge5" class="edge">
+<title>T&#45;&gt;A</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M101.11,-303.84C113.97,-293.38 130.53,-279.91 144.3,-268.71"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="146.12,-270.39 150.01,-264.07 143.03,-266.59 146.12,-270.39"/>
+</g>
+<g id="edge3" class="edge">
+<title>P&#45;&gt;S</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M246.64,-379.84C249.29,-370.03 252.65,-357.58 255.56,-346.84"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="257.93,-347.47 257.39,-340.07 253.19,-346.19 257.93,-347.47"/>
+</g>
+<g id="edge4" class="edge">
+<title>S&#45;&gt;A</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M240.89,-303.84C228.03,-293.38 211.47,-279.91 197.7,-268.71"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="198.97,-266.59 191.99,-264.07 195.88,-270.39 198.97,-266.59"/>
+</g>
+<g id="edge6" class="edge">
+<title>A&#45;&gt;V</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M171,-227.84C171,-218.12 171,-205.82 171,-195.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="173.45,-195.07 171,-188.07 168.55,-195.07 173.45,-195.07"/>
+</g>
+<g id="edge7" class="edge">
+<title>V&#45;&gt;F</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M171,-151.84C171,-142.12 171,-129.82 171,-119.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="173.45,-119.07 171,-112.07 168.55,-119.07 173.45,-119.07"/>
+</g>
+<g id="edge8" class="edge">
+<title>F&#45;&gt;R</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M171,-75.84C171,-66.12 171,-53.82 171,-43.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="173.45,-43.07 171,-36.07 168.55,-43.07 173.45,-43.07"/>
+</g>
+<g id="node1" class="node">
+<title>M</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M202,-492C202,-492 138,-492 138,-492 132,-492 126,-486 126,-480 126,-480 126,-468 126,-468 126,-462 132,-456 138,-456 138,-456 202,-456 202,-456 208,-456 214,-462 214,-468 214,-468 214,-480 214,-480 214,-486 208,-492 202,-492"/>
+<text text-anchor="middle" x="170" y="-470.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">사용자 모델</text>
+</g>
+<g id="node2" class="node">
+<title>T</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M148,-340C148,-340 12,-340 12,-340 6,-340 0,-334 0,-328 0,-328 0,-316 0,-316 0,-310 6,-304 12,-304 12,-304 148,-304 148,-304 154,-304 160,-310 160,-316 160,-316 160,-328 160,-328 160,-334 154,-340 148,-340"/>
+<text text-anchor="middle" x="80" y="-318.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">공개 Trainer의 학습·평가</text>
+</g>
+<g id="node3" class="node">
+<title>P</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M294.5,-416C294.5,-416 189.5,-416 189.5,-416 183.5,-416 177.5,-410 177.5,-404 177.5,-404 177.5,-392 177.5,-392 177.5,-386 183.5,-380 189.5,-380 189.5,-380 294.5,-380 294.5,-380 300.5,-380 306.5,-386 306.5,-392 306.5,-392 306.5,-404 306.5,-404 306.5,-410 300.5,-416 294.5,-416"/>
+<text text-anchor="middle" x="242" y="-394.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">공개 Python client</text>
+</g>
+<g id="node4" class="node">
+<title>S</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M326.5,-340C326.5,-340 197.5,-340 197.5,-340 191.5,-340 185.5,-334 185.5,-328 185.5,-328 185.5,-316 185.5,-316 185.5,-310 191.5,-304 197.5,-304 197.5,-304 326.5,-304 326.5,-304 332.5,-304 338.5,-310 338.5,-316 338.5,-316 338.5,-328 338.5,-328 338.5,-334 332.5,-340 326.5,-340"/>
+<text text-anchor="middle" x="262" y="-318.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">NetsPresso 서비스 작업</text>
+</g>
+<g id="node5" class="node">
+<title>A</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M232,-264C232,-264 110,-264 110,-264 104,-264 98,-258 98,-252 98,-252 98,-240 98,-240 98,-234 104,-228 110,-228 110,-228 232,-228 232,-228 238,-228 244,-234 244,-240 244,-240 244,-252 244,-252 244,-258 238,-264 232,-264"/>
+<text text-anchor="middle" x="171" y="-242.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">변환 모델과 metadata</text>
+</g>
+<g id="node6" class="node">
+<title>V</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M245,-188C245,-188 97,-188 97,-188 91,-188 85,-182 85,-176 85,-176 85,-164 85,-164 85,-158 91,-152 97,-152 97,-152 245,-152 245,-152 251,-152 257,-158 257,-164 257,-164 257,-176 257,-176 257,-182 251,-188 245,-188"/>
+<text text-anchor="middle" x="171" y="-166.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">품질·shape·연산 계약 확인</text>
+</g>
+<g id="node7" class="node">
+<title>F</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M238,-112C238,-112 104,-112 104,-112 98,-112 92,-106 92,-100 92,-100 92,-88 92,-88 92,-82 98,-76 104,-76 104,-76 238,-76 238,-76 244,-76 250,-82 250,-88 250,-88 250,-100 250,-100 250,-106 244,-112 238,-112"/>
+<text text-anchor="middle" x="171" y="-90.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">선택한 Furiosa 입력 경로</text>
+</g>
+<g id="node8" class="node">
+<title>R</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M226.5,-36C226.5,-36 115.5,-36 115.5,-36 109.5,-36 103.5,-30 103.5,-24 103.5,-24 103.5,-12 103.5,-12 103.5,-6 109.5,0 115.5,0 115.5,0 226.5,0 226.5,0 232.5,0 238.5,-6 238.5,-12 238.5,-12 238.5,-24 238.5,-24 238.5,-30 232.5,-36 226.5,-36"/>
+<text text-anchor="middle" x="171" y="-14.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">RNGD에서 별도 측정</text>
+</g>
+</g>
+</svg>
