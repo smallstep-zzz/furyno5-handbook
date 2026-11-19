@@ -1,0 +1,9 @@
+flowchart TB
+  H["호스트 RAM: 프로그램의 입력 배열"] -->|"PCIe DMA 업로드"| B["장치 HBM: 큰 입력·가중치"]
+  B -->|"PCIe DMA 다운로드"| H
+  B -->|"Tensor DMA"| D["DM: 이번에 계산할 부분"]
+  D -->|"Tensor DMA"| B
+  D -->|"Fetch"| T["Tensor Unit: 계산 중인 값"]
+  T -->|"Commit"| D
+  D -->|"Tensor DMA"| S["SPM: 작은 보조 데이터"]
+  S -->|"Tensor DMA"| D

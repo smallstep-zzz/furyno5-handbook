@@ -1,0 +1,9 @@
+flowchart TB
+  S["앞 단계에서 온 값"] --> C["Contraction: 곱하고 합치기"]
+  T["TRF의 피연산자"] --> C
+  C --> V["Vector: 원소별 연산·축약"]
+  R["VRF의 피연산자"] --> V
+  V --> A["Cast: 자료형 바꾸기"]
+  A --> P["Transpose: 묶음 안의 원소 순서 바꾸기"]
+  P --> D["Commit Adapter: 저장 전 보정"]
+  D --> M["Commit: DM에 결과 쓰기"]

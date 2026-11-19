@@ -1,4 +1,7 @@
-"""Summarize a FuryNo5/fxbX plan trace; diagnostic only, never acceptance."""
+"""FuryNo5/fxbX 계획과 trace를 맞춰 보는 진단 도구.
+
+이름·횟수·시간을 정리하며 수치 정확성이나 NPU 실행 성공을 인증하지 않는다.
+"""
 import argparse
 from collections import Counter, defaultdict
 import json
@@ -7,6 +10,7 @@ from pathlib import Path
 
 
 def summarize(plan, trace, entry_name="forward"):
+    # plan은 실행 순서, trace는 기록된 사건이다. 같은 단계 이름으로 서로 대조한다.
     steps = plan["entries"][entry_name]["steps"]
     prefix = "execution_plan::" + entry_name + "::"
     expected = {
@@ -18,6 +22,7 @@ def summarize(plan, trace, entry_name="forward"):
         if (not step["inputs"] or plan["kernels"][step["kernel"]].get(
             "execution_kind") == "static_value_preparation")
     }
+    # Chrome trace의 {"traceEvents": [...]} 형태와 사건 목록 형태를 모두 읽는다.
     events = trace["traceEvents"] if isinstance(trace, dict) else trace
     if not isinstance(events, list):
         raise ValueError("trace must be a list or contain traceEvents")
@@ -49,12 +54,15 @@ def summarize(plan, trace, entry_name="forward"):
             continue
         observed[label] += 1
         duration = event.get("dur")
+        # ph='X'는 시작 시각과 지속시간을 한 사건에 적는 complete event다.
+        # 0·음수·NaN·무한대인 기록을 실제 작업 시간처럼 합산하지 않는다.
         if (event.get("ph") != "X"
                 or type(duration) not in (int, float)
                 or not math.isfinite(duration) or duration <= 0):
             invalid_timing.append(label)
             continue
         key = expected[label][1]["kernel"]
+        # 겹친 task도 각각 더한 작업량이다. 사용자 요청의 벽시계 지연과 다르다.
         duration_by_kernel[key] += duration
         task_count_by_kernel[key] += 1
     uses = Counter(step["kernel"] for step in steps)
@@ -106,6 +114,7 @@ def main():
         json.loads(args.trace.read_text()),
         args.entry,
     )
+    # x 모드는 새 파일만 생성하므로 이전 측정 결과를 조용히 덮어쓰지 않는다.
     with args.out.open("x", encoding="utf-8") as output:
         json.dump(result, output, indent=2, ensure_ascii=False)
         output.write("\n")

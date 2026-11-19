@@ -70,9 +70,15 @@ fxbX가 공개 저장소라는 사실은 Furiosa의 공식 지원 형식이라�
 
 공식 홈페이지의 개요는 개념의 출발점으로 쓰고, 구체적인 함수 호출·호환성·오류 처리는 가능한 한 해당 문서나 구현으로 내려가 확인했다. 사용자 프로젝트의 ATen 지원 범위도 README의 목표 문구만으로 판정하지 않고 실제 registry·변환 규칙·실행 경로를 구분했다.
 
+## 기초 계산과 한국어 도식의 출처
+
+행렬곱·`einsum`·`reshape`·전치·stride·broadcasting은 NumPy 공식 문서로 동작을 확인하고, 본문에서는 별도로 만든 작은 배열로 계산을 풀었다. 실제 값은 [tensor_basics.py](examples/tensor_basics.py)와 [array_layout.py](examples/array_layout.py)에서 다시 계산할 수 있다. NumPy의 stride는 바이트 수이고 PyTorch의 stride는 원소 단위이므로 예제를 옮길 때 단위를 유지해야 한다. [NumPy ndarray](https://numpy.org/doc/stable/reference/arrays.ndarray.html) · [PyTorch Tensor.stride](https://docs.pytorch.org/docs/2.10/generated/torch.Tensor.stride.html)
+
+01·02장의 메모리와 연산 경계 그림은 공식 furiosa-opt의 [Moving Tensors](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/moving-tensors/index.md)와 [Computing Tensors](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/computing-tensors/index.md)에 근거해 한국어로 재구성했다. 원본 그림을 그대로 번역한 것으로 표시하지 않고, 학습에 필요한 경로로 나누거나 단순화한 사실을 설명한다. 라이선스는 [Apache-2.0 전문](assets/licenses/furiosa-opt-Apache-2.0.txt), 권리 표시는 [Furiosa Opt NOTICE](assets/licenses/furiosa-opt-NOTICE.txt)에 보존했다.
+
 ## 코드 검사와 NPU 실측의 구분
 
-**이번 핸드북 작성 환경에서는 RNGD에서 새 모델을 컴파일·실행하거나 새 성능 수치를 측정하지 않았다.** 호출 API·정의 파일·CLI 구성·버전·실행 전제를 소스와 대조하고, 완전한 Python 예제의 문법을 검사했다. 예를 들어 5장의 병렬 컴파일 예제는 소스가 `spawn` 방식의 프로세스를 사용함을 확인하고 `main()` 보호를 추가했다. 이는 재현성을 높이는 코드 검토 결과이지 NPU 통과 결과는 아니다. [프로세스 생성 구현](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/execution_plan.py)
+**이번 핸드북 작성 환경에서는 RNGD에서 새 모델을 컴파일·실행하거나 새 성능 수치를 측정하지 않았다.** 새로 추가한 NumPy 기초 예제 두 개는 CPU에서 실제 실행해 배열 값과 shape·stride·메모리 공유를 확인했다. 장치 호출 API·정의 파일·CLI 구성·버전·실행 전제는 소스와 대조하고, 완전한 Python 예제의 문법을 검사했다. 예를 들어 5장의 병렬 컴파일 예제는 소스가 `spawn` 방식의 프로세스를 사용함을 확인하고 `main()` 보호를 추가했다. 이는 재현성을 높이는 코드 검토 결과이지 NPU 통과 결과는 아니다. [프로세스 생성 구현](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/execution_plan.py)
 
 8장의 Schedule Viewer 수치는 **컴파일러가 만든 정적 schedule의 비용**이다. 실제 host 대기·전송·장치 상태·요청 분포를 포함한 benchmark 결과로 바꾸어 읽지 않는다. [Schedule Viewer 설명](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/tools/schedule-viewer.md)
 

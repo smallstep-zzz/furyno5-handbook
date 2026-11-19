@@ -1,0 +1,76 @@
+<svg role="img" aria-label="RNGD 칩 하나 · 2개 cluster · 각 cluster에 4개 PE · 각 PE에 64개 slice · slice 쪽 메모리에서 값 읽기 · 수축 연산기의 8개 lane · 결과를 slice 쪽 메모리에 저장" width="261pt" height="521pt"
+ viewBox="0.00 0.00 261.30 520.80" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(14.4 506.4)">
+<title>handbook</title>
+<g id="edge1" class="edge">
+<title>C&#45;&gt;G</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M143.5,-455.84C143.5,-446.12 143.5,-433.82 143.5,-423.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="145.95,-423.07 143.5,-416.07 141.05,-423.07 145.95,-423.07"/>
+</g>
+<g id="edge2" class="edge">
+<title>G&#45;&gt;P</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M143.5,-379.84C143.5,-370.12 143.5,-357.82 143.5,-347.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="145.95,-347.07 143.5,-340.07 141.05,-347.07 145.95,-347.07"/>
+</g>
+<g id="edge3" class="edge">
+<title>P&#45;&gt;S</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M143.5,-303.84C143.5,-294.12 143.5,-281.82 143.5,-271.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="145.95,-271.07 143.5,-264.07 141.05,-271.07 145.95,-271.07"/>
+</g>
+<g id="edge4" class="edge">
+<title>S&#45;&gt;M</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M129.58,-227.84C121.33,-217.66 110.77,-204.63 101.84,-193.62"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="103.65,-191.96 97.34,-188.07 99.85,-195.05 103.65,-191.96"/>
+</g>
+<g id="edge5" class="edge">
+<title>S&#45;&gt;E</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M158,-227.79C166.05,-217.09 175.27,-202.62 179.5,-188 183.95,-172.63 183.95,-167.37 179.5,-152 176,-139.9 169.07,-127.89 162.23,-118.04"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="164.09,-116.44 158,-112.21 160.12,-119.32 164.09,-116.44"/>
+</g>
+<g id="edge6" class="edge">
+<title>M&#45;&gt;E</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M97.42,-151.84C105.67,-141.66 116.23,-128.63 125.16,-117.62"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="127.15,-119.05 129.66,-112.07 123.35,-115.96 127.15,-119.05"/>
+</g>
+<g id="edge7" class="edge">
+<title>E&#45;&gt;R</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M143.5,-75.84C143.5,-66.12 143.5,-53.82 143.5,-43.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="145.95,-43.07 143.5,-36.07 141.05,-43.07 145.95,-43.07"/>
+</g>
+<g id="node1" class="node">
+<title>C</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M182,-492C182,-492 105,-492 105,-492 99,-492 93,-486 93,-480 93,-480 93,-468 93,-468 93,-462 99,-456 105,-456 105,-456 182,-456 182,-456 188,-456 194,-462 194,-468 194,-468 194,-480 194,-480 194,-486 188,-492 182,-492"/>
+<text text-anchor="middle" x="143.5" y="-470.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">RNGD 칩 하나</text>
+</g>
+<g id="node2" class="node">
+<title>G</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M175.5,-416C175.5,-416 111.5,-416 111.5,-416 105.5,-416 99.5,-410 99.5,-404 99.5,-404 99.5,-392 99.5,-392 99.5,-386 105.5,-380 111.5,-380 111.5,-380 175.5,-380 175.5,-380 181.5,-380 187.5,-386 187.5,-392 187.5,-392 187.5,-404 187.5,-404 187.5,-410 181.5,-416 175.5,-416"/>
+<text text-anchor="middle" x="143.5" y="-394.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">2개 cluster</text>
+</g>
+<g id="node3" class="node">
+<title>P</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M197,-340C197,-340 90,-340 90,-340 84,-340 78,-334 78,-328 78,-328 78,-316 78,-316 78,-310 84,-304 90,-304 90,-304 197,-304 197,-304 203,-304 209,-310 209,-316 209,-316 209,-328 209,-328 209,-334 203,-340 197,-340"/>
+<text text-anchor="middle" x="143.5" y="-318.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">각 cluster에 4개 PE</text>
+</g>
+<g id="node4" class="node">
+<title>S</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M193.5,-264C193.5,-264 93.5,-264 93.5,-264 87.5,-264 81.5,-258 81.5,-252 81.5,-252 81.5,-240 81.5,-240 81.5,-234 87.5,-228 93.5,-228 93.5,-228 193.5,-228 193.5,-228 199.5,-228 205.5,-234 205.5,-240 205.5,-240 205.5,-252 205.5,-252 205.5,-258 199.5,-264 193.5,-264"/>
+<text text-anchor="middle" x="143.5" y="-242.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">각 PE에 64개 slice</text>
+</g>
+<g id="node5" class="node">
+<title>M</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M155,-188C155,-188 12,-188 12,-188 6,-188 0,-182 0,-176 0,-176 0,-164 0,-164 0,-158 6,-152 12,-152 12,-152 155,-152 155,-152 161,-152 167,-158 167,-164 167,-164 167,-176 167,-176 167,-182 161,-188 155,-188"/>
+<text text-anchor="middle" x="83.5" y="-166.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">slice 쪽 메모리에서 값 읽기</text>
+</g>
+<g id="node6" class="node">
+<title>E</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M205.5,-112C205.5,-112 81.5,-112 81.5,-112 75.5,-112 69.5,-106 69.5,-100 69.5,-100 69.5,-88 69.5,-88 69.5,-82 75.5,-76 81.5,-76 81.5,-76 205.5,-76 205.5,-76 211.5,-76 217.5,-82 217.5,-88 217.5,-88 217.5,-100 217.5,-100 217.5,-106 211.5,-112 205.5,-112"/>
+<text text-anchor="middle" x="143.5" y="-90.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">수축 연산기의 8개 lane</text>
+</g>
+<g id="node7" class="node">
+<title>R</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M220.5,-36C220.5,-36 66.5,-36 66.5,-36 60.5,-36 54.5,-30 54.5,-24 54.5,-24 54.5,-12 54.5,-12 54.5,-6 60.5,0 66.5,0 66.5,0 220.5,0 220.5,0 226.5,0 232.5,-6 232.5,-12 232.5,-12 232.5,-24 232.5,-24 232.5,-30 226.5,-36 220.5,-36"/>
+<text text-anchor="middle" x="143.5" y="-14.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">결과를 slice 쪽 메모리에 저장</text>
+</g>
+</g>
+</svg>

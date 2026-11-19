@@ -1,0 +1,61 @@
+<svg role="img" aria-label="입력 x: -2, 1 · Add · 입력 b: 1, 2 · 중간값: -1, 3 · ReLU · 출력 y: 0, 3" width="231pt" height="369pt"
+ viewBox="0.00 0.00 231.30 368.80" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(14.4 354.4)">
+<title>handbook</title>
+<g id="edge1" class="edge">
+<title>X&#45;&gt;A</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M58.22,-303.84C66.06,-293.66 76.09,-280.63 84.58,-269.62"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="86.52,-271.11 88.85,-264.07 82.64,-268.12 86.52,-271.11"/>
+</g>
+<g id="edge3" class="edge">
+<title>A&#45;&gt;T</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M102,-227.84C102,-218.12 102,-205.82 102,-195.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="104.45,-195.07 102,-188.07 99.55,-195.07 104.45,-195.07"/>
+</g>
+<g id="edge2" class="edge">
+<title>B&#45;&gt;A</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M145.78,-303.84C137.94,-293.66 127.91,-280.63 119.42,-269.62"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="121.36,-268.12 115.15,-264.07 117.48,-271.11 121.36,-268.12"/>
+</g>
+<g id="edge4" class="edge">
+<title>T&#45;&gt;R</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M102,-151.84C102,-142.12 102,-129.82 102,-119.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="104.45,-119.07 102,-112.07 99.55,-119.07 104.45,-119.07"/>
+</g>
+<g id="edge5" class="edge">
+<title>R&#45;&gt;Y</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M102,-75.84C102,-66.12 102,-53.82 102,-43.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="104.45,-43.07 102,-36.07 99.55,-43.07 104.45,-43.07"/>
+</g>
+<g id="node1" class="node">
+<title>X</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M78,-340C78,-340 12,-340 12,-340 6,-340 0,-334 0,-328 0,-328 0,-316 0,-316 0,-310 6,-304 12,-304 12,-304 78,-304 78,-304 84,-304 90,-310 90,-316 90,-316 90,-328 90,-328 90,-334 84,-340 78,-340"/>
+<text text-anchor="middle" x="45" y="-318.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">입력 x: &#45;2, 1</text>
+</g>
+<g id="node2" class="node">
+<title>A</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M117,-264C117,-264 87,-264 87,-264 81,-264 75,-258 75,-252 75,-252 75,-240 75,-240 75,-234 81,-228 87,-228 87,-228 117,-228 117,-228 123,-228 129,-234 129,-240 129,-240 129,-252 129,-252 129,-258 123,-264 117,-264"/>
+<text text-anchor="middle" x="102" y="-242.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">Add</text>
+</g>
+<g id="node3" class="node">
+<title>B</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M190.5,-340C190.5,-340 127.5,-340 127.5,-340 121.5,-340 115.5,-334 115.5,-328 115.5,-328 115.5,-316 115.5,-316 115.5,-310 121.5,-304 127.5,-304 127.5,-304 190.5,-304 190.5,-304 196.5,-304 202.5,-310 202.5,-316 202.5,-316 202.5,-328 202.5,-328 202.5,-334 196.5,-340 190.5,-340"/>
+<text text-anchor="middle" x="159" y="-318.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">입력 b: 1, 2</text>
+</g>
+<g id="node4" class="node">
+<title>T</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M136,-188C136,-188 68,-188 68,-188 62,-188 56,-182 56,-176 56,-176 56,-164 56,-164 56,-158 62,-152 68,-152 68,-152 136,-152 136,-152 142,-152 148,-158 148,-164 148,-164 148,-176 148,-176 148,-182 142,-188 136,-188"/>
+<text text-anchor="middle" x="102" y="-166.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">중간값: &#45;1, 3</text>
+</g>
+<g id="node5" class="node">
+<title>R</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M119,-112C119,-112 85,-112 85,-112 79,-112 73,-106 73,-100 73,-100 73,-88 73,-88 73,-82 79,-76 85,-76 85,-76 119,-76 119,-76 125,-76 131,-82 131,-88 131,-88 131,-100 131,-100 131,-106 125,-112 119,-112"/>
+<text text-anchor="middle" x="102" y="-90.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">ReLU</text>
+</g>
+<g id="node6" class="node">
+<title>Y</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M133,-36C133,-36 71,-36 71,-36 65,-36 59,-30 59,-24 59,-24 59,-12 59,-12 59,-6 65,0 71,0 71,0 133,0 133,0 139,0 145,-6 145,-12 145,-12 145,-24 145,-24 145,-30 139,-36 133,-36"/>
+<text text-anchor="middle" x="102" y="-14.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">출력 y: 0, 3</text>
+</g>
+</g>
+</svg>

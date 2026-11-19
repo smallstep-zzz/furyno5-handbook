@@ -1,0 +1,10 @@
+flowchart TB
+  H["호스트 RAM: 입력 생성과 결과 사용"] --> B["장치 HBM: 큰 배열 보관"]
+  B --> D["DM: 계산할 부분 준비"]
+  D --> F["Fetch: DM 값을 연산 경로로 읽기"]
+  F --> T["Tensor Unit: 값의 흐름을 계산"]
+  T --> C["Commit: 결과를 DM에 저장"]
+  C --> D
+  D --> B
+  B --> H
+  R["TRF·VRF: 반복할 피연산자"] --> T

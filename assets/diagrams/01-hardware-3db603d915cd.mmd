@@ -1,0 +1,9 @@
+flowchart TB
+  D["DM: 저장된 값"] --> F["Fetch: 값 읽기"]
+  F --> A["Fetch Adapter: 읽은 값의 형식 보정"]
+  A --> S["Switch: 필요한 slice로 전달"]
+  S --> C["Collect: 계산에 맞는 크기로 묶기"]
+  C --> R["TRF에 보관할 값"]
+  C --> V["VRF에 보관할 값"]
+  C --> E["수축 연산기로 보낼 값의 흐름"]
+  R --> E

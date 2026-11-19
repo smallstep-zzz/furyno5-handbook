@@ -1,0 +1,92 @@
+<svg role="img" aria-label="앞 단계에서 온 값 · Contraction: 곱하고 합치기 · TRF의 피연산자 · Vector: 원소별 연산·축약 · VRF의 피연산자 · Cast: 자료형 바꾸기 · Transpose: 묶음 안의 원소 순서 바꾸기 · Commit Adapter: 저장 전 보정 · Commit: DM에 결과 쓰기" width="376pt" height="531pt"
+ viewBox="0.00 0.00 376.30 530.80" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(14.4 516.4)">
+<title>handbook</title>
+<g id="edge1" class="edge">
+<title>S&#45;&gt;C</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M74,-465.84C83.58,-455.56 95.86,-442.39 106.19,-431.32"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="108.1,-432.86 111.08,-426.07 104.52,-429.52 108.1,-432.86"/>
+</g>
+<g id="edge3" class="edge">
+<title>C&#45;&gt;V</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M146.25,-389.84C157.88,-379.47 172.82,-366.15 185.31,-355.02"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="187.26,-356.56 190.85,-350.07 184,-352.9 187.26,-356.56"/>
+</g>
+<g id="edge2" class="edge">
+<title>T&#45;&gt;C</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M180,-465.84C170.42,-455.56 158.14,-442.39 147.81,-431.32"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="149.48,-429.52 142.92,-426.07 145.9,-432.86 149.48,-429.52"/>
+</g>
+<g id="edge5" class="edge">
+<title>V&#45;&gt;A</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M210,-313.84C210,-304.12 210,-291.82 210,-281.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="212.45,-281.07 210,-274.07 207.55,-281.07 212.45,-281.07"/>
+</g>
+<g id="edge4" class="edge">
+<title>R&#45;&gt;V</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M273.75,-389.84C262.12,-379.47 247.18,-366.15 234.69,-355.02"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="236,-352.9 229.15,-350.07 232.74,-356.56 236,-352.9"/>
+</g>
+<g id="edge6" class="edge">
+<title>A&#45;&gt;P</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M210,-237.86C210,-228.33 210,-216.21 210,-205.23"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="212.45,-205.22 210,-198.22 207.55,-205.22 212.45,-205.22"/>
+</g>
+<g id="edge7" class="edge">
+<title>P&#45;&gt;D</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M210,-151.99C210,-141.85 210,-129.79 210,-119.37"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="212.45,-119.13 210,-112.13 207.55,-119.13 212.45,-119.13"/>
+</g>
+<g id="edge8" class="edge">
+<title>D&#45;&gt;M</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M210,-75.84C210,-66.12 210,-53.82 210,-43.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="212.45,-43.07 210,-36.07 207.55,-43.07 212.45,-43.07"/>
+</g>
+<g id="node1" class="node">
+<title>S</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M104,-502C104,-502 12,-502 12,-502 6,-502 0,-496 0,-490 0,-490 0,-478 0,-478 0,-472 6,-466 12,-466 12,-466 104,-466 104,-466 110,-466 116,-472 116,-478 116,-478 116,-490 116,-490 116,-496 110,-502 104,-502"/>
+<text text-anchor="middle" x="58" y="-480.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">앞 단계에서 온 값</text>
+</g>
+<g id="node2" class="node">
+<title>C</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M201,-426C201,-426 53,-426 53,-426 47,-426 41,-420 41,-414 41,-414 41,-402 41,-402 41,-396 47,-390 53,-390 53,-390 201,-390 201,-390 207,-390 213,-396 213,-402 213,-402 213,-414 213,-414 213,-420 207,-426 201,-426"/>
+<text text-anchor="middle" x="127" y="-404.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">Contraction: 곱하고 합치기</text>
+</g>
+<g id="node3" class="node">
+<title>T</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M239,-502C239,-502 153,-502 153,-502 147,-502 141,-496 141,-490 141,-490 141,-478 141,-478 141,-472 147,-466 153,-466 153,-466 239,-466 239,-466 245,-466 251,-472 251,-478 251,-478 251,-490 251,-490 251,-496 245,-502 239,-502"/>
+<text text-anchor="middle" x="196" y="-480.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">TRF의 피연산자</text>
+</g>
+<g id="node4" class="node">
+<title>V</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M278,-350C278,-350 142,-350 142,-350 136,-350 130,-344 130,-338 130,-338 130,-326 130,-326 130,-320 136,-314 142,-314 142,-314 278,-314 278,-314 284,-314 290,-320 290,-326 290,-326 290,-338 290,-338 290,-344 284,-350 278,-350"/>
+<text text-anchor="middle" x="210" y="-328.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">Vector: 원소별 연산·축약</text>
+</g>
+<g id="node5" class="node">
+<title>R</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M335.5,-426C335.5,-426 250.5,-426 250.5,-426 244.5,-426 238.5,-420 238.5,-414 238.5,-414 238.5,-402 238.5,-402 238.5,-396 244.5,-390 250.5,-390 250.5,-390 335.5,-390 335.5,-390 341.5,-390 347.5,-396 347.5,-402 347.5,-402 347.5,-414 347.5,-414 347.5,-420 341.5,-426 335.5,-426"/>
+<text text-anchor="middle" x="293" y="-404.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">VRF의 피연산자</text>
+</g>
+<g id="node6" class="node">
+<title>A</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M262.5,-274C262.5,-274 157.5,-274 157.5,-274 151.5,-274 145.5,-268 145.5,-262 145.5,-262 145.5,-250 145.5,-250 145.5,-244 151.5,-238 157.5,-238 157.5,-238 262.5,-238 262.5,-238 268.5,-238 274.5,-244 274.5,-250 274.5,-250 274.5,-262 274.5,-262 274.5,-268 268.5,-274 262.5,-274"/>
+<text text-anchor="middle" x="210" y="-252.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">Cast: 자료형 바꾸기</text>
+</g>
+<g id="node7" class="node">
+<title>P</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M293.5,-198C293.5,-198 126.5,-198 126.5,-198 120.5,-198 114.5,-192 114.5,-186 114.5,-186 114.5,-164 114.5,-164 114.5,-158 120.5,-152 126.5,-152 126.5,-152 293.5,-152 293.5,-152 299.5,-152 305.5,-158 305.5,-164 305.5,-164 305.5,-186 305.5,-186 305.5,-192 299.5,-198 293.5,-198"/>
+<text text-anchor="middle" x="210" y="-178.4" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">Transpose: 묶음 안의 원소 순서</text>
+<text text-anchor="middle" x="210" y="-165.4" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">바꾸기</text>
+</g>
+<g id="node8" class="node">
+<title>D</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M293.5,-112C293.5,-112 126.5,-112 126.5,-112 120.5,-112 114.5,-106 114.5,-100 114.5,-100 114.5,-88 114.5,-88 114.5,-82 120.5,-76 126.5,-76 126.5,-76 293.5,-76 293.5,-76 299.5,-76 305.5,-82 305.5,-88 305.5,-88 305.5,-100 305.5,-100 305.5,-106 299.5,-112 293.5,-112"/>
+<text text-anchor="middle" x="210" y="-90.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">Commit Adapter: 저장 전 보정</text>
+</g>
+<g id="node9" class="node">
+<title>M</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M278,-36C278,-36 142,-36 142,-36 136,-36 130,-30 130,-24 130,-24 130,-12 130,-12 130,-6 136,0 142,0 142,0 278,0 278,0 284,0 290,-6 290,-12 290,-12 290,-24 290,-24 290,-30 284,-36 278,-36"/>
+<text text-anchor="middle" x="210" y="-14.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">Commit: DM에 결과 쓰기</text>
+</g>
+</g>
+</svg>

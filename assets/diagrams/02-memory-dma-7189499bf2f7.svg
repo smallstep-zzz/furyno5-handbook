@@ -1,0 +1,91 @@
+<svg role="img" aria-label="호스트 버퍼에 요청 A 저장 · 장치 버퍼로 DMA 제출 · DMA 읽기·쓰기 완료 · 호스트 버퍼: 다음 요청에 재사용 가능 · 장치 버퍼를 사용해 계산 · 장치 입력의 마지막 읽기 완료 · 장치 입력 버퍼: 재사용 가능 · 결과를 쓰는 작업 완료 · 다음 연산 또는 호스트가 결과 읽기" width="546pt" height="445pt"
+ viewBox="0.00 0.00 545.80 444.80" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(14.4 430.4)">
+<title>handbook</title>
+<g id="edge1" class="edge">
+<title>A&#45;&gt;T</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M211.5,-379.84C211.5,-370.12 211.5,-357.82 211.5,-347.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="213.95,-347.07 211.5,-340.07 209.05,-347.07 213.95,-347.07"/>
+</g>
+<g id="edge2" class="edge">
+<title>T&#45;&gt;W</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M211.5,-303.84C211.5,-294.12 211.5,-281.82 211.5,-271.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="213.95,-271.07 211.5,-264.07 209.05,-271.07 213.95,-271.07"/>
+</g>
+<g id="edge3" class="edge">
+<title>W&#45;&gt;R</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M187.38,-227.84C172.55,-217.28 153.42,-203.67 137.6,-192.42"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="138.61,-190.13 131.49,-188.07 135.77,-194.12 138.61,-190.13"/>
+</g>
+<g id="edge4" class="edge">
+<title>W&#45;&gt;C</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M235.62,-227.84C250.45,-217.28 269.58,-203.67 285.4,-192.42"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="287.23,-194.12 291.51,-188.07 284.39,-190.13 287.23,-194.12"/>
+</g>
+<g id="edge5" class="edge">
+<title>C&#45;&gt;D</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M293.47,-151.84C279.92,-141.28 262.44,-127.67 247.99,-116.42"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="249.44,-114.44 242.41,-112.07 246.43,-118.3 249.44,-114.44"/>
+</g>
+<g id="edge7" class="edge">
+<title>C&#45;&gt;O</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M337.3,-151.84C350.71,-141.28 368,-127.67 382.3,-116.42"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="383.83,-118.33 387.82,-112.07 380.8,-114.47 383.83,-118.33"/>
+</g>
+<g id="edge6" class="edge">
+<title>D&#45;&gt;E</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M217.48,-75.84C215.78,-66.12 213.62,-53.82 211.74,-43.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="214.12,-42.54 210.5,-36.07 209.3,-43.39 214.12,-42.54"/>
+</g>
+<g id="edge8" class="edge">
+<title>O&#45;&gt;H</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M411.12,-75.84C412.04,-66.12 413.21,-53.82 414.22,-43.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="416.67,-43.27 414.89,-36.07 411.79,-42.81 416.67,-43.27"/>
+</g>
+<g id="node1" class="node">
+<title>A</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M280,-416C280,-416 143,-416 143,-416 137,-416 131,-410 131,-404 131,-404 131,-392 131,-392 131,-386 137,-380 143,-380 143,-380 280,-380 280,-380 286,-380 292,-386 292,-392 292,-392 292,-404 292,-404 292,-410 286,-416 280,-416"/>
+<text text-anchor="middle" x="211.5" y="-394.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">호스트 버퍼에 요청 A 저장</text>
+</g>
+<g id="node2" class="node">
+<title>T</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M270.5,-340C270.5,-340 152.5,-340 152.5,-340 146.5,-340 140.5,-334 140.5,-328 140.5,-328 140.5,-316 140.5,-316 140.5,-310 146.5,-304 152.5,-304 152.5,-304 270.5,-304 270.5,-304 276.5,-304 282.5,-310 282.5,-316 282.5,-316 282.5,-328 282.5,-328 282.5,-334 276.5,-340 270.5,-340"/>
+<text text-anchor="middle" x="211.5" y="-318.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">장치 버퍼로 DMA 제출</text>
+</g>
+<g id="node3" class="node">
+<title>W</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M266.5,-264C266.5,-264 156.5,-264 156.5,-264 150.5,-264 144.5,-258 144.5,-252 144.5,-252 144.5,-240 144.5,-240 144.5,-234 150.5,-228 156.5,-228 156.5,-228 266.5,-228 266.5,-228 272.5,-228 278.5,-234 278.5,-240 278.5,-240 278.5,-252 278.5,-252 278.5,-258 272.5,-264 266.5,-264"/>
+<text text-anchor="middle" x="211.5" y="-242.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">DMA 읽기·쓰기 완료</text>
+</g>
+<g id="node4" class="node">
+<title>R</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M203,-188C203,-188 12,-188 12,-188 6,-188 0,-182 0,-176 0,-176 0,-164 0,-164 0,-158 6,-152 12,-152 12,-152 203,-152 203,-152 209,-152 215,-158 215,-164 215,-164 215,-176 215,-176 215,-182 209,-188 203,-188"/>
+<text text-anchor="middle" x="107.5" y="-166.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">호스트 버퍼: 다음 요청에 재사용 가능</text>
+</g>
+<g id="node5" class="node">
+<title>C</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M378.5,-188C378.5,-188 252.5,-188 252.5,-188 246.5,-188 240.5,-182 240.5,-176 240.5,-176 240.5,-164 240.5,-164 240.5,-158 246.5,-152 252.5,-152 252.5,-152 378.5,-152 378.5,-152 384.5,-152 390.5,-158 390.5,-164 390.5,-164 390.5,-176 390.5,-176 390.5,-182 384.5,-188 378.5,-188"/>
+<text text-anchor="middle" x="315.5" y="-166.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">장치 버퍼를 사용해 계산</text>
+</g>
+<g id="node6" class="node">
+<title>D</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M296.5,-112C296.5,-112 144.5,-112 144.5,-112 138.5,-112 132.5,-106 132.5,-100 132.5,-100 132.5,-88 132.5,-88 132.5,-82 138.5,-76 144.5,-76 144.5,-76 296.5,-76 296.5,-76 302.5,-76 308.5,-82 308.5,-88 308.5,-88 308.5,-100 308.5,-100 308.5,-106 302.5,-112 296.5,-112"/>
+<text text-anchor="middle" x="220.5" y="-90.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">장치 입력의 마지막 읽기 완료</text>
+</g>
+<g id="node7" class="node">
+<title>E</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M279,-36C279,-36 136,-36 136,-36 130,-36 124,-30 124,-24 124,-24 124,-12 124,-12 124,-6 130,0 136,0 136,0 279,0 279,0 285,0 291,-6 291,-12 291,-12 291,-24 291,-24 291,-30 285,-36 279,-36"/>
+<text text-anchor="middle" x="207.5" y="-14.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">장치 입력 버퍼: 재사용 가능</text>
+</g>
+<g id="node8" class="node">
+<title>O</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M467,-112C467,-112 352,-112 352,-112 346,-112 340,-106 340,-100 340,-100 340,-88 340,-88 340,-82 346,-76 352,-76 352,-76 467,-76 467,-76 473,-76 479,-82 479,-88 479,-88 479,-100 479,-100 479,-106 473,-112 467,-112"/>
+<text text-anchor="middle" x="409.5" y="-90.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">결과를 쓰는 작업 완료</text>
+</g>
+<g id="node9" class="node">
+<title>H</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M505,-36C505,-36 328,-36 328,-36 322,-36 316,-30 316,-24 316,-24 316,-12 316,-12 316,-6 322,0 328,0 328,0 505,0 505,0 511,0 517,-6 517,-12 517,-12 517,-24 517,-24 517,-30 511,-36 505,-36"/>
+<text text-anchor="middle" x="416.5" y="-14.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">다음 연산 또는 호스트가 결과 읽기</text>
+</g>
+</g>
+</svg>

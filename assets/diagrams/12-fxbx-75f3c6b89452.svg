@@ -1,0 +1,91 @@
+<svg role="img" aria-label="패키지 bytes · 형식·해시·버전 검사 · 외부 checkpoint · weight 이름·shape 연결 · EDF 해석·장치 객체 준비 · 이번 호출의 x · 입력 계약 검사 · 계획의 step 실행 · 완료 후 y 반환" width="372pt" height="521pt"
+ viewBox="0.00 0.00 371.80 520.80" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(14.4 506.4)">
+<title>handbook</title>
+<g id="edge1" class="edge">
+<title>P&#45;&gt;V</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M67.5,-455.84C67.5,-446.12 67.5,-433.82 67.5,-423.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="69.95,-423.07 67.5,-416.07 65.05,-423.07 69.95,-423.07"/>
+</g>
+<g id="edge3" class="edge">
+<title>V&#45;&gt;B</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M84.9,-379.84C95.4,-369.47 108.9,-356.15 120.19,-345.02"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="121.94,-346.73 125.2,-340.07 118.5,-343.24 121.94,-346.73"/>
+</g>
+<g id="edge2" class="edge">
+<title>W&#45;&gt;B</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M200.87,-379.84C190.23,-369.47 176.55,-356.15 165.11,-345.02"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="166.76,-343.2 160.03,-340.07 163.34,-346.71 166.76,-343.2"/>
+</g>
+<g id="edge4" class="edge">
+<title>B&#45;&gt;L</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M142.5,-303.84C142.5,-294.12 142.5,-281.82 142.5,-271.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="144.95,-271.07 142.5,-264.07 140.05,-271.07 144.95,-271.07"/>
+</g>
+<g id="edge6" class="edge">
+<title>L&#45;&gt;I</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M160.13,-227.84C170.77,-217.47 184.45,-204.15 195.89,-193.02"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="197.66,-194.71 200.97,-188.07 194.24,-191.2 197.66,-194.71"/>
+</g>
+<g id="edge5" class="edge">
+<title>X&#45;&gt;I</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M276.87,-227.84C266.23,-217.47 252.55,-204.15 241.11,-193.02"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="242.76,-191.2 236.03,-188.07 239.34,-194.71 242.76,-191.2"/>
+</g>
+<g id="edge7" class="edge">
+<title>I&#45;&gt;S</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M218.5,-151.84C218.5,-142.12 218.5,-129.82 218.5,-119.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="220.95,-119.07 218.5,-112.07 216.05,-119.07 220.95,-119.07"/>
+</g>
+<g id="edge8" class="edge">
+<title>S&#45;&gt;Y</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M218.5,-75.84C218.5,-66.12 218.5,-53.82 218.5,-43.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="220.95,-43.07 218.5,-36.07 216.05,-43.07 220.95,-43.07"/>
+</g>
+<g id="node1" class="node">
+<title>P</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M103,-492C103,-492 32,-492 32,-492 26,-492 20,-486 20,-480 20,-480 20,-468 20,-468 20,-462 26,-456 32,-456 32,-456 103,-456 103,-456 109,-456 115,-462 115,-468 115,-468 115,-480 115,-480 115,-486 109,-492 103,-492"/>
+<text text-anchor="middle" x="67.5" y="-470.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">패키지 bytes</text>
+</g>
+<g id="node2" class="node">
+<title>V</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M123,-416C123,-416 12,-416 12,-416 6,-416 0,-410 0,-404 0,-404 0,-392 0,-392 0,-386 6,-380 12,-380 12,-380 123,-380 123,-380 129,-380 135,-386 135,-392 135,-392 135,-404 135,-404 135,-410 129,-416 123,-416"/>
+<text text-anchor="middle" x="67.5" y="-394.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">형식·해시·버전 검사</text>
+</g>
+<g id="node3" class="node">
+<title>W</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M265,-416C265,-416 172,-416 172,-416 166,-416 160,-410 160,-404 160,-404 160,-392 160,-392 160,-386 166,-380 172,-380 172,-380 265,-380 265,-380 271,-380 277,-386 277,-392 277,-392 277,-404 277,-404 277,-410 271,-416 265,-416"/>
+<text text-anchor="middle" x="218.5" y="-394.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">외부 checkpoint</text>
+</g>
+<g id="node4" class="node">
+<title>B</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M209.5,-340C209.5,-340 75.5,-340 75.5,-340 69.5,-340 63.5,-334 63.5,-328 63.5,-328 63.5,-316 63.5,-316 63.5,-310 69.5,-304 75.5,-304 75.5,-304 209.5,-304 209.5,-304 215.5,-304 221.5,-310 221.5,-316 221.5,-316 221.5,-328 221.5,-328 221.5,-334 215.5,-340 209.5,-340"/>
+<text text-anchor="middle" x="142.5" y="-318.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">weight 이름·shape 연결</text>
+</g>
+<g id="node5" class="node">
+<title>L</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M208.5,-264C208.5,-264 76.5,-264 76.5,-264 70.5,-264 64.5,-258 64.5,-252 64.5,-252 64.5,-240 64.5,-240 64.5,-234 70.5,-228 76.5,-228 76.5,-228 208.5,-228 208.5,-228 214.5,-228 220.5,-234 220.5,-240 220.5,-240 220.5,-252 220.5,-252 220.5,-258 214.5,-264 208.5,-264"/>
+<text text-anchor="middle" x="142.5" y="-242.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">EDF 해석·장치 객체 준비</text>
+</g>
+<g id="node6" class="node">
+<title>X</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M331,-264C331,-264 258,-264 258,-264 252,-264 246,-258 246,-252 246,-252 246,-240 246,-240 246,-234 252,-228 258,-228 258,-228 331,-228 331,-228 337,-228 343,-234 343,-240 343,-240 343,-252 343,-252 343,-258 337,-264 331,-264"/>
+<text text-anchor="middle" x="294.5" y="-242.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">이번 호출의 x</text>
+</g>
+<g id="node7" class="node">
+<title>I</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M257.5,-188C257.5,-188 179.5,-188 179.5,-188 173.5,-188 167.5,-182 167.5,-176 167.5,-176 167.5,-164 167.5,-164 167.5,-158 173.5,-152 179.5,-152 179.5,-152 257.5,-152 257.5,-152 263.5,-152 269.5,-158 269.5,-164 269.5,-164 269.5,-176 269.5,-176 269.5,-182 263.5,-188 257.5,-188"/>
+<text text-anchor="middle" x="218.5" y="-166.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">입력 계약 검사</text>
+</g>
+<g id="node8" class="node">
+<title>S</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M264,-112C264,-112 173,-112 173,-112 167,-112 161,-106 161,-100 161,-100 161,-88 161,-88 161,-82 167,-76 173,-76 173,-76 264,-76 264,-76 270,-76 276,-82 276,-88 276,-88 276,-100 276,-100 276,-106 270,-112 264,-112"/>
+<text text-anchor="middle" x="218.5" y="-90.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">계획의 step 실행</text>
+</g>
+<g id="node9" class="node">
+<title>Y</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M256.5,-36C256.5,-36 180.5,-36 180.5,-36 174.5,-36 168.5,-30 168.5,-24 168.5,-24 168.5,-12 168.5,-12 168.5,-6 174.5,0 180.5,0 180.5,0 256.5,0 256.5,0 262.5,0 268.5,-6 268.5,-12 268.5,-12 268.5,-24 268.5,-24 268.5,-30 262.5,-36 256.5,-36"/>
+<text text-anchor="middle" x="218.5" y="-14.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">완료 후 y 반환</text>
+</g>
+</g>
+</svg>

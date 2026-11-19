@@ -1,0 +1,56 @@
+<svg role="img" aria-label="C의 0행 0열 계산 · k=0,1 담당: 1×1 + 2×0 = 1 · k=2 담당: 3×1 = 3 · 부분합을 합침: 1+3 · C의 0행 0열 = 4" width="352pt" height="293pt"
+ viewBox="0.00 0.00 351.80 292.80" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(14.4 278.4)">
+<title>handbook</title>
+<g id="edge1" class="edge">
+<title>A&#45;&gt;L</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M153.32,-227.84C141.02,-217.38 125.19,-203.91 112.03,-192.71"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="113.49,-190.74 106.57,-188.07 110.31,-194.47 113.49,-190.74"/>
+</g>
+<g id="edge2" class="edge">
+<title>A&#45;&gt;R</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M193.68,-227.84C205.98,-217.38 221.81,-203.91 234.97,-192.71"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="236.69,-194.47 240.43,-188.07 233.51,-190.74 236.69,-194.47"/>
+</g>
+<g id="edge3" class="edge">
+<title>L&#45;&gt;S</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M106.68,-151.84C118.98,-141.38 134.81,-127.91 147.97,-116.71"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="149.69,-118.47 153.43,-112.07 146.51,-114.74 149.69,-118.47"/>
+</g>
+<g id="edge4" class="edge">
+<title>R&#45;&gt;S</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M240.32,-151.84C228.02,-141.38 212.19,-127.91 199.03,-116.71"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="200.49,-114.74 193.57,-112.07 197.31,-118.47 200.49,-114.74"/>
+</g>
+<g id="edge5" class="edge">
+<title>S&#45;&gt;C</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M173.5,-75.84C173.5,-66.12 173.5,-53.82 173.5,-43.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="175.95,-43.07 173.5,-36.07 171.05,-43.07 175.95,-43.07"/>
+</g>
+<g id="node1" class="node">
+<title>A</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M219,-264C219,-264 128,-264 128,-264 122,-264 116,-258 116,-252 116,-252 116,-240 116,-240 116,-234 122,-228 128,-228 128,-228 219,-228 219,-228 225,-228 231,-234 231,-240 231,-240 231,-252 231,-252 231,-258 225,-264 219,-264"/>
+<text text-anchor="middle" x="173.5" y="-242.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">C의 0행 0열 계산</text>
+</g>
+<g id="node2" class="node">
+<title>L</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M161,-188C161,-188 12,-188 12,-188 6,-188 0,-182 0,-176 0,-176 0,-164 0,-164 0,-158 6,-152 12,-152 12,-152 161,-152 161,-152 167,-152 173,-158 173,-164 173,-164 173,-176 173,-176 173,-182 167,-188 161,-188"/>
+<text text-anchor="middle" x="86.5" y="-166.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">k=0,1 담당: 1×1 + 2×0 = 1</text>
+</g>
+<g id="node3" class="node">
+<title>R</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M311,-188C311,-188 210,-188 210,-188 204,-188 198,-182 198,-176 198,-176 198,-164 198,-164 198,-158 204,-152 210,-152 210,-152 311,-152 311,-152 317,-152 323,-158 323,-164 323,-164 323,-176 323,-176 323,-182 317,-188 311,-188"/>
+<text text-anchor="middle" x="260.5" y="-166.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">k=2 담당: 3×1 = 3</text>
+</g>
+<g id="node4" class="node">
+<title>S</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M224,-112C224,-112 123,-112 123,-112 117,-112 111,-106 111,-100 111,-100 111,-88 111,-88 111,-82 117,-76 123,-76 123,-76 224,-76 224,-76 230,-76 236,-82 236,-88 236,-88 236,-100 236,-100 236,-106 230,-112 224,-112"/>
+<text text-anchor="middle" x="173.5" y="-90.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">부분합을 합침: 1+3</text>
+</g>
+<g id="node5" class="node">
+<title>C</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M216,-36C216,-36 131,-36 131,-36 125,-36 119,-30 119,-24 119,-24 119,-12 119,-12 119,-6 125,0 131,0 131,0 216,0 216,0 222,0 228,-6 228,-12 228,-12 228,-24 228,-24 228,-30 222,-36 216,-36"/>
+<text text-anchor="middle" x="173.5" y="-14.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">C의 0행 0열 = 4</text>
+</g>
+</g>
+</svg>

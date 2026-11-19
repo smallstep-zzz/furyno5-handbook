@@ -1,0 +1,9 @@
+flowchart TB
+    P["패키지 bytes"] --> V["형식·해시·버전 검사"]
+    W["외부 checkpoint"] --> B["weight 이름·shape 연결"]
+    V --> B
+    B --> L["EDF 해석·장치 객체 준비"]
+    X["이번 호출의 x"] --> I["입력 계약 검사"]
+    L --> I
+    I --> S["계획의 step 실행"]
+    S --> Y["완료 후 y 반환"]

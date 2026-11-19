@@ -1,0 +1,86 @@
+<svg role="img" aria-label="독립 요청 A와 B · 요청 배정 · 복제본 0: 전체 모델 · 복제본 1: 전체 모델 · A의 요청 상태 · B의 요청 상태 · 층을 나누어야 하는 모델 · 앞 층과 중간 출력 · 뒤 층과 최종 출력" width="504pt" height="293pt"
+ viewBox="0.00 0.00 503.80 292.80" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(14.4 278.4)">
+<title>handbook</title>
+<g id="edge1" class="edge">
+<title>R&#45;&gt;Q</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M174,-227.84C174,-218.12 174,-205.82 174,-195.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="176.45,-195.07 174,-188.07 171.55,-195.07 176.45,-195.07"/>
+</g>
+<g id="edge2" class="edge">
+<title>Q&#45;&gt;A</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M148.26,-151.84C132.28,-141.19 111.65,-127.43 94.68,-116.12"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="95.79,-113.91 88.61,-112.07 93.07,-117.99 95.79,-113.91"/>
+</g>
+<g id="edge3" class="edge">
+<title>Q&#45;&gt;B</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M183.28,-151.84C188.63,-141.94 195.43,-129.35 201.28,-118.53"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="203.6,-119.39 204.77,-112.07 199.29,-117.06 203.6,-119.39"/>
+</g>
+<g id="edge4" class="edge">
+<title>A&#45;&gt;OA</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M63,-75.84C63,-66.12 63,-53.82 63,-43.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="65.45,-43.07 63,-36.07 60.55,-43.07 65.45,-43.07"/>
+</g>
+<g id="edge5" class="edge">
+<title>B&#45;&gt;OB</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M214,-75.84C214,-66.12 214,-53.82 214,-43.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="216.45,-43.07 214,-36.07 211.55,-43.07 216.45,-43.07"/>
+</g>
+<g id="edge6" class="edge">
+<title>S&#45;&gt;P1</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M400,-227.84C400,-218.12 400,-205.82 400,-195.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="402.45,-195.07 400,-188.07 397.55,-195.07 402.45,-195.07"/>
+</g>
+<g id="edge7" class="edge">
+<title>P1&#45;&gt;P2</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M400,-151.84C400,-142.12 400,-129.82 400,-119.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="402.45,-119.07 400,-112.07 397.55,-119.07 402.45,-119.07"/>
+</g>
+<g id="node1" class="node">
+<title>R</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M217,-264C217,-264 131,-264 131,-264 125,-264 119,-258 119,-252 119,-252 119,-240 119,-240 119,-234 125,-228 131,-228 131,-228 217,-228 217,-228 223,-228 229,-234 229,-240 229,-240 229,-252 229,-252 229,-258 223,-264 217,-264"/>
+<text text-anchor="middle" x="174" y="-242.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">독립 요청 A와 B</text>
+</g>
+<g id="node2" class="node">
+<title>Q</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M200.5,-188C200.5,-188 147.5,-188 147.5,-188 141.5,-188 135.5,-182 135.5,-176 135.5,-176 135.5,-164 135.5,-164 135.5,-158 141.5,-152 147.5,-152 147.5,-152 200.5,-152 200.5,-152 206.5,-152 212.5,-158 212.5,-164 212.5,-164 212.5,-176 212.5,-176 212.5,-182 206.5,-188 200.5,-188"/>
+<text text-anchor="middle" x="174" y="-166.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">요청 배정</text>
+</g>
+<g id="node3" class="node">
+<title>A</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M114,-112C114,-112 12,-112 12,-112 6,-112 0,-106 0,-100 0,-100 0,-88 0,-88 0,-82 6,-76 12,-76 12,-76 114,-76 114,-76 120,-76 126,-82 126,-88 126,-88 126,-100 126,-100 126,-106 120,-112 114,-112"/>
+<text text-anchor="middle" x="63" y="-90.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">복제본 0: 전체 모델</text>
+</g>
+<g id="node4" class="node">
+<title>B</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M265,-112C265,-112 163,-112 163,-112 157,-112 151,-106 151,-100 151,-100 151,-88 151,-88 151,-82 157,-76 163,-76 163,-76 265,-76 265,-76 271,-76 277,-82 277,-88 277,-88 277,-100 277,-100 277,-106 271,-112 265,-112"/>
+<text text-anchor="middle" x="214" y="-90.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">복제본 1: 전체 모델</text>
+</g>
+<g id="node5" class="node">
+<title>OA</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M100,-36C100,-36 26,-36 26,-36 20,-36 14,-30 14,-24 14,-24 14,-12 14,-12 14,-6 20,0 26,0 26,0 100,0 100,0 106,0 112,-6 112,-12 112,-12 112,-24 112,-24 112,-30 106,-36 100,-36"/>
+<text text-anchor="middle" x="63" y="-14.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">A의 요청 상태</text>
+</g>
+<g id="node6" class="node">
+<title>OB</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M251.5,-36C251.5,-36 176.5,-36 176.5,-36 170.5,-36 164.5,-30 164.5,-24 164.5,-24 164.5,-12 164.5,-12 164.5,-6 170.5,0 176.5,0 176.5,0 251.5,0 251.5,0 257.5,0 263.5,-6 263.5,-12 263.5,-12 263.5,-24 263.5,-24 263.5,-30 257.5,-36 251.5,-36"/>
+<text text-anchor="middle" x="214" y="-14.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">B의 요청 상태</text>
+</g>
+<g id="node7" class="node">
+<title>S</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M463,-264C463,-264 337,-264 337,-264 331,-264 325,-258 325,-252 325,-252 325,-240 325,-240 325,-234 331,-228 337,-228 337,-228 463,-228 463,-228 469,-228 475,-234 475,-240 475,-240 475,-252 475,-252 475,-258 469,-264 463,-264"/>
+<text text-anchor="middle" x="400" y="-242.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">층을 나누어야 하는 모델</text>
+</g>
+<g id="node8" class="node">
+<title>P1</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M446,-188C446,-188 354,-188 354,-188 348,-188 342,-182 342,-176 342,-176 342,-164 342,-164 342,-158 348,-152 354,-152 354,-152 446,-152 446,-152 452,-152 458,-158 458,-164 458,-164 458,-176 458,-176 458,-182 452,-188 446,-188"/>
+<text text-anchor="middle" x="400" y="-166.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">앞 층과 중간 출력</text>
+</g>
+<g id="node9" class="node">
+<title>P2</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M446,-112C446,-112 354,-112 354,-112 348,-112 342,-106 342,-100 342,-100 342,-88 342,-88 342,-82 348,-76 354,-76 354,-76 446,-76 446,-76 452,-76 458,-82 458,-88 458,-88 458,-100 458,-100 458,-106 452,-112 446,-112"/>
+<text text-anchor="middle" x="400" y="-90.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">뒤 층과 최종 출력</text>
+</g>
+</g>
+</svg>

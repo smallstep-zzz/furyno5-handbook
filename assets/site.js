@@ -55,6 +55,29 @@
   const out=(key,value)=>{const n=$('[data-value="'+key+'"]',lab);if(n)n.textContent=value;};
   const stat=(key,value)=>{const n=$('[data-stat="'+key+'"]',lab);if(n)n.textContent=value;};
   const update=()=>{
+   if(type==='axes'){
+    // A: 입력 2행×3열, W: 가중치 3행×2열. 결과 C의 모양은 2행×2열이다.
+    const A=[[1,2,3],[4,5,6]],W=[[1,0],[0,1],[1,1]],C=[[4,5],[10,11]];
+    const m=v('row'),n=v('col'),split=$('[data-key=split]',lab).value;
+    // 한 출력 칸 C[m,n]에 필요한 입력은 A의 m행과 W의 n열이다.
+    const row=A[m],column=W.map(r=>r[n]),products=row.map((value,k)=>value*column[k]);
+    $$('[data-matrix] td',lab).forEach(cell=>{
+     const name=cell.closest('[data-matrix]').dataset.matrix;
+     const i=Number(cell.dataset.row),j=Number(cell.dataset.col);
+     cell.classList.toggle('matrix-selected',name==='A'?i===m:name==='W'?j===n:i===m&&j===n);
+    });
+    $('[data-matrix-selection]',lab).textContent=`A의 ${m}행 [${row.join(', ')}]과 W의 ${n}열 [${column.join(', ')}]을 곱합니다.`;
+    $('[data-matrix-formula]',lab).textContent=`C[${m}, ${n}] = ${row.map((value,k)=>`${value}×${column[k]}`).join(' + ')} = ${C[m][n]}`;
+    let explanation='같은 위치의 숫자를 곱한 뒤 세 항을 모두 더하면 출력 한 칸이 됩니다.';
+    if(split==='M')explanation=`작업 1은 C의 0행 [4, 5], 작업 2는 1행 [10, 11]을 만듭니다. 서로 다른 출력 행이므로 두 결과를 서로 더하지 않습니다. 현재 선택한 칸은 작업 ${m+1}의 결과입니다.`;
+    if(split==='N')explanation=`선택한 A의 ${m}행 [${row.join(', ')}]을 두 작업이 함께 사용합니다. 작업 1은 출력 0열의 ${C[m][0]}, 작업 2는 출력 1열의 ${C[m][1]}을 만듭니다. 같은 입력 행을 재사용하지만 서로 다른 출력 칸을 만듭니다.`;
+    if(split==='K'){
+     // K는 곱해서 더할 항의 개수다. 앞의 두 항과 마지막 항을 나누면 각각 부분합이 생긴다.
+     const first=products[0]+products[1],second=products[2];
+     explanation=`작업 1의 부분합: ${products[0]} + ${products[1]} = ${first}. 작업 2의 부분합: ${second}. 두 작업이 같은 출력 칸을 나눠 계산했으므로 마지막에 ${first} + ${second} = ${C[m][n]}로 합칩니다.`;
+    }
+    $('[data-split-result]',lab).textContent=explanation;
+   }
    if(type==='bucket'){
     const n=v('tokens'),preset=$('[data-key=preset]',lab).value;
     const buckets={fine:[128,256,512,1024,2048],coarse:[512,2048],single:[2048]}[preset];

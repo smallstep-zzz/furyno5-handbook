@@ -1,15 +1,68 @@
-# 실행그래프와 폴백: 자동으로 해 주는 일의 경계
+# 실행그래프와 폴백: 계산의 연결을 누가 알고 있는가
 
-**EDF가 없으면 자동으로 CPU로 넘어간다는 일반 규칙은 없다. 실행그래프가 없으면 런타임이 원래 모델을 알아서 복원한다는 일반 규칙도 없다.** 어떤 입력을 받은 어느 계층이 어떤 정책으로 동작하는지를 확인해야 한다. 이 장에서는 그래프·실행 산출물·폴백을 별개로 설명한다.
+함수 두 개가 있다고 해서 프로그램 하나가 정해지지는 않는다. `add`와 `relu`라는 함수를 가진 CPU(Central Processing Unit) 라이브러리에도 **무엇을 먼저 호출하고 결과를 어디에 넘길지** 정한 코드가 필요하다. NPU(Neural Processing Unit)의 컴파일된 커널도 같다. EDF(Executable Device Format)는 장치에서 실행할 컴파일 결과이고, 여러 EDF 사이의 연결은 별도의 실행계획이 담당할 수 있다.
 
-## 1. 같은 ‘실행그래프’로 부르면 안 되는 네 가지
+이 장에서는 두 연산을 연결하는 예로 그래프를 이해한 뒤, 그래프를 저장했을 때 줄어드는 작업과 실제 `export_model()`·`GraphFXB` 호출을 살펴본다. 마지막에는 EDF가 없을 때 발생하는 오류와 CPU 폴백을 구분한다.
+
+## 1. 같은 두 연산으로도 다른 프로그램이 된다
+
+**ReLU(Rectified Linear Unit)**는 각 원소가 음수이면 0, 그렇지 않으면 원래 값을 반환하는 함수다. 여기서는 `relu(v) = max(0,v)`만 알면 된다. 두 입력 벡터 `x=[-2,1]`, `b=[1,2]`에 대해 먼저 원소별 덧셈을 하고 ReLU를 적용해 보자.
+
+```python
+# CPU에서 두 실행 순서가 서로 다른 결과를 내는지 확인한다.
+x = [-2, 1]
+b = [1, 2]
+
+added = [a + offset for a, offset in zip(x, b)] # shape (2,) -> (2,), 결과 [-1,3]
+y = [max(0, value) for value in added]         # 음수만 0으로 바꿔 [0,3]
+assert y == [0, 3]
+
+activated = [max(0, value) for value in x]     # 이번에는 ReLU를 먼저 실행한다: [0,1]
+z = [a + offset for a, offset in zip(activated, b)]
+assert z == [1, 3]                            # 같은 Add·ReLU여도 연결 순서가 다르다.
+```
+
+| 프로그램 | 첫 연산 뒤 값 | 둘째 연산 뒤 값 |
+|---|---|---|
+| `relu(x + b)` | `[-1,3]` | `[0,3]` |
+| `relu(x) + b` | `[0,1]` | `[1,3]` |
+
+두 연산 모두 길이 2의 벡터를 받는다. 따라서 “길이 2를 받는 Add EDF와 ReLU EDF가 있다”는 사실만으로 어떤 프로그램인지 정할 수 없다. **입출력 형상이 같아도 연결 의미는 다를 수 있다.** 그래프가 보관하는 핵심 정보가 이 연결이다.
+
+그래프에서 **노드(node)**는 연산이나 값이고, **간선(edge)**은 누가 만든 값을 누가 사용하는지 나타낸다. 아래 그림은 첫 번째 프로그램이다. Add는 x와 b가 필요하고, ReLU는 Add가 만든 중간값이 필요하다.
+
+```mermaid
+flowchart TB
+    X["입력 x: -2, 1"] --> A["Add"]
+    B["입력 b: 1, 2"] --> A
+    A --> T["중간값: -1, 3"]
+    T --> R["ReLU"]
+    R --> Y["출력 y: 0, 3"]
+```
+
+### 실행계획은 값에 이름을 붙이고 소비자를 연결한다
+
+여러 커널을 호출하는 계획은 “Add 다음 ReLU”라는 순서만으로 부족하다. Add의 어느 출력이 ReLU의 어느 입력으로 들어가는지, 최종 출력은 무엇인지도 필요하다. 다음 표는 이 예를 설명하는 **교육용 계획**이다. 실제 fxbX JSON 스키마를 그대로 복사한 형식은 아니다.
+
+| 값의 이름 | 만드는 곳 | 사용하는 곳 | 수명을 판단하는 기준 |
+|---|---|---|---|
+| `input_x` | 호출자가 전달 | Add의 첫 입력 | Add가 읽기를 완료했는가? |
+| `input_b` | 호출자가 전달하거나 고정값으로 준비 | Add의 둘째 입력 | 다음 호출에서 재사용할 고정값인가? |
+| `tmp_sum` | Add의 출력 | ReLU의 입력 | ReLU가 읽기를 완료했는가? |
+| `output_y` | ReLU의 출력 | 호출자 | 결과 전달과 사용이 끝났는가? |
+
+**버퍼(buffer)**는 이 값이 실제로 저장되는 공간이다. 계획의 값 이름과 현재 프로세스의 버퍼는 별개이며, 둘을 연결하는 것을 **binding(바인딩)**이라고 한다. 중간값 `tmp_sum`을 만드는 커널을 CPU가 제출했다고 바로 공간을 재사용할 수 있는 것도 아니다. 그 값을 읽는 작업의 **완료**까지 보장되어야 한다. FuryNo5 실행계획과 fxbX 로더는 이러한 입력·출력·상태 연결을 명시한다. [공유 실행계획 계약](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/fxbx-producer/EXECUTION_PLAN.md), [로더의 값 수명 처리](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py)
+
+## 2. 서로 다른 네 종류의 그래프와 스케줄
+
+앞 예는 연산 사이의 데이터 연결이다. 그런데 문서나 프로파일러에서는 장치 내부 명령 순서와 사용자 요청 순서도 ‘그래프’ 또는 ‘스케줄’이라고 부른다. **누구의 순서를 정하는지** 먼저 구분하면 혼동을 줄일 수 있다.
 
 | 종류 | 노드와 간선이 뜻하는 것 | 만드는 주체·시점 | 대표 산출물 |
 |---|---|---|---|
-| 모델 그래프 | 연산과 텐서 의존성 | Torch 캡처·export 또는 모델 작성자 | FX Graph, ExportedProgram |
-| 커널 내부 스케줄 | 엔진 명령·메모리 의존성·시각 | 컴파일러 | EDF 내부 실행 코드, vISA schedule JSON |
-| 여러 커널의 실행계획 | EDF 호출 순서·입출력 tensor ID·상태 연결 | FuryNo5 같은 producer | `tclmachine.execution-plan.v1/v2` |
-| 서비스 스케줄 | 요청·배치·prefill·decode 선택 | Furiosa-LLM 또는 vLLM 서버 | 요청 대기열과 실행 중 배치 |
+| 모델 그래프 | 앞 예의 Add·ReLU와 텐서 의존성 | Torch 캡처·export 또는 모델 작성자 | FX Graph, ExportedProgram |
+| 커널 내부 스케줄 | 커널 하나 안의 데이터 이동·엔진 계산 순서 | 컴파일러 | EDF 내부 실행 코드, vISA schedule JSON |
+| 여러 커널의 실행계획 | Add EDF 출력 → ReLU EDF 입력 같은 연결 | FuryNo5 같은 producer | `tclmachine.execution-plan.v1/v2` |
+| 서비스 스케줄 | 사용자 A·B 중 어떤 요청을 언제 묶어 실행할지 선택 | Furiosa-LLM 또는 vLLM 서버 | 요청 대기열과 실행 중 배치 |
 
 Torch 그래프의 간선은 텐서 데이터 관계이고, 서비스 스케줄의 순서는 여러 사용자 요청 사이의 선택이다. 한쪽을 저장했다고 다른 쪽이 사라지는 것은 아니다. 정적 schedule JSON도 운영 중 요청의 실측 trace와 다르다. [FuryNo5 실행계획](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/NATIVE_EXECUTION_PLAN.md), [Schedule Viewer의 범위](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/tools/schedule-viewer.md)
 
@@ -25,7 +78,10 @@ flowchart TB
     R --> N["NPU 실행"]
 ```
 
-## 2. 그래프가 없는 경우: 무엇이 제공됐는가
+상태(state)는 다음 호출에도 남기는 값이다. 예를 들어 언어 모델의 KV(Key–Value) cache는 이전 토큰에서 계산한 attention 정보를 보관한다. 매 호출의 출력만 연결하는 모델과 이 상태를 갱신하는 모델은 실행계획의 요구사항이 다르다.
+
+
+## 3. 저장된 그래프가 없을 때 무엇을 만들 수 있는가
 
 ### 모델 코드와 예제 입력이 있다
 
@@ -51,46 +107,68 @@ flowchart TB
     B --> R["실행 세션"]
 ```
 
-## 3. 계획을 저장하면 줄어드는 작업과 남는 작업
+## 4. 저장한 계획으로 줄이는 작업과 남는 작업
+
+앞의 Add·ReLU 모델을 매번 Python에서 분석하면 연산 연결을 다시 찾아야 한다. 반대로 “첫 입력과 고정값을 Add에 넣고, 결과를 ReLU에 넣는다”는 계획과 대응 EDF가 저장되어 있으면 그 분석과 커널 컴파일을 재사용할 수 있다. 그렇더라도 **이번 입력 값과 이번 장치 메모리 주소까지 파일에 영구 고정할 수는 없다.** 로딩과 실제 데이터 연결은 남는다.
 
 | 이미 보존된 것 | 로딩에서 생략하거나 재사용할 수 있는 것 | 여전히 해야 하는 것 |
 |---|---|---|
-| 진짜 EDF | 해당 커널 컴파일 | 버전·해시·입출력 ABI 확인, 장치 적재 |
+| 진짜 EDF | 해당 커널 컴파일 | 버전·해시·입출력 ABI(Application Binary Interface) 확인, 장치 적재 |
 | 커널 연결·tensor ID | 원본 모델 재캡처, 영역 선택 재계산 | 계획 검증, 현재 버퍼·가중치 연결 |
-| shape·dtype·stride 계약 | 계약 추론 | 실제 입력이 계약에 맞는지 검사 |
+| 형상(shape)·자료형(dtype)·저장 간격(stride) 계약 | 계약 추론 | 실제 입력이 계약에 맞는지 검사 |
 | 상태 갱신 선언 | 상태 의미의 재추론 | 상태 할당·reset·완료 후 commit |
 | 외부 가중치 target | 원본 Python 객체 구조 의존 줄이기 | 가중치 읽기·검사·업로드 |
 
 FuryNo5의 공유 실행계획 문서는 loader에 producer나 compiler가 필요하지 않도록 의도했고, 별도 프로세스에서 producer import와 compiler 호출을 막은 reload 시험 범위를 기록한다. 이 장은 그 **기존 검증 기록을 읽어 설명하는 것**이며 새 NPU 재시험을 한 것이 아니다. 원본 모델이 필요한 direct preparation 경로와 compiler 없이 package를 재로드하는 경로도 구별한다. [Native execution owner](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/NATIVE_EXECUTION_PLAN.md), [Direct runtime 계약](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/DIRECT_RUNTIME.md)
 
-## 4. 코드에서 실행계획과 EDF를 함께 전달하기
+## 5. 실행계획과 EDF를 함께 만들고 전달한다
 
-FuryNo5의 `export_model()`은 모델을 분석해 실행계획을 만들고 해당 계획에서 참조할 EDF를 생성한다. fxbX의 `GraphFXB`는 package의 계획 schema를 보고 실행한다. 실습 전에 [13장의 호환 checkout 설치](13-porting-fha.md)를 마치고 [3장의 장치 확인](03-driver-runtime.md)을 수행한다. 아래 코드를 **새 작업 디렉터리의 `build_and_run.py`로 저장**한다. 출력 경로는 실행한 디렉터리를 기준으로 해석된다.
+FuryNo5의 `export_model()`은 모델을 분석해 실행계획을 만들고 해당 계획에서 참조할 EDF를 생성한다. fxbX의 `GraphFXB`는 package의 계획 schema(필드와 연결을 읽는 규칙)를 보고 실행한다. 여기서 **export**는 모델을 저장 가능한 실행 계약으로 만드는 준비 작업이고, **load**는 그 계약을 읽어 현재 장치의 실행 객체를 만드는 작업이다.
+
+실습 모델은 MLP(Multi-Layer Perceptron)의 작은 예다. 입력은 4개 샘플, 샘플당 8개 숫자여서 shape `(4,8)`이다. `Linear(8,12)`는 각 샘플에 같은 가중치를 적용하여 12개 숫자로 바꾸고, ReLU는 shape를 유지하며 음수를 0으로 만든다. 마지막 `Linear(12,8)`이 `(4,8)` 출력을 만든다. Linear의 계산은 입력과 가중치의 행렬곱에 bias(각 출력 좌표에 더하는 고정값)를 더하는 것이다.
+
+| 단계 | 텐서 shape | 값에 가하는 일 |
+|---|---|---|
+| 입력 | `(4,8)` | 4개 샘플의 특징값 |
+| 첫 Linear | `(4,12)` | 샘플마다 8개 입력의 가중합 12개 생성 |
+| ReLU | `(4,12)` | 각 값에 `max(0,v)` 적용 |
+| 둘째 Linear | `(4,8)` | 12개 값의 가중합 8개 생성 |
+
+실습 전에 [13장의 호환 checkout 설치](13-porting-fha.md)를 마치고 [3장의 장치 확인](03-driver-runtime.md)을 수행한다. 아래 코드를 **새 작업 디렉터리의 `build_and_run.py`로 저장**한다. 출력 경로는 실행한 디렉터리를 기준으로 해석된다.
 
 ```python
-# build_and_run.py — 호환 SDK, FuryNo5/fxbX, RNGD가 필요하다.
+# build_and_run.py — 호환 SDK(Software Development Kit), FuryNo5/fxbX, RNGD가 필요하다.
 import torch
 from tclmachine import export_model
 from fxbx import GraphFXB
 
 def main():
+    # 같은 모델과 입력을 다시 만들 수 있도록 CPU 난수 시드를 고정한다.
     torch.manual_seed(42)
+    # shape: (4,8) -> (4,12) -> (4,12) -> (4,8)
     model = torch.nn.Sequential(
         torch.nn.Linear(8, 12), torch.nn.ReLU(), torch.nn.Linear(12, 8)
     ).bfloat16().eval().requires_grad_(False)
+    # BF16(BFloat16) 입출력에 맞춰 예제 입력을 만든다.
     x = torch.randn(4, 8, dtype=torch.bfloat16)
 
+    # 준비 단계: 예제 shape로 모델을 분석하고 실행계획과 EDF들을 저장한다.
     export_model(model, (x,), "./small-mlp.fxbx", compile_workers=4)
+    # 적재 단계: 외부 가중치를 이름에 맞춰 연결하고 장치 실행을 준비한다.
     with GraphFXB("./small-mlp.fxbx", weights=model.state_dict()) as session:
-        actual, = session.predict((x,))
+        # 실행 단계: 입력 하나를 tuple로 전달하고 CPU에서 확인할 출력을 받는다.
+        actual, = session.predict((x,), output_device="cpu")
+    # 수치 검증은 별도 단계다. 일치만으로 NPU 실행 사실이 증명되지는 않는다.
     torch.testing.assert_close(actual, model(x), atol=0.02, rtol=0.02)
     print("single-shape numerical comparison passed")
 
+# 병렬 컴파일의 자식 프로세스가 import할 때 빌드를 다시 시작하지 않게 한다.
 if __name__ == "__main__":
     main()
 ```
 
 ```bash
+# main 보호가 있는 파일로 실행해 병렬 컴파일의 재귀 시작을 막는다.
 python build_and_run.py
 ```
 
@@ -108,13 +186,17 @@ python examples/native_execution_plan.py run ./small-mlp.fxbx
 
 예제 스크립트는 빌드와 실행을 분리하며, 수치 일치만으로 NPU 실행이 증명되는 것은 아니라고 결과에 적는다. NPU Task trace도 확인해야 한다. 한 EDF만 로드하는 낮은 수준의 Python 호출은 4장의 `from_serialized_edf()` 예제로 돌아가면 된다.
 
-## 5. 빠진 EDF, 호환되지 않는 EDF, 지원하지 않는 연산
+## 6. EDF 누락과 CPU 폴백을 구분한다
+
+**폴백(fallback)**은 원래 시도한 실행 경로를 사용할 수 없을 때 다른 구현으로 계산을 이어가는 정책이다. 예를 들어 NPU용 구현이 없는 연산을 CPU 구현으로 수행하도록 백엔드가 명시적으로 지원할 수 있다. 그러나 파일 읽기 실패, 컴파일 실패, NPU 호출 실패가 모두 이런 정책을 갖는 것은 아니다.
+
+4장 예제는 먼저 `Path("matmul.edf").read_bytes()`를 수행한다. 파일이 없으면 Python의 파일 읽기가 실패하므로 NPU 실행 함수에 도착하지 않는다. 그 코드에는 오류를 잡아 `left @ right`로 바꾸는 분기가 없다. **EDF가 없으면 자동으로 CPU로 넘어간다는 일반 규칙은 없다.** 실제로 호출한 경로를 기준으로 판단해야 한다.
 
 | 상황 | 이 핸드북에서 확인한 판단 | 근거·제약 |
 |---|---|---|
 | `.edf` 경로가 없음 | 파일 읽기 또는 loader 준비가 실패한다. | 존재하지 않는 바이너리를 NPU가 실행할 수 없다. |
 | EDF·SDK·fusion 계약 불일치 | load·ABI 검증 단계에서 거절될 수 있다. | FuryNo5는 명시적으로 검사한다. |
-| 공식 FXB 캐시에 호환 bundle 없음 | `fxb check`는 non-zero 종료한다. | 이것은 CPU 폴백 명령이 아니다. |
+| 공식 FXB(Furiosa Executable Bundle) 캐시에 호환 bundle 없음 | `fxb check`는 non-zero 종료한다. | 이것은 CPU 폴백 명령이 아니다. |
 | 공식 FXB 캐시에 오래된 IR revision만 있음 | 공식 문서는 자동 serving 실패를 설명한다. | 명시적 선택과 호환성 판단은 별개다. |
 | PyTorch 경로의 미지원 연산 | backend의 fallback 정책에 달려 있다. | 해당 SDK의 모든 기본값을 일반화하지 않는다. |
 | FuryNo5 직접 준비·선택된 EDF 경로 | CPU fallback을 끄고 문제를 드러내는 정책이다. | 지원 규칙이 없으면 구체적인 gap을 보고해야 한다. |
@@ -124,9 +206,9 @@ python examples/native_execution_plan.py run ./small-mlp.fxbx
 
 `fail`도 구체적으로 써야 한다. Python 예외, Rust `Result::Err`, 컴파일 subprocess의 non-zero 종료, 장치 timeout, 프로세스 crash는 다른 현상이다. 근거가 예외를 보여줄 때 이를 `항상 crash`라고 부르지 않는다. 복구 가능성도 해당 오류와 런타임 정책을 확인한다.
 
-## 6. CPU를 썼다는 사실과 CPU 폴백의 구분
+## 7. CPU 사용과 NPU 계산의 증거를 따로 확인한다
 
-토큰화·입력 검사·스케줄·결과 포맷은 원래 호스트에서 수행할 수 있다. lookup 입력의 범위를 CPU에서 검사한 것도 embedding 계산 자체를 CPU에서 수행했다는 뜻이 아니다. 반대로 최종 출력이 맞는다는 이유만으로 NPU가 계산했다고 확정할 수 없다. [fxbX execution contract의 입력 검사 설명](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/fxbx-producer/EXECUTION_PLAN.md)
+사용자 문자열을 토큰 정수로 바꾸기, 입력 길이 검사, 다음 요청 선택, 응답 포맷 만들기는 원래 CPU 호스트에서 수행할 수 있다. 이것은 NPU에 맡겼던 행렬곱을 CPU로 대체한 상황과 구분한다. lookup 입력의 범위를 CPU에서 검사한 것도 embedding 계산 자체를 CPU에서 수행했다는 뜻이 아니다. 반대로 최종 출력이 맞는다는 이유만으로 NPU가 계산했다고 확정할 수 없다. [fxbX execution contract의 입력 검사 설명](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/fxbx-producer/EXECUTION_PLAN.md)
 
 FuryNo5를 검증할 때는 다음 네 항목을 연결해 본다.
 

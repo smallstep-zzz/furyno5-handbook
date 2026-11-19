@@ -1,11 +1,58 @@
 <!doctype html>
-<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="공식 FXB를 참고한 비공식 확장과 서로 다른 패키지 실행 경로를 구분합니다."><meta name="theme-color" content="#fbfaf7"><title>fxbX의 포맷과 실행기 · FuryNo5 개발 핸드북</title><link rel="icon" href="../assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="../assets/site.css?v=92d31956ba70"><script defer src="../assets/site.js?v=b3207df84190"></script></head>
-<body data-root="../" data-chapter="12-fxbx" data-search-version="76d18c01bdf0"><a class="skip" href="#content">본문으로 이동</a><header class="topbar"><button class="menu-toggle" type="button" aria-label="전체 목차 열기" aria-controls="sidebar" aria-expanded="false">☰</button><a class="brand" href="../index.html"><span class="brand-mark">Nº5</span>FuryNo5<small>DEVELOPER HANDBOOK</small></a><div class="top-actions"><a class="top-link" href="../sources.html">출처와 버전</a><button class="search-open" type="button" aria-label="핸드북 전체 검색"><span>전체 문서 검색</span><kbd>⌘ K</kbd></button></div></header><div class="progress" aria-hidden="true"></div><div class="mobile-shade"></div><aside class="sidebar" id="sidebar" aria-label="전체 목차"><nav><div class="nav-caption">시작하기</div><a class="nav-link"  href="../index.html"><span class="num">00</span><span>전체 지도와 읽는 방법</span></a><div class="nav-caption">I. 디바이스를 이해하기</div><a class="nav-link"  href="../chapter/01-hardware.html"><span class="num">01</span><span>RNGD · TCP · PE</span></a><a class="nav-link"  href="../chapter/02-memory-dma.html"><span class="num">02</span><span>메모리 · DMA · 배치</span></a><a class="nav-link"  href="../chapter/03-driver-runtime.html"><span class="num">03</span><span>드라이버와 공식 런타임</span></a><div class="nav-caption">II. 프로그램을 만들고 실행하기</div><a class="nav-link"  href="../chapter/04-tcl-edf.html"><span class="num">04</span><span>TCL 작성 · 컴파일 · 실행</span></a><a class="nav-link"  href="../chapter/05-graphs-fallback.html"><span class="num">05</span><span>실행그래프 · 오류 · 폴백</span></a><a class="nav-link"  href="../chapter/06-buckets-shapes.html"><span class="num">06</span><span>Shape · 버킷 · 컴파일 비용</span></a><a class="nav-link"  href="../chapter/07-optimization.html"><span class="num">07</span><span>최적화의 축과 우선순위</span></a><a class="nav-link"  href="../chapter/08-eisa-visa.html"><span class="num">08</span><span>eISA · vISA · furiosa-opt</span></a><div class="nav-caption">III. FuryNo5를 해부하기</div><a class="nav-link"  href="../chapter/09-torch-aten.html"><span class="num">09</span><span>PyTorch · ATen · 등록</span></a><a class="nav-link"  href="../chapter/10-furyno5-architecture.html"><span class="num">10</span><span>FuryNo5 구조와 지원 범위</span></a><a class="nav-link"  href="../chapter/11-furyno5-compiler.html"><span class="num">11</span><span>FuryNo5 컴파일과 캐시</span></a><div class="nav-caption">IV. 모델 포팅과 서빙</div><a class="nav-link active" aria-current="page" href="../chapter/12-fxbx.html"><span class="num">12</span><span>fxbX 포맷과 실행계획</span></a><a class="nav-link"  href="../chapter/13-porting-fha.html"><span class="num">13</span><span>포팅 · FHA · FuryAwesome</span></a><a class="nav-link"  href="../chapter/14-serving-vllm.html"><span class="num">14</span><span>vLLM · 서빙 브리지</span></a><a class="nav-link"  href="../chapter/15-multi-npu.html"><span class="num">15</span><span>PE · 여러 카드 · 여러 서버</span></a><div class="nav-caption">V. 검증과 다음 개발</div><a class="nav-link"  href="../chapter/16-furyboost.html"><span class="num">16</span><span>FuryBoost 실측과 남은 과제</span></a><a class="nav-link"  href="../chapter/17-debugging.html"><span class="num">17</span><span>측정 · 추적 · 실패 재현</span></a><div class="nav-caption">VI. 생태계 비교와 최적화 연구</div><a class="nav-link"  href="../chapter/18-npu-ecosystems.html"><span class="num">18</span><span>다른 NPU의 지원 방식</span></a><a class="nav-link"  href="../chapter/19-model-optimization.html"><span class="num">19</span><span>모델 사전 최적화 · 연구</span></a><div class="nav-caption">참고와 검증</div><a class="nav-link"  href="../glossary.html"><span class="num">·</span><span>약어와 용어 사전</span></a><a class="nav-link"  href="../sources.html"><span class="num">·</span><span>출처 · 버전 · 접근 범위</span></a><a class="nav-link"  href="../review.html"><span class="num">·</span><span>검토 기록과 미해결 질문</span></a></nav><div class="side-foot">비공식 개발 핸드북 · 2026.11.19<br>공식 SDK와 프로젝트 구현을 구분합니다.<br><a href="https://github.com/smallstep-zzz/furyno5-handbook">원고와 변경 이력 ↗</a></div></aside><div class="shell"><main class="page" id="content"><div class="eyebrow">IV. 모델 포팅과 서빙 / CHAPTER 12</div><h1>fxbX의 포맷과 실행기</h1><p class="dek">공식 FXB를 참고한 비공식 확장과 서로 다른 패키지 실행 경로를 구분합니다.</p><div class="page-meta"><span>검토 2026.11.19</span><span>SDK 2026.4 계열 / 버전별 표기</span><span class="readtime">약 8분</span><span><a href="https://github.com/smallstep-zzz/furyno5-handbook/blob/main/content/12-fxbx.md">원고</a></span></div><details class="mobile-toc"><summary>이 장의 목차</summary><div><a class="" href="#1-공식-fxb가-부족했다는-말의-정확한-뜻">1. 공식 FXB가 부족했다는 말의 정확한 뜻</a><a class="" href="#2-현재-공존하는-세-가지-산출물">2. 현재 공존하는 세 가지 산출물</a><a class="" href="#3-공식-방식을-따른다-와-공식-지원이다-는-다른-주장이다">3. “공식 방식을 따른다”와 “공식 지원이다”는 다른 주장이다</a><a class="" href="#4-패키지-안에-무엇이-있는가">4. 패키지 안에 무엇이 있는가</a><a class="" href="#5-loader가-실제로-하는-일">5. loader가 실제로 하는 일</a><a class="" href="#6-계획이-있어도-모든-적재-작업이-사라지지는-않는다">6. 계획이 있어도 모든 적재 작업이 사라지지는 않는다</a><a class="" href="#7-검사와-실행-예">7. 검사와 실행 예</a><a class="" href="#8-배포-성공을-판단하는-순서">8. 배포 성공을 판단하는 순서</a><a class="" href="#출처">출처</a></div></details><noscript><p class="noscript">본문과 그림은 JavaScript 없이 읽을 수 있습니다. 검색과 조절 실험에는 JavaScript가 필요합니다.</p></noscript><article class="article"><p>FuryNo5가 연산을 컴파일해도 소비자에게는 “무슨 바이너리를 어떤 입력으로 어떤 순서에 실행할지”가 남는다. <strong>fxbX는 이 계약과 실행기를 함께 제공하는 프로젝트다.</strong> 공식 FXB(Furiosa Executable Bundle)를 대신하는 공식 표준은 아니다. 현재 소스에는 초기 SDK(Software Development Kit) Runnable 패키지와 실제 EDF(Executable Device Format, 컴파일된 장치 실행 바이너리)를 담는 실행 계획 패키지가 함께 있으므로, 확장자만 보고 내부를 추정하면 안 된다. 이 장은 fxbX 커밋 <code>03d993b</code>와 FuryNo5 <code>bba9efe</code>를 기준으로 한다. <a href="https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/README.md">fxbX README</a> · <a href="https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/graph_fxb.py">포맷 판별 코드</a> · <a href="https://developer.furiosa.ai/furiosa-opt/book/quick-start/kernel-validation.html">EDF 공식 정의</a></p>
-<p>이 패키지를 찾고 사용법을 공유하는 카탈로그는 <strong>FuryAwesome</strong>, FuryNo5·fxbX와 진단·검증·게시 도구를 연결해 포팅 작업을 진행하는 쪽은 **FHA(Furiosa-Hug-Anything)**다. 카탈로그에 등록 가능한 패키지와 현재 FHA 자동 게시기가 허용하는 포맷은 범위가 다르므로 <a href="../chapter/13-porting-fha.html">13장의 역할·게시 조건</a>을 함께 읽는다.</p>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="공식 FXB를 참고한 비공식 확장과 서로 다른 패키지 실행 경로를 구분합니다."><meta name="theme-color" content="#fbfaf7"><title>fxbX의 포맷과 실행기 · FuryNo5 개발 핸드북</title><link rel="icon" href="../assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="../assets/site.css?v=5454d41416bc"><script defer src="../assets/site.js?v=aeae33420bbb"></script></head>
+<body data-root="../" data-chapter="12-fxbx" data-search-version="0f5480784ed1"><a class="skip" href="#content">본문으로 이동</a><header class="topbar"><button class="menu-toggle" type="button" aria-label="전체 목차 열기" aria-controls="sidebar" aria-expanded="false">☰</button><a class="brand" href="../index.html"><span class="brand-mark">Nº5</span>FuryNo5<small>DEVELOPER HANDBOOK</small></a><div class="top-actions"><a class="top-link" href="../sources.html">출처와 버전</a><button class="search-open" type="button" aria-label="핸드북 전체 검색"><span>전체 문서 검색</span><kbd>⌘ K</kbd></button></div></header><div class="progress" aria-hidden="true"></div><div class="mobile-shade"></div><aside class="sidebar" id="sidebar" aria-label="전체 목차"><nav><div class="nav-caption">시작하기</div><a class="nav-link"  href="../index.html"><span class="num">00</span><span>전체 지도와 읽는 방법</span></a><div class="nav-caption">I. 디바이스를 이해하기</div><a class="nav-link"  href="../chapter/01-hardware.html"><span class="num">01</span><span>RNGD · TCP · PE</span></a><a class="nav-link"  href="../chapter/02-memory-dma.html"><span class="num">02</span><span>메모리 · DMA · 배치</span></a><a class="nav-link"  href="../chapter/03-driver-runtime.html"><span class="num">03</span><span>드라이버와 공식 런타임</span></a><div class="nav-caption">II. 프로그램을 만들고 실행하기</div><a class="nav-link"  href="../chapter/04-tcl-edf.html"><span class="num">04</span><span>TCL 작성 · 컴파일 · 실행</span></a><a class="nav-link"  href="../chapter/05-graphs-fallback.html"><span class="num">05</span><span>실행그래프 · 오류 · 폴백</span></a><a class="nav-link"  href="../chapter/06-buckets-shapes.html"><span class="num">06</span><span>Shape · 버킷 · 컴파일 비용</span></a><a class="nav-link"  href="../chapter/07-optimization.html"><span class="num">07</span><span>최적화의 축과 우선순위</span></a><a class="nav-link"  href="../chapter/08-eisa-visa.html"><span class="num">08</span><span>eISA · vISA · furiosa-opt</span></a><div class="nav-caption">III. FuryNo5를 해부하기</div><a class="nav-link"  href="../chapter/09-torch-aten.html"><span class="num">09</span><span>PyTorch · ATen · 등록</span></a><a class="nav-link"  href="../chapter/10-furyno5-architecture.html"><span class="num">10</span><span>FuryNo5 구조와 지원 범위</span></a><a class="nav-link"  href="../chapter/11-furyno5-compiler.html"><span class="num">11</span><span>FuryNo5 컴파일과 캐시</span></a><div class="nav-caption">IV. 모델 포팅과 서빙</div><a class="nav-link active" aria-current="page" href="../chapter/12-fxbx.html"><span class="num">12</span><span>fxbX 포맷과 실행계획</span></a><a class="nav-link"  href="../chapter/13-porting-fha.html"><span class="num">13</span><span>포팅 · FHA · FuryAwesome</span></a><a class="nav-link"  href="../chapter/14-serving-vllm.html"><span class="num">14</span><span>vLLM · 서빙 브리지</span></a><a class="nav-link"  href="../chapter/15-multi-npu.html"><span class="num">15</span><span>PE · 여러 카드 · 여러 서버</span></a><div class="nav-caption">V. 검증과 다음 개발</div><a class="nav-link"  href="../chapter/16-furyboost.html"><span class="num">16</span><span>FuryBoost 실측과 남은 과제</span></a><a class="nav-link"  href="../chapter/17-debugging.html"><span class="num">17</span><span>측정 · 추적 · 실패 재현</span></a><div class="nav-caption">VI. 생태계 비교와 최적화 연구</div><a class="nav-link"  href="../chapter/18-npu-ecosystems.html"><span class="num">18</span><span>다른 NPU의 지원 방식</span></a><a class="nav-link"  href="../chapter/19-model-optimization.html"><span class="num">19</span><span>모델 사전 최적화 · 연구</span></a><div class="nav-caption">참고와 검증</div><a class="nav-link"  href="../glossary.html"><span class="num">·</span><span>약어와 용어 사전</span></a><a class="nav-link"  href="../sources.html"><span class="num">·</span><span>출처 · 버전 · 접근 범위</span></a><a class="nav-link"  href="../review.html"><span class="num">·</span><span>검토 기록과 미해결 질문</span></a></nav><div class="side-foot">비공식 개발 핸드북 · 2026.11.19<br>공식 SDK와 프로젝트 구현을 구분합니다.<br><a href="https://github.com/smallstep-zzz/furyno5-handbook">원고와 변경 이력 ↗</a></div></aside><div class="shell"><main class="page" id="content"><div class="eyebrow">IV. 모델 포팅과 서빙 / CHAPTER 12</div><h1>fxbX의 포맷과 실행기</h1><p class="dek">공식 FXB를 참고한 비공식 확장과 서로 다른 패키지 실행 경로를 구분합니다.</p><div class="page-meta"><span>검토 2026.11.19</span><span>SDK 2026.4 계열 / 버전별 표기</span><span class="readtime">약 17분</span><span><a href="https://github.com/smallstep-zzz/furyno5-handbook/blob/main/content/12-fxbx.md">원고</a></span></div><details class="mobile-toc"><summary>이 장의 목차</summary><div><a class="" href="#먼저-같은-작은-모델을-다시-실행하는-상황을-보자">먼저 같은 작은 모델을 다시 실행하는 상황을 보자</a><a class="" href="#1-공식-fxb가-부족했다는-말의-정확한-뜻">1. 공식 FXB가 부족했다는 말의 정확한 뜻</a><a class="" href="#2-현재-공존하는-세-가지-산출물">2. 현재 공존하는 세 가지 산출물</a><a class="" href="#3-공식-방식을-따른다-와-공식-지원이다-는-다른-주장이다">3. “공식 방식을 따른다”와 “공식 지원이다”는 다른 주장이다</a><a class="" href="#4-패키지-안에-무엇이-있는가">4. 패키지 안에 무엇이 있는가</a><a class="" href="#5-loader가-실제로-하는-일">5. loader가 실제로 하는 일</a><a class="" href="#6-계획이-있어도-모든-적재-작업이-사라지지는-않는다">6. 계획이 있어도 모든 적재 작업이 사라지지는 않는다</a><a class="" href="#7-검사와-실행-예">7. 검사와 실행 예</a><a class="" href="#8-배포-성공을-판단하는-순서">8. 배포 성공을 판단하는 순서</a><a class="" href="#출처">출처</a></div></details><noscript><p class="noscript">본문과 그림은 JavaScript 없이 읽을 수 있습니다. 검색과 조절 실험에는 JavaScript가 필요합니다.</p></noscript><article class="article"><p>Python에서 모델을 만든 프로세스를 종료하면 <code>model</code> 객체, 중간 tensor, 장치 메모리 주소, 준비된 호출 객체도 함께 사라진다. 디스크에 컴파일 결과만 남겼다면 다른 프로세스는 무엇을 해야 할까? <strong>fxbX는 저장한 실행 파일과 연결 설명을 읽고, 현재 프로세스의 가중치·입력·장치 객체를 연결해 실행하는 프로젝트</strong>다.</p>
+<p>배포용 **package(패키지)**는 필요한 파일을 묶은 전달 단위다. 프로그램 설치 파일이나 아카이브를 생각하면 된다. **manifest(매니페스트)**는 묶음 안에 어떤 파일이 있고 어떤 조건에서 써야 하는지 적은 설명서다. 실행계획은 한 단계 더 구체적이다. 어떤 계산에 어떤 tensor를 넘기고 그 결과를 어디에 연결할지를 적는다. 파일 목록과 함수 호출 목록은 역할이 다르다.</p>
+<p>이 장은 fxbX commit <code>03d993b4d1b36cdda209d61bbf447434c174b401</code>와 FuryNo5 <code>bba9efea8201aec48150514a35d0b637d29d107e</code>를 기준으로 한다. fxbX는 공식 FXB(Furiosa Executable Bundle)를 대신하는 공식 표준이 아니다. 초기 패키지 형식과 최신 실행계획 형식을 모두 다루므로 뒤에서 어느 파일을 어느 reader가 읽는지 나눈다. 집필 환경에서는 새 RNGD 실행을 하지 않았다. <a href="https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/README.md">현재 프로젝트 범위</a></p>
+<h2 id="먼저-같은-작은-모델을-다시-실행하는-상황을-보자"><a class="heading-anchor" href="#먼저-같은-작은-모델을-다시-실행하는-상황을-보자">먼저 같은 작은 모델을 다시 실행하는 상황을 보자</a></h2>
+<p>예제는 <code>Linear(8,12) → ReLU → Linear(12,8)</code>이다. 길이 8의 입력 4개를 담은 <code>x[4,8]</code>을 주면 첫 Linear와 ReLU가 <code>[4,12]</code> 중간값을 만들고 마지막 Linear가 <code>y[4,8]</code>을 반환한다. Linear는 weight와의 행렬곱에 bias를 더하고, ReLU(Rectified Linear Unit)는 음수를 0으로 바꾼다.</p>
+<p>행렬곱 <code>@</code>는 왼쪽 행과 오른쪽 열의 대응 원소를 곱해 더한다. 첫 층의 가중치 <code>W[12,8]</code>은 출력 특징 12개 각각의 계수 8개를 담으므로, <code>W.T</code>로 축을 맞바꾼 <code>[8,12]</code>를 사용한다. 결과 <code>x[4,8] @ W.T[8,12]</code>의 shape는 <code>[4,12]</code>이고, bias <code>[12]</code>를 모든 행에 똑같이 더한다. 이 <strong>broadcasting</strong>을 포함한 계산이 <code>Linear(8,12)</code>의 계약이다. 두 번째 층도 같은 방식으로 12개 특징을 8개로 바꾼다. 패키지를 읽는 쪽이 weight의 행·열 의미를 바꾸거나 bias를 다른 축에 연결하면 파일이 정상이어도 잘못된 모델을 실행한다. <a href="https://docs.pytorch.org/docs/2.10/generated/torch.nn.Linear.html">Linear의 계산과 weight shape</a></p>
+<p>FuryNo5가 만드는 **EDF(Executable Device Format)**는 RNGD NPU(Neural Processing Unit)에서 계산할 장치 바이너리다. 이는 Python의 모델 객체와 다르다. 실행 소비자는 파일 bytes를 해석하고 장치 자원을 준비하는 **loader(로더)**를 통해 계산 가능한 객체를 만든다. 메모리에서 객체를 파일로 저장하는 직렬화와 그 반대인 역직렬화도 이 경계에서 등장한다. <a href="https://developer.furiosa.ai/furiosa-opt/book/quick-start/kernel-validation.html">EDF 정의</a>, <a href="https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py">실행 소비자</a></p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>다른 프로세스가 알아야 할 것</th>
+<th>예제에서의 값</th>
+<th>저장·공급하는 곳</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>어떤 계산 코드인가</td>
+<td>Linear·ReLU를 구현한 EDF들</td>
+<td>패키지의 EDF 파일</td>
+</tr>
+<tr>
+<td>입력을 어떻게 연결하는가</td>
+<td>첫 결과 <code>h</code>를 ReLU에, 그 결과 <code>a</code>를 마지막 Linear에</td>
+<td>실행계획</td>
+</tr>
+<tr>
+<td>weight 값은 무엇인가</td>
+<td><code>0.weight</code>, <code>0.bias</code>, <code>2.weight</code>, <code>2.bias</code></td>
+<td>이 예제 경로에서는 외부 checkpoint</td>
+</tr>
+<tr>
+<td>이번 요청 값은 무엇인가</td>
+<td><code>x[4,8]</code></td>
+<td>호출자가 전달</td>
+</tr>
+<tr>
+<td>실행 환경이 맞는가</td>
+<td>SDK(Software Development Kit)·장치 구성·입출력 계약</td>
+<td>manifest·계획·실제 환경의 대조</td>
+</tr>
+<tr>
+<td>이번 프로세스의 주소는 무엇인가</td>
+<td>실제 버퍼와 실행 객체</td>
+<td>적재 때 새로 준비</td>
+</tr>
+</tbody></table>
+</div><p>checkpoint는 모델의 학습된 weight·buffer 값을 저장한 파일이다. <strong>외부 가중치</strong>란 이 값이 패키지와 별도로 공급된다는 뜻이다. 패키지가 완전하지 않다는 뜻은 아니지만, 실행할 때 맞는 weight를 반드시 연결해야 한다. 다른 숫자로 임의 초기화한 같은 구조의 모델은 같은 checkpoint를 복구한 것이 아니다.</p>
+<p>FuryNo5는 그래프를 분석해 이러한 EDF와 연결 계획을 생산한다. 그래프는 계산과 값의 의존 관계를 node와 간선으로 담은 자료구조다. fxbX는 이미 정해진 계획을 소비한다. 패키지를 찾는 카탈로그는 FuryAwesome이고, 준비·진단·검증·게시 작업을 연결하는 도구 모음은 FHA(Furiosa-Hug-Anything)다. 카탈로그의 등록 가능 형식과 FHA 자동 게시기의 허용 형식은 다르며 이 경계는 <a href="../chapter/13-porting-fha.html">13장</a>에서 다룬다.</p>
 <h2 id="1-공식-fxb가-부족했다는-말의-정확한-뜻"><a class="heading-anchor" href="#1-공식-fxb가-부족했다는-말의-정확한-뜻">1. 공식 FXB가 부족했다는 말의 정확한 뜻</a></h2>
-<p>공식 FXB는 모델 가중치, tokenizer, configuration과 분리된 컴파일 결과 묶음이다. 가중치가 달라도 architecture fingerprint와 실행 조건이 맞으면 재사용할 수 있다. 그러므로 “공식 FXB는 여러 EDF를 담지 못한다”거나 “가중치를 넣을 수 없어 쓸모없다”는 것이 프로젝트의 출발점은 아니다. <strong>커스텀 그래프의 호스트 실행 의미를 공식 모델 런타임이 이해하는가</strong>가 실제 경계다. <a href="https://developer.furiosa.ai/v2026.4.0/en/furiosa_llm/fxb.html">공식 FXB 설명</a></p>
-<p>예를 들어 임의 Torch 모델을 <code>linear → relu → linear</code>로 분리해 EDF를 만들었다고 하자. 실행기는 첫 커널의 출력이 두 번째 커널의 어느 입력인지, 가중치를 언제 올리는지, 마지막 결과를 어느 이름으로 돌려줄지 알아야 한다. LLM(Large Language Model)이라면 여기에 prefill, decode, KV(Key–Value) cache, 요청별 상태, 토큰 선택 정책까지 더해진다. 커널 파일을 ZIP에 넣는 것만으로 이 의미가 생성되지는 않는다. FuryNo5는 그래프를 해석하고 실행 계획을 만들며, fxbX는 그 계획을 검사·적재·실행한다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/execution_plan.py">실행 계획 생산자</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span> · <a href="https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py">소비자</a></p>
+<p>공식 FXB는 모델 가중치, tokenizer, configuration과 분리된 컴파일 결과 묶음이다. 여기서 architecture fingerprint는 hidden size·head 수·정밀도처럼 컴파일된 프로그램의 구조를 결정하는 설정을 요약한 식별자다. checkpoint의 모든 weight 값과 같은 개념이 아니다. 가중치가 달라도 이 식별자와 실행 조건이 맞으면 재사용할 수 있다. 그러므로 “공식 FXB는 여러 EDF를 담지 못한다”거나 “가중치를 넣을 수 없어 쓸모없다”는 것이 프로젝트의 출발점은 아니다. <strong>커스텀 그래프의 호출 순서와 상태 관리 방법을 공식 모델 런타임이 이해하는가</strong>가 실제 경계다. 호스트는 NPU를 제어하는 CPU 측 프로그램이며, 모델 런타임은 요청을 받아 계산·상태·반환을 관리하는 실행기다. <a href="https://developer.furiosa.ai/v2026.4.0/en/furiosa_llm/fxb.html">공식 FXB 설명</a></p>
+<p>예를 들어 임의 Torch 모델을 <code>linear → relu → linear</code>로 분리해 EDF를 만들었다고 하자. 실행기는 첫 커널의 출력이 두 번째 커널의 어느 입력인지, 가중치를 언제 올리는지, 마지막 결과를 어느 이름으로 돌려줄지 알아야 한다. LLM(Large Language Model)이라면 여기에 prefill(입력 토큰을 처음 처리), decode(다음 토큰을 순차 생성), KV(Key–Value) cache(앞 토큰의 attention 계산에 쓸 key·value tensor를 저장), 요청별 상태, 토큰 선택 정책까지 더해진다. 커널 파일을 ZIP에 넣는 것만으로 이 의미가 생성되지는 않는다. FuryNo5는 그래프를 해석하고 실행 계획을 만들며, fxbX는 그 계획을 검사·적재·실행한다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/execution_plan.py">실행 계획 생산자</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span> · <a href="https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py">소비자</a></p>
 <h2 id="2-현재-공존하는-세-가지-산출물"><a class="heading-anchor" href="#2-현재-공존하는-세-가지-산출물">2. 현재 공존하는 세 가지 산출물</a></h2>
+<p>**schema(스키마)**는 파일의 필드·자료형·버전 규칙이다. 데이터베이스의 테이블 정의처럼 reader와 writer가 같은 규칙을 알아야 한다. 확장자는 사람이 파일을 구분하는 이름의 일부이고 schema는 내부 구조다. 이름을 <code>.fxb</code>로 바꾸었다고 공식 실행계약으로 변환되지는 않는다.</p>
 <div class="table-wrap"><table>
 <thead>
 <tr>
@@ -23,18 +70,19 @@
 </tr>
 <tr>
 <td>초기 <code>.fxbx</code> 또는 <code>.fxbex</code></td>
-<td><code>FXB_EX</code> schema 1, 실행 계획·메모리 계획·adapter, SDK Runnable 등이 가능</td>
+<td><code>FXB_EX</code> schema 1, 실행·메모리 계획, 호출을 연결하는 adapter, SDK Runnable 등이 가능</td>
 <td>fxbX <code>Session</code>과 adapter</td>
 <td>이 포맷 자체는 공식 FXB가 아님</td>
 </tr>
 <tr>
 <td>FuryNo5 커스텀 execution-plan 패키지</td>
-<td>genuine EDF, native 스타일 manifest, <code>fxbex.provenance.json</code> 안의 계획</td>
+<td>실제 EDF, 공식 컨테이너 구조를 따르는 manifest, <code>fxbex.provenance.json</code> 안의 계획</td>
 <td><code>GraphFXB</code>가 선택하는 <code>ExecutionFXB</code></td>
 <td>fxbX 전용 의미 계약이므로 임의 모델 자동 지원을 뜻하지 않음</td>
 </tr>
 </tbody></table>
-</div><p>현 생산자는 커스텀 계획의 출력에 <code>.fxb</code>와 <code>.fxbx</code>를 모두 허용한다. 따라서 <strong>파일 내부 schema와 해당 consumer를 확인하는 것이 확장자 확인보다 중요하다.</strong> 내부 <code>fxbex</code>, <code>tplmachine</code>, <code>tclmachine</code> 문자열은 호환성과 소스 위치를 보존한 이름이다. 사용자에게 보이는 프로젝트 이름은 fxbX와 FuryNo5를 사용한다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/fxb_export/model_export.py">출력 suffix 검사</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span> · <a href="https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/package.py">초기 schema 검사</a></p>
+</div><p>표의 SDK(Software Development Kit) Runnable은 SDK가 관리하는 실행 객체다. adapter는 패키지의 입력·실행 방법을 해당 runtime 호출로 연결하는 코드다. 초기 <code>FXB_EX</code>의 version 1과 최신 <code>tclmachine.execution-plan.v1</code>의 숫자 1도 서로 다른 schema의 버전이므로 같은 포맷으로 읽으면 안 된다.</p>
+<p>현 생산자는 커스텀 계획의 출력에 <code>.fxb</code>와 <code>.fxbx</code>를 모두 허용한다. 따라서 <strong>파일 내부 schema와 해당 consumer를 확인하는 것이 확장자 확인보다 중요하다.</strong> 내부 <code>fxbex</code>, <code>tplmachine</code>, <code>tclmachine</code> 문자열은 호환성과 소스 위치를 보존한 이름이다. 사용자에게 보이는 프로젝트 이름은 fxbX와 FuryNo5를 사용한다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/fxb_export/model_export.py">출력 suffix 검사</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span> · <a href="https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/package.py">초기 schema 검사</a></p>
 <figure class="diagram"><img src="../assets/diagrams/12-fxbx-1ea45a5d09bf.svg?v=d7a90e26a07a" alt="fxbX의 포맷과 실행기 · 도식 1" loading="lazy"><figcaption>도식 1 · fxbX의 포맷과 실행기 — 설명을 위해 단순화한 관계도. 실제 호출 조건과 근거는 본문을 함께 읽으세요.</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
     A[&quot;FuryNo5: 그래프와 연산 계약&quot;] --&gt; B[&quot;genuine EDF와 실행 계획&quot;]
     B --&gt; C[&quot;fxbX: 무결성·ABI·버전 검사&quot;]
@@ -42,55 +90,107 @@
     D --&gt; E[&quot;SDK Runnable 또는 RunnableSequence&quot;]
     E --&gt; F[&quot;RNGD 실행과 완료 확인&quot;]
     G[&quot;공식 builder의 FXB&quot;] --&gt; H[&quot;호환 Furiosa-LLM 모델 실행기&quot;]</pre></details></figure><h2 id="3-공식-방식을-따른다-와-공식-지원이다-는-다른-주장이다"><a class="heading-anchor" href="#3-공식-방식을-따른다-와-공식-지원이다-는-다른-주장이다">3. “공식 방식을 따른다”와 “공식 지원이다”는 다른 주장이다</a></h2>
-<p>fxbX의 native writer는 <code>manifest.json</code>, <code>edfs/</code>, 컴파일러 identity, 외부 가중치라는 공식 배포 구조를 가능한 한 활용한다. 커스텀 실행 의미는 별도 producer metadata에 기록한다. 이 방식으로 공식 검사 도구가 읽는 아카이브를 만들 수 있다는 사실과, 특정 모델을 공식 LLM runner가 실행한다는 사실은 각각 검증해야 한다. <a href="https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/native_fxb.py">native container 검사</a> · <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/fxb_export/model_export.py">FuryNo5 native export</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
-<p>SDK 내부 바이너리와 직렬화 계약은 버전 의존적이다. <code>Runnable.serialize()</code>로 만든 blob을 raw EDF라고 이름 붙이거나, 실제 architecture와 다른 이름을 manifest에 적어 registry를 통과시키면 안 된다. 현재 소비자는 EDF의 SHA-256, 입력·출력 ABI(Application Binary Interface), fusion 계약을 확인한다. ELF(Executable and Linkable Format) 계열 장치 프로그램, EDF, SDK 직렬화 Runnable은 서로 다른 수준의 산출물이다. 각각에 맞는 loader가 필요하다. <a href="https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py#L392-L407">EDF loader와 ABI 비교</a></p>
+<p>writer는 파일을 작성하는 쪽, reader는 읽는 쪽이다. 여기서 native writer라는 이름은 공식 컨테이너의 구조를 사용하는 writer를 뜻하며, 임의 모델이 공식 런타임에 등록되었다는 뜻은 아니다. fxbX의 native writer는 <code>manifest.json</code>, <code>edfs/</code>, 컴파일러 identity, 외부 가중치라는 공식 배포 구조를 가능한 한 활용한다. 커스텀 실행 의미는 별도 producer metadata에 기록한다. 이 방식으로 공식 검사 도구가 읽는 아카이브를 만들 수 있다는 사실과, 특정 모델을 공식 LLM runner가 실행한다는 사실은 각각 검증해야 한다. <a href="https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/native_fxb.py">native container 검사</a> · <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/fxb_export/model_export.py">FuryNo5 native export</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
+<p>SDK 내부 바이너리와 직렬화 계약은 버전 의존적이다. <code>Runnable.serialize()</code>로 만든 blob을 raw EDF라고 이름 붙이거나, 실제 architecture와 다른 이름을 manifest에 적어 registry를 통과시키면 안 된다. 현재 소비자는 EDF의 SHA-256(Secure Hash Algorithm 256-bit) 해시, 입력·출력 ABI(Application Binary Interface), fusion 계약을 확인한다. 해시는 파일 bytes가 기대한 것과 같은지 확인하는 값이고, ABI는 인수 순서·자료형·배치가 컴파일된 코드와 일치하는지에 관한 계약이다. 무결성은 파일이 바뀌지 않았다는 증거이며 수치 정확도 증거는 아니다. ELF(Executable and Linkable Format) 계열 장치 프로그램, EDF, SDK 직렬화 Runnable은 서로 다른 수준의 산출물이다. 각각에 맞는 loader가 필요하다. <a href="https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py#L392-L407">EDF loader와 ABI 비교</a></p>
 <h2 id="4-패키지-안에-무엇이-있는가"><a class="heading-anchor" href="#4-패키지-안에-무엇이-있는가">4. 패키지 안에 무엇이 있는가</a></h2>
-<p>초기 <code>FXB_EX</code> schema 1은 아래 네 파일을 필수로 요구한다. 실제 필수 항목을 선언한 짧은 소스 발췌다.</p>
+<p>우선 초기 형식을 보자. <code>FXB_EX</code> schema 1은 아래 네 파일을 필수로 요구한다. 이 목록은 최신 execution-plan 아카이브의 필수 파일 목록으로 재사용하면 안 된다. 실제 필수 항목 선언에 설명 주석을 추가한 발췌다.</p>
 <div class="codebox"><div class="codebar"><span>python</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-python">REQUIRED = (
-    'execution_plan.json', 'weights_index.json',
-    'memory_plan.json', 'runtime_config.json',
+    'execution_plan.json',  # 어느 계산을 어떤 인수로 호출할지
+    'weights_index.json',   # 가중치 이름과 저장 위치를 어떻게 대응시킬지
+    'memory_plan.json',     # 논리 메모리를 어떻게 계획했는지
+    'runtime_config.json',  # 어느 runtime 설정을 요구하는지
 )
 </code></pre></div>
 <p><a href="https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/package.py#L10-L10">출처: package.py</a></p>
-<p><code>manifest.json</code>에는 파일별 크기와 checksum, 모델 출처, runtime adapter, standalone 여부, 호환성 정보가 있다. <code>weights_index.json</code>은 내부 가중치와 외부 가중치를 구별하며, standalone 패키지에서는 외부 경로를 허용하지 않는다. <code>memory_plan.json</code>은 논리 메모리 계획이다. 이 수치를 드라이버 allocator overhead까지 포함한 물리 HBM(High Bandwidth Memory) 실측값으로 읽으면 안 된다. <a href="https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/package.py">무결성 검사</a> · <a href="https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/memory.py">메모리 계산</a></p>
-<p>새 execution-plan 계열은 <code>tclmachine.execution-plan.v1/v2</code>를 읽는다. 계획에 tensor의 shape·stride·dtype·역할, kernel의 EDF 해시와 입출력 ABI, entry별 steps, 상태 update를 담는다. v2는 frozen buffer guard도 포함한다. 특정 buffer 값에 의존해 컴파일했다면 같은 shape만으로 재사용을 허용할 수 없기 때문이다. 모델의 수치 의미를 바꾸는 buffer 변경을 실행 전에 발견하려는 장치다. <a href="https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py#L132-L257">계획 검증</a></p>
+<p>네 파일은 각각 <code>계산을 어떻게 호출하는가</code>, <code>weight가 어디에 있는가</code>, <code>논리 메모리를 어떻게 나누는가</code>, <code>어떤 runtime 설정을 쓰는가</code>라는 질문에 답한다. Python tuple <code>REQUIRED</code>는 검사기가 빠진 파일을 찾기 위해 사용하는 이름 목록이다. 이 발췌가 패키지를 만드는 완성 코드인 것은 아니다.</p>
+<p><code>manifest.json</code>에는 파일별 크기와 checksum, 모델 출처, runtime adapter, standalone 여부, 호환성 정보가 있다. checksum은 파일 내용 변경을 검사하는 요약 값이다. standalone은 이 형식에서 필요한 weight와 실행 연결을 패키지 안에 포함해 외부 파일 경로에 의존하지 않는다는 계약이다. <code>weights_index.json</code>은 내부 가중치와 외부 가중치를 구별하며, standalone 패키지에서는 외부 경로를 허용하지 않는다. <code>memory_plan.json</code>은 논리 메모리 계획이다. 이 수치를 드라이버 allocator overhead까지 포함한 물리 HBM(High Bandwidth Memory) 실측값으로 읽으면 안 된다. <a href="https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/package.py">무결성 검사</a> · <a href="https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/memory.py">메모리 계산</a></p>
+<p>이 장의 작은 MLP(Multilayer Perceptron)가 사용하는 새 execution-plan 계열은 공식 컨테이너와 비슷하게 <code>manifest.json</code>, <code>edfs/</code>를 두고, 커스텀 실행 설명을 <code>fxbex.provenance.json</code>에 기록한다. provenance는 이 파일을 어떤 생산자가 어떤 계약으로 만들었는지에 관한 metadata(설명 정보)다. 그 안의 계획은 <code>tclmachine.execution-plan.v1/v2</code> schema를 사용한다.</p>
+<p>실행계획은 크게 세 표로 읽으면 된다. <code>tensors</code>는 값의 이름과 shape·dtype(원소 자료형)·stride(축별 저장소 간격)·역할, <code>kernels</code>는 호출할 EDF와 계약, <code>entries</code>는 <code>forward</code>처럼 이름 있는 실행 입구와 step 순서를 담는다. 아래 값 이름은 이해를 위한 예이고 실제 ID는 생산자가 정한다.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>설명용 호출</th>
+<th>입력 ID에 연결할 것</th>
+<th>출력 ID</th>
+<th>이어지는 사용</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>첫 Linear kernel</td>
+<td><code>x</code>, <code>w0</code>, <code>b0</code></td>
+<td><code>h</code></td>
+<td>ReLU의 입력</td>
+</tr>
+<tr>
+<td>ReLU kernel</td>
+<td><code>h</code></td>
+<td><code>a</code></td>
+<td>마지막 Linear의 입력</td>
+</tr>
+<tr>
+<td>마지막 Linear kernel</td>
+<td><code>a</code>, <code>w2</code>, <code>b2</code></td>
+<td><code>y</code></td>
+<td><code>forward</code>의 반환값</td>
+</tr>
+</tbody></table>
+</div><p>실제 컴파일에서 두 연산이 결합되면 표의 두 행을 한 kernel이 맡을 수도 있다. 계획을 읽는 이유는 실행기가 그 선택을 다시 추측하지 않게 하기 위해서다. 계획에 tensor의 shape·stride·dtype·역할, kernel의 EDF 해시와 입출력 ABI, entry별 steps, 상태 update를 담는다. v2는 frozen buffer guard도 포함한다. buffer는 학습 parameter와 별도로 모델에 등록한 tensor 값이고, guard는 허용된 조건을 실행 전에 검사하는 장치다. 특정 buffer 값에 의존해 컴파일했다면 같은 shape만으로 재사용을 허용할 수 없기 때문이다. 모델의 수치 의미를 바꾸는 buffer 변경을 실행 전에 발견하려는 장치다. <a href="https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py#L132-L257">계획 검증</a></p>
 <h2 id="5-loader가-실제로-하는-일"><a class="heading-anchor" href="#5-loader가-실제로-하는-일">5. loader가 실제로 하는 일</a></h2>
-<p><code>GraphFXB.__new__</code>는 producer metadata에 <code>execution_plan</code>이 있는지 보고 <code>ExecutionFXB</code>로 보낸다. 모델 이름으로 YOLO나 Qwen을 특별 대우하는 분기는 아니다. 이후 외부 가중치와 tensor metadata를 검사하고, 장치 설정을 맞추고, EDF를 SDK loader로 읽는다. <a href="https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/graph_fxb.py#L137-L159">분기 코드</a></p>
-<p>아래는 <code>ExecutionFXB._load</code>의 핵심 호출을 발췌한 것이다. 이 몇 줄만 독립 실행하면 앞뒤 검증과 가중치 바인딩이 빠지므로, 사용자 코드는 다음 절의 <code>GraphFXB</code> API를 사용한다.</p>
-<div class="codebox"><div class="codebar"><span>python</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-python">sdk.set_fusion(8)
-sdk.set_mesh_kind(sdk.MeshKind.Single())
-program = sdk.ir.Runnable.from_serialized_edf(raw)
+<p><code>GraphFXB</code>는 사용자가 부르는 생성 API다. Python의 <code>__new__</code>는 객체를 만드는 단계에서 어떤 종류의 객체를 반환할지 고를 수 있다. <code>GraphFXB.__new__</code>는 producer metadata에 <code>execution_plan</code>이 있는지 보고 <code>ExecutionFXB</code>로 보낸다. 여기서는 그래프 안에 어떤 모델 이름이 적혔는지보다 저장된 계획 형식을 본다. <code>execution_plan</code>이 있으면 그 계약을 해석하는 <code>ExecutionFXB</code> 객체를 만든다. 모델 이름으로 YOLO나 Qwen을 특별 대우하는 분기는 아니다. 이후 외부 가중치와 tensor metadata를 검사하고, 장치 설정을 맞추고, EDF를 SDK loader로 읽는다. <a href="https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/graph_fxb.py#L137-L159">분기 코드</a></p>
+<p>아래는 <code>ExecutionFXB._load</code>의 핵심 호출에 설명 주석을 추가한 발췌다. <code>sdk</code>는 <code>furiosa.torch</code>, <code>raw</code>는 검사한 EDF bytes다. <code>from_serialized_edf</code>가 반환하는 <code>program</code>은 파일 내용을 SDK가 해석한 실행 표현이며, 이 세 줄만으로 요청 입력을 계산한 결과가 생기는 것은 아니다. 이 몇 줄만 독립 실행하면 앞뒤 검증과 가중치 바인딩이 빠지므로, 사용자 코드는 다음 절의 <code>GraphFXB</code> API를 사용한다.</p>
+<div class="codebox"><div class="codebar"><span>python</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-python">sdk.set_fusion(8)  # 이 consumer에서 검증한 8 PE 결합 설정; NPU 카드 8개가 아니다.
+sdk.set_mesh_kind(sdk.MeshKind.Single())  # 검증한 단일 mesh 구성을 지정한다.
+program = sdk.ir.Runnable.from_serialized_edf(raw)  # EDF bytes → SDK 내부 실행 표현
 </code></pre></div>
 <p><a href="https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py#L392-L407">출처: ExecutionFXB._load</a></p>
-<p>현 검증 범위는 <code>furiosa:0</code>, fusion 8, <code>MeshKind.Single()</code>이다. CPU(Central Processing Unit) fallback을 끄고 확인한 다음 장치 실행체를 적재한다. 상태 변경 후 오류가 난 세션은 정상 결과를 보장할 수 없어 실패 상태로 관리한다. 이 검증은 “카드를 아무 수나 붙이면 자동 분산”하는 기능이 아니다. <a href="https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py#L307-L422">device와 fallback 검사</a></p>
+<p>현 검증 범위는 <code>furiosa:0</code>, fusion 8, <code>MeshKind.Single()</code>이다. <code>furiosa:0</code>은 선택한 장치 식별자이고, 여기의 fusion 8은 8개 PE(Processing Element)를 사용하는 장치 실행 구성이다. <code>Single</code>은 이 consumer가 요구하는 mesh 구성이다. 여러 연산을 하나의 kernel로 합치는 graph fusion과 구분한다. CPU(Central Processing Unit) fallback을 끄고 확인한 다음 장치 실행체를 적재한다. 상태 변경 후 오류가 난 세션은 정상 결과를 보장할 수 없어 실패 상태로 관리한다. 이 검증은 “카드를 아무 수나 붙이면 자동 분산”하는 기능이 아니다. <a href="https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py#L307-L422">device와 fallback 검사</a></p>
 <h2 id="6-계획이-있어도-모든-적재-작업이-사라지지는-않는다"><a class="heading-anchor" href="#6-계획이-있어도-모든-적재-작업이-사라지지는-않는다">6. 계획이 있어도 모든 적재 작업이 사라지지는 않는다</a></h2>
-<p>저장된 계획은 graph capture·분해·의존성 추론·커널 컴파일을 재실행할 필요를 줄인다. 그래도 해시 검사, 버전 검사, EDF 역직렬화, 장치 버퍼 할당, 가중치 업로드, runtime object 생성, 요청 상태 준비는 남는다. <code>ExecutionFXB</code> 생성자도 마지막 사용 위치를 계산해 임시 tensor를 해제할 step 목록을 만든다. 이는 저장된 그래프에서 <strong>런타임 bookkeeping을 파생</strong>하는 일이며, EDF만 보고 원본 모델의 실행 의미를 복원하는 일이 아니다. <a href="https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py#L307-L352">생성자와 last-use 처리</a></p>
-<p>현재 소스에는 stateless entry를 SDK <code>RunnableSequence</code>로 묶는 최적화가 있다. 상태 update가 있거나 논리 예산으로 전체 중간 tensor 보유를 감당할 수 없으면 해당 sequence 경로를 건너뛴다. 호환되는 merged-runnable sidecar가 있으면 연속 구간을 더 묶을 수 있고, 없거나 해시·ABI가 달라지면 기본 EDF 경로를 사용한다. 이 선택에서 <code>_RunnableSequenceBuilder</code>, <code>_inner</code> 같은 내부 API를 사용하므로 안정된 공개 ABI라고 설명해서는 안 된다. <a href="https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py#L423-L474">sequence 구성</a> · <a href="https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py#L476-L520">sidecar 검사</a></p>
-<p><strong>Python dispatch를 줄이는 sequence 구성과 컴파일러가 연산을 융합하는 kernel fusion도 다르다.</strong> 전자는 호스트 호출의 반복을 줄일 수 있고, 후자는 장치 실행·중간 데이터 이동 자체를 바꾼다. 성능 결과는 둘을 구분해 측정해야 한다.</p>
+<figure class="diagram"><img src="../assets/diagrams/12-fxbx-75f3c6b89452.svg?v=e59a8c2c3b67" alt="fxbX의 포맷과 실행기 · 도식 2" loading="lazy"><figcaption>도식 2 · fxbX의 포맷과 실행기 — 설명을 위해 단순화한 관계도. 실제 호출 조건과 근거는 본문을 함께 읽으세요.</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
+    P[&quot;패키지 bytes&quot;] --&gt; V[&quot;형식·해시·버전 검사&quot;]
+    W[&quot;외부 checkpoint&quot;] --&gt; B[&quot;weight 이름·shape 연결&quot;]
+    V --&gt; B
+    B --&gt; L[&quot;EDF 해석·장치 객체 준비&quot;]
+    X[&quot;이번 호출의 x&quot;] --&gt; I[&quot;입력 계약 검사&quot;]
+    L --&gt; I
+    I --&gt; S[&quot;계획의 step 실행&quot;]
+    S --&gt; Y[&quot;완료 후 y 반환&quot;]</pre></details></figure><p>저장된 계획은 graph capture·분해·의존성 추론·커널 컴파일을 재실행할 필요를 줄인다. 그래도 해시 검사, 버전 검사, EDF 역직렬화, 장치 버퍼 할당, 가중치 업로드, runtime object 생성, 요청 상태 준비는 남는다. <code>ExecutionFXB</code> 생성자도 마지막 사용 위치를 계산해 임시 tensor를 해제할 step 목록을 만든다. 이는 저장된 그래프에서 <strong>런타임 bookkeeping을 파생</strong>하는 일이며, EDF만 보고 원본 모델의 실행 의미를 복원하는 일이 아니다. <a href="https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py#L307-L352">생성자와 last-use 처리</a></p>
+<p>**last use(마지막 사용 위치)**를 작은 모델에 적용해 보자. 설명용 세 단계에서는 <code>h</code>가 ReLU에 전달된 뒤 더 이상 필요하지 않고, <code>a</code>는 마지막 Linear 이후 필요하지 않다. 다른 분기에서 다시 쓰지 않는다는 것을 계획에서 알면 논리적으로 임시 객체를 놓을 시점을 정할 수 있다. 실제 장치 버퍼 재사용·해제 시점은 SDK 실행·완료 계약도 따라야 하므로 이 표만으로 물리 메모리 사용량이 결정되지는 않는다.</p>
+<p><strong>stateless</strong>는 호출을 마친 뒤 다음 호출로 넘길 내부 상태 갱신이 없는 경우다. 이번 MLP가 그런 예다. 현재 소스에는 stateless entry를 SDK <code>RunnableSequence</code>로 묶는 최적화가 있다. 이는 준비된 여러 호출의 연결을 SDK 실행 객체 하나에 구성하는 방법이다. 상태 update가 있거나 논리 예산으로 전체 중간 tensor 보유를 감당할 수 없으면 해당 sequence 경로를 건너뛴다. sidecar는 주 패키지에 덧붙는 보조 산출물이다. 호환되는 merged-runnable sidecar, 즉 여러 실행 구간을 미리 결합해 둔 보조 파일이 있으면 연속 구간을 더 묶을 수 있고, 없거나 해시·ABI가 달라지면 기본 EDF 경로를 사용한다. 이 선택에서 <code>_RunnableSequenceBuilder</code>, <code>_inner</code> 같은 내부 API를 사용하므로 안정된 공개 ABI라고 설명해서는 안 된다. <a href="https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py#L423-L474">sequence 구성</a> · <a href="https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py#L476-L520">sidecar 검사</a></p>
+<p><strong>Python 호출을 줄이는 sequence 구성과 컴파일러가 연산을 융합하는 kernel fusion도 다르다.</strong> 예를 들어 Python이 kernel 세 개를 차례로 호출하던 부분을 SDK sequence 한 번으로 제출한다고 해서 세 EDF가 자동으로 하나의 새로운 EDF가 되는 것은 아니다. 전자는 호스트 호출의 반복을 줄일 수 있고, 후자는 장치 실행·중간 데이터 이동 자체를 바꾼다. 성능 결과는 둘을 구분해 측정해야 한다.</p>
 <h2 id="7-검사와-실행-예"><a class="heading-anchor" href="#7-검사와-실행-예">7. 검사와 실행 예</a></h2>
-<p>초기 <code>FXB_EX</code> 패키지는 CLI(Command-Line Interface)로 다음과 같이 확인한다.</p>
-<div class="codebox"><div class="codebar"><span>bash</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-bash">fxbx doctor
-fxbx inspect model.fxbx
-fxbx validate model.fxbx --integrity-only
-fxbx describe model.fxbx
+<p>아래 네 명령은 <strong>초기 <code>FXB_EX</code> 형식</strong>의 <code>model.fxbx</code>를 이미 가지고 있을 때 쓰는 CLI(Command-Line Interface) 예다. <code>doctor</code>는 환경, <code>inspect</code>는 패키지 설명, <code>validate --integrity-only</code>는 파일의 무결성, <code>describe</code>는 입력·출력 계약을 조사한다. 새 execution-plan 형식에 같은 검사기가 적용된다고 가정하지 않는다.</p>
+<div class="codebox"><div class="codebar"><span>bash</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-bash">fxbx doctor                              # Python·SDK 등의 환경을 점검한다.
+fxbx inspect model.fxbx                   # 초기 FXB_EX 패키지의 설명을 읽는다.
+fxbx validate model.fxbx --integrity-only  # 파일 무결성을 검사한다. 추론 실행이 아니다.
+fxbx describe model.fxbx                  # 선언된 입력·출력 계약을 확인한다.
 </code></pre></div>
 <p><code>validate</code>는 추론을 실행하지 않는다. <code>describe</code>는 package가 선언한 입출력 의미를 보여준다. “텐서 shape를 안다”와 “이미지·텍스트의 전후처리를 안다”도 다르므로 modality와 adapter 계약이 필요하다. <a href="https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/cli.py">CLI 구현</a> · <a href="https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/schema.py">입출력 schema</a></p>
-<p>커스텀 execution-plan 패키지는 버전에 따라 위 초기 포맷 검사 명령에 맞지 않을 수 있다. 다음 코드는 해당 형식의 reader를 명시한다.</p>
+<p>커스텀 execution-plan 패키지는 버전에 따라 위 초기 포맷 검사 명령에 맞지 않을 수 있다. 다음 코드는 해당 형식의 reader를 명시한다. 입력은 완성된 <code>tiny.fxbx</code> 파일 경로이고 출력은 계획 dictionary다. 이 코드는 컴파일·추론을 실행하지 않으므로 패키지가 어떤 호출을 계획했는지 먼저 확인할 수 있다.</p>
 <div class="codebox"><div class="codebar"><span>python</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-python">from fxbex.execution_fxb import read_execution_plan
 
-plan = read_execution_plan(&quot;tiny.fxbx&quot;)
-print(plan[&quot;schema&quot;])
-print(list(plan[&quot;entries&quot;]))
-print(&quot;kernels:&quot;, len(plan[&quot;kernels&quot;]))
+plan = read_execution_plan(&quot;tiny.fxbx&quot;)  # 아카이브에서 계획을 읽는다. NPU를 호출하지 않는다.
+print(plan[&quot;schema&quot;])                   # 소비자가 해석해야 할 실행 계획 형식·버전
+print(list(plan[&quot;entries&quot;]))            # forward 등 호출할 수 있는 실행 입구 이름
+print(&quot;kernels:&quot;, len(plan[&quot;kernels&quot;])) # 고유 kernel 계약 수; 실행 step 수와는 다를 수 있다.
 </code></pre></div>
-<p>실제 실행에서는 외부 가중치와 입력을 전달한다. <code>model</code>과 <code>x</code>는 13장의 동일한 작은 모델과 입력이다.</p>
-<div class="codebox"><div class="codebar"><span>python</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-python">from fxbx import GraphFXB
+<p>실제 실행에는 패키지 밖의 weight 값과 이번 입력이 필요하다. 다음 예제는 13장의 생산 스크립트가 만든 <strong>같은 작업 디렉터리의</strong> <code>tiny.fxbx</code>, <code>tiny-state.pt</code>, <code>tiny-cases.pt</code>를 사용한다. 새 모델을 임의 초기화하지 않고 파일에 저장한 동일 weight와 검증 입력을 읽는다. <code>weights_only=True</code>는 tensor와 기본 자료형 중심으로 체크포인트를 읽는 옵션이다.</p>
+<div class="codebox"><div class="codebar"><span>python</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-python">import torch
+from fxbx import GraphFXB
 
-with GraphFXB(&quot;tiny.fxbx&quot;, weights=model.state_dict()) as runtime:
-    actual, = runtime.predict((x,))
+# 생성할 때 사용한 동일 가중치를 CPU tensor로 읽는다. 임의 초기화로 대체하지 않는다.
+weights = torch.load(&quot;tiny-state.pt&quot;, map_location=&quot;cpu&quot;, weights_only=True)
+cases = torch.load(&quot;tiny-cases.pt&quot;, map_location=&quot;cpu&quot;, weights_only=True)
+x = cases[&quot;inputs&quot;][0]           # 첫 비교 입력: BF16 [4,8]
+expected = cases[&quot;expected&quot;][0]  # 같은 가중치로 계산해 저장한 CPU 출력 [4,8]
+with GraphFXB(&quot;tiny.fxbx&quot;, weights=weights) as runtime:  # 가중치와 계획을 연결·적재한다.
+    actual, = runtime.predict((x,))  # 입력 하나를 담은 tuple → 출력 하나 [4,8]
+# 절대 오차 atol과 상대 오차 rtol을 적용한다. 일반 모델의 품질 기준은 별도로 정한다.
+torch.testing.assert_close(actual, expected, atol=0.02, rtol=0.02)
 </code></pre></div>
-<p>대형 checkpoint에서 CPU에 모델 전체를 만드는 부담을 줄이려면 execution-plan 경로의 <code>SafeTensorWeights</code>를 사용할 수 있다. 이 loader는 header부터 확인하고 tensor 단위로 읽으며, legacy single-EDF 경로에서는 지원하지 않는다고 명시적으로 거절한다. <code>names</code>를 사용할 경우 plan target과 checkpoint tensor 이름을 정확히 대응시켜야 한다. <a href="https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/docs/CHECKPOINT_WEIGHTS.md">가중치 계약과 예제</a></p>
+<p><code>weights</code>는 이름에서 tensor로 가는 dictionary다. <code>predict((x,))</code>의 tuple은 입력 한 개라는 뜻이고, <code>actual, = ...</code>는 출력 한 개를 꺼낸다. <code>with</code> 블록은 실행 세션의 수명을 묶는다. 출력이 맞으면 이 표본의 수치 비교를 통과한 것이며, NPU가 계산했다는 독립 증거는 task trace로 확인한다. 허용오차는 이 작은 BF16 예제를 위한 값이고 다른 모델의 품질 기준은 별도로 정해야 한다. <a href="https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/docs/CHECKPOINT_WEIGHTS.md">가중치·입출력 계약</a></p>
+<p>대형 checkpoint에서 CPU에 모델 전체를 만드는 부담을 줄이려면 execution-plan 경로의 <code>SafeTensorWeights</code>를 사용할 수 있다. 이 loader는 weight 파일의 이름·shape·dtype를 담은 header부터 확인하고 필요한 tensor 단위로 읽으므로, Python 모델 전체를 복구하는 작업과 분리할 수 있다. 반면 legacy single-EDF 경로에서는 지원하지 않는다고 명시적으로 거절한다. <code>names</code>를 사용할 경우 plan target과 checkpoint tensor 이름을 정확히 대응시켜야 한다. <a href="https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/docs/CHECKPOINT_WEIGHTS.md">가중치 계약과 예제</a></p>
 <h2 id="8-배포-성공을-판단하는-순서"><a class="heading-anchor" href="#8-배포-성공을-판단하는-순서">8. 배포 성공을 판단하는 순서</a></h2>
+<p>지금까지의 순서를 다시 작은 모델에 적용하면, <code>패키지 bytes가 맞음</code>, <code>weight·bias 네 tensor가 올바른 입력에 연결됨</code>, <code>x[4,8]로 실행됨</code>, <code>y[4,8]의 수치가 맞음</code>은 각각 다른 확인이다. 수치가 같아도 CPU에서 계산했다면 목표한 NPU 실행을 증명한 것이 아니므로, 장치의 계산 task와 계획 step을 연결한 실행 기록이 필요하다.</p>
 <p>무결성 통과 → SDK·ABI 일치 → 가중치 계약 통과 → 변경 입력의 수치 대조 → 공식 NPU(Neural Processing Unit)의 Task 증거 → 새로운 프로세스에서 재적재 → 상태 reset·반복 요청 → 전체 모델 품질·성능 순서로 근거를 쌓는다. 아카이브 생성 성공을 이 모든 항목의 대체 증거로 쓰지 않는다. 이것은 FuryNo5/fxbX의 개발 권장 절차이며 애플리케이션의 신뢰도·지연 요구에 따라 검사 강도는 달라질 수 있다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/fxb_export/model_export.py">검증을 분리하는 생산자</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
 <h2 id="출처"><a class="heading-anchor" href="#출처">출처</a></h2>
 <div class="table-wrap"><table>
@@ -101,6 +201,10 @@ with GraphFXB(&quot;tiny.fxbx&quot;, weights=model.state_dict()) as runtime:
 </tr>
 </thead>
 <tbody><tr>
+<td>작은 모델의 행렬 계산</td>
+<td><a href="https://docs.pytorch.org/docs/2.10/generated/torch.nn.Linear.html">PyTorch Linear 2.10</a></td>
+</tr>
+<tr>
 <td>공식 FXB의 범위와 호환성</td>
 <td><a href="https://developer.furiosa.ai/v2026.4.0/en/furiosa_llm/fxb.html">SDK 2026.4.0 FXB</a></td>
 </tr>
@@ -121,4 +225,4 @@ with GraphFXB(&quot;tiny.fxbx&quot;, weights=model.state_dict()) as runtime:
 <td><a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/fxb_export/model_export.py">model_export.py</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span> — FuryNo5 저장소 접근 권한 필요</td>
 </tr>
 </tbody></table>
-</div></article><nav class="next-prev" aria-label="이전과 다음 장"><a href="../chapter/11-furyno5-compiler.html"><small>← 이전 장</small><b>FuryNo5 컴파일 경로</b></a><a href="../chapter/13-porting-fha.html"><small>다음 장 →</small><b>모델 포팅과 FHA·FuryAwesome</b></a></nav><footer class="footer">FuryNo5 개발 핸드북 · 비공식 자료<br>공식 문서와 소스의 권리는 각 프로젝트에 있습니다. 코드 인용은 출처와 함께 표시합니다.<br><a href="../review.html">검토 기록과 남은 질문</a> · <a href="../sources.html">출처와 버전</a> · <a href="../glossary.html">용어 사전</a></footer></main></div><aside class="right-toc" aria-label="이 장의 목차"><h2>이 장에서 다루는 내용</h2><a class="" href="#1-공식-fxb가-부족했다는-말의-정확한-뜻">1. 공식 FXB가 부족했다는 말의 정확한 뜻</a><a class="" href="#2-현재-공존하는-세-가지-산출물">2. 현재 공존하는 세 가지 산출물</a><a class="" href="#3-공식-방식을-따른다-와-공식-지원이다-는-다른-주장이다">3. “공식 방식을 따른다”와 “공식 지원이다”는 다른 주장이다</a><a class="" href="#4-패키지-안에-무엇이-있는가">4. 패키지 안에 무엇이 있는가</a><a class="" href="#5-loader가-실제로-하는-일">5. loader가 실제로 하는 일</a><a class="" href="#6-계획이-있어도-모든-적재-작업이-사라지지는-않는다">6. 계획이 있어도 모든 적재 작업이 사라지지는 않는다</a><a class="" href="#7-검사와-실행-예">7. 검사와 실행 예</a><a class="" href="#8-배포-성공을-판단하는-순서">8. 배포 성공을 판단하는 순서</a><a class="" href="#출처">출처</a></aside><dialog class="search-dialog" aria-label="문서 검색"><div class="search-head"><input type="search" aria-label="검색어" placeholder="DMA, EDF, 폴백, 버킷…" autocomplete="off"><button class="close-search" type="button">닫기</button></div><div class="search-status" role="status">용어나 함수 이름을 입력하세요.</div><div class="search-results"></div></dialog></body></html>
+</div></article><nav class="next-prev" aria-label="이전과 다음 장"><a href="../chapter/11-furyno5-compiler.html"><small>← 이전 장</small><b>FuryNo5 컴파일 경로</b></a><a href="../chapter/13-porting-fha.html"><small>다음 장 →</small><b>모델 포팅과 FHA·FuryAwesome</b></a></nav><footer class="footer">FuryNo5 개발 핸드북 · 비공식 자료<br>공식 문서와 소스의 권리는 각 프로젝트에 있습니다. 코드 인용은 출처와 함께 표시합니다.<br><a href="../review.html">검토 기록과 남은 질문</a> · <a href="../sources.html">출처와 버전</a> · <a href="../glossary.html">용어 사전</a></footer></main></div><aside class="right-toc" aria-label="이 장의 목차"><h2>이 장에서 다루는 내용</h2><a class="" href="#먼저-같은-작은-모델을-다시-실행하는-상황을-보자">먼저 같은 작은 모델을 다시 실행하는 상황을 보자</a><a class="" href="#1-공식-fxb가-부족했다는-말의-정확한-뜻">1. 공식 FXB가 부족했다는 말의 정확한 뜻</a><a class="" href="#2-현재-공존하는-세-가지-산출물">2. 현재 공존하는 세 가지 산출물</a><a class="" href="#3-공식-방식을-따른다-와-공식-지원이다-는-다른-주장이다">3. “공식 방식을 따른다”와 “공식 지원이다”는 다른 주장이다</a><a class="" href="#4-패키지-안에-무엇이-있는가">4. 패키지 안에 무엇이 있는가</a><a class="" href="#5-loader가-실제로-하는-일">5. loader가 실제로 하는 일</a><a class="" href="#6-계획이-있어도-모든-적재-작업이-사라지지는-않는다">6. 계획이 있어도 모든 적재 작업이 사라지지는 않는다</a><a class="" href="#7-검사와-실행-예">7. 검사와 실행 예</a><a class="" href="#8-배포-성공을-판단하는-순서">8. 배포 성공을 판단하는 순서</a><a class="" href="#출처">출처</a></aside><dialog class="search-dialog" aria-label="문서 검색"><div class="search-head"><input type="search" aria-label="검색어" placeholder="DMA, EDF, 폴백, 버킷…" autocomplete="off"><button class="close-search" type="button">닫기</button></div><div class="search-status" role="status">용어나 함수 이름을 입력하세요.</div><div class="search-results"></div></dialog></body></html>

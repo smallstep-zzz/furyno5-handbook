@@ -1,0 +1,71 @@
+<svg role="img" aria-label="실제 요청과 유지 상태 · 형상·자료형·범위 확인 · 준비된 버킷 선택 · 일치하지 않으면 정책에 따라 처리 · 패딩·마스크·입력 연결 · 선택한 실행물 호출 · 유효 결과와 다음 상태" width="382pt" height="445pt"
+ viewBox="0.00 0.00 381.80 444.80" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(14.4 430.4)">
+<title>handbook</title>
+<g id="edge1" class="edge">
+<title>R&#45;&gt;C</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M163,-379.84C163,-370.12 163,-357.82 163,-347.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="165.45,-347.07 163,-340.07 160.55,-347.07 165.45,-347.07"/>
+</g>
+<g id="edge2" class="edge">
+<title>C&#45;&gt;B</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M142.13,-303.84C129.4,-293.38 113.03,-279.91 99.41,-268.71"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="100.72,-266.62 93.76,-264.07 97.61,-270.41 100.72,-266.62"/>
+</g>
+<g id="edge3" class="edge">
+<title>C&#45;&gt;F</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M184.11,-303.84C196.97,-293.38 213.53,-279.91 227.3,-268.71"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="229.12,-270.39 233.01,-264.07 226.03,-266.59 229.12,-270.39"/>
+</g>
+<g id="edge4" class="edge">
+<title>B&#45;&gt;P</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M73,-227.84C73,-218.12 73,-205.82 73,-195.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="75.45,-195.07 73,-188.07 70.55,-195.07 75.45,-195.07"/>
+</g>
+<g id="edge5" class="edge">
+<title>P&#45;&gt;E</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M73,-151.84C73,-142.12 73,-129.82 73,-119.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="75.45,-119.07 73,-112.07 70.55,-119.07 75.45,-119.07"/>
+</g>
+<g id="edge6" class="edge">
+<title>E&#45;&gt;O</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M73,-75.84C73,-66.12 73,-53.82 73,-43.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="75.45,-43.07 73,-36.07 70.55,-43.07 75.45,-43.07"/>
+</g>
+<g id="node1" class="node">
+<title>R</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M220.5,-416C220.5,-416 105.5,-416 105.5,-416 99.5,-416 93.5,-410 93.5,-404 93.5,-404 93.5,-392 93.5,-392 93.5,-386 99.5,-380 105.5,-380 105.5,-380 220.5,-380 220.5,-380 226.5,-380 232.5,-386 232.5,-392 232.5,-392 232.5,-404 232.5,-404 232.5,-410 226.5,-416 220.5,-416"/>
+<text text-anchor="middle" x="163" y="-394.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">실제 요청과 유지 상태</text>
+</g>
+<g id="node2" class="node">
+<title>C</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M224,-340C224,-340 102,-340 102,-340 96,-340 90,-334 90,-328 90,-328 90,-316 90,-316 90,-310 96,-304 102,-304 102,-304 224,-304 224,-304 230,-304 236,-310 236,-316 236,-316 236,-328 236,-328 236,-334 230,-340 224,-340"/>
+<text text-anchor="middle" x="163" y="-318.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">형상·자료형·범위 확인</text>
+</g>
+<g id="node3" class="node">
+<title>B</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M117.5,-264C117.5,-264 28.5,-264 28.5,-264 22.5,-264 16.5,-258 16.5,-252 16.5,-252 16.5,-240 16.5,-240 16.5,-234 22.5,-228 28.5,-228 28.5,-228 117.5,-228 117.5,-228 123.5,-228 129.5,-234 129.5,-240 129.5,-240 129.5,-252 129.5,-252 129.5,-258 123.5,-264 117.5,-264"/>
+<text text-anchor="middle" x="73" y="-242.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">준비된 버킷 선택</text>
+</g>
+<g id="node4" class="node">
+<title>F</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M341,-264C341,-264 167,-264 167,-264 161,-264 155,-258 155,-252 155,-252 155,-240 155,-240 155,-234 161,-228 167,-228 167,-228 341,-228 341,-228 347,-228 353,-234 353,-240 353,-240 353,-252 353,-252 353,-258 347,-264 341,-264"/>
+<text text-anchor="middle" x="254" y="-242.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">일치하지 않으면 정책에 따라 처리</text>
+</g>
+<g id="node5" class="node">
+<title>P</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M134,-188C134,-188 12,-188 12,-188 6,-188 0,-182 0,-176 0,-176 0,-164 0,-164 0,-158 6,-152 12,-152 12,-152 134,-152 134,-152 140,-152 146,-158 146,-164 146,-164 146,-176 146,-176 146,-182 140,-188 134,-188"/>
+<text text-anchor="middle" x="73" y="-166.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">패딩·마스크·입력 연결</text>
+</g>
+<g id="node6" class="node">
+<title>E</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M123.5,-112C123.5,-112 22.5,-112 22.5,-112 16.5,-112 10.5,-106 10.5,-100 10.5,-100 10.5,-88 10.5,-88 10.5,-82 16.5,-76 22.5,-76 22.5,-76 123.5,-76 123.5,-76 129.5,-76 135.5,-82 135.5,-88 135.5,-88 135.5,-100 135.5,-100 135.5,-106 129.5,-112 123.5,-112"/>
+<text text-anchor="middle" x="73" y="-90.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">선택한 실행물 호출</text>
+</g>
+<g id="node7" class="node">
+<title>O</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M130.5,-36C130.5,-36 15.5,-36 15.5,-36 9.5,-36 3.5,-30 3.5,-24 3.5,-24 3.5,-12 3.5,-12 3.5,-6 9.5,0 15.5,0 15.5,0 130.5,0 130.5,0 136.5,0 142.5,-6 142.5,-12 142.5,-12 142.5,-24 142.5,-24 142.5,-30 136.5,-36 130.5,-36"/>
+<text text-anchor="middle" x="73" y="-14.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">유효 결과와 다음 상태</text>
+</g>
+</g>
+</svg>

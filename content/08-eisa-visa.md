@@ -1,10 +1,129 @@
-# eISA 확인과 vISA 실전: furiosa-opt로 내부를 읽는다
+# eISA 확인과 vISA 실전: 배열의 원소를 장치 위치에 연결하기
 
-사용자가 요청한 **eISA의 공식 풀네임과 독립적인 공개 실행 API는 이번 조사에서 확인하지 못했다.** `furiosa-opt` 공개 문서가 직접 프로그래밍 대상으로 설명하는 이름은 **vISA(Virtual Instruction Set Architecture)**다. ISA(Instruction Set Architecture)는 명령어 집합 구조를 뜻한다. eISA가 vISA의 다른 이름이라고 단정하지 않고, 확인 가능한 vISA·컴파일·실행·관찰 경로를 이 장에서 다룬다. [공식 프로그래밍 문서](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/introduction.md)
+CPU(Central Processing Unit)에서 C의 2차원 배열을 사용하여 `a[row][col]`을 읽으면, 결국 한 저장 공간 안의 어느 위치를 읽을지 정해야 한다. NPU(Neural Processing Unit)에서도 같은 문제가 있지만, 값이 여러 chip·PE·slice의 메모리에 나뉘고 여러 차례에 걸쳐 계산 경로로 전달될 수 있다. **Mapping(매핑)**은 이 논리 좌표와 실제 저장·처리 위치의 관계를 표현한다.
 
-> **재현 기준** · 이 장의 소스는 `furiosa-opt` commit `3d43bc9d20f324af60e3006c3f1541938d7f5097`이다. 같은 commit의 base template은 `furiosa-opt-std = "0.10"`을 요구한다. 오래된 0.8.x 예제·포럼 답변과 섞지 않는다. 공개 프로젝트는 실험적 소프트웨어이며 API 변경을 전제로 버전을 기록한다. [template 의존성](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/base-template/Cargo.toml.liquid)
+이 장은 먼저 2×3 배열의 주소 계산부터 시작한다. 그 다음 공식 `constant_add` 예제의 2,048개 정수 중 **37번 원소 하나가 어느 위치에 있고 어떻게 38이 되는지** 따라간다. 계산식 `x+1`은 간단하게 유지하고, 메모리와 실행 경로를 읽는 데 집중한다.
 
-## 1. TCL보다 어떤 결정을 더 표현하는가
+> **명칭과 버전** · ISA(Instruction Set Architecture)는 명령어 집합 구조다. 공개 프로그래밍 문서의 이름은 **vISA(Virtual Instruction Set Architecture)**다. 요청에 나온 eISA의 공식 풀네임과 독립적인 공개 실행 API(Application Programming Interface)는 이번 조사에서 확인하지 못했으므로 두 이름을 같다고 단정하지 않는다. 이 장은 `furiosa-opt` commit `3d43bc9d20f324af60e3006c3f1541938d7f5097`과 `furiosa-opt-std = "0.10"` template을 기준으로 한다. [공식 소개](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/introduction.md), [template 의존성](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/base-template/Cargo.toml.liquid)
+
+## 1. 같은 행렬을 두 저장 순서로 표현한다
+
+논리 행렬이 `[[0,1,2],[10,11,12]]`라고 하자. 행 우선이면 한 행을 연속으로 저장하므로 버퍼는 `[0,1,2,10,11,12]`다. 열 우선이면 한 열을 먼저 저장하므로 `[0,10,1,11,2,12]`다. 논리 값은 같지만 저장 위치가 다르다.
+
+```python
+# CPU의 일반 리스트로 mapping의 의미를 확인한다. NPU API가 아니다.
+row_major = [0, 1, 2, 10, 11, 12]
+column_major = [0, 10, 1, 11, 2, 12]
+H, W = 2, 3                       # H는 행 축의 길이, W는 열 축의 길이
+for h in range(H):
+    for w in range(W):
+        row_offset = h * W + w     # 행 하나를 건너뛰면 원소 W개만큼 이동한다.
+        col_offset = w * H + h     # 열 하나를 건너뛰면 원소 H개만큼 이동한다.
+        assert row_major[row_offset] == column_major[col_offset]
+```
+
+| 논리 좌표 | 값 | 행 우선 원소 위치 `h×3+w` | 열 우선 원소 위치 `w×2+h` |
+|---|---:|---:|---:|
+| `(0,0)` | 0 | 0 | 0 |
+| `(0,1)` | 1 | 1 | 2 |
+| `(1,0)` | 10 | 3 | 1 |
+| `(1,2)` | 12 | 5 | 5 |
+
+여기서 **shape**는 `(2,3)`이라는 축의 길이, **layout**은 행 우선·열 우선 같은 저장 규칙이다. **Stride**는 한 축을 한 칸 이동할 때의 저장 간격이다. 이 행 우선 배열의 stride는 원소 단위로 `(3,1)`이다. 실제 바이트 주소는 `버퍼 시작 주소 + 원소 위치 × 원소당 바이트 수`로 구한다. mapping은 이 규칙을 표현하며 **실제 버퍼 시작 주소를 그 자체에 저장하는 것은 아니다.**
+
+공식 Rust mapping 표현에서는 아래처럼 이름 있는 축과 순서를 지정한다. 이는 mapping 문법을 설명하는 조각이며, 아직 장치의 cluster·slice에 배치한 커널은 아니다.
+
+```rust
+use furiosa_opt_std::prelude::*;
+axes![H = 2, W = 3];              // 논리 좌표의 이름과 길이
+pub type RowMajor = m![H, W];    // W가 안쪽: 물리 위치 p를 H=p/3, W=p%3으로 해석
+pub type ColumnMajor = m![W, H]; // H가 안쪽: 물리 위치 p를 W=p/2, H=p%2으로 해석
+```
+
+`m![]`의 Rust 타입은 **물리 위치에서 어떤 논리 좌표를 읽는지**를 표현한다. 따라서 이미 행 우선으로 저장된 버퍼를 그대로 두고 타입 이름만 열 우선으로 바꾸면 같은 행렬이 되지 않는다. 좌표 `(0,1)`에서 원래의 1 대신 물리 위치 2의 값 2를 읽게 된다. 필요한 데이터 이동 또는 성립하는 view 변환을 구분해야 한다. [공식 Mapping Expressions](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/mapping-tensors/mapping-expressions.md)
+
+**Reshape**는 원소 수를 유지하면서 차원 길이를 다시 묶는 것이고, **transpose(전치)**는 좌표 축을 교환하는 것이다. 예를 들어 `[0,1,2,10,11,12]`를 `(3,2)`로 reshape하면 `[[0,1],[2,10],[11,12]]`다. 원래 행렬을 transpose한 `[[0,10],[1,11],[2,12]]`와 값의 좌표가 다르다. 저수준 코드에서도 이름이나 shape를 바꾸는 것과 실제 원소를 올바른 위치로 옮기는 것을 구분해야 한다.
+
+## 2. 논리 축과 물리 자원의 이름을 구분한다
+
+논리 축 A·H·W는 배열의 좌표다. **Chip·Cluster·PE·Slice·Lane은 그 배열을 저장하거나 계산에 배치하는 물리 단위**다. CPU의 스레드 ID나 Python의 차원 번호와 자동으로 일치하지 않는다.
+
+| 단위 | 이 장에서 필요한 의미 | 고정 공개 문서의 관계 |
+|---|---|---|
+| Chip | NPU 칩 | 사용할 칩 수는 실행 구성에 따라 결정 |
+| Cluster | 칩 안의 PE 묶음 | 칩당 2개 |
+| PE(Processing Element) | 계산·메모리 자원 묶음 | cluster당 4개 |
+| Slice | PE 안에서 데이터를 나누고 계산하는 더 작은 단위 | PE당 64개, cluster당 256개 |
+| Lane | 수축 연산과 TRF 배치에 쓰는 slice 내부의 세부 병렬 차원 | TRF의 slice당 8개 lane |
+
+**TRF(Tensor Register File)**는 반복 사용할 수축 연산 피연산자를 가까이 두는 레지스터 묶음이다. 그러나 모든 저장소에 Lane 차원이 붙는 것은 아니다. `DmTensor`는 `Chip·Cluster·Slice·Element`로 나뉘고, `TrfTensor`는 여기에 `Lane`이 추가된다. `Element`는 선택한 물리 단위 **안의 저장 위치**다. DM(Data Memory)의 원소 8개와 TRF의 lane 8개는 개수가 같아도 다른 개념이다. [공간·시간 차원의 공식 정의](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/mapping-tensors/spatial-temporal-dimensions.md)
+
+장치 tensor의 타입은 어느 물리 단위에 어떤 논리 좌표를 놓는지 표현한다. 실제 메모리를 소유하고 주소를 관리하는 것은 storage 객체와 런타임이다. 값을 놓는 규칙을 맞췄다고 저장 공간 할당까지 끝났다고 생각하면 안 된다.
+
+## 3. 2,048개 정수를 256개 slice에 나누어 놓는다
+
+공식 `constant_add_kernel`은 모든 정수에 1을 더한다. 다음은 **설명 주석을 추가한 mapping 선언 발췌**다. 전체 실행 파일은 뒤의 공식 template에서 만든다.
+
+```rust
+axes![A = 2048];                  // 논리 배열의 길이: 2048개 i32 정수
+pub type Chip = m![1];            // 이 커널의 칩 차원은 하나다.
+pub type Cluster = m![1 # 2];     // 한 cluster에 유효 값을 두고 물리 범위는 2로 맞춘다.
+pub type Slice = m![A / 8 # 256]; // 논리 인덱스 A를 8개씩 묶어 256 slice에 나눈다.
+```
+
+이후 DM의 slice 내부 원소 배치는 `m![A % 8]`이다. 나눗셈의 몫 `a // 8`은 slice 번호, 나머지 `a % 8`은 그 slice 안의 원소 위치다. 각 slice에 8개씩 저장하므로 `256×8=2048`개를 담는다. [공식 kernel 원문](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/base-template/src/kernel/constant_add_kernel.rs)
+
+| 논리 인덱스 a | active cluster | slice `a//8` | cluster 안 PE `slice//64` | slice 안 Element `a%8` |
+|---:|---:|---:|---:|---:|
+| 0 | 0 | 0 | 0 | 0 |
+| 7 | 0 | 0 | 0 | 7 |
+| 8 | 0 | 1 | 0 | 0 |
+| 37 | 0 | 4 | 0 | 5 |
+| 1023 | 0 | 127 | 1 | 7 |
+| 2047 | 0 | 255 | 3 | 7 |
+
+이제 “37번 원소가 어디에 있는가”에 답할 수 있다. 이 mapping에서는 **chip 0, active cluster 0, slice 4의 Element 5**다. 이 좌표만으로 전체 바이트 주소를 임의 계산해 드라이버에 넣지는 않는다. 실제 주소·정렬·할당은 해당 tensor storage의 계약을 따른다.
+
+### `#`는 0을 채우라는 명령이 아니다
+
+`#`는 mapping의 물리 범위를 padding으로 맞추는 표기다. `m![1 # 2]`는 유효한 배치 하나와 padding 위치 하나로 cluster 차원의 범위를 2로 맞춘다. 기본 padding 표기만으로 값이 0이라고 보장되지 않으며, 타입 표현을 적는 것만으로 메모리에 0을 쓰는 DMA(Direct Memory Access)가 실행되지 않는다. 필요한 중립값·마스크·읽기 규약을 실제 연산에 맞춰야 한다. [Padding의 의미](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/mapping-tensors/mapping-expressions.md)
+
+이 예에서 `A/8=256`이므로 `#256`으로 추가되는 slice는 없다. `Cluster`의 `#2`에서는 유효하지 않은 cluster 위치 하나를 표현한다.
+
+또한 한 active cluster를 사용한다는 표현은 “런타임이 칩의 절반을 독립적으로 예약하여 다른 프로그램과 안전하게 공유한다”는 보장이 아니다. **계산의 유효 배치와 장치 자원 예약 단위**를 구분한다. 같은 2,048개를 한 slice에 긴 시간에 걸쳐 처리하도록 바꾸는 것도 단순한 이름 변경이 아니다. 적합한 저장·전송·엔진 제약을 새로 만족해야 한다.
+
+## 4. 저장된 값이 계산 경로로 흘러가는 과정
+
+HBM(High Bandwidth Memory)은 큰 장치 메모리이고, DM은 계산에 가까운 칩 내부 메모리다. **DMA(Direct Memory Access)**는 CPU가 각 원소를 복사하는 대신 전송 엔진이 데이터를 옮기는 방식이다. CPU↔HBM 전송과 HBM↔DM 전송을 구분한다. **Fetch**는 DM 값을 Tensor Unit의 계산 흐름으로 읽고, **Commit**은 계산 결과를 DM에 기록한다.
+
+`constant_add_kernel`의 첫 이동은 HBM 입력을 앞 절의 DM mapping으로 옮기는 것이다. 아래는 해당 함수 안에서 사용하는 한 줄에 설명 주석을 추가한 발췌다. `input`, `device`, `Cluster`, `Slice`, `A`는 template의 선언을 사용한다.
+
+```rust
+// 입력의 논리 값은 유지하며 HBM -> DM으로 이동한다. slice당 A%8, 즉 8개 원소다.
+let dm = input.to_dm::<Cluster, Slice, m![A % 8]>(&mut device.tdma);
+```
+
+### Time과 Packet은 무엇을 세는가
+
+DM에 정지해 있는 배열을 계산 엔진에 공급할 때는 **몇 차례에 걸쳐, 한 차례에 얼마씩 줄지** 정한다. `Time`은 전달 반복의 순서이고, `Packet`은 그 반복에서 한 slice에 전달되는 원소 묶음이다. 이때 time step 하나가 항상 하드웨어 한 clock cycle과 같다는 뜻은 아니다. 패킷을 읽는 데 여러 접근이 필요할 수 있다. [Fetch Engine](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/moving-tensors/fetch-engine.md)
+
+공식 예제는 `fetch::<m![1], m![A % 8]>()`를 사용한다. 한 번의 논리 전달 반복에서 각 active slice의 i32 8개를 읽는다. i32 하나는 4 bytes이므로 패킷은 32 bytes다. **Collect**는 뒤 엔진이 받는 32-byte 단위인 flit에 맞게 패킷을 정리한다. 이 예의 패킷은 이미 32 bytes여서 그 단위에 맞는다. 일반적으로 Collect는 작은 패킷에 padding을 더하거나 큰 패킷을 여러 단위로 나눌 수 있다. [Collect Engine](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/computing-tensors/collect-engine.md)
+
+이제 읽기 쉽게 입력값을 `input[a]=a`라고 정한 **설명용 추적**을 하자. 실제 template의 시험 입력은 난수다.
+
+| 단계 | a=37의 위치·상태 | 값이 바뀌는가? |
+|---|---|---|
+| Host 입력 | CPU 버퍼의 논리 37번 원소 | `37` |
+| HBM 준비 | 장치의 HBM 입력 tensor | 이동만 하므로 `37` |
+| `to_dm` | slice 4, Element 5 | 이동만 하므로 `37` |
+| Fetch·Collect | slice 4의 첫 전달, 패킷 안 위치 5 | 표현·흐름을 맞추며 `37` 유지 |
+| Vector Engine | 정수 덧셈 연산에 상수 1 전달 | `38`로 변경 |
+| Commit | slice 4의 출력 DM 위치 | 결과 `38` 기록 |
+| `to_hbm`·`to_host` | HBM 결과를 거쳐 CPU에서 확인 | `38` 확인 |
+
+Vector Engine은 패킷 원소에 정수·부동소수점 등의 벡터 연산을 적용하는 계산 엔진이다. 공식 예제의 `vector_fxp(FxpBinaryOp::AddFxp, 1)`이 여기서 실제 `+1`을 수행한다. 그 전후의 `vector_init`, `vector_final`은 벡터 계산의 상태·단계를 맞추고, `commit_trim`·`commit`은 요구한 출력 배치로 DM에 기록하도록 연결한다. 함수 이름을 순서만 외우기보다 **이동인지, 표현 변환인지, 수치 계산인지, 저장인지**를 구분해 읽는다. [완전한 constant-add kernel](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/base-template/src/kernel/constant_add_kernel.rs)
+
+## 5. TCL과 vISA가 컴파일러에 전달하는 정보
 
 TCL(Tensor Contraction Language)에서는 논리 축과 연산의 의미를 표현하고 컴파일러에 맡기는 부분이 많다. vISA에서는 텐서를 어느 메모리에 놓고, 축을 어느 하드웨어 차원에 배치하고, 어느 엔진 경로로 흘릴지를 더 구체적으로 쓴다. 모든 레지스터의 원시 바이트를 직접 관리해야 하는 수준과도 다르다. [TCL과 vISA의 공개 소개](https://furiosa.ai/developers), [vISA 소개](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/introduction.md)
 
@@ -12,13 +131,13 @@ TCL(Tensor Contraction Language)에서는 논리 축과 연산의 의미를 표�
 |---|---|---|
 | 수식 | contraction·pointwise·reduce | 동일한 텐서 의미를 구체적 엔진 연산으로 구성 |
 | 배치 | 논리 축과 compiler lowering | `Chip/Cluster/Slice/Lane/Element` mapping |
-| 시간 반복 | 특수화한 shape와 컴파일 결과 | `Time/Packet`, loop, unroll |
+| 시간 반복 | 특수화한 shape와 컴파일 결과 | `Time/Packet`, 반복문과 반복문 펼치기(unroll) |
 | 메모리 이동 | compiler가 만든 이동 | `to_dm`, `to_hbm`, fetch, commit |
-| 겹침 | compiler 스케줄 결과 | main/sub context에 노출한 의존성 |
+| 겹침 | compiler 스케줄 결과 | main/sub 실행 흐름에 노출한 의존성 |
 
 vISA는 성능이 중요한 작은 구간의 가설을 직접 실험할 때 유용하다. 모델 전체를 먼저 Rust로 다시 작성해야만 사용할 수 있다는 뜻은 아니다. 한편 TCL로 생성된 임의 EDF를 Rust vISA 원본으로 복원하거나 그대로 schedule JSON으로 변환하는 보편적인 공개 절차는 확인되지 않았다.
 
-## 2. 컴파일 도구와 실행 런타임
+### vISA에서 컴파일된 실행물까지
 
 **vISA는 컴파일 과정에서 다루는 중간 표현이며, 그 텍스트를 NPU에 전달해서 곧바로 실행하는 경로가 아니다.** 공식 도구는 중간 vISA를 dump하는 기능과 커널을 컴파일하는 기능을 구분하고, 검증 문서는 최종 장치 실행물을 EDF(Executable Device Format)라고 부른다. 공개 opt 소스에서는 이 실행 단계에 사용하는 구체적인 객체로 compiler image와 device executable을 확인할 수 있다. [중간 vISA 출력](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/tools/kernel-optimizer.md), [컴파일된 EDF의 실행](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/quick-start/kernel-validation.md), [공개 실행물 계약](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-abi/README.md)
 
@@ -36,17 +155,182 @@ flowchart TB
     J --> W["Schedule Viewer"]
 ```
 
-그림의 “컴파일된 장치 실행물”은 문서에서 EDF로 설명하는 단계다. **그 다음에 나오는 opt Device Function Image의 직렬화 형식을 SDK Python의 `.edf`와 바이트 단위로 같다고 표시한 그림은 아니다.** IR(Intermediate Representation), 컴파일 결과, 이를 host 프로그램에 연결하는 image·registry, 실제 장치 적재를 구분하기 위해 나누어 그렸다. TCL/`furiosa-tcc` 경로와 Rust/opt 경로가 모두 NPU 실행물을 만든다는 사실만으로 서로의 loader를 교환할 수는 없다.
+그림의 “컴파일된 장치 실행물”은 문서에서 EDF로 설명하는 단계다. **그 다음에 나오는 opt Device Function Image의 직렬화 형식을 SDK(Software Development Kit) Python의 `.edf`와 바이트 단위로 같다고 표시한 그림은 아니다.** IR(Intermediate Representation, 중간 표현), 컴파일 결과, 이를 host 프로그램에 연결하는 image·registry, 실제 장치 적재를 구분하기 위해 나누어 그렸다. TCL/`furiosa-tcc` 경로와 Rust/opt 경로가 모두 NPU 실행물을 만든다는 사실만으로 서로의 loader를 교환할 수는 없다.
+
+이때 컴파일은 실행 방법을 만드는 단계이고, 적재(load)는 그 결과를 현재 장치 자원에 준비하는 단계다. 실행할 입력 값은 호출 시 다시 연결한다.
 
 `cargo`는 Rust의 빌드·의존성 도구다. `cargo-furiosa-opt`는 이 도구를 감싸 NPU build와 커널 사전 컴파일을 수행한다. 일반 `cargo run`은 CPU backend이고 `cargo furiosa-opt run`은 NPU backend다. CPU build가 성공했다고 NPU mapping까지 검증된 것은 아니다. [Kernel Optimizer](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/tools/kernel-optimizer.md)
 
-### 공개 소스에서 보는 코드와 컨테이너의 차이
+## 6. 공식 template로 컴파일·실행·정답 비교
+
+Linux x86-64, matching Rust toolchain, 필요한 cross compiler 및 NPU 드라이버를 준비한다. 아래 설치 명령은 공식 Quick Start의 경로다. 배포된 compiler와 template 의존성이 일치하는지 반드시 확인하고, 실험 기록에는 `Cargo.lock`과 compiler version을 함께 보관한다. [Setup and Tooling](https://developer.furiosa.ai/furiosa-opt/book/quick-start/setup-and-tooling.html)
+
+```bash
+# 이 template과 맞는 Rust toolchain을 준비한다.
+rustup toolchain install nightly-2026-05-01
+# 사전 빌드된 compiler 배포물을 설치하는 도구를 설치한다.
+cargo +nightly-2026-05-01 install cargo-binstall
+cargo +nightly-2026-05-01 binstall cargo-furiosa-opt
+# 작은 완전한 프로젝트를 생성한다. 아래 kernel 조각만으로는 실행 파일이 아니다.
+cargo install cargo-generate
+cargo generate furiosa-ai/furiosa-opt base-template
+```
+
+생성한 프로젝트 디렉터리에서 실행한다. template을 기본 branch에서 가져온 경우 이 핸드북 commit 이후 바뀔 수 있으므로, 생성된 소스·의존성을 앞의 기준과 비교한다.
+
+```bash
+# CPU 의미 비교
+cargo test --release --bin constant_add
+
+# NPU용 커널 컴파일
+cargo furiosa-opt compile constant_add_kernel
+
+# 실제 NPU에서 값 비교
+cargo furiosa-opt test --release --bin constant_add
+
+# 실행 프로그램
+cargo furiosa-opt run --release --bin constant_add
+```
+
+대상 binary와 test는 template의 `src/constant_add.rs`에 있다. CPU reference(비교 기준)는 input의 각 원소에 1을 더한 값이다. 공식 test는 NPU 결과를 CPU로 가져온 뒤 모든 원소를 비교한다. 일반 `run`은 커널 실행 메시지를 출력하므로 값 검증에는 위 `test`가 필요하다. 이 test는 `wrapping_add(1)`을 사용한다. i32의 최대값을 넘어가면 32비트 범위 안에서 순환하는 정수 의미를 맞추려는 것이다. 크기가 무제한인 일반 Python 정수의 `+1`과 모든 입력에서 같다고 보면 안 된다. 이 원고 작성 환경에서는 Rust 컴파일·NPU 실행을 새로 수행하지 않았다. [공식 constant_add host/test](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/base-template/src/constant_add.rs)
+
+## 7. 제출과 완료를 분리해 호스트 작업을 겹친다
+
+CPU의 비동기 작업과 마찬가지로 **submit(제출)**과 **completion(완료)**은 다른 시점이다. 제출 뒤 CPU가 다른 준비를 할 수 있어도 NPU의 결과가 이미 기록되었다는 뜻은 아니다. Rust의 `.await`는 해당 비동기 결과가 준비될 때까지 다음 의존 작업으로 진행하지 않게 한다.
+
+선택한 commit의 `launch.rs`에는 `Prepared`, `.submit()`, `Submitted`, `.await`가 구분되어 있다. 첫 launch의 이미지 로딩을 앞당기는 `function.load(&device)`와 기존 output storage를 사용하는 `.output(&mut out)`도 있다. [현재 launch 구현](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-std/src/runtime/launch.rs)
+
+아래 코드는 공식 template의 host 함수 안에서 input HBM을 준비한 뒤 사용할 수 있도록 설명 주석을 붙인 **호출 부분**이다. `constant_add_kernel`, `device`, `in_hbm`은 앞선 template에서 정의된 값이다.
+
+```rust
+// 준비한 장치 함수와 HBM 입력을 연결해 실행 요청을 제출한다.
+let pending = launch(constant_add_kernel, (&mut device, &in_hbm)).submit();
+// 결과 버퍼에 접근하지 않는 호스트 준비 작업을 이 사이에 배치할 수 있다.
+// 완료를 확인한 뒤에만 결과 HBM tensor를 사용한다. ?는 실행 오류를 전파한다.
+let result_hbm = pending.await?;
+```
+
+제출했다고 모든 커널이 장치에서 병렬 실행된다는 뜻은 아니다. 같은 자원과 의존성을 공유하면 대기해야 한다. 이 구분은 호스트 준비를 겹치는지, NPU 내부 연산을 겹치는지 분석할 때 중요하다. 2026년 10월 포럼에서 보고된 0.8.1의 고정 spin·제출 API 제약은 역사적 기록이다. 현재 소스에 이미 구현된 API를 아직 미구현이라고 쓰면 안 된다. [0.8.1 당시 질문과 공식 답변](https://forums.furiosa.ai/t/furiosa-opt-v0-8-1-launch-host-cpu-cpu-2/479)
+
+## 8. 스케줄에서 데이터 대기와 자원 대기를 구분한다
+
+스케줄은 계산·전송을 언제 진행하고 무엇을 기다릴지 정한다. **Context**는 여기서 장치의 실행 흐름을 구분하는 말이며 OS 스레드를 생성하는 API가 아니다. 공개 compiler는 같은 흐름 안의 순서와 공유 자원·메모리 의존성을 보존한다.
+
+| 실행 흐름 | 맡는 일의 예 | 다른 흐름과 겹칠 조건 |
+|---|---|---|
+| `device.main` | 주 Tensor Unit 경로에서 Fetch·계산·Commit | 필요한 입력이 준비되고 공유 자원이 충돌하지 않음 |
+| `device.sub` | 일부 엔진 경로를 이용한 레지스터 데이터 준비 | 같은 엔진·메모리를 먼저 쓰는 작업과 충돌하지 않음 |
+| `device.tdma` | HBM·DM 등 메모리 사이의 전송 | 아직 읽고 있는 버퍼를 덮어쓰지 않음 |
+
+예를 들어 현재 DM 버퍼 A를 읽어 계산하면서 다음 입력을 **다른 버퍼 B**로 옮기면 겹칠 여지가 있다. 반대로 다음 입력을 A에 덮어쓰면 현재 계산이 바뀐 데이터를 읽을 수 있으므로 앞의 읽기가 끝나야 한다. CPU 코드에도 있는 read-after-write(쓰기 뒤 읽기), write-after-read(읽기 뒤 쓰기) 의존성이다. 실행 흐름이 다르다는 이유만으로 이를 무시할 수 없다. [공식 Schedule](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/scheduling/schedule.md)
+
+이 가설이 컴파일 결과에 반영되었는지 다음 명령으로 확인한다.
+
+```bash
+# 설치된 compiler의 옵션 이름을 확인한다.
+cargo furiosa-opt compile --help
+# 중간 계산 표현을 파일로 관찰한다. 이 파일을 NPU가 직접 실행하지는 않는다.
+cargo furiosa-opt compile constant_add_kernel --dump-visa constant-add.visa
+# 컴파일러가 배치한 연산·전송의 정적 스케줄을 저장한다.
+cargo furiosa-opt compile constant_add_kernel --dump-schedule constant-add.schedule.json
+# viewer를 실행한 다음 위 JSON을 연다. 실제 장치 측정 trace는 아니다.
+cargo install furiosa-schedule-viewer
+furiosa-schedule-viewer --host 127.0.0.1 --port 9254
+```
+
+생성된 schedule JSON을 viewer에 넣는다. 함수 filter가 여러 함수를 고르면 완전한 Rust 경로로 하나만 지정한다. Viewer는 값이 필요한 동안 유지되는 텐서 수명, 연결된 연산, context, 자원 점유를 보여준다. 빈 구간을 보았을 때 입력이 아직 오지 않았는지, 이전 작업이 같은 자원을 쓰는지 구분한다. **이 그림은 정적 컴파일 스케줄이며 실제 요청의 처리량이나 수치 정확성을 측정하지 않는다.** [Schedule Viewer](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/tools/schedule-viewer.md)
+
+읽는 순서는 다음과 같다. 먼저 마지막으로 끝나는 구간을 찾고, 그 구간을 막은 원인이 데이터 의존인지 공유 자원인지 확인한다. 그 다음 대기하는 동안 다른 context가 무엇을 하는지 본다. 마지막으로 한 가지 변경을 제안하고 같은 workload로 다시 컴파일·실행한다. [공식 진단 절차](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/scheduling/diagnosis.md)
+
+`constant-add.visa`는 compiler 중간 표현을 관찰하는 파일이고, `constant-add.schedule.json`은 정적 스케줄을 관찰하는 파일이다. 둘 중 하나가 생겼다고 runtime이 적재할 최종 실행물까지 생성·검증됐다고 결론 내리지 않는다. **중간 표현 생성, 전체 컴파일 성공, 이미지 적재 성공, 실제 값 비교**를 각각 기록한다. 공개 kernel validation도 이 검증 수준들을 분리한다. [검증 단계](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/quick-start/kernel-validation.md)
+
+| 어디에서 멈췄는가 | 다음에 볼 근거 |
+|---|---|
+| 커널 translation·검증 거절 | shape·mapping·engine 제약과 compiler 진단 |
+| 중간 vISA는 보이지만 전체 컴파일 실패 | 뒤쪽 변환의 오류 원문·선택한 filter·compiler 버전. 중간 파일 존재만으로 성공 판정하지 않음 |
+| image 적재 거절 | image/runtime 버전, topology, 요구 메모리와 ABI |
+| 실행은 되지만 값이 틀림 | CPU reference, 자료형·layout·stride·alias·완료 순서 |
+| 값은 맞지만 느림 | 정적 schedule의 가설을 host·전송·실제 warm 실행 측정과 대조 |
+
+이 책은 확인한 고정 소스와 현재 페이지 본문에 있는 `--dump-visa`, `--dump-schedule`을 실습에 사용한다. 검색 색인이나 다른 버전에서 보이는 IR 단계·추가 dump 옵션을 현재 설치본에서 쓸 수 있다고 가정하지 않는다. 정확한 내부 pass 순서는 공개된 구현과 compiler 진단이 증명하는 범위까지만 설명한다. [해당 커밋의 CLI 명세](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/tools/kernel-optimizer.md)
+
+**`MIR → vISA → LIR → EDF`라는 구체적 전개를 이 고정 소스에서 직접 검증했다고 쓰지는 않는다.** 검색 색인에는 이 설명이 나타났지만 실제로 대조한 페이지 본문·고정 문서에는 같은 단계표가 없었다. 공개 `cargo-furiosa-opt`의 driver 진입점도 실제 translator 대신 바이너리 설치 안내를 출력하는 stub이고, 일부 lowering은 별도 prebuilt 라이브러리를 연결한다. 이는 그 단계가 존재하지 않는다는 결론이 아니라, **이번 문서에서 근거를 확보한 범위의 한계**다. 추후 동일 버전의 공식 원문·진단 산출물을 확보하면 세부 단계표를 갱신할 수 있다. [driver 진입점](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/cargo-furiosa-opt/src/driver.rs) · [lowering 라이브러리 연결](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-lower/build.rs)
+
+## 9. 작은 구간부터 실험하는 네 가지 사례
+
+### A. 다음 가중치 준비와 현재 계산을 겹치기
+
+같은 가중치를 사용해 계산할 때 다음 묶음을 미리 준비하면 계산 엔진이 기다리는 시간을 줄일 기회가 있다. **Double buffering**은 현재 계산이 읽는 저장 공간과 다음 데이터를 받는 저장 공간을 둘로 나누어 이 수명 충돌을 줄이는 방법이다. 추가 공간이 필요하고, 둘이 같은 메모리 bank(병렬 접근 통로)에 몰리면 경쟁은 남는다.
+
+가중치 그룹을 하나씩 준비한 후 계산하고 기다리는 loop는 다음 그룹의 준비가 늦게 보일 수 있다. 두 반복을 같은 scheduling unit에 노출하거나 작은 정적 loop를 `#[unroll]`하면 compiler가 겹침을 선택할 기회가 생긴다. 무조건 unroll하면 IR 크기와 컴파일 비용이 늘 수 있다.
+
+| 공식 문서의 동일 20-group 예제 | 정적 스케줄의 처음부터 마지막 완료까지 |
+|---|---:|
+| 일반 rolled loop | 19,106 cycles |
+| 두 단계를 드러낸 software pipeline | 15,477 cycles |
+| 전체 unroll | 15,086 cycles |
+
+이 수치는 **Furiosa 문서의 특정 예제 결과**다. FuryNo5 모델의 새 측정치가 아니며, 15,086 cycles를 사용자 환경의 밀리초로 바로 변환하지 않는다. TRF(Tensor Register File) double buffering도 두 절반이 bank를 공유하므로 의존성과 경쟁이 남는다. [공식 tuning 사례](https://developer.furiosa.ai/furiosa-opt/book/scheduling/tuning.html)
+
+### B. Gather·scatter의 인덱스 단위를 맞추기
+
+**Gather**는 인덱스로 지정한 여러 위치에서 값을 모아 읽는 작업, **scatter**는 지정한 여러 위치로 값을 흩어 쓰는 작업이다. 예를 들어 embedding 표에서 토큰 ID 3의 특징 행을 읽을 때, 숫자 3이 행 번호인지 바이트 위치인지부터 구분해야 한다.
+
+embedding 같은 lookup에서는 `행 번호`와 `바이트 offset`을 섞으면 값이나 주소가 틀린다. 공개 DMA API는 `by_byte_offsets`와 `by_positions`를 구분한다. 후자는 SPM(Scratchpad Memory)의 위치 인덱스를 받는다. BF16 행의 길이가 128이면 한 행은 256 bytes이므로 행 3의 시작은 768 bytes다. 이 계산은 단순 예시이며 실제 tensor mapping·정렬 조건까지 충족해야 한다. [Gather·Scatter 계약](https://developer.furiosa.ai/furiosa-opt/book/moving-tensors/dma-engine.html#gather-and-scatter)
+
+FuryNo5의 int32 입력 검사, embedding contraction과 projection 연결을 읽을 때도 **ID의 의미·단위·범위**부터 확인한다. 잘못된 인덱스를 CPU에서 검사하는 것은 장치의 embedding 계산을 CPU로 옮기는 것이 아니다.
+
+```python
+# 연속 행 우선 배열이라고 가정한 주소 계산 예다. 실제 DMA 호출 코드는 아니다.
+row_id = 3
+features_per_row = 128
+bytes_per_bf16 = 2                         # BF16(BFloat16) 원소 하나는 2 bytes다.
+byte_offset = row_id * features_per_row * bytes_per_bf16
+assert byte_offset == 768                   # 기준 주소로부터 768 bytes 떨어진 위치
+```
+
+| 잘못 섞기 쉬운 숫자 | 뜻 |
+|---|---|
+| 3 | 논리 행 번호 |
+| 384 | 원소 단위 offset: `3×128` |
+| 768 | 바이트 단위 offset: `384×2` |
+
+바이트 offset을 받는 곳에 3을 넣으면 세 번째 행을 뜻하지 않는다. 반대로 `by_positions`를 임의의 행 번호 API로 생각하면 안 된다. 해당 경로는 SPM(Scratchpad Memory)에 놓은 위치 인덱스와 그 배치 계약을 따른다.
+
+
+### C. 앞 출력과 뒤 입력의 배치를 맞추기
+
+두 커널이 서로 다른 layout을 기대하면 중간 변환이 필요할 수 있다. vISA에서 입력·출력 mapping을 직접 비교해, 앞 커널의 commit 배치를 다음 커널의 fetch가 원하는 배치에 맞추는 실험을 할 수 있다. 다만 view의 이름만 바꿔 값을 잘못 해석하는 것을 최적화라고 부르면 안 된다. DMA로 새 값 배치를 만드는 경우와 실제 이동 없는 reshape의 성립 조건을 구분한다. [Moving Tensors](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/moving-tensors/index.md)
+
+1절의 행 우선 버퍼 `[0,1,2,10,11,12]`와 열 우선 버퍼 `[0,10,1,11,2,12]`를 떠올리면 된다. 앞 커널이 다음 커널의 요구 순서로 결과를 직접 기록할 수 있다면 별도 변환을 줄일 후보가 된다. 반면 출력 이름이나 축 annotation만 바꾸고 원소 위치를 유지하면 다른 행렬을 읽는 오류가 된다. 출력 배치 변경이 앞 커널을 더 느리게 하는지도 전체 시간에 포함한다.
+
+
+### D. TCL의 느린 영역을 vISA로 재현하기
+
+FuryNo5에서 느린 영역을 찾았다면 먼저 연산 의미·shape·dtype·입출력 계약을 고정한다. 그 영역의 vISA 후보를 만들고 CPU reference, compiler mapping 검사, NPU 값 비교, 정적 schedule, 실제 warm latency를 순서대로 비교한다. 선택한 후보가 빨라도 모델 전체의 호출·변환 비용을 포함해야 통합 효과를 판단할 수 있다.
+
+`furiosa.torch._module.visa.compile_from_visa`를 통한 Python 연결은 버전 확인이 특히 필요하다. 포럼의 2026-10-13 공식 답변은 당시 예제가 내부 전용이며 공개 SDK에 포함되지 않았다고 밝혔다. 이후 버전에서의 지원 여부는 설치된 wheel과 release 근거로 재확인해야 한다. **그 함수를 누구나 설치해 즉시 호출할 수 있다고 이 핸드북은 주장하지 않는다.** 공개 Rust 직접 실행 경로는 위 절차대로 별도로 사용할 수 있다. [compile_from_visa 접근 제약](https://forums.furiosa.ai/t/furiosa-opt-compile-from-visa-furiosa-torch/487)
+
+## 10. 더 아래로 읽기: 컴파일 이미지와 런타임 적재
+
+### 코드 바이트와 실행 이미지의 차이
+
+CPU 실행 파일도 기계어 명령만 있는 배열이 아니라 적재할 영역과 연결 정보가 필요하다. 공개 opt 경로의 **Device Function Image**도 컴파일된 코드와 이를 호출하는 데 필요한 정보를 묶는다. 아래 용어를 먼저 정리한다.
+
+| 용어 | 이 로더 문맥의 의미 |
+|---|---|
+| Topology | 함수가 기대하는 칩·PE의 구성 |
+| Executable | 실제 장치 코드와 코드 구간·진입 위치를 담는 객체 |
+| Stack 요구량 | 실행 중 임시 작업 공간을 준비하기 위한 크기 정보 |
+| Argument slot | 호출의 인수를 놓는 자리와 연결 규칙 |
+| Registry | host 프로그램이 함수 이름·특수화 조건으로 컴파일 이미지를 찾는 표 |
+| Binder | 이번 호출의 실제 버퍼·값을 그 인수 자리에 연결하는 객체 |
 
 다음 표는 **이 장의 고정 opt 커밋**에서 직접 확인한 구조다. 이것을 SDK EDF 전체 포맷의 명세로 확장하지 않는다. magic은 파일·버퍼 앞부분에 두어 어떤 형식인지 식별하는 값이며, 아래 이름은 이 구현의 구분자다.
 
 | 공개 객체 | 포함하거나 참조하는 것 | 역할 |
 |---|---|---|
-| `image::Image`, `image::Parts` | topology, executable, 선택적인 weight bytes, stack 요구량, 인수 slot, 입출력 관계, profile·SRAM 정보 | compiler가 만든 함수 이미지를 runtime이 이해하도록 구성 |
+| `image::Image`, `image::Parts` | topology, executable, 선택적인 weight bytes, stack 요구량, 인수 slot, 입출력 관계, profile·SRAM(Static Random Access Memory) 정보 | compiler가 만든 함수 이미지를 runtime이 이해하도록 구성 |
 | `executable::Executable` | chunk·cluster별 코드 위치·길이·진입점과 실제 code bytes | 펌웨어가 적재·실행할 장치 코드 컨테이너 |
 | `registry::Entry` | 함수 경로, const-generic key, image 참조 | host 실행 프로그램에서 호출할 함수의 컴파일 이미지를 찾음 |
 
@@ -58,17 +342,18 @@ flowchart TB
 
 `registry/load/mod.rs::load()`는 image를 읽은 뒤 실제 device topology와 맞는지 비교한다. 필요한 weight bytes가 있으면 장치 버퍼를 할당하고 올리며, compiler가 요청한 stack을 준비한다. 이어서 signature와 slot 관계를 보관하는 `Binder`를 만들고 `Function::load()`를 호출한다. **컴파일된 실행물이 있어도 현재 장치의 메모리와 인수는 여기서 구체화된다.** [컴파일 이미지 적재](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-rt/src/registry/load/mod.rs)
 
-다음은 원본의 `unsafe` 블록에 있는 호출 부분이다. `device`, `executable`, `sram_end`, `capacity`, `binder`는 위 로더에서 준비한 값이다. 실행 코드의 bytes와 **호출 인수를 연결할 함수**를 함께 전달하는 점을 읽으면 된다.
+다음은 원본의 `unsafe` 블록에 있는 호출 부분에 설명 주석을 추가한 발췌다. 독립 실행 코드가 아니다. `device`, `executable`, `sram_end`, `capacity`, `binder`는 위 로더에서 준비한 값이다. 실행 코드의 bytes와 **호출 인수를 연결할 함수**를 함께 전달하는 점을 읽으면 된다.
 
 ```rust
 Function::load(
     device,
-    executable.bytes(),
+    executable.bytes(), // 이미 컴파일된 코드 bytes를 전달한다.
     sram_end as usize,
     capacity,
+    // 호출할 때 실제 buffer를 준비된 인수 규칙에 맞춰 연결한다.
     move |args, arguments| binder.bind(args, arguments),
 )
-.await
+.await // 비동기 적재가 완료될 때까지 기다린다.
 ```
 
 [출처: `registry::load` 호출부](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-rt/src/registry/load/mod.rs)
@@ -105,122 +390,7 @@ host registry의 section과 참조는 [registry.rs](https://github.com/furiosa-a
 
 또한 공개 opt bootloader 설명은 서명된 bootloader가 host가 준비한 firmware image를 검증한 뒤 scratchpad로 복사해 진입한다고 밝힌다. **부트로더·펌웨어 이미지와 사용자 커널의 실행 이미지는 서로 다른 역할**이다. SDK 경로와 opt 경로가 같은 RNGD를 사용한다는 이유만으로 동일한 초기화·제출 프로토콜 또는 동시 장치 사용을 보장하지 않는다. 공개 ABI는 compiler image, executable, boot request, ring·doorbell을 별도 계약으로 구분한다. [Bootloader의 역할](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-rt/bootloader/README.md), [공개 ABI 구성](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-abi/README.md)
 
-## 3. 공식 template로 첫 실행
-
-Linux x86-64, matching Rust toolchain, 필요한 cross compiler 및 NPU 드라이버를 준비한다. 아래 설치 명령은 공식 Quick Start의 경로다. 배포된 compiler와 template 의존성이 일치하는지 반드시 확인하고, 실험 기록에는 `Cargo.lock`과 compiler version을 함께 보관한다. [Setup and Tooling](https://developer.furiosa.ai/furiosa-opt/book/quick-start/setup-and-tooling.html)
-
-```bash
-rustup toolchain install nightly-2026-05-01
-cargo +nightly-2026-05-01 install cargo-binstall
-cargo +nightly-2026-05-01 binstall cargo-furiosa-opt
-cargo install cargo-generate
-cargo generate furiosa-ai/furiosa-opt base-template
-```
-
-생성한 프로젝트 디렉터리에서 실행한다. template을 기본 branch에서 가져온 경우 이 핸드북 commit 이후 바뀔 수 있으므로, 생성된 소스·의존성을 앞의 기준과 비교한다.
-
-```bash
-# CPU 의미 비교
-cargo test --release --bin constant_add
-
-# NPU용 커널 컴파일
-cargo furiosa-opt compile constant_add_kernel
-
-# 실제 NPU에서 값 비교
-cargo furiosa-opt test --release --bin constant_add
-
-# 실행 프로그램
-cargo furiosa-opt run --release --bin constant_add
-```
-
-대상 binary와 test는 template의 `src/constant_add.rs`에 있다. 원래 input의 각 원소에 1을 더한 CPU reference와 NPU 결과를 비교한다. Rust 정수 overflow 의미까지 일치시켜야 하므로 임의의 Python 정수 계산과 동일시하지 않는다. [공식 constant_add host/test](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/base-template/src/constant_add.rs)
-
-## 4. 코드 한 조각으로 mapping을 읽는다
-
-공식 constant-add kernel의 핵심은 다음 배치다.
-
-```rust
-axes![A = 2048];
-pub type Chip = m![1];
-pub type Cluster = m![1 # 2];
-pub type Slice = m![A / 8 # 256];
-```
-
-`A/8`은 축을 8개 단위로 나눈 위치이고 `A%8`은 그 단위 안의 위치다. `#256`은 물리 차원의 범위를 맞추는 padding 표기다. 이 예에서는 한 active cluster의 256 slice에 각 8개의 i32가 배치된다. 다음에 나오는 `fetch`, `collect`, `vector_fxp`, `commit`은 이 배치에 맞춰 데이터를 흘리고 저장한다. [공식 kernel 원문](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/base-template/src/kernel/constant_add_kernel.rs)
-
-`m![]`은 NumPy shape를 다른 문법으로 쓴 것만은 아니다. 예를 들어 같은 총 2048개라도 slice에 256개를 쓰는 배치와 하나의 slice에서 긴 시간 반복을 하는 배치는 병렬성이 달라진다. **논리 값의 동일성, 주소 배치의 합법성, 충분한 자원 활용**을 각각 확인해야 한다.
-
-## 5. 제출과 완료 대기 분리
-
-선택한 commit의 `launch.rs`에는 `Prepared`, `.submit()`, `Submitted`, `.await`가 구분되어 있다. 첫 launch의 이미지 로딩을 앞당기는 `function.load(&device)`와 기존 output storage를 사용하는 `.output(&mut out)`도 있다. [현재 launch 구현](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-std/src/runtime/launch.rs)
-
-아래 코드는 공식 template의 host 함수 안에서 input HBM을 준비한 뒤 사용하는 **호출 부분**이다. `constant_add_kernel`, `device`, `in_hbm`은 앞선 template에서 정의된 값이다.
-
-```rust
-let pending = launch(constant_add_kernel, (&mut device, &in_hbm)).submit();
-// 결과 버퍼에 접근하지 않는 호스트 준비 작업을 이 사이에 배치할 수 있다.
-let result_hbm = pending.await?;
-```
-
-제출했다고 모든 커널이 장치에서 병렬 실행된다는 뜻은 아니다. 같은 자원과 의존성을 공유하면 대기해야 한다. 이 구분은 호스트 준비를 겹치는지, NPU 내부 연산을 겹치는지 분석할 때 중요하다. 2026년 10월 포럼에서 보고된 0.8.1의 고정 spin·제출 API 제약은 역사적 기록이다. 현재 소스에 이미 구현된 API를 아직 미구현이라고 쓰면 안 된다. [0.8.1 당시 질문과 공식 답변](https://forums.furiosa.ai/t/furiosa-opt-v0-8-1-launch-host-cpu-cpu-2/479)
-
-## 6. 스케줄을 눈으로 확인한다
-
-```bash
-cargo furiosa-opt compile --help
-cargo furiosa-opt compile constant_add_kernel --dump-visa constant-add.visa
-cargo furiosa-opt compile constant_add_kernel --dump-schedule constant-add.schedule.json
-cargo install furiosa-schedule-viewer
-furiosa-schedule-viewer --host 127.0.0.1 --port 9254
-```
-
-생성된 schedule JSON을 viewer에 넣는다. 함수 filter가 여러 함수를 고르면 완전한 Rust 경로로 하나만 지정한다. Viewer는 텐서 수명, 연결된 연산, context, 자원 점유를 보여준다. **이 그림은 정적 컴파일 스케줄이며 실제 요청의 처리량이나 수치 정확성을 측정하지 않는다.** [Schedule Viewer](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/tools/schedule-viewer.md)
-
-읽는 순서는 다음과 같다. 먼저 마지막으로 끝나는 구간을 찾고, 그 구간을 막은 원인이 데이터 의존인지 공유 자원인지 확인한다. 그 다음 대기하는 동안 다른 context가 무엇을 하는지 본다. 마지막으로 한 가지 변경을 제안하고 같은 workload로 다시 컴파일·실행한다. [공식 진단 절차](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/scheduling/diagnosis.md)
-
-`constant-add.visa`는 compiler 중간 표현을 관찰하는 파일이고, `constant-add.schedule.json`은 정적 스케줄을 관찰하는 파일이다. 둘 중 하나가 생겼다고 runtime이 적재할 최종 실행물까지 생성·검증됐다고 결론 내리지 않는다. **중간 표현 생성, 전체 컴파일 성공, 이미지 적재 성공, 실제 값 비교**를 각각 기록한다. 공개 kernel validation도 이 검증 수준들을 분리한다. [검증 단계](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/quick-start/kernel-validation.md)
-
-| 어디에서 멈췄는가 | 다음에 볼 근거 |
-|---|---|
-| 커널 translation·검증 거절 | shape·mapping·engine 제약과 compiler 진단 |
-| 중간 vISA는 보이지만 전체 컴파일 실패 | 뒤쪽 변환의 오류 원문·선택한 filter·compiler 버전. 중간 파일 존재만으로 성공 판정하지 않음 |
-| image 적재 거절 | image/runtime 버전, topology, 요구 메모리와 ABI |
-| 실행은 되지만 값이 틀림 | CPU reference, 자료형·layout·stride·alias·완료 순서 |
-| 값은 맞지만 느림 | 정적 schedule의 가설을 host·전송·실제 warm 실행 측정과 대조 |
-
-이 책은 확인한 고정 소스와 현재 페이지 본문에 있는 `--dump-visa`, `--dump-schedule`을 실습에 사용한다. 검색 색인이나 다른 버전에서 보이는 IR 단계·추가 dump 옵션을 현재 설치본에서 쓸 수 있다고 가정하지 않는다. 정확한 내부 pass 순서는 공개된 구현과 compiler 진단이 증명하는 범위까지만 설명한다. [해당 커밋의 CLI 명세](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/tools/kernel-optimizer.md)
-
-**`MIR → vISA → LIR → EDF`라는 구체적 전개를 이 고정 소스에서 직접 검증했다고 쓰지는 않는다.** 검색 색인에는 이 설명이 나타났지만 실제로 대조한 페이지 본문·고정 문서에는 같은 단계표가 없었다. 공개 `cargo-furiosa-opt`의 driver 진입점도 실제 translator 대신 바이너리 설치 안내를 출력하는 stub이고, 일부 lowering은 별도 prebuilt 라이브러리를 연결한다. 이는 그 단계가 존재하지 않는다는 결론이 아니라, **이번 문서에서 근거를 확보한 범위의 한계**다. 추후 동일 버전의 공식 원문·진단 산출물을 확보하면 세부 단계표를 갱신할 수 있다. [driver 진입점](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/cargo-furiosa-opt/src/driver.rs) · [lowering 라이브러리 연결](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-lower/build.rs)
-
-## 7. 사례 A: 다음 가중치 준비를 현재 계산과 겹치기
-
-가중치 그룹을 하나씩 준비한 후 계산하고 기다리는 loop는 다음 그룹의 준비가 늦게 보일 수 있다. 두 반복을 같은 scheduling unit에 노출하거나 작은 정적 loop를 `#[unroll]`하면 compiler가 겹침을 선택할 기회가 생긴다. 무조건 unroll하면 IR 크기와 컴파일 비용이 늘 수 있다.
-
-| 공식 문서의 동일 20-group 예제 | 정적 schedule makespan |
-|---|---:|
-| 일반 rolled loop | 19,106 cycles |
-| 두 단계를 드러낸 software pipeline | 15,477 cycles |
-| 전체 unroll | 15,086 cycles |
-
-이 수치는 **Furiosa 문서의 특정 예제 결과**다. FuryNo5 모델의 새 측정치가 아니며, 15,086 cycles를 사용자 환경의 밀리초로 바로 변환하지 않는다. TRF(Tensor Register File) double buffering도 두 절반이 bank를 공유하므로 의존성과 경쟁이 남는다. [공식 tuning 사례](https://developer.furiosa.ai/furiosa-opt/book/scheduling/tuning.html)
-
-## 8. 사례 B: gather와 scatter에서 인덱스 단위를 맞추기
-
-embedding 같은 lookup에서는 `행 번호`와 `바이트 offset`을 섞으면 값이나 주소가 틀린다. 공개 DMA API는 `by_byte_offsets`와 `by_positions`를 구분한다. 후자는 SPM(Scratchpad Memory)의 위치 인덱스를 받는다. BF16 행의 길이가 128이면 한 행은 256 bytes이므로 행 3의 시작은 768 bytes다. 이 계산은 단순 예시이며 실제 tensor mapping·정렬 조건까지 충족해야 한다. [Gather·Scatter 계약](https://developer.furiosa.ai/furiosa-opt/book/moving-tensors/dma-engine.html#gather-and-scatter)
-
-FuryNo5의 int32 입력 검사, embedding contraction과 projection 연결을 읽을 때도 **ID의 의미·단위·범위**부터 확인한다. 잘못된 인덱스를 CPU에서 검사하는 것은 장치의 embedding 계산을 CPU로 옮기는 것이 아니다.
-
-## 9. 사례 C: transpose가 만드는 이동을 줄이기
-
-두 커널이 서로 다른 layout을 기대하면 중간 변환이 필요할 수 있다. vISA에서 입력·출력 mapping을 직접 비교해, 앞 커널의 commit 배치를 다음 커널의 fetch가 원하는 배치에 맞추는 실험을 할 수 있다. 다만 view의 이름만 바꿔 값을 잘못 해석하는 것을 최적화라고 부르면 안 된다. DMA로 새 값 배치를 만드는 경우와 실제 이동 없는 reshape의 성립 조건을 구분한다. [Moving Tensors](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/moving-tensors/index.md)
-
-## 10. 사례 D: TCL hot path를 vISA로 실험하기
-
-FuryNo5에서 느린 영역을 찾았다면 먼저 연산 의미·shape·dtype·입출력 계약을 고정한다. 그 영역의 vISA 후보를 만들고 CPU reference, compiler mapping 검사, NPU 값 비교, 정적 schedule, 실제 warm latency를 순서대로 비교한다. 선택한 후보가 빨라도 모델 전체의 호출·변환 비용을 포함해야 통합 효과를 판단할 수 있다.
-
-`furiosa.torch._module.visa.compile_from_visa`를 통한 Python 연결은 버전 확인이 특히 필요하다. 포럼의 2026-10-13 공식 답변은 당시 예제가 내부 전용이며 공개 SDK에 포함되지 않았다고 밝혔다. 이후 버전에서의 지원 여부는 설치된 wheel과 release 근거로 재확인해야 한다. **그 함수를 누구나 설치해 즉시 호출할 수 있다고 이 핸드북은 주장하지 않는다.** 공개 Rust 직접 실행 경로는 위 절차대로 별도로 사용할 수 있다. [compile_from_visa 접근 제약](https://forums.furiosa.ai/t/furiosa-opt-compile-from-visa-furiosa-torch/487)
-
-## 11. 두 경로를 연결하려면 무엇부터 검증하는가
+## 11. SDK와 opt 경로를 연결하려면 확인할 것
 
 다음은 **TCL/SDK 경로와 Rust/opt 경로의 연결을 연구하기 위한 제안**이다. 현재 교차 로딩이나 혼합 실행을 구현·실측했다는 보고가 아니다. 문서에서 둘 다 EDF라는 용어를 쓴다는 이유만으로 동일한 파일 형식·ABI·runtime·firmware 프로토콜을 공유한다고 결론 내릴 수 없기 때문이다.
 
@@ -256,3 +426,7 @@ FuryNo5에서 느린 영역을 찾았다면 먼저 연산 의미·shape·dtype·
 | [Operand table](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-rt/src/function/table.rs) · [Driver submit](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-rt/src/driver/mod.rs) | 실제 주소 연결과 cluster 제출 |
 | [0.10.0 changelog](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/CHANGES.md) | 새 image format·재컴파일 조건 |
 | [Bootloader](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-rt/bootloader/README.md) | firmware 준비와 사용자 kernel 실행의 경계 |
+| [Mapping Expressions](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/mapping-tensors/mapping-expressions.md) | 물리 위치→논리 좌표, 순서·padding 의미 |
+| [Spatial and Temporal Dimensions](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/mapping-tensors/spatial-temporal-dimensions.md) | 공간 단위 수·Element와 Lane·Time/Packet |
+| [Fetch Engine](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/moving-tensors/fetch-engine.md) · [Collect Engine](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/computing-tensors/collect-engine.md) | DM 읽기·패킷 전달·32-byte flit 정규화 |
+| [Schedule](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/scheduling/schedule.md) | context·자원 경쟁·메모리 의존성 |

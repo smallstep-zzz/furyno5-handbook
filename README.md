@@ -6,6 +6,8 @@ RNGD의 하드웨어에서 모델 포팅·서빙까지 연결하는 한국어 �
 
 공식 자료와 FuryAwesome·FuryNo5·fxbX·Furiosa-Hug-Anything의 구현을 구분합니다. 지원 목표와 검증 결과, 정적 스케줄과 실제 측정, 공식 FXB와 비공식 확장을 섞지 않습니다.
 
+독자는 대학의 프로그래밍·운영체제·알고리즘 과정을 배운 개발자입니다. NPU 용어와 행렬 계산을 미리 안다고 가정하지 않습니다. 작은 값의 계산부터 설명하고, 코드에는 입력·출력 모양과 연산의 이유를 주석으로 남깁니다. 외부 논문과 영문 문서는 근거로 연결하며, 이해에 필요한 설명은 본문에 제공합니다.
+
 ## 구성
 
 - 01–03: RNGD, PE, 메모리, DMA, 드라이버, 런타임
@@ -37,7 +39,9 @@ FuryNo5·FHA·FuryBoost는 조사 시점에 비공개 저장소였으므로 소�
 
 정적 사이트 검사와 Python 예제 구문 검사는 NPU 검증을 대신하지 않습니다. 이 편집 환경에서 RNGD 실행이나 새로운 성능 측정을 수행하지 않았습니다. FuryBoost 숫자는 명시한 저장소의 기존 실험에서 가져왔습니다.
 
-본문의 설명용 조절 도구는 측정값이나 장비 성능 예측이 아닙니다. 버킷 패딩, 이상적인 복사·계산 겹침, Amdahl의 법칙을 탐색합니다.
+NumPy가 설치되어 있다면 `python examples/tensor_basics.py`와 `python examples/array_layout.py`로 행렬곱·einsum·reshape·전치·stride·메모리 공유를 직접 확인할 수 있습니다. 이 두 CPU 기초 실습은 편집 환경에서 실제로 실행했습니다.
+
+본문의 설명용 조절 도구는 행렬곱의 행·열과 M/N/K 분할, 버킷 패딩, 이상적인 복사·계산 겹침, Amdahl의 법칙을 탐색합니다. 장비 성능 예측과 구분합니다.
 
 EDF는 공식 Kernel Validation의 Executable Device Format 표기를 사용합니다. vISA 중간 표현, 컴파일된 실행물, Device Function Image, SDK와 opt의 적재·실행 API를 구분하며, 서로의 실행물을 교차 로딩할 수 있다고 주장하지 않습니다.
 
@@ -46,3 +50,4 @@ EDF는 공식 Kernel Validation의 Executable Device Format 표기를 사용합�
 원고를 바꾼 뒤 생성 HTML과 관련 SVG도 함께 갱신합니다. 기존 8개 장 URL은 새 문서로 이동하도록 유지합니다. 배포 전 로컬 링크·앵커·도식·예제 구문을 검사합니다. 공개 문서와 실제 코드가 다르면 조회일과 불일치를 명시합니다.
 
 출처의 코드·자료는 각 프로젝트의 라이선스와 권리를 따릅니다.
+furiosa-opt 공식 도식을 한국어로 재구성한 부분에는 원본 링크를 붙였으며, 해당 Apache-2.0 라이선스와 NOTICE를 `assets/licenses/`에 보존했습니다.

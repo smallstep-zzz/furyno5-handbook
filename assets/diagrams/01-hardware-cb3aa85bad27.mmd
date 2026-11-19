@@ -1,0 +1,8 @@
+flowchart TB
+  C["RNGD 칩 하나"] --> G["2개 cluster"]
+  G --> P["각 cluster에 4개 PE"]
+  P --> S["각 PE에 64개 slice"]
+  S --> M["slice 쪽 메모리에서 값 읽기"]
+  S --> E["수축 연산기의 8개 lane"]
+  M --> E
+  E --> R["결과를 slice 쪽 메모리에 저장"]

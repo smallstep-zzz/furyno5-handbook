@@ -1,0 +1,86 @@
+<svg role="img" aria-label="호스트 RAM: 입력 생성과 결과 사용 · 장치 HBM: 큰 배열 보관 · DM: 계산할 부분 준비 · Fetch: DM 값을 연산 경로로 읽기 · Tensor Unit: 값의 흐름을 계산 · Commit: 결과를 DM에 저장 · TRF·VRF: 반복할 피연산자" width="476pt" height="445pt"
+ viewBox="0.00 0.00 475.80 444.80" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(14.4 430.4)">
+<title>handbook</title>
+<g id="edge1" class="edge">
+<title>H&#45;&gt;B</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M254.77,-379.84C253.39,-370.12 253.14,-357.82 254,-347.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="256.45,-347.3 254.78,-340.07 251.58,-346.76 256.45,-347.3"/>
+</g>
+<g id="edge8" class="edge">
+<title>B&#45;&gt;H</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M270.86,-340.07C272.36,-349.77 272.65,-362.07 271.72,-372.75"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="269.27,-372.6 270.88,-379.84 274.13,-373.17 269.27,-372.6"/>
+</g>
+<g id="edge2" class="edge">
+<title>B&#45;&gt;D</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M254.77,-303.84C253.39,-294.12 253.14,-281.82 254,-271.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="256.45,-271.3 254.78,-264.07 251.58,-270.76 256.45,-271.3"/>
+</g>
+<g id="edge7" class="edge">
+<title>D&#45;&gt;B</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M270.86,-264.07C272.36,-273.77 272.65,-286.07 271.72,-296.75"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="269.27,-296.6 270.88,-303.84 274.13,-297.17 269.27,-296.6"/>
+</g>
+<g id="edge3" class="edge">
+<title>D&#45;&gt;F</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M224.46,-227.84C200.14,-216.86 168.49,-202.58 143.01,-191.08"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="143.72,-188.72 136.33,-188.07 141.7,-193.18 143.72,-188.72"/>
+</g>
+<g id="edge4" class="edge">
+<title>F&#45;&gt;T</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M144.42,-151.84C174.16,-140.72 212.97,-126.22 243.94,-114.64"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="245.13,-116.82 250.83,-112.07 243.41,-112.23 245.13,-116.82"/>
+</g>
+<g id="edge5" class="edge">
+<title>T&#45;&gt;C</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M311.58,-75.84C320.52,-65.66 331.96,-52.63 341.63,-41.62"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="343.73,-42.95 346.51,-36.07 340.05,-39.71 343.73,-42.95"/>
+</g>
+<g id="edge6" class="edge">
+<title>C&#45;&gt;D</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M377.2,-36.01C385.91,-46.64 395.89,-61.11 400.5,-76 415.21,-123.55 428.18,-146.63 400.5,-188 386.14,-209.47 362.06,-222.86 337.99,-231.21"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="337.1,-228.92 331.21,-233.43 338.63,-233.58 337.1,-228.92"/>
+</g>
+<g id="edge9" class="edge">
+<title>R&#45;&gt;T</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M303.41,-151.84C302.23,-142.12 300.73,-129.82 299.44,-119.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="301.85,-118.72 298.58,-112.07 296.99,-119.31 301.85,-118.72"/>
+</g>
+<g id="node1" class="node">
+<title>H</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M353.5,-416C353.5,-416 171.5,-416 171.5,-416 165.5,-416 159.5,-410 159.5,-404 159.5,-404 159.5,-392 159.5,-392 159.5,-386 165.5,-380 171.5,-380 171.5,-380 353.5,-380 353.5,-380 359.5,-380 365.5,-386 365.5,-392 365.5,-392 365.5,-404 365.5,-404 365.5,-410 359.5,-416 353.5,-416"/>
+<text text-anchor="middle" x="262.5" y="-394.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">호스트 RAM: 입력 생성과 결과 사용</text>
+</g>
+<g id="node2" class="node">
+<title>B</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M325,-340C325,-340 200,-340 200,-340 194,-340 188,-334 188,-328 188,-328 188,-316 188,-316 188,-310 194,-304 200,-304 200,-304 325,-304 325,-304 331,-304 337,-310 337,-316 337,-316 337,-328 337,-328 337,-334 331,-340 325,-340"/>
+<text text-anchor="middle" x="262.5" y="-318.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">장치 HBM: 큰 배열 보관</text>
+</g>
+<g id="node3" class="node">
+<title>D</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M319,-264C319,-264 206,-264 206,-264 200,-264 194,-258 194,-252 194,-252 194,-240 194,-240 194,-234 200,-228 206,-228 206,-228 319,-228 319,-228 325,-228 331,-234 331,-240 331,-240 331,-252 331,-252 331,-258 325,-264 319,-264"/>
+<text text-anchor="middle" x="262.5" y="-242.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">DM: 계산할 부분 준비</text>
+</g>
+<g id="node4" class="node">
+<title>F</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M185,-188C185,-188 12,-188 12,-188 6,-188 0,-182 0,-176 0,-176 0,-164 0,-164 0,-158 6,-152 12,-152 12,-152 185,-152 185,-152 191,-152 197,-158 197,-164 197,-164 197,-176 197,-176 197,-182 191,-188 185,-188"/>
+<text text-anchor="middle" x="98.5" y="-166.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">Fetch: DM 값을 연산 경로로 읽기</text>
+</g>
+<g id="node5" class="node">
+<title>T</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M376.5,-112C376.5,-112 216.5,-112 216.5,-112 210.5,-112 204.5,-106 204.5,-100 204.5,-100 204.5,-88 204.5,-88 204.5,-82 210.5,-76 216.5,-76 216.5,-76 376.5,-76 376.5,-76 382.5,-76 388.5,-82 388.5,-88 388.5,-88 388.5,-100 388.5,-100 388.5,-106 382.5,-112 376.5,-112"/>
+<text text-anchor="middle" x="296.5" y="-90.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">Tensor Unit: 값의 흐름을 계산</text>
+</g>
+<g id="node6" class="node">
+<title>C</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M435,-36C435,-36 288,-36 288,-36 282,-36 276,-30 276,-24 276,-24 276,-12 276,-12 276,-6 282,0 288,0 288,0 435,0 435,0 441,0 447,-6 447,-12 447,-12 447,-24 447,-24 447,-30 441,-36 435,-36"/>
+<text text-anchor="middle" x="361.5" y="-14.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">Commit: 결과를 DM에 저장</text>
+</g>
+<g id="node7" class="node">
+<title>R</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M376.5,-188C376.5,-188 234.5,-188 234.5,-188 228.5,-188 222.5,-182 222.5,-176 222.5,-176 222.5,-164 222.5,-164 222.5,-158 228.5,-152 234.5,-152 234.5,-152 376.5,-152 376.5,-152 382.5,-152 388.5,-158 388.5,-164 388.5,-164 388.5,-176 388.5,-176 388.5,-182 382.5,-188 376.5,-188"/>
+<text text-anchor="middle" x="305.5" y="-166.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">TRF·VRF: 반복할 피연산자</text>
+</g>
+</g>
+</svg>

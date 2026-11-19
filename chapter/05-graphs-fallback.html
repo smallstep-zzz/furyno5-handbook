@@ -1,7 +1,86 @@
 <!doctype html>
-<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="그래프가 맡는 일과 EDF가 맡는 일, 프로그램이 없을 때의 동작을 구분합니다."><meta name="theme-color" content="#fbfaf7"><title>실행그래프와 실패 경계 · FuryNo5 개발 핸드북</title><link rel="icon" href="../assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="../assets/site.css?v=92d31956ba70"><script defer src="../assets/site.js?v=b3207df84190"></script></head>
-<body data-root="../" data-chapter="05-graphs-fallback" data-search-version="76d18c01bdf0"><a class="skip" href="#content">본문으로 이동</a><header class="topbar"><button class="menu-toggle" type="button" aria-label="전체 목차 열기" aria-controls="sidebar" aria-expanded="false">☰</button><a class="brand" href="../index.html"><span class="brand-mark">Nº5</span>FuryNo5<small>DEVELOPER HANDBOOK</small></a><div class="top-actions"><a class="top-link" href="../sources.html">출처와 버전</a><button class="search-open" type="button" aria-label="핸드북 전체 검색"><span>전체 문서 검색</span><kbd>⌘ K</kbd></button></div></header><div class="progress" aria-hidden="true"></div><div class="mobile-shade"></div><aside class="sidebar" id="sidebar" aria-label="전체 목차"><nav><div class="nav-caption">시작하기</div><a class="nav-link"  href="../index.html"><span class="num">00</span><span>전체 지도와 읽는 방법</span></a><div class="nav-caption">I. 디바이스를 이해하기</div><a class="nav-link"  href="../chapter/01-hardware.html"><span class="num">01</span><span>RNGD · TCP · PE</span></a><a class="nav-link"  href="../chapter/02-memory-dma.html"><span class="num">02</span><span>메모리 · DMA · 배치</span></a><a class="nav-link"  href="../chapter/03-driver-runtime.html"><span class="num">03</span><span>드라이버와 공식 런타임</span></a><div class="nav-caption">II. 프로그램을 만들고 실행하기</div><a class="nav-link"  href="../chapter/04-tcl-edf.html"><span class="num">04</span><span>TCL 작성 · 컴파일 · 실행</span></a><a class="nav-link active" aria-current="page" href="../chapter/05-graphs-fallback.html"><span class="num">05</span><span>실행그래프 · 오류 · 폴백</span></a><a class="nav-link"  href="../chapter/06-buckets-shapes.html"><span class="num">06</span><span>Shape · 버킷 · 컴파일 비용</span></a><a class="nav-link"  href="../chapter/07-optimization.html"><span class="num">07</span><span>최적화의 축과 우선순위</span></a><a class="nav-link"  href="../chapter/08-eisa-visa.html"><span class="num">08</span><span>eISA · vISA · furiosa-opt</span></a><div class="nav-caption">III. FuryNo5를 해부하기</div><a class="nav-link"  href="../chapter/09-torch-aten.html"><span class="num">09</span><span>PyTorch · ATen · 등록</span></a><a class="nav-link"  href="../chapter/10-furyno5-architecture.html"><span class="num">10</span><span>FuryNo5 구조와 지원 범위</span></a><a class="nav-link"  href="../chapter/11-furyno5-compiler.html"><span class="num">11</span><span>FuryNo5 컴파일과 캐시</span></a><div class="nav-caption">IV. 모델 포팅과 서빙</div><a class="nav-link"  href="../chapter/12-fxbx.html"><span class="num">12</span><span>fxbX 포맷과 실행계획</span></a><a class="nav-link"  href="../chapter/13-porting-fha.html"><span class="num">13</span><span>포팅 · FHA · FuryAwesome</span></a><a class="nav-link"  href="../chapter/14-serving-vllm.html"><span class="num">14</span><span>vLLM · 서빙 브리지</span></a><a class="nav-link"  href="../chapter/15-multi-npu.html"><span class="num">15</span><span>PE · 여러 카드 · 여러 서버</span></a><div class="nav-caption">V. 검증과 다음 개발</div><a class="nav-link"  href="../chapter/16-furyboost.html"><span class="num">16</span><span>FuryBoost 실측과 남은 과제</span></a><a class="nav-link"  href="../chapter/17-debugging.html"><span class="num">17</span><span>측정 · 추적 · 실패 재현</span></a><div class="nav-caption">VI. 생태계 비교와 최적화 연구</div><a class="nav-link"  href="../chapter/18-npu-ecosystems.html"><span class="num">18</span><span>다른 NPU의 지원 방식</span></a><a class="nav-link"  href="../chapter/19-model-optimization.html"><span class="num">19</span><span>모델 사전 최적화 · 연구</span></a><div class="nav-caption">참고와 검증</div><a class="nav-link"  href="../glossary.html"><span class="num">·</span><span>약어와 용어 사전</span></a><a class="nav-link"  href="../sources.html"><span class="num">·</span><span>출처 · 버전 · 접근 범위</span></a><a class="nav-link"  href="../review.html"><span class="num">·</span><span>검토 기록과 미해결 질문</span></a></nav><div class="side-foot">비공식 개발 핸드북 · 2026.11.19<br>공식 SDK와 프로젝트 구현을 구분합니다.<br><a href="https://github.com/smallstep-zzz/furyno5-handbook">원고와 변경 이력 ↗</a></div></aside><div class="shell"><main class="page" id="content"><div class="eyebrow">II. 프로그램을 만들고 실행하기 / CHAPTER 05</div><h1>실행그래프와 실패 경계</h1><p class="dek">그래프가 맡는 일과 EDF가 맡는 일, 프로그램이 없을 때의 동작을 구분합니다.</p><div class="page-meta"><span>검토 2026.11.19</span><span>SDK 2026.4 계열 / 버전별 표기</span><span class="readtime">약 7분</span><span><a href="https://github.com/smallstep-zzz/furyno5-handbook/blob/main/content/05-graphs-fallback.md">원고</a></span></div><details class="mobile-toc"><summary>이 장의 목차</summary><div><a class="" href="#1-같은-실행그래프-로-부르면-안-되는-네-가지">1. 같은 ‘실행그래프’로 부르면 안 되는 네 가지</a><a class="" href="#2-그래프가-없는-경우-무엇이-제공됐는가">2. 그래프가 없는 경우: 무엇이 제공됐는가</a><a class="minor" href="#모델-코드와-예제-입력이-있다">모델 코드와 예제 입력이 있다</a><a class="minor" href="#edf와-연결-계약이-있다">EDF와 연결 계약이 있다</a><a class="minor" href="#edf-파일만-여러-개-있다">EDF 파일만 여러 개 있다</a><a class="" href="#3-계획을-저장하면-줄어드는-작업과-남는-작업">3. 계획을 저장하면 줄어드는 작업과 남는 작업</a><a class="" href="#4-코드에서-실행계획과-edf를-함께-전달하기">4. 코드에서 실행계획과 EDF를 함께 전달하기</a><a class="" href="#5-빠진-edf-호환되지-않는-edf-지원하지-않는-연산">5. 빠진 EDF, 호환되지 않는 EDF, 지원하지 않는 연산</a><a class="" href="#6-cpu를-썼다는-사실과-cpu-폴백의-구분">6. CPU를 썼다는 사실과 CPU 폴백의 구분</a><a class="" href="#출처">출처</a></div></details><noscript><p class="noscript">본문과 그림은 JavaScript 없이 읽을 수 있습니다. 검색과 조절 실험에는 JavaScript가 필요합니다.</p></noscript><article class="article"><p><strong>EDF가 없으면 자동으로 CPU로 넘어간다는 일반 규칙은 없다. 실행그래프가 없으면 런타임이 원래 모델을 알아서 복원한다는 일반 규칙도 없다.</strong> 어떤 입력을 받은 어느 계층이 어떤 정책으로 동작하는지를 확인해야 한다. 이 장에서는 그래프·실행 산출물·폴백을 별개로 설명한다.</p>
-<h2 id="1-같은-실행그래프-로-부르면-안-되는-네-가지"><a class="heading-anchor" href="#1-같은-실행그래프-로-부르면-안-되는-네-가지">1. 같은 ‘실행그래프’로 부르면 안 되는 네 가지</a></h2>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="그래프가 맡는 일과 EDF가 맡는 일, 프로그램이 없을 때의 동작을 구분합니다."><meta name="theme-color" content="#fbfaf7"><title>실행그래프와 실패 경계 · FuryNo5 개발 핸드북</title><link rel="icon" href="../assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="../assets/site.css?v=5454d41416bc"><script defer src="../assets/site.js?v=aeae33420bbb"></script></head>
+<body data-root="../" data-chapter="05-graphs-fallback" data-search-version="0f5480784ed1"><a class="skip" href="#content">본문으로 이동</a><header class="topbar"><button class="menu-toggle" type="button" aria-label="전체 목차 열기" aria-controls="sidebar" aria-expanded="false">☰</button><a class="brand" href="../index.html"><span class="brand-mark">Nº5</span>FuryNo5<small>DEVELOPER HANDBOOK</small></a><div class="top-actions"><a class="top-link" href="../sources.html">출처와 버전</a><button class="search-open" type="button" aria-label="핸드북 전체 검색"><span>전체 문서 검색</span><kbd>⌘ K</kbd></button></div></header><div class="progress" aria-hidden="true"></div><div class="mobile-shade"></div><aside class="sidebar" id="sidebar" aria-label="전체 목차"><nav><div class="nav-caption">시작하기</div><a class="nav-link"  href="../index.html"><span class="num">00</span><span>전체 지도와 읽는 방법</span></a><div class="nav-caption">I. 디바이스를 이해하기</div><a class="nav-link"  href="../chapter/01-hardware.html"><span class="num">01</span><span>RNGD · TCP · PE</span></a><a class="nav-link"  href="../chapter/02-memory-dma.html"><span class="num">02</span><span>메모리 · DMA · 배치</span></a><a class="nav-link"  href="../chapter/03-driver-runtime.html"><span class="num">03</span><span>드라이버와 공식 런타임</span></a><div class="nav-caption">II. 프로그램을 만들고 실행하기</div><a class="nav-link"  href="../chapter/04-tcl-edf.html"><span class="num">04</span><span>TCL 작성 · 컴파일 · 실행</span></a><a class="nav-link active" aria-current="page" href="../chapter/05-graphs-fallback.html"><span class="num">05</span><span>실행그래프 · 오류 · 폴백</span></a><a class="nav-link"  href="../chapter/06-buckets-shapes.html"><span class="num">06</span><span>Shape · 버킷 · 컴파일 비용</span></a><a class="nav-link"  href="../chapter/07-optimization.html"><span class="num">07</span><span>최적화의 축과 우선순위</span></a><a class="nav-link"  href="../chapter/08-eisa-visa.html"><span class="num">08</span><span>eISA · vISA · furiosa-opt</span></a><div class="nav-caption">III. FuryNo5를 해부하기</div><a class="nav-link"  href="../chapter/09-torch-aten.html"><span class="num">09</span><span>PyTorch · ATen · 등록</span></a><a class="nav-link"  href="../chapter/10-furyno5-architecture.html"><span class="num">10</span><span>FuryNo5 구조와 지원 범위</span></a><a class="nav-link"  href="../chapter/11-furyno5-compiler.html"><span class="num">11</span><span>FuryNo5 컴파일과 캐시</span></a><div class="nav-caption">IV. 모델 포팅과 서빙</div><a class="nav-link"  href="../chapter/12-fxbx.html"><span class="num">12</span><span>fxbX 포맷과 실행계획</span></a><a class="nav-link"  href="../chapter/13-porting-fha.html"><span class="num">13</span><span>포팅 · FHA · FuryAwesome</span></a><a class="nav-link"  href="../chapter/14-serving-vllm.html"><span class="num">14</span><span>vLLM · 서빙 브리지</span></a><a class="nav-link"  href="../chapter/15-multi-npu.html"><span class="num">15</span><span>PE · 여러 카드 · 여러 서버</span></a><div class="nav-caption">V. 검증과 다음 개발</div><a class="nav-link"  href="../chapter/16-furyboost.html"><span class="num">16</span><span>FuryBoost 실측과 남은 과제</span></a><a class="nav-link"  href="../chapter/17-debugging.html"><span class="num">17</span><span>측정 · 추적 · 실패 재현</span></a><div class="nav-caption">VI. 생태계 비교와 최적화 연구</div><a class="nav-link"  href="../chapter/18-npu-ecosystems.html"><span class="num">18</span><span>다른 NPU의 지원 방식</span></a><a class="nav-link"  href="../chapter/19-model-optimization.html"><span class="num">19</span><span>모델 사전 최적화 · 연구</span></a><div class="nav-caption">참고와 검증</div><a class="nav-link"  href="../glossary.html"><span class="num">·</span><span>약어와 용어 사전</span></a><a class="nav-link"  href="../sources.html"><span class="num">·</span><span>출처 · 버전 · 접근 범위</span></a><a class="nav-link"  href="../review.html"><span class="num">·</span><span>검토 기록과 미해결 질문</span></a></nav><div class="side-foot">비공식 개발 핸드북 · 2026.11.19<br>공식 SDK와 프로젝트 구현을 구분합니다.<br><a href="https://github.com/smallstep-zzz/furyno5-handbook">원고와 변경 이력 ↗</a></div></aside><div class="shell"><main class="page" id="content"><div class="eyebrow">II. 프로그램을 만들고 실행하기 / CHAPTER 05</div><h1>실행그래프와 실패 경계</h1><p class="dek">그래프가 맡는 일과 EDF가 맡는 일, 프로그램이 없을 때의 동작을 구분합니다.</p><div class="page-meta"><span>검토 2026.11.19</span><span>SDK 2026.4 계열 / 버전별 표기</span><span class="readtime">약 12분</span><span><a href="https://github.com/smallstep-zzz/furyno5-handbook/blob/main/content/05-graphs-fallback.md">원고</a></span></div><details class="mobile-toc"><summary>이 장의 목차</summary><div><a class="" href="#1-같은-두-연산으로도-다른-프로그램이-된다">1. 같은 두 연산으로도 다른 프로그램이 된다</a><a class="minor" href="#실행계획은-값에-이름을-붙이고-소비자를-연결한다">실행계획은 값에 이름을 붙이고 소비자를 연결한다</a><a class="" href="#2-서로-다른-네-종류의-그래프와-스케줄">2. 서로 다른 네 종류의 그래프와 스케줄</a><a class="" href="#3-저장된-그래프가-없을-때-무엇을-만들-수-있는가">3. 저장된 그래프가 없을 때 무엇을 만들 수 있는가</a><a class="minor" href="#모델-코드와-예제-입력이-있다">모델 코드와 예제 입력이 있다</a><a class="minor" href="#edf와-연결-계약이-있다">EDF와 연결 계약이 있다</a><a class="minor" href="#edf-파일만-여러-개-있다">EDF 파일만 여러 개 있다</a><a class="" href="#4-저장한-계획으로-줄이는-작업과-남는-작업">4. 저장한 계획으로 줄이는 작업과 남는 작업</a><a class="" href="#5-실행계획과-edf를-함께-만들고-전달한다">5. 실행계획과 EDF를 함께 만들고 전달한다</a><a class="" href="#6-edf-누락과-cpu-폴백을-구분한다">6. EDF 누락과 CPU 폴백을 구분한다</a><a class="" href="#7-cpu-사용과-npu-계산의-증거를-따로-확인한다">7. CPU 사용과 NPU 계산의 증거를 따로 확인한다</a><a class="" href="#출처">출처</a></div></details><noscript><p class="noscript">본문과 그림은 JavaScript 없이 읽을 수 있습니다. 검색과 조절 실험에는 JavaScript가 필요합니다.</p></noscript><article class="article"><p>함수 두 개가 있다고 해서 프로그램 하나가 정해지지는 않는다. <code>add</code>와 <code>relu</code>라는 함수를 가진 CPU(Central Processing Unit) 라이브러리에도 <strong>무엇을 먼저 호출하고 결과를 어디에 넘길지</strong> 정한 코드가 필요하다. NPU(Neural Processing Unit)의 컴파일된 커널도 같다. EDF(Executable Device Format)는 장치에서 실행할 컴파일 결과이고, 여러 EDF 사이의 연결은 별도의 실행계획이 담당할 수 있다.</p>
+<p>이 장에서는 두 연산을 연결하는 예로 그래프를 이해한 뒤, 그래프를 저장했을 때 줄어드는 작업과 실제 <code>export_model()</code>·<code>GraphFXB</code> 호출을 살펴본다. 마지막에는 EDF가 없을 때 발생하는 오류와 CPU 폴백을 구분한다.</p>
+<h2 id="1-같은-두-연산으로도-다른-프로그램이-된다"><a class="heading-anchor" href="#1-같은-두-연산으로도-다른-프로그램이-된다">1. 같은 두 연산으로도 다른 프로그램이 된다</a></h2>
+<p>**ReLU(Rectified Linear Unit)**는 각 원소가 음수이면 0, 그렇지 않으면 원래 값을 반환하는 함수다. 여기서는 <code>relu(v) = max(0,v)</code>만 알면 된다. 두 입력 벡터 <code>x=[-2,1]</code>, <code>b=[1,2]</code>에 대해 먼저 원소별 덧셈을 하고 ReLU를 적용해 보자.</p>
+<div class="codebox"><div class="codebar"><span>python</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-python"># CPU에서 두 실행 순서가 서로 다른 결과를 내는지 확인한다.
+x = [-2, 1]
+b = [1, 2]
+
+added = [a + offset for a, offset in zip(x, b)] # shape (2,) -&gt; (2,), 결과 [-1,3]
+y = [max(0, value) for value in added]         # 음수만 0으로 바꿔 [0,3]
+assert y == [0, 3]
+
+activated = [max(0, value) for value in x]     # 이번에는 ReLU를 먼저 실행한다: [0,1]
+z = [a + offset for a, offset in zip(activated, b)]
+assert z == [1, 3]                            # 같은 Add·ReLU여도 연결 순서가 다르다.
+</code></pre></div>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>프로그램</th>
+<th>첫 연산 뒤 값</th>
+<th>둘째 연산 뒤 값</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>relu(x + b)</code></td>
+<td><code>[-1,3]</code></td>
+<td><code>[0,3]</code></td>
+</tr>
+<tr>
+<td><code>relu(x) + b</code></td>
+<td><code>[0,1]</code></td>
+<td><code>[1,3]</code></td>
+</tr>
+</tbody></table>
+</div><p>두 연산 모두 길이 2의 벡터를 받는다. 따라서 “길이 2를 받는 Add EDF와 ReLU EDF가 있다”는 사실만으로 어떤 프로그램인지 정할 수 없다. <strong>입출력 형상이 같아도 연결 의미는 다를 수 있다.</strong> 그래프가 보관하는 핵심 정보가 이 연결이다.</p>
+<p>그래프에서 **노드(node)**는 연산이나 값이고, **간선(edge)**은 누가 만든 값을 누가 사용하는지 나타낸다. 아래 그림은 첫 번째 프로그램이다. Add는 x와 b가 필요하고, ReLU는 Add가 만든 중간값이 필요하다.</p>
+<figure class="diagram"><img src="../assets/diagrams/05-graphs-fallback-9769b1b0b3b4.svg?v=d44269a8f0ea" alt="실행그래프와 실패 경계 · 도식 1" loading="lazy"><figcaption>도식 1 · 실행그래프와 실패 경계 — 설명을 위해 단순화한 관계도. 실제 호출 조건과 근거는 본문을 함께 읽으세요.</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
+    X[&quot;입력 x: -2, 1&quot;] --&gt; A[&quot;Add&quot;]
+    B[&quot;입력 b: 1, 2&quot;] --&gt; A
+    A --&gt; T[&quot;중간값: -1, 3&quot;]
+    T --&gt; R[&quot;ReLU&quot;]
+    R --&gt; Y[&quot;출력 y: 0, 3&quot;]</pre></details></figure><h3 id="실행계획은-값에-이름을-붙이고-소비자를-연결한다"><a class="heading-anchor" href="#실행계획은-값에-이름을-붙이고-소비자를-연결한다">실행계획은 값에 이름을 붙이고 소비자를 연결한다</a></h3>
+<p>여러 커널을 호출하는 계획은 “Add 다음 ReLU”라는 순서만으로 부족하다. Add의 어느 출력이 ReLU의 어느 입력으로 들어가는지, 최종 출력은 무엇인지도 필요하다. 다음 표는 이 예를 설명하는 <strong>교육용 계획</strong>이다. 실제 fxbX JSON 스키마를 그대로 복사한 형식은 아니다.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>값의 이름</th>
+<th>만드는 곳</th>
+<th>사용하는 곳</th>
+<th>수명을 판단하는 기준</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>input_x</code></td>
+<td>호출자가 전달</td>
+<td>Add의 첫 입력</td>
+<td>Add가 읽기를 완료했는가?</td>
+</tr>
+<tr>
+<td><code>input_b</code></td>
+<td>호출자가 전달하거나 고정값으로 준비</td>
+<td>Add의 둘째 입력</td>
+<td>다음 호출에서 재사용할 고정값인가?</td>
+</tr>
+<tr>
+<td><code>tmp_sum</code></td>
+<td>Add의 출력</td>
+<td>ReLU의 입력</td>
+<td>ReLU가 읽기를 완료했는가?</td>
+</tr>
+<tr>
+<td><code>output_y</code></td>
+<td>ReLU의 출력</td>
+<td>호출자</td>
+<td>결과 전달과 사용이 끝났는가?</td>
+</tr>
+</tbody></table>
+</div><p>**버퍼(buffer)**는 이 값이 실제로 저장되는 공간이다. 계획의 값 이름과 현재 프로세스의 버퍼는 별개이며, 둘을 연결하는 것을 **binding(바인딩)**이라고 한다. 중간값 <code>tmp_sum</code>을 만드는 커널을 CPU가 제출했다고 바로 공간을 재사용할 수 있는 것도 아니다. 그 값을 읽는 작업의 <strong>완료</strong>까지 보장되어야 한다. FuryNo5 실행계획과 fxbX 로더는 이러한 입력·출력·상태 연결을 명시한다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/fxbx-producer/EXECUTION_PLAN.md">공유 실행계획 계약</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span>, <a href="https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py">로더의 값 수명 처리</a></p>
+<h2 id="2-서로-다른-네-종류의-그래프와-스케줄"><a class="heading-anchor" href="#2-서로-다른-네-종류의-그래프와-스케줄">2. 서로 다른 네 종류의 그래프와 스케줄</a></h2>
+<p>앞 예는 연산 사이의 데이터 연결이다. 그런데 문서나 프로파일러에서는 장치 내부 명령 순서와 사용자 요청 순서도 ‘그래프’ 또는 ‘스케줄’이라고 부른다. <strong>누구의 순서를 정하는지</strong> 먼저 구분하면 혼동을 줄일 수 있다.</p>
 <div class="table-wrap"><table>
 <thead>
 <tr>
@@ -13,31 +92,31 @@
 </thead>
 <tbody><tr>
 <td>모델 그래프</td>
-<td>연산과 텐서 의존성</td>
+<td>앞 예의 Add·ReLU와 텐서 의존성</td>
 <td>Torch 캡처·export 또는 모델 작성자</td>
 <td>FX Graph, ExportedProgram</td>
 </tr>
 <tr>
 <td>커널 내부 스케줄</td>
-<td>엔진 명령·메모리 의존성·시각</td>
+<td>커널 하나 안의 데이터 이동·엔진 계산 순서</td>
 <td>컴파일러</td>
 <td>EDF 내부 실행 코드, vISA schedule JSON</td>
 </tr>
 <tr>
 <td>여러 커널의 실행계획</td>
-<td>EDF 호출 순서·입출력 tensor ID·상태 연결</td>
+<td>Add EDF 출력 → ReLU EDF 입력 같은 연결</td>
 <td>FuryNo5 같은 producer</td>
 <td><code>tclmachine.execution-plan.v1/v2</code></td>
 </tr>
 <tr>
 <td>서비스 스케줄</td>
-<td>요청·배치·prefill·decode 선택</td>
+<td>사용자 A·B 중 어떤 요청을 언제 묶어 실행할지 선택</td>
 <td>Furiosa-LLM 또는 vLLM 서버</td>
 <td>요청 대기열과 실행 중 배치</td>
 </tr>
 </tbody></table>
 </div><p>Torch 그래프의 간선은 텐서 데이터 관계이고, 서비스 스케줄의 순서는 여러 사용자 요청 사이의 선택이다. 한쪽을 저장했다고 다른 쪽이 사라지는 것은 아니다. 정적 schedule JSON도 운영 중 요청의 실측 trace와 다르다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/NATIVE_EXECUTION_PLAN.md">FuryNo5 실행계획</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span>, <a href="https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/tools/schedule-viewer.md">Schedule Viewer의 범위</a></p>
-<figure class="diagram"><img src="../assets/diagrams/05-graphs-fallback-8bb133880221.svg?v=51a688168756" alt="실행그래프와 실패 경계 · 도식 1" loading="lazy"><figcaption>도식 1 · 실행그래프와 실패 경계 — 설명을 위해 단순화한 관계도. 실제 호출 조건과 근거는 본문을 함께 읽으세요.</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
+<figure class="diagram"><img src="../assets/diagrams/05-graphs-fallback-8bb133880221.svg?v=51a688168756" alt="실행그래프와 실패 경계 · 도식 2" loading="lazy"><figcaption>도식 2 · 실행그래프와 실패 경계 — 설명을 위해 단순화한 관계도. 실제 호출 조건과 근거는 본문을 함께 읽으세요.</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
     M[&quot;모델의 수식·상태&quot;] --&gt; G[&quot;모델 그래프&quot;]
     G --&gt; K[&quot;영역별 커널 컴파일&quot;]
     G --&gt; P[&quot;커널 사이 연결 계획&quot;]
@@ -45,14 +124,15 @@
     E --&gt; R[&quot;로더·실행 세션&quot;]
     P --&gt; R
     Q[&quot;서비스 요청·버킷 선택&quot;] --&gt; R
-    R --&gt; N[&quot;NPU 실행&quot;]</pre></details></figure><h2 id="2-그래프가-없는-경우-무엇이-제공됐는가"><a class="heading-anchor" href="#2-그래프가-없는-경우-무엇이-제공됐는가">2. 그래프가 없는 경우: 무엇이 제공됐는가</a></h2>
+    R --&gt; N[&quot;NPU 실행&quot;]</pre></details></figure><p>상태(state)는 다음 호출에도 남기는 값이다. 예를 들어 언어 모델의 KV(Key–Value) cache는 이전 토큰에서 계산한 attention 정보를 보관한다. 매 호출의 출력만 연결하는 모델과 이 상태를 갱신하는 모델은 실행계획의 요구사항이 다르다.</p>
+<h2 id="3-저장된-그래프가-없을-때-무엇을-만들-수-있는가"><a class="heading-anchor" href="#3-저장된-그래프가-없을-때-무엇을-만들-수-있는가">3. 저장된 그래프가 없을 때 무엇을 만들 수 있는가</a></h2>
 <h3 id="모델-코드와-예제-입력이-있다"><a class="heading-anchor" href="#모델-코드와-예제-입력이-있다">모델 코드와 예제 입력이 있다</a></h3>
 <p>모델을 캡처하고 컴파일하는 <strong>앞단</strong>이 그래프를 만들 수 있다. FuryNo5의 <code>prepare_model_direct()</code>는 모델을 export하고, 필요한 정규화를 적용하고, 공식 SDK compiler를 호출해 <code>Runnable</code>을 만든다. 이 작업은 명시적인 준비 단계다. 첫 호출에서 <code>.activate()</code>가 지연 실행될 수 있지만, 이 사실을 <code>EDF 목록에서 모델 그래프를 추론한다</code>는 뜻으로 바꾸면 안 된다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/direct_runtime.py">직접 준비 구현</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
 <h3 id="edf와-연결-계약이-있다"><a class="heading-anchor" href="#edf와-연결-계약이-있다">EDF와 연결 계약이 있다</a></h3>
 <p>로더는 이미 정해진 인수 순서와 커널 연결을 장치 객체로 <strong>구체화</strong>한다. 파일 안의 선언적 계획과 현재 프로세스의 실행 객체는 다르므로, 계획이 저장되어 있어도 주소·버퍼·가중치 바인딩·완료 상태는 실행 시 준비해야 한다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/fxbx-producer/EXECUTION_PLAN.md">공유 실행계획 계약</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
 <h3 id="edf-파일만-여러-개-있다"><a class="heading-anchor" href="#edf-파일만-여러-개-있다">EDF 파일만 여러 개 있다</a></h3>
 <p>각 EDF의 입출력 개수·물리 형상만으로 원래 모델의 연결을 유일하게 복원할 수는 없다. 같은 shape의 값이라도 residual 입력인지 bias인지 이전 층의 출력인지 의미가 다르다. 이는 정보가 부족한 문제다. 연결 메타데이터, 모델 코드 또는 해당 구조를 아는 adapter가 필요하다.</p>
-<figure class="diagram"><img src="../assets/diagrams/05-graphs-fallback-f5eaf31d8c44.svg?v=dd1357441c81" alt="실행그래프와 실패 경계 · 도식 2" loading="lazy"><figcaption>도식 2 · 실행그래프와 실패 경계 — 설명을 위해 단순화한 관계도. 실제 호출 조건과 근거는 본문을 함께 읽으세요.</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
+<figure class="diagram"><img src="../assets/diagrams/05-graphs-fallback-f5eaf31d8c44.svg?v=dd1357441c81" alt="실행그래프와 실패 경계 · 도식 3" loading="lazy"><figcaption>도식 3 · 실행그래프와 실패 경계 — 설명을 위해 단순화한 관계도. 실제 호출 조건과 근거는 본문을 함께 읽으세요.</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
     I[&quot;제공된 입력 확인&quot;] --&gt; M[&quot;모델과 예제 입력 있음&quot;]
     I --&gt; P[&quot;EDF와 연결 계획 있음&quot;]
     I --&gt; E[&quot;EDF들만 있음&quot;]
@@ -60,7 +140,8 @@
     P --&gt; B[&quot;로더가 계약 검증·바인딩&quot;]
     E --&gt; X[&quot;연결 의미 추가 필요&quot;]
     C --&gt; B
-    B --&gt; R[&quot;실행 세션&quot;]</pre></details></figure><h2 id="3-계획을-저장하면-줄어드는-작업과-남는-작업"><a class="heading-anchor" href="#3-계획을-저장하면-줄어드는-작업과-남는-작업">3. 계획을 저장하면 줄어드는 작업과 남는 작업</a></h2>
+    B --&gt; R[&quot;실행 세션&quot;]</pre></details></figure><h2 id="4-저장한-계획으로-줄이는-작업과-남는-작업"><a class="heading-anchor" href="#4-저장한-계획으로-줄이는-작업과-남는-작업">4. 저장한 계획으로 줄이는 작업과 남는 작업</a></h2>
+<p>앞의 Add·ReLU 모델을 매번 Python에서 분석하면 연산 연결을 다시 찾아야 한다. 반대로 “첫 입력과 고정값을 Add에 넣고, 결과를 ReLU에 넣는다”는 계획과 대응 EDF가 저장되어 있으면 그 분석과 커널 컴파일을 재사용할 수 있다. 그렇더라도 <strong>이번 입력 값과 이번 장치 메모리 주소까지 파일에 영구 고정할 수는 없다.</strong> 로딩과 실제 데이터 연결은 남는다.</p>
 <div class="table-wrap"><table>
 <thead>
 <tr>
@@ -72,7 +153,7 @@
 <tbody><tr>
 <td>진짜 EDF</td>
 <td>해당 커널 컴파일</td>
-<td>버전·해시·입출력 ABI 확인, 장치 적재</td>
+<td>버전·해시·입출력 ABI(Application Binary Interface) 확인, 장치 적재</td>
 </tr>
 <tr>
 <td>커널 연결·tensor ID</td>
@@ -80,7 +161,7 @@
 <td>계획 검증, 현재 버퍼·가중치 연결</td>
 </tr>
 <tr>
-<td>shape·dtype·stride 계약</td>
+<td>형상(shape)·자료형(dtype)·저장 간격(stride) 계약</td>
 <td>계약 추론</td>
 <td>실제 입력이 계약에 맞는지 검사</td>
 </tr>
@@ -96,30 +177,70 @@
 </tr>
 </tbody></table>
 </div><p>FuryNo5의 공유 실행계획 문서는 loader에 producer나 compiler가 필요하지 않도록 의도했고, 별도 프로세스에서 producer import와 compiler 호출을 막은 reload 시험 범위를 기록한다. 이 장은 그 <strong>기존 검증 기록을 읽어 설명하는 것</strong>이며 새 NPU 재시험을 한 것이 아니다. 원본 모델이 필요한 direct preparation 경로와 compiler 없이 package를 재로드하는 경로도 구별한다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/NATIVE_EXECUTION_PLAN.md">Native execution owner</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span>, <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/DIRECT_RUNTIME.md">Direct runtime 계약</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
-<h2 id="4-코드에서-실행계획과-edf를-함께-전달하기"><a class="heading-anchor" href="#4-코드에서-실행계획과-edf를-함께-전달하기">4. 코드에서 실행계획과 EDF를 함께 전달하기</a></h2>
-<p>FuryNo5의 <code>export_model()</code>은 모델을 분석해 실행계획을 만들고 해당 계획에서 참조할 EDF를 생성한다. fxbX의 <code>GraphFXB</code>는 package의 계획 schema를 보고 실행한다. 실습 전에 <a href="../chapter/13-porting-fha.html">13장의 호환 checkout 설치</a>를 마치고 <a href="../chapter/03-driver-runtime.html">3장의 장치 확인</a>을 수행한다. 아래 코드를 <strong>새 작업 디렉터리의 <code>build_and_run.py</code>로 저장</strong>한다. 출력 경로는 실행한 디렉터리를 기준으로 해석된다.</p>
-<div class="codebox"><div class="codebar"><span>python</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-python"># build_and_run.py — 호환 SDK, FuryNo5/fxbX, RNGD가 필요하다.
+<h2 id="5-실행계획과-edf를-함께-만들고-전달한다"><a class="heading-anchor" href="#5-실행계획과-edf를-함께-만들고-전달한다">5. 실행계획과 EDF를 함께 만들고 전달한다</a></h2>
+<p>FuryNo5의 <code>export_model()</code>은 모델을 분석해 실행계획을 만들고 해당 계획에서 참조할 EDF를 생성한다. fxbX의 <code>GraphFXB</code>는 package의 계획 schema(필드와 연결을 읽는 규칙)를 보고 실행한다. 여기서 <strong>export</strong>는 모델을 저장 가능한 실행 계약으로 만드는 준비 작업이고, <strong>load</strong>는 그 계약을 읽어 현재 장치의 실행 객체를 만드는 작업이다.</p>
+<p>실습 모델은 MLP(Multi-Layer Perceptron)의 작은 예다. 입력은 4개 샘플, 샘플당 8개 숫자여서 shape <code>(4,8)</code>이다. <code>Linear(8,12)</code>는 각 샘플에 같은 가중치를 적용하여 12개 숫자로 바꾸고, ReLU는 shape를 유지하며 음수를 0으로 만든다. 마지막 <code>Linear(12,8)</code>이 <code>(4,8)</code> 출력을 만든다. Linear의 계산은 입력과 가중치의 행렬곱에 bias(각 출력 좌표에 더하는 고정값)를 더하는 것이다.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>단계</th>
+<th>텐서 shape</th>
+<th>값에 가하는 일</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>입력</td>
+<td><code>(4,8)</code></td>
+<td>4개 샘플의 특징값</td>
+</tr>
+<tr>
+<td>첫 Linear</td>
+<td><code>(4,12)</code></td>
+<td>샘플마다 8개 입력의 가중합 12개 생성</td>
+</tr>
+<tr>
+<td>ReLU</td>
+<td><code>(4,12)</code></td>
+<td>각 값에 <code>max(0,v)</code> 적용</td>
+</tr>
+<tr>
+<td>둘째 Linear</td>
+<td><code>(4,8)</code></td>
+<td>12개 값의 가중합 8개 생성</td>
+</tr>
+</tbody></table>
+</div><p>실습 전에 <a href="../chapter/13-porting-fha.html">13장의 호환 checkout 설치</a>를 마치고 <a href="../chapter/03-driver-runtime.html">3장의 장치 확인</a>을 수행한다. 아래 코드를 <strong>새 작업 디렉터리의 <code>build_and_run.py</code>로 저장</strong>한다. 출력 경로는 실행한 디렉터리를 기준으로 해석된다.</p>
+<div class="codebox"><div class="codebar"><span>python</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-python"># build_and_run.py — 호환 SDK(Software Development Kit), FuryNo5/fxbX, RNGD가 필요하다.
 import torch
 from tclmachine import export_model
 from fxbx import GraphFXB
 
 def main():
+    # 같은 모델과 입력을 다시 만들 수 있도록 CPU 난수 시드를 고정한다.
     torch.manual_seed(42)
+    # shape: (4,8) -&gt; (4,12) -&gt; (4,12) -&gt; (4,8)
     model = torch.nn.Sequential(
         torch.nn.Linear(8, 12), torch.nn.ReLU(), torch.nn.Linear(12, 8)
     ).bfloat16().eval().requires_grad_(False)
+    # BF16(BFloat16) 입출력에 맞춰 예제 입력을 만든다.
     x = torch.randn(4, 8, dtype=torch.bfloat16)
 
+    # 준비 단계: 예제 shape로 모델을 분석하고 실행계획과 EDF들을 저장한다.
     export_model(model, (x,), &quot;./small-mlp.fxbx&quot;, compile_workers=4)
+    # 적재 단계: 외부 가중치를 이름에 맞춰 연결하고 장치 실행을 준비한다.
     with GraphFXB(&quot;./small-mlp.fxbx&quot;, weights=model.state_dict()) as session:
-        actual, = session.predict((x,))
+        # 실행 단계: 입력 하나를 tuple로 전달하고 CPU에서 확인할 출력을 받는다.
+        actual, = session.predict((x,), output_device=&quot;cpu&quot;)
+    # 수치 검증은 별도 단계다. 일치만으로 NPU 실행 사실이 증명되지는 않는다.
     torch.testing.assert_close(actual, model(x), atol=0.02, rtol=0.02)
     print(&quot;single-shape numerical comparison passed&quot;)
 
+# 병렬 컴파일의 자식 프로세스가 import할 때 빌드를 다시 시작하지 않게 한다.
 if __name__ == &quot;__main__&quot;:
     main()
 </code></pre></div>
-<div class="codebox"><div class="codebar"><span>bash</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-bash">python build_and_run.py
+<div class="codebox"><div class="codebar"><span>bash</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-bash"># main 보호가 있는 파일로 실행해 병렬 컴파일의 재귀 시작을 막는다.
+python build_and_run.py
 </code></pre></div>
 <p>컴파일러는 여러 커널을 처리할 때 <code>multiprocessing.get_context(&#39;spawn&#39;)</code>를 사용한다. 따라서 <code>compile_workers=4</code>인 이 독립 스크립트에서 <code>if __name__ == &quot;__main__&quot;</code> 보호를 빼면 자식 프로세스의 import가 빌드를 다시 시작할 수 있다. 노트북에 그대로 붙이기보다 파일로 실행한다. API 의미는 <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/examples/native_execution_plan.py">사용자 프로젝트의 실제 예제</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span>와 <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/execution_plan.py">계획 exporter</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span>를 확인했다. 이 핸드북 작성 환경에서는 NPU로 실행하지 않았다. namespace <code>tclmachine</code>은 저장소가 유지하는 실제 import 이름이다.</p>
 <p>가중치는 <code>model.state_dict()</code>로 별도 전달한다. 이 예제는 동일한 프로세스에 모델이 있어 바로 넘기지만, 실제 배포에서는 모델 코드가 없어도 읽을 수 있는 호환 checkpoint와 가중치 이름 계약을 함께 보존해야 한다. <code>0.02</code> 오차는 작은 BF16 예제를 위한 값이며 모든 모델의 합격 기준이 아니다. 재실행에는 새 출력 디렉터리를 사용해 실험 결과를 분리한다.</p>
@@ -129,7 +250,9 @@ python examples/native_execution_plan.py build ./small-mlp.fxbx
 python examples/native_execution_plan.py run ./small-mlp.fxbx
 </code></pre></div>
 <p>예제 스크립트는 빌드와 실행을 분리하며, 수치 일치만으로 NPU 실행이 증명되는 것은 아니라고 결과에 적는다. NPU Task trace도 확인해야 한다. 한 EDF만 로드하는 낮은 수준의 Python 호출은 4장의 <code>from_serialized_edf()</code> 예제로 돌아가면 된다.</p>
-<h2 id="5-빠진-edf-호환되지-않는-edf-지원하지-않는-연산"><a class="heading-anchor" href="#5-빠진-edf-호환되지-않는-edf-지원하지-않는-연산">5. 빠진 EDF, 호환되지 않는 EDF, 지원하지 않는 연산</a></h2>
+<h2 id="6-edf-누락과-cpu-폴백을-구분한다"><a class="heading-anchor" href="#6-edf-누락과-cpu-폴백을-구분한다">6. EDF 누락과 CPU 폴백을 구분한다</a></h2>
+<p>**폴백(fallback)**은 원래 시도한 실행 경로를 사용할 수 없을 때 다른 구현으로 계산을 이어가는 정책이다. 예를 들어 NPU용 구현이 없는 연산을 CPU 구현으로 수행하도록 백엔드가 명시적으로 지원할 수 있다. 그러나 파일 읽기 실패, 컴파일 실패, NPU 호출 실패가 모두 이런 정책을 갖는 것은 아니다.</p>
+<p>4장 예제는 먼저 <code>Path(&quot;matmul.edf&quot;).read_bytes()</code>를 수행한다. 파일이 없으면 Python의 파일 읽기가 실패하므로 NPU 실행 함수에 도착하지 않는다. 그 코드에는 오류를 잡아 <code>left @ right</code>로 바꾸는 분기가 없다. <strong>EDF가 없으면 자동으로 CPU로 넘어간다는 일반 규칙은 없다.</strong> 실제로 호출한 경로를 기준으로 판단해야 한다.</p>
 <div class="table-wrap"><table>
 <thead>
 <tr>
@@ -149,7 +272,7 @@ python examples/native_execution_plan.py run ./small-mlp.fxbx
 <td>FuryNo5는 명시적으로 검사한다.</td>
 </tr>
 <tr>
-<td>공식 FXB 캐시에 호환 bundle 없음</td>
+<td>공식 FXB(Furiosa Executable Bundle) 캐시에 호환 bundle 없음</td>
 <td><code>fxb check</code>는 non-zero 종료한다.</td>
 <td>이것은 CPU 폴백 명령이 아니다.</td>
 </tr>
@@ -176,8 +299,8 @@ python examples/native_execution_plan.py run ./small-mlp.fxbx
 </tbody></table>
 </div><p><a href="https://developer.furiosa.ai/v2026.4.0/en/furiosa_llm/fxb.html">공식 FXB cache와 오류</a>, <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/direct_runtime.py">FuryNo5 fallback 정책</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span>, <a href="https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/tools/kernel-optimizer.md">Rust CPU/NPU build 구분</a></p>
 <p><code>fail</code>도 구체적으로 써야 한다. Python 예외, Rust <code>Result::Err</code>, 컴파일 subprocess의 non-zero 종료, 장치 timeout, 프로세스 crash는 다른 현상이다. 근거가 예외를 보여줄 때 이를 <code>항상 crash</code>라고 부르지 않는다. 복구 가능성도 해당 오류와 런타임 정책을 확인한다.</p>
-<h2 id="6-cpu를-썼다는-사실과-cpu-폴백의-구분"><a class="heading-anchor" href="#6-cpu를-썼다는-사실과-cpu-폴백의-구분">6. CPU를 썼다는 사실과 CPU 폴백의 구분</a></h2>
-<p>토큰화·입력 검사·스케줄·결과 포맷은 원래 호스트에서 수행할 수 있다. lookup 입력의 범위를 CPU에서 검사한 것도 embedding 계산 자체를 CPU에서 수행했다는 뜻이 아니다. 반대로 최종 출력이 맞는다는 이유만으로 NPU가 계산했다고 확정할 수 없다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/fxbx-producer/EXECUTION_PLAN.md">fxbX execution contract의 입력 검사 설명</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
+<h2 id="7-cpu-사용과-npu-계산의-증거를-따로-확인한다"><a class="heading-anchor" href="#7-cpu-사용과-npu-계산의-증거를-따로-확인한다">7. CPU 사용과 NPU 계산의 증거를 따로 확인한다</a></h2>
+<p>사용자 문자열을 토큰 정수로 바꾸기, 입력 길이 검사, 다음 요청 선택, 응답 포맷 만들기는 원래 CPU 호스트에서 수행할 수 있다. 이것은 NPU에 맡겼던 행렬곱을 CPU로 대체한 상황과 구분한다. lookup 입력의 범위를 CPU에서 검사한 것도 embedding 계산 자체를 CPU에서 수행했다는 뜻이 아니다. 반대로 최종 출력이 맞는다는 이유만으로 NPU가 계산했다고 확정할 수 없다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/fxbx-producer/EXECUTION_PLAN.md">fxbX execution contract의 입력 검사 설명</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
 <p>FuryNo5를 검증할 때는 다음 네 항목을 연결해 본다.</p>
 <ol>
 <li><strong>정책</strong>: <code>sdk.config.set_cpu_fallback(False)</code>처럼 요청한 실행 정책.</li>
@@ -219,4 +342,4 @@ python examples/native_execution_plan.py run ./small-mlp.fxbx
 <td>CPU build와 NPU build</td>
 </tr>
 </tbody></table>
-</div></article><nav class="next-prev" aria-label="이전과 다음 장"><a href="../chapter/04-tcl-edf.html"><small>← 이전 장</small><b>TCL에서 EDF까지</b></a><a href="../chapter/06-buckets-shapes.html"><small>다음 장 →</small><b>Shape와 버킷 설계</b></a></nav><footer class="footer">FuryNo5 개발 핸드북 · 비공식 자료<br>공식 문서와 소스의 권리는 각 프로젝트에 있습니다. 코드 인용은 출처와 함께 표시합니다.<br><a href="../review.html">검토 기록과 남은 질문</a> · <a href="../sources.html">출처와 버전</a> · <a href="../glossary.html">용어 사전</a></footer></main></div><aside class="right-toc" aria-label="이 장의 목차"><h2>이 장에서 다루는 내용</h2><a class="" href="#1-같은-실행그래프-로-부르면-안-되는-네-가지">1. 같은 ‘실행그래프’로 부르면 안 되는 네 가지</a><a class="" href="#2-그래프가-없는-경우-무엇이-제공됐는가">2. 그래프가 없는 경우: 무엇이 제공됐는가</a><a class="minor" href="#모델-코드와-예제-입력이-있다">모델 코드와 예제 입력이 있다</a><a class="minor" href="#edf와-연결-계약이-있다">EDF와 연결 계약이 있다</a><a class="minor" href="#edf-파일만-여러-개-있다">EDF 파일만 여러 개 있다</a><a class="" href="#3-계획을-저장하면-줄어드는-작업과-남는-작업">3. 계획을 저장하면 줄어드는 작업과 남는 작업</a><a class="" href="#4-코드에서-실행계획과-edf를-함께-전달하기">4. 코드에서 실행계획과 EDF를 함께 전달하기</a><a class="" href="#5-빠진-edf-호환되지-않는-edf-지원하지-않는-연산">5. 빠진 EDF, 호환되지 않는 EDF, 지원하지 않는 연산</a><a class="" href="#6-cpu를-썼다는-사실과-cpu-폴백의-구분">6. CPU를 썼다는 사실과 CPU 폴백의 구분</a><a class="" href="#출처">출처</a></aside><dialog class="search-dialog" aria-label="문서 검색"><div class="search-head"><input type="search" aria-label="검색어" placeholder="DMA, EDF, 폴백, 버킷…" autocomplete="off"><button class="close-search" type="button">닫기</button></div><div class="search-status" role="status">용어나 함수 이름을 입력하세요.</div><div class="search-results"></div></dialog></body></html>
+</div></article><nav class="next-prev" aria-label="이전과 다음 장"><a href="../chapter/04-tcl-edf.html"><small>← 이전 장</small><b>TCL에서 EDF까지</b></a><a href="../chapter/06-buckets-shapes.html"><small>다음 장 →</small><b>Shape와 버킷 설계</b></a></nav><footer class="footer">FuryNo5 개발 핸드북 · 비공식 자료<br>공식 문서와 소스의 권리는 각 프로젝트에 있습니다. 코드 인용은 출처와 함께 표시합니다.<br><a href="../review.html">검토 기록과 남은 질문</a> · <a href="../sources.html">출처와 버전</a> · <a href="../glossary.html">용어 사전</a></footer></main></div><aside class="right-toc" aria-label="이 장의 목차"><h2>이 장에서 다루는 내용</h2><a class="" href="#1-같은-두-연산으로도-다른-프로그램이-된다">1. 같은 두 연산으로도 다른 프로그램이 된다</a><a class="minor" href="#실행계획은-값에-이름을-붙이고-소비자를-연결한다">실행계획은 값에 이름을 붙이고 소비자를 연결한다</a><a class="" href="#2-서로-다른-네-종류의-그래프와-스케줄">2. 서로 다른 네 종류의 그래프와 스케줄</a><a class="" href="#3-저장된-그래프가-없을-때-무엇을-만들-수-있는가">3. 저장된 그래프가 없을 때 무엇을 만들 수 있는가</a><a class="minor" href="#모델-코드와-예제-입력이-있다">모델 코드와 예제 입력이 있다</a><a class="minor" href="#edf와-연결-계약이-있다">EDF와 연결 계약이 있다</a><a class="minor" href="#edf-파일만-여러-개-있다">EDF 파일만 여러 개 있다</a><a class="" href="#4-저장한-계획으로-줄이는-작업과-남는-작업">4. 저장한 계획으로 줄이는 작업과 남는 작업</a><a class="" href="#5-실행계획과-edf를-함께-만들고-전달한다">5. 실행계획과 EDF를 함께 만들고 전달한다</a><a class="" href="#6-edf-누락과-cpu-폴백을-구분한다">6. EDF 누락과 CPU 폴백을 구분한다</a><a class="" href="#7-cpu-사용과-npu-계산의-증거를-따로-확인한다">7. CPU 사용과 NPU 계산의 증거를 따로 확인한다</a><a class="" href="#출처">출처</a></aside><dialog class="search-dialog" aria-label="문서 검색"><div class="search-head"><input type="search" aria-label="검색어" placeholder="DMA, EDF, 폴백, 버킷…" autocomplete="off"><button class="close-search" type="button">닫기</button></div><div class="search-status" role="status">용어나 함수 이름을 입력하세요.</div><div class="search-results"></div></dialog></body></html>

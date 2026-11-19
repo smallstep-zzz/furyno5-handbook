@@ -1,4 +1,16 @@
-# 모델 포팅 실습과 FHA·FuryAwesome의 역할
+# 13. 모델 파일을 실행 가능한 패키지로 포팅하기
+
+Python에서 모델을 실행할 때는 모델 클래스, 가중치, 입력 tensor가 같은 프로세스에 있다. NPU(Neural Processing Unit)로 옮겨 다른 프로세스에서 실행하려면 이 정보를 분리해서 전달해야 한다. **포팅(porting)**은 파일 확장자를 바꾸는 작업이 아니라, 원래 계산의 의미를 보존하면서 대상 장치가 받아들이는 연산·입출력·실행 순서로 바꾸고 검증하는 작업이다.
+
+이 장의 목표는 작은 `Linear → ReLU → Linear` 모델로 세 질문에 답하는 것이다. “어떤 가중치와 입력으로 컴파일했는가?”, “다른 프로세스가 무엇을 읽어 실행하는가?”, “원래 모델과 같은 계산을 했다는 근거가 무엇인가?” 처음에는 아래 파일의 역할을 구분하면 된다.
+
+| 전달할 정보 | 이 장의 예제 파일 | 받는 쪽에서 사용하는 방법 |
+|---|---|---|
+| 모델의 계산 구조와 장치 실행 코드 | `tiny.fxbx` | fxbX가 실행 순서와 EDF(Executable Device Format)를 읽음 |
+| 학습으로 정해진 tensor 값 | `tiny-state.pt` | 가중치 이름을 패키지의 입력 슬롯에 연결 |
+| 비교할 입력과 원래 모델의 출력 | `tiny-cases.pt` | 같은 입력을 넣고 출력이 허용오차 안에서 일치하는지 검사 |
+
+EDF는 장치에서 수행할 계산을 담은 산출물이다. **실행 계획**은 어느 EDF에 어느 tensor를 넣고 그 출력을 다음 어디에 연결할지 적은 자료구조다. **패키지**는 이런 코드와 설명 자료를 함께 전달하는 파일이며, **manifest**는 안에 어떤 파일과 버전·규격이 있는지 기록한 목록이다. **schema**는 그 목록의 필드·자료형·버전 규칙이고, **계산 그래프(graph)**는 입력·계산·출력의 의존 관계를 node와 간선으로 표현한 자료구조다. 체크포인트의 가중치만으로는 실행 순서와 장치 코드가 생기지 않는다. 반대로 이 예제의 패키지만 있어도 별도로 요구하는 가중치가 없으면 원래 모델을 재현할 수 없다. [최소 모델의 생성·가중치 전달](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/examples/native_execution_plan.py) · [fxbX의 실행 계획 소비](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py)
 
 **FHA(Furiosa-Hug-Anything)는 FuryAwesome·FuryNo5·fxbX를 연결해 모델 포팅을 돕는 도구 모음이다.** FuryAwesome에서 배포된 모델과 포팅 요청을 찾고, FuryNo5에 공통 연산 구현·실행 계획·패키지 생성을 맡기며, fxbX로 적재·실행을 확인한다. 검증된 결과를 공유할 때는 HF(Hugging Face) 파일 배포와 FuryAwesome 카탈로그 등록을 연결한다. 각 도구의 책임과 현재 연결 범위를 알아야 실패한 부분을 고칠 수 있다. [FHA 포팅 skill](https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/skills/rngd-model-porting/SKILL.md) · [FuryAwesome 소개](https://github.com/smallstep-zzz/furyawesome/blob/c668ecbceac2bedd04c6e539c1a5509a404a464d/README.md)
 
@@ -13,7 +25,7 @@
 | **FuryNo5** | 재사용 가능한 연산 규칙, TCL(Tensor Contraction Language) 기반 컴파일 연결, 실행 계획과 패키지 생성 | EDF, 입출력·가중치·상태를 연결한 실행 계획, fxbX에서 사용할 패키지 |
 | **fxbX** | 패키지와 실행 계획 적재, 가중치 연결, 실행·반복 호출 | 실제 출력, 실행 기록, 적재·호환 오류 |
 
-FuryAwesome의 카탈로그 데이터가 연산 구현이나 컴파일러를 대신하지는 않는다. FHA 역시 별도 커널을 모델마다 복제하는 방식보다 FuryNo5의 공통 규칙을 보완하도록 구성되어 있다. 공식 컴파일러가 TCL을 EDF로 만드는 과정과 fxbX가 이를 실행하는 과정은 앞 장들의 장치·런타임 계약을 따른다. [역할 분담](https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/docs/FHA_ROLE_TRANSITION.md) · [FHA의 실제 위임](https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/forge_fxbex/native.py)
+FuryAwesome의 카탈로그 데이터가 연산 구현이나 컴파일러를 대신하지는 않는다. FHA 역시 별도 커널을 모델마다 복제하는 방식보다 FuryNo5의 공통 규칙을 보완하도록 구성되어 있다. TCL은 행렬곱·축약 같은 계산 의미를 컴파일러에 설명하는 언어다. 공식 컴파일러가 TCL을 EDF로 만드는 과정과 fxbX가 이를 실행하는 과정은 앞 장들의 장치·런타임 계약을 따른다. [역할 분담](https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/docs/FHA_ROLE_TRANSITION.md) · [FHA의 실제 위임](https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/forge_fxbex/native.py)
 
 다음은 도구를 함께 사용하는 전체 흐름이다. 검증에 실패하면 입력 계약이나 공통 규칙으로 돌아간다. 마지막 공유 단계는 패키지 형식과 게시 도구의 지원 범위를 확인한 뒤 진행한다. 현재 구현의 구체적인 경계는 10절에서 다룬다.
 
@@ -41,9 +53,9 @@ flowchart TB
 모델을 선택하면 용도뿐 아니라 **SDK(Software Development Kit)·runtime 버전, 입력 범위, 별도 가중치 필요 여부, 검증된 실행 방법**을 확인한다. 아래는 해당 모델의 의존성과 SDK를 준비한 환경에서 실행할 수 있는 등록 모델의 예다. `fetch`는 다운로드이며, `run --sample`에서 샘플 추론을 수행한다. [FuryAwesome 실행 안내](https://github.com/smallstep-zzz/furyawesome/blob/c668ecbceac2bedd04c6e539c1a5509a404a464d/README.md)
 
 ```bash
-fxbx doctor
-fxbx fetch FLUX.2-klein-4B
-fxbx run FLUX.2-klein-4B --sample
+fxbx doctor                             # 현재 Python·SDK·장치 환경을 점검한다.
+fxbx fetch FLUX.2-klein-4B               # 등록된 배포 파일을 내려받는다.
+fxbx run FLUX.2-klein-4B --sample        # 동봉된 샘플 입력으로 실제 추론을 요청한다.
 ```
 
 모든 등록 모델이 같은 설치·호출 계약을 가진 것은 아니다. 예를 들어 `all-MiniLM-L6-v2`의 등록 예는 배치 1·최대 16토큰의 BF16(Bfloat16) 임베딩이며, 별도 가중치와 동봉된 Python 실행 파일을 사용한다. NPU가 만든 은닉 상태에 호스트가 마스크 평균과 정규화를 적용하는 범위도 안내한다. 최신 Depth Anything V2 Small 사용법은 체크포인트를 연결하는 `fxbx>=0.9.3` 경로를 요구한다. 따라서 다른 모델의 명령이나 오래된 생성 템플릿의 runtime 버전을 그대로 적용하지 않는다. [MiniLM 사용법](https://github.com/smallstep-zzz/furyawesome/blob/c668ecbceac2bedd04c6e539c1a5509a404a464d/usage/all-minilm-l6-v2.md) · [Depth Anything 사용법](https://github.com/smallstep-zzz/furyawesome/blob/c668ecbceac2bedd04c6e539c1a5509a404a464d/usage/depth-anything-v2-small-hf.md)
@@ -51,8 +63,10 @@ fxbx run FLUX.2-klein-4B --sample
 필요한 모델이 없으면 FuryAwesome의 요청 화면에서 GitHub issue 초안을 만들 수 있다. 사용자가 GitHub에서 내용을 확인하고 제출하는 흐름이며, 요청 등록이 곧 컴파일 작업 실행은 아니다. FHA에는 이 요청들을 읽어 모델 계열별로 묶고 우선순위를 계산하는 코드가 있다. 다음 명령은 FHA checkout에서 인증된 GitHub CLI `gh`를 사용하며, 원격 issue를 수정하지 않는다. [요청 화면의 동작](https://github.com/smallstep-zzz/furyawesome/blob/c668ecbceac2bedd04c6e539c1a5509a404a464d/CONTRIBUTING.md) · [요청 수집·CLI 구현](https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/forge_fxbex/requests.py)
 
 ```bash
+# 원격 요청을 읽어 최대 5개로 요약한다. 원격 issue를 수정하지 않는다.
 python -m forge_fxbex requests --repository smallstep-zzz/furyawesome --limit 5
-python -m forge_fxbex requests --cached --limit 5
+python -m forge_fxbex requests --cached --limit 5  # 저장한 보고서에서 다시 읽는다.
+# OWNER/MODEL은 실제 보고서의 family 값으로 바꾼다.
 python -m forge_fxbex requests --cached --model 'hf:OWNER/MODEL'
 ```
 
@@ -60,15 +74,33 @@ python -m forge_fxbex requests --cached --model 'hf:OWNER/MODEL'
 
 ## 3. 포팅의 입력은 모델 이름보다 넓다
 
+### 작은 모델이 실제로 계산하는 것
+
+입력 `x`의 shape가 `[4,8]`이라는 것은 **샘플 4개를 행에 놓고 각 샘플의 특징 8개를 열에 놓았다**는 뜻이다. `Linear(8,12)`는 각 행의 특징 8개를 출력 특징 12개로 바꾼다. 가중치 `W`의 shape는 `[12,8]`이다. 가중치의 한 행이 출력 특징 하나를 계산하는 계수 8개를 갖는다.
+
+행렬곱 `A @ B`는 A의 한 행과 B의 한 열에서 같은 위치의 원소를 곱해 더한다. `[M,K] @ [K,N]`의 결과는 `[M,N]`이며 가운데 크기 K가 같아야 한다. 그래서 이 층은 `x @ W.T + b`를 계산한다. `W.T`는 행과 열을 맞바꾸는 **전치(transpose)**로 `[8,12]`가 되어 곱셈이 가능해진다. bias `b[12]`는 출력의 모든 행에 같은 12개 값을 더한다. 이 자동 확장이 **broadcasting**이며 bias를 4번 학습한다는 뜻은 아니다. 첫 출력값 하나는 `x[0,0]*W[0,0] + … + x[0,7]*W[0,7] + b[0]`이다. [PyTorch Linear의 계산과 가중치 규격](https://docs.pytorch.org/docs/2.10/generated/torch.nn.Linear.html)
+
+| 단계 | 계산 | 입력 → 출력 shape | 값의 의미 |
+|---|---|---|---|
+| 첫 Linear | `h = x @ W0.T + b0` | `[4,8] → [4,12]` | 각 샘플을 12개 특징으로 변환 |
+| ReLU(Rectified Linear Unit) | `a = max(h, 0)` | `[4,12] → [4,12]` | 각 원소가 음수면 0으로 바꾸고 양수는 유지 |
+| 둘째 Linear | `y = a @ W2.T + b2` | `[4,12] → [4,8]` | 최종 특징 8개를 계산 |
+
+모델 객체를 만든 시점에는 이 계산식과 무작위 초기 가중치가 존재한다. `model(x)`가 실제 CPU 값을 계산하고, `export_model(model, (x,), ...)`은 이 구조와 대표 입력 규격을 바탕으로 장치 실행 산출물을 만든다. 두 호출은 반환값부터 다르다. 앞은 tensor, 뒤는 생성 상태와 산출물 위치 등을 담은 보고서다.
+
+### 크기뿐 아니라 자료형과 저장 순서도 계약이다
+
+**dtype(data type)**은 각 원소의 저장·계산 자료형이다. 이 예제의 BF16(Bfloat16)은 16비트 부동소수점이므로 FP32(Float32) 값을 바꾸면 반올림이 생길 수 있다. **stride**는 각 축의 인덱스가 1 증가할 때 저장 공간에서 몇 원소 이동하는지 나타낸다. 일반적인 연속 배열 `x[4,8]`은 stride `[8,1]`이다. **contiguous**는 요구하는 순서대로 원소가 연속해 놓인 상태다. 같은 숫자와 shape를 갖더라도 전치로 얻은 view는 stride가 다를 수 있다. 따라서 shape만 같다고 같은 커널 입력 계약이라고 판단하지 않는다.
+
 포팅 계약에는 원본 모델 revision, configuration, 실제 입력 shape·dtype·stride, 전후처리, mask 의미, 가변 길이 정책, 상태 변화가 들어간다. 예를 들어 같은 `aten.mm`이라도 BF16(Bfloat16) contiguous 행렬과 FP32(Float32) 비연속 view는 같은 시험이 아니다. 연산 이름이 같아도 크기·배치·메모리 계약이 달라지면 기존 EDF를 사용할 수 있는지 다시 판단해야 한다. [FHA feature 정의](https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/docs/AUTOMATED_PORTING.md) · [FuryNo5 입력 검사](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/execution_plan.py)
 
 | 먼저 고정할 항목 | 예 | 왜 필요한가 |
 |---|---|---|
 | 원본 | HF repository와 commit | 가중치·설정 변경을 성능 변경과 분리 |
 | 실제 작업 | 이미지 분류, 임베딩, decoder 한 step | 출력과 상태의 의미 결정 |
-| 입력 규격 | `[4,8]`, BF16, contiguous | 컴파일과 ABI 선택 |
+| 입력 규격 | `[4,8]`, BF16, contiguous | 컴파일과 ABI(Application Binary Interface: 실행 코드와 호출자가 합의한 입출력 규격) 선택 |
 | 정확도 기준 | 절대·상대 오차, 과제별 품질 | 더 빠르지만 다른 계산인 결과 배제 |
-| 장치 환경 | SDK·TCC·driver·fusion·mesh | EDF와 runtime 호환 |
+| 장치 환경 | SDK·TCC(Tensor Contraction Compiler)·driver·PE 결합·장치 구성 | EDF와 runtime 호환 |
 | 측정 범위 | 첫 적재 / warm 호출 / 전체 요청 | 비용 누락 방지 |
 
 ## 4. 준비: 서로 맞는 소스를 설치한다
@@ -76,53 +108,100 @@ python -m forge_fxbex requests --cached --model 'hf:OWNER/MODEL'
 공식 SDK(Software Development Kit)와 드라이버가 동작하는 Linux 환경에서 각 프로젝트의 호환 버전을 맞춘다. `pip install fxbx`가 최신 GitHub의 모든 기능을 포함한다고 가정하지 않는다. 아래는 이미 내려받은 세 checkout을 같은 SDK Python에 연결하는 **개발 환경 예**다. 의존성 설치를 생략하므로 필요한 SDK와 Python 패키지는 사전에 준비해야 한다. [FHA 설치 안내](https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/README.md) · [fxbX 패키지 설정](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/pyproject.toml)
 
 ```bash
+# -e는 checkout의 코드를 연결한다. --no-deps는 이미 준비한 SDK 의존성 설치를 생략한다.
 python -m pip install --no-deps -e ./FuryNo5
 python -m pip install --no-deps -e ./fxbX
 python -m pip install --no-deps -e ./Furiosa-Hug-Anything
 
-fxbx doctor
+fxbx doctor  # 패키지 import와 장치 환경 확인은 별개다.
 python -c "import tclmachine, fxbx, forge_fxbex; print('imports OK')"
-python -m forge_fxbex.native --help
+python -m forge_fxbex.native --help  # 현재 설치본에서 지원하는 CLI 인수를 확인한다.
 ```
 
 SDK의 Python 환경과 CLI가 사용하는 Python이 다르면 import 성공과 실제 실행이 갈릴 수 있다. 먼저 `python -m pip show furiosa-torch furiosa-tcc fxbx`로 같은 interpreter에서 확인한다. 패키지가 있다고 장치가 열린다는 뜻도 아니므로 driver 상태는 3장의 점검 절차로 확인한다.
 
-## 5. 작은 모델을 끝까지 통과시킨다
+## 5. 작은 모델을 생성하고 새 프로세스에서 실행한다
 
-다음은 저장소의 `examples/native_execution_plan.py`와 같은 종류의 작은 MLP(Multilayer Perceptron)다. 학습 가능한 parameter를 그대로 넘기지 않고 추론용으로 고정한다. `preflight_only`는 컴파일과 NPU 할당 없이 지원 진단을 기록하는 경로다. 사전 분석과 실제 export의 출력 이름은 새 경로를 사용한다. [FuryNo5 예제](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/examples/native_execution_plan.py) · [export_model 옵션](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/execution_plan.py#L355-L381)
+다음은 저장소의 `examples/native_execution_plan.py`를 바탕으로 파일 전달과 두 입력 검증을 드러낸 학습용 예제다. **현재 편집 환경에서는 실행하지 않았으며**, 같은 SDK와 RNGD가 준비된 환경에서 따라 할 코드다. 모델은 MLP(Multilayer Perceptron), 즉 여러 선형 층과 비선형 함수를 이어 놓은 구조다. 먼저 파일을 만드는 `tiny_port.py`, 다음으로 파일만 받아 실행하는 `verify_tiny.py`를 작성한다. [FuryNo5 원래 예제](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/examples/native_execution_plan.py) · [export_model 옵션](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/execution_plan.py#L355-L381)
+
+실습 파일: [tiny_port.py](../examples/porting/tiny_port.py), [verify_tiny.py](../examples/porting/verify_tiny.py). 같은 작업 디렉터리에 두고 아래 순서로 실행한다.
+
+### 5.1 생산자: 모델·가중치·대표 입력을 고정한다
+
+`eval()`은 추론 동작을 선택하며, `requires_grad_(False)`는 이 예제의 parameter에 기울기를 요구하지 않도록 한다. `bfloat16()`은 가중치 dtype을 바꾸므로 입력도 BF16으로 맞춘다. **대표 입력**은 값 자체뿐 아니라 이번 컴파일에 사용할 shape·dtype·stride를 알려 주는 예시다. `x`와 `x_second`는 규격이 같고 값만 달라, 한 번 만든 산출물이 입력 변화에 반응하는지 검사한다.
 
 ```python
-# tiny_port.py — 호환 SDK와 RNGD가 있는 개발 환경에서 실행
+# tiny_port.py — 호환 SDK와 RNGD가 있는 환경의 생산 스크립트
 import torch
 import tclmachine
+
+
+def main():
+    torch.manual_seed(42)  # 무작위 초기 가중치와 입력을 다시 만들 수 있게 고정한다.
+    model = torch.nn.Sequential(
+        torch.nn.Linear(8, 12),  # x[4,8] @ W0.T[8,12] + b0[12] → h[4,12]
+        torch.nn.ReLU(),        # 음수를 0으로 바꾸며 shape [4,12]는 유지한다.
+        torch.nn.Linear(12, 8), # a[4,12] @ W2.T[12,8] + b2[8] → y[4,8]
+    ).bfloat16().eval().requires_grad_(False)  # BF16 가중치, 추론 모드, 학습 제외
+    x = torch.randn(4, 8, dtype=torch.bfloat16)  # CPU의 입력 4행 × 특징 8개
+    x_second = x + torch.full_like(x, 0.25)  # 모든 입력 원소에 0.25를 더한 두 번째 사례
+    inputs = [x, x_second]  # 두 사례는 동일한 shape·dtype을 유지한다.
+    with torch.no_grad():  # 참조 계산에 미분 그래프를 만들지 않는다.
+        expected = [model(value) for value in inputs]  # 각각 CPU 출력 [4,8]
+
+    # 패키지가 별도로 요구할 가중치와, 동일 값 비교에 쓸 입력·정답을 보존한다.
+    torch.save(model.state_dict(), "tiny-state.pt")
+    torch.save({"inputs": inputs, "expected": expected}, "tiny-cases.pt")
+
+    preflight = tclmachine.export_model(
+        model, (x,), "tiny-preflight.fxbx",  # (x,)는 입력 tensor 하나를 담은 tuple
+        preflight_only=True,  # 지원 진단만 수행하며 EDF 컴파일·실행은 하지 않는다.
+    )
+    print("preflight:", preflight)  # 사전 분석 보고서이며 추론 출력이 아니다.
+    report = tclmachine.export_model(
+        model, (x,), "tiny.fxbx",  # 계산 구조·입력 계약으로 패키지를 생성한다.
+        compile_workers=4,  # CPU 컴파일 작업의 병렬 worker 수; NPU 개수가 아니다.
+    )
+    print("export:", report)  # 생성 상태·region·kernel 수·소요 시간을 확인한다.
+
+
+if __name__ == "__main__":  # spawn된 worker가 전체 생산 작업을 다시 시작하지 않게 한다.
+    main()
+```
+
+컴파일 worker는 `spawn` 방식으로 Python 프로세스를 새로 띄운다. 새 프로세스가 이 파일을 import해도 `main()`을 다시 호출하지 않도록 마지막 보호문을 유지한다. notebook cell에서 부분 실행하기보다 파일로 실행하는 예제다. 사전 분석에서 `admitted_not_compiled`가 나와도 EDF 생성에 성공했다는 뜻은 아니다. 생성 보고서의 `built_not_runtime_validated`도 실제 모델 추론 검증 전이라는 뜻이다. [worker 생성과 상태 반환](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/execution_plan.py)
+
+| 단계 후 남는 것 | 읽는 방법 | 아직 증명하지 않은 것 |
+|---|---|---|
+| `tiny-state.pt` | 이름 → parameter tensor의 사전 | 원본 학습 모델의 품질 |
+| `tiny-cases.pt` | 두 입력 `[4,8]`과 두 CPU 출력 `[4,8]` | NPU 출력 일치 |
+| 사전 분석 보고서 | 미지원 규칙·계약·의존성 확인 | 실제 컴파일 성공 |
+| `tiny.fxbx`와 `tiny.fxbx.plan/` | 패키지와 별도 분석용 실행 계획 | 새 프로세스 추론·상태·성능 |
+
+출력 경로가 이미 있으면 새 실험 디렉터리나 이름을 사용한다. 소스의 생성 경로는 기존 산출물을 조용히 덮어쓰는 용도로 설계되지 않았다.
+
+### 5.2 소비자: 가중치와 패키지를 다시 연결한다
+
+다음 파일은 위 스크립트가 종료된 뒤 별도 명령으로 실행한다. 이 코드에서는 원래 `Sequential` 객체를 다시 만들지 않는다. 실행 순서는 패키지에서, 실제 가중치 값은 `tiny-state.pt`에서 얻는다. `GraphFXB`라는 공개 이름으로 열더라도 실행 계획 형식은 내부에서 `ExecutionFXB` 경로로 연결된다. [fxbX 적재 분기와 실행](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/graph_fxb.py) · [실행 계획 런타임](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py)
+
+```python
+# verify_tiny.py — 위에서 생성한 세 파일을 같은 작업 디렉터리에서 읽는다.
+import torch
 from fxbx import GraphFXB
 
 
 def main():
-    torch.manual_seed(42)
-    model = torch.nn.Sequential(
-        torch.nn.Linear(8, 12),
-        torch.nn.ReLU(),
-        torch.nn.Linear(12, 8),
-    ).bfloat16().eval().requires_grad_(False)
-    x = torch.randn(4, 8, dtype=torch.bfloat16)
-
-    preflight = tclmachine.export_model(
-        model, (x,), "tiny-preflight.fxbx", preflight_only=True,
-    )
-    print("preflight:", preflight)
-    report = tclmachine.export_model(
-        model, (x,), "tiny.fxbx", compile_workers=4,
-    )
-    print("export:", report)
-
-    with torch.no_grad():
-        expected = model(x)
-    with GraphFXB("tiny.fxbx", weights=model.state_dict()) as runner:
-        actual, = runner.predict((x,))
-
-    torch.testing.assert_close(actual, expected, atol=0.02, rtol=0.02)
-    print("tiny numerical comparison passed")
+    # CPU에 가중치 tensor를 적재한다. 이것 자체는 CPU 모델 추론이 아니다.
+    weights = torch.load("tiny-state.pt", map_location="cpu", weights_only=True)
+    cases = torch.load("tiny-cases.pt", map_location="cpu", weights_only=True)
+    with GraphFXB("tiny.fxbx", weights=weights) as runner:
+        for index, (x, expected) in enumerate(zip(cases["inputs"], cases["expected"])):
+            actual, = runner.predict((x,))  # 입력 tuple → 출력 tuple; 출력 하나 [4,8]을 꺼낸다.
+            torch.testing.assert_close(
+                actual, expected, atol=0.02, rtol=0.02,  # 작은 BF16 예제의 비교 기준
+            )
+            print("numerical comparison passed:", index)
+    # with 블록을 나가면 runner가 보유한 실행 자원을 정리한다.
 
 
 if __name__ == "__main__":
@@ -130,32 +209,34 @@ if __name__ == "__main__":
 ```
 
 ```bash
-python tiny_port.py
+python tiny_port.py    # 패키지·가중치·비교 입력 파일을 생성하고 종료한다.
+python verify_tiny.py  # 새 Python 프로세스가 파일을 읽어 두 입력을 비교한다.
 ```
 
-컴파일 worker는 `spawn` 방식의 별도 process를 사용한다. 따라서 전체 실행을 `main()` 안에 두고 위 보호문을 유지한다. notebook cell을 그대로 복사 실행하는 대신 `.py` 파일로 실행하는 예제다. [worker 생성 코드](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/execution_plan.py#L286-L286)
+`atol`은 값이 0에 가까울 때도 허용하는 **절대 오차**, `rtol`은 기준 값의 크기에 비례하는 **상대 오차**다. 여기의 `0.02`를 실제 모델의 품질 기준으로 복사하지 않는다. 출력 범위·누산 정밀도와 과제 품질을 고려해 기준을 먼저 정한다. 두 비교가 통과해도 모든 입력이나 큰 모델 전체가 검증된 것은 아니다. **CPU 참조 값을 만드는 단계와 NPU를 실행하는 단계를 분리했고, 같은 가중치와 입력을 사용했다**는 의미다. [assert_close의 오차 조건](https://docs.pytorch.org/docs/2.10/testing.html#torch.testing.assert_close)
 
-이 예제의 `0.02`는 이 작은 BF16 확인을 위한 값이다. 모델 전체의 합격 기준으로 복사하지 않는다. 허용오차는 출력 범위·누산 방식·과제 품질을 고려해 미리 정해야 한다. 코드가 끝났다는 사실은 수치 비교 통과를 뜻하며, CPU 모델 fallback이 없었다는 독립 증거는 공식 profiler의 NPU Task와 실행 경로 감사로 더해야 한다. 반복 실행 시 기존 산출물을 덮어쓰지 않도록 새 출력 이름이나 새 실험 디렉터리를 사용한다.
+NPU Task가 계획의 step에 대응하는지와 CPU 모델 fallback이 없었는지는 profiler와 실행 경로 감사로 확인한다. 이 짧은 소비자 예제는 프로세스 재적재를 보여 주지만, 생산자 import나 컴파일 호출을 강제로 차단하는 강화 검증까지 구현하지 않는다. 저장소의 독립 검증 worker와 17장의 절차로 이 증거를 더한다. [FuryNo5 독립 검증 worker](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/verified_worker.py)
 
 ### 저장된 체크포인트 파일에서 시작하기
 
-이미 학습한 모델 파일을 포팅할 때도 같은 경로를 사용한다. 다음 9줄은 앞 예제의 `main()` 안에서 `model`과 `x`를 만든 뒤 넣는 대체 export 부분이다. 첫 줄은 파일을 만드는 시연이며, 자신이 만든 `state_dict` 체크포인트가 이미 있다면 생략하고 그 파일 경로를 사용한다. `map_location="cpu"`는 가중치를 우선 호스트에 적재하고, `weights_only=True`는 tensor와 기본 자료형 중심으로 역직렬화 범위를 제한한다. [PyTorch 2.10 torch.load](https://docs.pytorch.org/docs/2.10/generated/torch.load.html)
+이미 학습한 모델 파일을 포팅할 때도 같은 경로를 사용한다. 다음은 `tiny_port.py`의 `main()` 안에서 `x`를 만든 뒤 넣을 대체 export 부분이다. 앞에서 저장한 `tiny-state.pt`를 읽으며, 자신의 체크포인트가 있으면 같은 역할의 경로를 지정한다. `map_location="cpu"`는 가중치를 우선 호스트에 적재하고, `weights_only=True`는 tensor와 기본 자료형 중심으로 역직렬화 범위를 제한한다. [PyTorch 2.10 torch.load](https://docs.pytorch.org/docs/2.10/generated/torch.load.html)
 
 ```python
-torch.save(model.state_dict(), "tiny-state.pt")
+# 가중치 파일에는 forward 구조가 없으므로 원래와 같은 층 구성을 먼저 만든다.
 restored = torch.nn.Sequential(
     torch.nn.Linear(8, 12), torch.nn.ReLU(), torch.nn.Linear(12, 8),
-).bfloat16().eval().requires_grad_(False)
+).bfloat16().eval().requires_grad_(False)  # 입력·가중치 BF16, 출력 [4,8]
 state = torch.load("tiny-state.pt", map_location="cpu", weights_only=True)
-restored.load_state_dict(state, strict=True)
+restored.load_state_dict(state, strict=True)  # 이름·shape가 맞는 기존 가중치로 교체한다.
 report = tclmachine.export_model(
-    restored, (x,), "tiny-from-checkpoint.fxbx", compile_workers=4,
+    restored, (x,), "tiny-from-checkpoint.fxbx",  # x[4,8]의 규격으로 새 패키지를 만든다.
+    compile_workers=4,  # 앞 절과 같은 __main__ 보호문 안에서 호출한다.
 )
 ```
 
-`state_dict`에는 parameter와 등록된 buffer가 들어가므로 원본 architecture와 forward 구현은 별도로 있어야 한다. 여기서는 파일을 만든 모델과 같은 layer·차원을 선언하고 `strict=True`로 parameter 이름의 누락·추가를 오류로 드러낸다. shape 불일치도 해결한 뒤 export해야 한다. BF16은 이 Tiny MLP의 입력·가중치 계약이며 모든 모델을 무조건 BF16으로 바꾸라는 뜻이 아니다. [PyTorch 모델 저장·적재 안내](https://docs.pytorch.org/tutorials/beginner/saving_loading_models.html)
+`state_dict`에는 parameter와 등록된 buffer(학습 대상 parameter와 별도로 모델 상태에 보관하는 tensor)가 들어가므로 원본 architecture와 forward 구현은 별도로 있어야 한다. 여기서는 파일을 만든 모델과 같은 layer·차원을 선언하고 `strict=True`로 parameter 이름의 누락·추가를 오류로 드러낸다. shape 불일치도 해결한 뒤 export해야 한다. BF16은 이 Tiny MLP의 입력·가중치 계약이며 모든 모델을 무조건 BF16으로 바꾸라는 뜻이 아니다. [PyTorch 모델 저장·적재 안내](https://docs.pytorch.org/tutorials/beginner/saving_loading_models.html)
 
-실행할 때는 앞 예제의 `GraphFXB` 부분을 `GraphFXB("tiny-from-checkpoint.fxbx", weights=restored.state_dict())`로 바꾸고 참조 출력도 `restored(x)`로 비교한다. 이 커스텀 export 경로의 `.fxbx`는 실행 계획과 EDF를 전달하며, 원본 가중치 파일의 역할까지 자동으로 대체하지 않는다. 원본 architecture·가중치 revision·입력 계약을 함께 보관해야 다시 적재하고 검증할 수 있다. [가중치 전달 API 예제](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/examples/native_execution_plan.py)
+새 체크포인트의 검증 입력과 참조 출력도 `restored`를 이용해 다시 저장한다. 소비자는 `GraphFXB("tiny-from-checkpoint.fxbx", weights=state)`처럼 해당 체크포인트와 패키지를 짝지어 읽는다. 이전 무작위 가중치로 계산한 참조 출력과 비교하면 모델이 달라져 검증 의미가 없어진다. 이 커스텀 export 경로의 `.fxbx`는 실행 계획과 EDF를 전달하며, 원본 가중치 파일의 역할까지 자동으로 대체하지 않는다. 원본 architecture·가중치 revision·입력 계약을 함께 보관해야 다시 적재하고 검증할 수 있다. [가중치 전달 API 예제](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/examples/native_execution_plan.py)
 
 ```mermaid
 flowchart TB
@@ -171,10 +252,12 @@ flowchart TB
 
 ## 6. FHA를 경유해 같은 역할을 호출한다
 
-FHA의 bridge는 새로운 컴파일러를 구현하지 않는다. `forge_fxbex/native.py`의 실제 위임 부분은 다음과 같다.
+**bridge**는 한 라이브러리의 호출을 다른 라이브러리의 API(Application Programming Interface)로 연결하는 얇은 함수다. C 함수가 다른 동적 라이브러리의 함수를 호출하는 것과 비슷하다. FHA의 bridge는 모델과 옵션을 받아 FuryNo5에 전달하고 보고서를 돌려준다. 여기서 `model`은 앞 절의 Torch module, `output`은 출력 경로, `options`는 입력 예시·동시 작업 수 등의 keyword 인자 사전이다. 다음은 `forge_fxbex/native.py` 함수 내부에서 **설명 주석을 추가한 발췌**이며 주변 함수 정의와 옵션 정규화는 생략했다.
 
 ```python
+# 함수 내부: 실제 패키지 생산자를 다른 이름 export로 import한다.
 from tplmachine.fxb_export.model_export import build_model as export
+# model·경로·키워드 옵션을 전달하고 생산자의 보고서를 그대로 반환한다.
 return export(model, output, **options)
 ```
 
@@ -186,19 +269,22 @@ Python에서 앞 절의 `main()` 안에 있는 `model`과 `x`를 그대로 사�
 from forge_fxbex.native import build_model
 
 report = build_model(
-    model, "tiny-via-fha.fxbx",
-    example_inputs=(x,), concurrency=4,
+    model, "tiny-via-fha.fxbx",  # 계산 구조와 산출물 경로
+    example_inputs=(x,),  # CPU의 BF16 tensor [4,8] 하나를 담은 tuple
+    concurrency=4,  # 위임할 CPU 컴파일 작업 수
 )
-print(report["status"])
+print(report["status"])  # 실행 결과 tensor가 아니라 생산 상태를 확인한다.
 ```
 
 이 함수의 분기를 이해해야 한다. 문자열이나 경로를 넘기면 공식 architecture-aware builder에 위임한다. 실제 Torch module과 `example_inputs`를 넘기면 FuryNo5의 커스텀 graph 경로를 사용한다. 따라서 **미지원 HF 모델 ID를 CLI에 넣었다고 자동으로 모든 미지원 연산을 구현해 주는 것은 아니다.** [생산자 분기](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/fxb_export/model_export.py#L31-L118)
 
 ```bash
-# 공식 builder가 architecture를 지원하는 HF assets의 경로
-python -m forge_fxbex.native build-model ./hf-assets   -o ./registered-model.fxb --concurrency 4
+# ./hf-assets는 공식 builder가 architecture를 지원하는 모델의 설정·가중치 경로다.
+# -o는 새 출력 파일, --concurrency는 생산 작업의 동시성 옵션이다.
+python -m forge_fxbex.native build-model ./hf-assets \
+  -o ./registered-model.fxb --concurrency 4
 
-# genuine manifest와 EDF가 이미 준비된 native-source의 포장·검사
+# manifest와 실제 EDF가 이미 있는 디렉터리를 포장하고 내부 설명을 검사한다.
 python -m forge_fxbex.native build ./native-source -o ./repacked.fxb
 python -m forge_fxbex.native inspect ./repacked.fxb
 ```
@@ -209,7 +295,18 @@ python -m forge_fxbex.native inspect ./repacked.fxb
 
 전체 모델이 막히면 operator 이름 목록만 수집하는 것보다 실패하는 **정확한 특징**을 뽑는다. 입력 tensor의 shape·dtype·stride, scalar attribute, alias·mutation, mask, 원본 layer 위치를 보관한다. 같은 특징이 여러 layer에 반복되면 한 번의 공통 구현과 검증으로 연결하되, 서로 다른 shape를 같은 성공으로 묶지 않는다. [특징 추출·중복 제거 절차](https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/docs/AUTOMATED_PORTING.md)
 
-예를 들어 attention 실패를 해결할 때 “Qwen 전용 우회 코드”부터 추가하는 대신 transpose layout, softmax mask, gather index 범위, reduction 누산 순서 중 어느 계약이 막혔는지 좁힌다. 작은 fixture가 통과하면 실제 가중치가 있는 block, 마지막으로 전체 모델을 검사한다. 이 순서는 FuryNo5의 공통성 목표를 유지하면서 장애 원인을 작게 만드는 개발 권장 순서다.
+예를 들어 `torch.mm(a, b)`가 실패했다고 하자. `a[2,3] @ b[3,2]`는 수학적으로 정의되지만, 지원 규칙이 BF16 연속 배열만 허용하면 FP32 입력이나 전치 view는 다른 계약이다. 다음 표처럼 **값의 의미**, **장치에 건네는 규격**, **실패 단계**를 분리해야 수정 지점이 드러난다.
+
+| 관측 | 먼저 확인할 내용 | 성급하게 하면 안 되는 수정 |
+|---|---|---|
+| `a[2,3] @ b[2,3]` | 가운데 차원 3과 2가 불일치 | 컴파일러만 고치려 하기; 원래 수식부터 확인 |
+| `b.T` 뒤 shape는 맞지만 지원 진단 실패 | 전치 후 stride와 contiguous 요구 | shape가 같다고 값을 `reshape`로 재배열해 대체하기 |
+| FP32 → BF16 변경 후 수치 차이 | 자료형 변환에서 생긴 반올림과 누산 오차 | 허용오차만 크게 늘려 통과시키기 |
+| 작은 kernel은 성공하지만 모델 적재 실패 | package schema·가중치 이름·ABI | 이미 맞는 TCL 계산을 다시 작성하기 |
+
+`reshape`는 원소 개수를 유지하면서 같은 논리적 원소열을 새 차원으로 읽는 작업이고, 전치는 축의 역할을 바꾸는 작업이다. 예를 들어 `[[1,2,3],[4,5,6]]`을 `reshape(3,2)`하면 `[[1,2],[3,4],[5,6]]`, 전치하면 `[[1,4],[2,5],[3,6]]`이다. shape가 `[3,2]`로 같아도 값의 위치가 다르므로 두 연산을 바꾸어 쓰면 모델 의미가 달라진다. `contiguous()`로 필요한 복사본을 만드는 비용 역시 측정 대상이다. [reshape](https://docs.pytorch.org/docs/2.10/generated/torch.reshape.html) · [transpose](https://docs.pytorch.org/docs/2.10/generated/torch.transpose.html)
+
+attention(입력 위치 사이의 관련도를 계산해 값을 섞는 연산)이 실패하면 transpose layout, softmax mask, gather index 범위, reduction 누산 순서 중 어느 계약이 막혔는지 좁힌다. **mask**는 참여시키지 않을 위치를 표시하는 값, **gather**는 인덱스로 원소를 골라오는 연산, **reduction**은 여러 원소를 합·최댓값 같은 더 작은 결과로 줄이는 연산이다. 이들은 같은 입력 shape에서도 값의 해석과 계산 순서를 바꿀 수 있다. 작은 **fixture**(실패를 반복 재현할 수 있게 고정한 함수·입력·기대 결과)가 통과하면 실제 가중치가 있는 block, 마지막으로 전체 모델을 검사한다. 이 순서는 FuryNo5의 공통성 목표를 유지하면서 장애 원인을 작게 만드는 개발 권장 순서다.
 
 ## 8. FHA가 자동화하는 것과 사람·LLM이 판단할 것
 
@@ -218,22 +315,28 @@ python -m forge_fxbex.native inspect ./repacked.fxb
 | export와 feature 추출 | 코드 | 원본 위치를 가진 feature 목록 |
 | SDK 선언·기존 규칙 대조 | 코드 | 후보와 확인되지 않은 지원 경계 |
 | 반복 특징 묶기 | 코드 | 대표 fixture와 영향받는 layer |
-| 새 TCL·분해 선택 | 개발자 또는 LLM | 의미·정밀도·layout을 설명한 변경 |
+| 새 TCL·분해 선택 | 개발자 또는 LLM(Large Language Model) | 의미·정밀도·layout을 설명한 변경 |
 | CPU 컴파일 작업 | 제한된 병렬 worker | compile 결과와 재사용 identity |
 | NPU 검증 | 장치 소유권을 확보한 worker | 수치 비교, Task trace, fallback 감사 |
 | 모델 통합·배포 판단 | 결과 집계와 개발자 | 전체 모델 품질·상태·속도·재적재 |
 
 현재 FHA의 기본 방향은 공통 rule 개발의 소유권을 FuryNo5에 두고, 자신은 유지보수·통합·검증을 담당하는 것이다. 과거 모델별 adapter와 실험 파일은 호환 경로로 남아 있다. 모든 특징마다 LLM을 호출하는 방식은 비용도 커지고 이미 검증된 동작의 일관성도 해칠 수 있으므로, 미해결 의미나 실측 병목에 집중한다. [역할 전환](https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/docs/FHA_ROLE_TRANSITION.md)
 
-자동화 도구의 실제 진입점 예는 다음과 같다. `my_adapter:representative_component`는 사용자가 작성한 신뢰 가능한 factory이며 `(module, args, kwargs)`를 반환해야 한다. 이 이름은 저장소에 이미 존재하는 모델이 아니라 **자신의 factory를 넣을 자리**다.
+자동화 도구에는 “어떤 모델을 어떤 입력으로 만들까?”를 알려 줄 함수가 필요하다. **factory**는 호출될 때 그 객체를 만들어 반환하는 함수이며, 여기서는 `(module, args, kwargs)`를 반환한다. `args`는 위치 인자 tuple, `kwargs`는 이름 있는 인자 사전이다. 도구가 나중에 `module(*args, **kwargs)`와 같은 호출을 구성할 수 있도록 전달한다.
+
+아래 명령의 `my_adapter:representative_component`는 `my_adapter.py` 파일의 `representative_component()` 함수를 가리킨다. 저장소에 이미 있는 모델 이름이 아니므로 사용자가 자신의 원본 모델·입력 준비 코드를 이 함수에 넣어야 한다. 앞 절의 Tiny 모델이라면 `module`은 그 Sequential, `args`는 `(x,)`, `kwargs`는 빈 사전 `{}`에 대응한다. 여기서는 명령의 입력 계약을 설명하며 임의 HF 모델을 불러오는 factory 구현을 생략했다.
 
 ```bash
-PYTHONPATH=. python tools/port_model.py   --model my-model --factory my_adapter:representative_component   --output reports/my-model-001 --cpu-workers 2 --cpu-budget 8 --execute
+# 현재 디렉터리의 my_adapter.py를 import할 수 있게 하고 사용자가 작성한 factory를 고른다.
+# 보고서 경로, CPU worker 수 2, CPU thread 예산 8을 지정한다. --execute는 실제 작업 시작이다.
+PYTHONPATH=. python tools/port_model.py \
+  --model my-model --factory my_adapter:representative_component \
+  --output reports/my-model-001 --cpu-workers 2 --cpu-budget 8 --execute
 
-PYTHONPATH=. python tools/porting_queue.py status
+PYTHONPATH=. python tools/porting_queue.py status  # 저장된 작업 대기열 상태를 읽는다.
 ```
 
-`--execute`는 실제 컴파일·검증 작업을 시작한다. CPU budget은 CPU thread 배분이며 RAM 보증이 아니다. NPU 작업을 여러 CPU compile worker와 같은 방식으로 동시에 실행하면 trace와 메모리 사용이 섞이므로, 현재 FHA는 공유 장치 잠금을 이용해 검증을 직렬화한다. PE(Processing Element) 8개를 fusion한다고 독립 NPU 8개가 되는 것은 아니다. [명령과 자원 계약](https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/docs/AUTOMATED_PORTING.md)
+`--execute`는 실제 컴파일·검증 작업을 시작한다. CPU budget은 CPU thread 배분이며 RAM 보증이 아니다. NPU 작업을 여러 CPU compile worker와 같은 방식으로 동시에 실행하면 trace와 메모리 사용이 섞이므로, 현재 FHA는 공유 장치 잠금을 이용해 검증을 직렬화한다. PE(Processing Element, 장치의 처리 단위) 8개를 fusion(장치 실행 단위로 결합)한다고 독립 NPU 8개가 되는 것은 아니다. [명령과 자원 계약](https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/docs/AUTOMATED_PORTING.md)
 
 ### 포팅 skill은 코드 경로를 고르는 절차다
 
@@ -243,7 +346,7 @@ skill은 **FuryNo5가 패키지와 실행 계약을 만들고, FHA가 준비·�
 
 ## 9. 완료의 정의를 보고서에 남긴다
 
-정적 모델에서는 입출력 변경, 반복 호출, 새 프로세스 재적재가 핵심이다. 상태 모델에서는 두 요청의 상태가 섞이지 않는지, reset이 원래 의미를 복구하는지, prefill과 decode가 같은 KV 계약을 쓰는지까지 필요하다. 입력 길이 하나가 통과했다고 모델 configuration의 전체 문맥 길이가 검증된 것은 아니다. [요청 상태 처리](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py) · [FHA native 전환 경계](https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/docs/NATIVE_FXB_TRANSITION.md)
+정적 모델에서는 입출력 변경, 반복 호출, 새 프로세스 재적재가 핵심이다. **상태 모델**은 이전 호출에서 만든 값을 다음 호출에 다시 사용하는 모델이다. 언어 모델의 KV(Key–Value) cache는 앞 토큰의 attention용 key·value tensor를 보관하는 예다. 이런 모델에서는 두 요청의 상태가 섞이지 않는지, reset이 원래 의미를 복구하는지, prefill(입력 토큰들을 처음 처리하는 단계)과 decode(다음 토큰을 순차 생성하는 단계)가 같은 상태 규격을 쓰는지까지 필요하다. 입력 길이 하나가 통과했다고 모델 configuration의 전체 문맥 길이가 검증된 것은 아니다. [요청 상태 처리](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py) · [FHA native 전환 경계](https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/docs/NATIVE_FXB_TRANSITION.md)
 
 보고서에는 다음을 별도로 기록한다.
 
@@ -262,13 +365,14 @@ FHA가 이 기록을 자동으로 모으는 목적은 실패를 감추는 데 �
 
 FHA에는 `forge_fxbex.workflow.finish_export()`라는 공통 완료 함수가 있다. 게시를 요청하면 `publish.py`가 HF에 파일을 올리고, `furyawesome.py:sync_catalog()`가 공개 메타데이터를 카탈로그에 반영한다. 후자는 FuryAwesome의 `scripts/catalog_store.py`를 검토된 commit에 고정해 불러온다. 분류 원본과 README·CLI·웹 인덱스를 하나의 GitHub commit으로 갱신하므로 목록들을 따로 편집할 필요가 없다. [완료 함수](https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/forge_fxbex/workflow.py) · [카탈로그 연결 코드](https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/forge_fxbex/furyawesome.py#L206-L239)
 
-`sync_catalog()`가 분류 카탈로그 경로를 선택하는 핵심은 다음과 같다. `_categorized_changes()`는 공유 카탈로그 함수의 `changes_for()`를 호출하고, 뒤의 `_commit()`이 실제 GitHub 변경을 반영한다. 이 코드는 컴파일이나 추론을 호출하지 않는다. [실제 호출 연결](https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/forge_fxbex/furyawesome.py#L215-L239)
+`sync_catalog()`가 분류 카탈로그 경로를 선택하는 핵심을 **설명 주석을 추가한 발췌**로 보자. `payload`는 모델 이름·배포 파일 URL·버전·검증 범위 등을 담은 게시 메타데이터 사전이다. `_snapshot()`은 현재 원격 카탈로그의 파일 목록과 commit 정보를 읽는다. 즉 입력은 모델 tensor가 아니라 목록의 한 행에 들어갈 정보다. `_categorized_changes()`는 공유 카탈로그 함수의 `changes_for()`를 호출하고, 뒤의 `_commit()`이 실제 GitHub 변경을 반영한다. 이 코드는 컴파일이나 추론을 호출하지 않는다. [실제 호출 연결](https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/forge_fxbex/furyawesome.py#L215-L239)
 
 ```python
-# forge_fxbex/furyawesome.py: sync_catalog()의 분류 카탈로그 분기
-path, new = record(payload)
-root, branch, head, tree, files = _snapshot()
+# forge_fxbex/furyawesome.py: sync_catalog() 함수 내부의 분류 카탈로그 분기
+path, new = record(payload)  # 게시 메타데이터를 검증·정규화해 경로와 새 항목을 만든다.
+root, branch, head, tree, files = _snapshot()  # 현재 카탈로그의 파일과 버전 정보를 읽는다.
 if "place-catalog.json" in files or any(p.startswith("model-catalog/") for p in files):
+    # 분류 원본과 README·CLI·웹 인덱스의 변경 내용을 한 묶음으로 계산한다.
     changes = _categorized_changes(root, files, new, path)
 ```
 
@@ -287,10 +391,11 @@ if "place-catalog.json" in files or any(p.startswith("model-catalog/") for p in 
 다음은 앞 절의 Tiny 패키지가 아니라 **이미 새 프로세스에서 검증한 기존 형식 `verified-model.fxbex`**를 위한 예다. 첫 명령은 로컬 완료만 명시한다. 두 번째는 게시 메타데이터 초안을 만들며 업로드하지 않는다. 생성한 JSON에서 원본 HF repository·40자리 revision, 배포 버전·SDK, 원본과 패키지의 라이선스, 해당 파일 SHA-256에 연결된 검토·승인 정보를 확인한 뒤 마지막 명령을 실행한다. [CLI 분기](https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/forge_fxbex/__main__.py) · [게시 메타데이터 검증](https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/forge_fxbex/publish.py#L109-L132)
 
 ```bash
+# 검증한 기존 FXB_EX v1 파일의 로컬 완료를 기록한다. 공개 게시를 하지 않는다.
 python -m forge_fxbex finalize --source ./verified-model.fxbex --publish no
-python -m forge_fxbex publish ./verified-model.fxbex --prepare
+python -m forge_fxbex publish ./verified-model.fxbex --prepare  # 게시 메타데이터 초안만 생성
 
-# verified-model.fxbex.publish.json을 검토한 뒤 공개 게시
+# verified-model.fxbex.publish.json을 검토한 뒤 실제 공개 게시를 요청한다.
 python -m forge_fxbex publish ./verified-model.fxbex \
   --metadata ./verified-model.fxbex.publish.json
 ```
@@ -306,10 +411,11 @@ python -m forge_fxbex publish ./verified-model.fxbex \
 다음 명령은 **FuryAwesome checkout**에서 수행하는 로컬 목록 변경이다. `reviewed-publication.json`은 위 계약으로 준비한 검토 완료 메타데이터이며, 바이너리 파일이 아니다.
 
 ```bash
+# 검토한 메타데이터를 embedding 분류에 추가하고 파생 목록 파일을 함께 갱신한다.
 python scripts/catalog_store.py add ../reviewed-publication.json --category embedding
-python scripts/catalog_store.py check
-python scripts/validate_catalog.py
-git diff -- README.md model-catalog catalog.json models place-catalog.json
+python scripts/catalog_store.py check  # 분류 원본과 파생 목록의 일관성을 확인한다.
+python scripts/validate_catalog.py     # 등록 메타데이터 규칙을 검사한다. 추론은 하지 않는다.
+git diff -- README.md model-catalog catalog.json models place-catalog.json  # 로컬 변경 검토
 ```
 
 변경 내용을 함께 commit하고 관리자가 게시하거나 PR(Pull Request)로 검토받는다. 로컬 `add`만 실행하면 공개 사이트가 바뀌지 않는다. 반영된 GitHub 카탈로그는 웹에서 다시 읽으므로 모델 하나를 추가할 때마다 사이트를 재배포할 필요는 없다. FHA의 `python -m forge_fxbex.furyawesome sync ./reviewed-publication.json`은 같은 등록을 인증된 관리자의 GitHub에 직접 반영하는 구현된 경로다. 이 명령은 로컬 검사와 달리 **원격 카탈로그에 commit을 작성**한다. [수동·자동 등록 계약](https://github.com/smallstep-zzz/furyawesome/blob/c668ecbceac2bedd04c6e539c1a5509a404a464d/CONTRIBUTING.md) · [sync 진입점](https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/forge_fxbex/furyawesome.py#L293-L310)
@@ -321,6 +427,8 @@ git diff -- README.md model-catalog catalog.json models place-catalog.json
 ```json
 {"sample_contract": "passed", "inference": "not_executed"}
 ```
+
+첫 필드는 샘플 파일과 선언된 입출력 규격 검사 통과, 둘째 필드는 추론 미실행을 뜻한다. JSON에는 표준 주석 문법이 없으므로 필드의 의미를 코드 밖에서 설명했다.
 
 카탈로그·다운로드 무결성, 새 프로세스에서의 NPU 실행, 수치·과제 품질, 유용한 성능은 각각 근거를 남긴다. 이 구분이 있어야 다음 사용자가 FuryAwesome에서 모델을 찾았을 때 어디까지 재사용할 수 있는지 판단할 수 있다.
 
@@ -334,6 +442,7 @@ git diff -- README.md model-catalog catalog.json models place-catalog.json
 | 게시기의 실제 수용 범위와 완료 조건 | [publish.py](https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/forge_fxbex/publish.py), [workflow.py](https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/forge_fxbex/workflow.py), [publication_checks.py](https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/forge_fxbex/publication_checks.py) |
 | FHA에서 FuryAwesome를 갱신하는 연결 | [furyawesome.py](https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/forge_fxbex/furyawesome.py), [실행 계획 모델 등록 사례](https://github.com/smallstep-zzz/furyawesome/blob/c668ecbceac2bedd04c6e539c1a5509a404a464d/model-catalog/embedding.json) |
 | 최소 모델과 export API | [native_execution_plan.py](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/examples/native_execution_plan.py), [execution_plan.py](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/execution_plan.py) |
+| Linear·차원 변환·수치 비교 | [Linear 2.10](https://docs.pytorch.org/docs/2.10/generated/torch.nn.Linear.html), [reshape 2.10](https://docs.pytorch.org/docs/2.10/generated/torch.reshape.html), [transpose 2.10](https://docs.pytorch.org/docs/2.10/generated/torch.transpose.html), [assert_close](https://docs.pytorch.org/docs/2.10/testing.html#torch.testing.assert_close) |
 | 체크포인트 적재와 state_dict | [torch.load 2.10](https://docs.pytorch.org/docs/2.10/generated/torch.load.html), [Saving and Loading Models](https://docs.pytorch.org/tutorials/beginner/saving_loading_models.html) |
 | 공식 모델과 커스텀 Torch 분기 | [model_export.py](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/fxb_export/model_export.py) |
 | FHA의 실제 위임·CLI | [native.py](https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/forge_fxbex/native.py) |
