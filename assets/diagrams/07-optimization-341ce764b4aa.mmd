@@ -1,0 +1,7 @@
+flowchart TB
+    A["Linear → BF16 rounding"] --> B["ReLU"]
+    B --> C["다음 Linear"]
+    D["닫힌 영역으로 결합"] --> E["host 제출·중간 materialization 감소 후보"]
+    D --> F["working set·compiler 복잡도 증가 후보"]
+    E --> G["전체 모델 실측으로 선택"]
+    F --> G

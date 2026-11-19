@@ -1,0 +1,8 @@
+flowchart TB
+    A["torch.add(x, y)"] --> B["aten::add.Tensor"]
+    B --> C["Dispatcher: tensor와 thread 상태"]
+    C --> D["Autograd · Autocast 등의 처리"]
+    D --> E["backend 구현 선택"]
+    E --> F["CPU kernel"]
+    E --> G["CUDA kernel"]
+    E --> H["PrivateUse1 kernel"]

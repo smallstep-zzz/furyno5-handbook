@@ -1,4 +1,4 @@
-name: Deploy handbook
+name: Validate and deploy handbook
 on:
   push:
     branches: [main]
@@ -18,9 +18,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Validate static documentation
+        run: |
+          python3 tools/check_site.py
+          node --check assets/site.js
       - uses: actions/configure-pages@v5
+      - name: Prepare public files
+        run: |
+          mkdir dist
+          cp *.html search-index.json .nojekyll dist/
+          cp -r chapter assets examples data dist/
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: .
+          path: dist
       - id: deployment
         uses: actions/deploy-pages@v4

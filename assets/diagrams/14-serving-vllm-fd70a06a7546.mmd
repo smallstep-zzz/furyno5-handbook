@@ -1,0 +1,9 @@
+flowchart TB
+    A["HTTP 요청과 tokenizer"] --> B["vLLM scheduler"]
+    B --> C["Furiosa platform과 worker"]
+    C --> D["요청·block·sampling 변환"]
+    D --> E["furiosa-opt-engine"]
+    E --> F["컴파일된 모델 함수"]
+    F --> G["장치 런타임과 RNGD"]
+    G --> D
+    D --> H["토큰과 응답"]

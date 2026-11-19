@@ -1,0 +1,9 @@
+flowchart TB
+    H["호스트 RAM"] -->|"PCIe DMA 업로드"| B["장치 HBM"]
+    B -->|"PCIe DMA 다운로드"| H
+    B -->|"Tensor DMA"| D["온칩 DM"]
+    D -->|"Tensor DMA"| B
+    D -->|"Fetch"| T["Tensor Unit 연산"]
+    T -->|"Commit"| D
+    D -->|"작은 인덱스 이동"| P["SPM"]
+    P -->|"Tensor DMA"| D

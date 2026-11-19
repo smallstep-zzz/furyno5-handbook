@@ -1,0 +1,9 @@
+flowchart TB
+    A["CPU: 훈련 데이터 binning"] --> B["NPU: bin·target·예측 상주"]
+    B --> C["후보 비교 마스크"]
+    C --> D["gradient·Hessian·count 집계"]
+    D --> E["후보 gain 계산"]
+    E --> F["CPU: 최종 후보 선택"]
+    F --> G["NPU: 행 라우팅·예측 갱신"]
+    G --> C
+    G --> H["다음 round 또는 최종 모델"]

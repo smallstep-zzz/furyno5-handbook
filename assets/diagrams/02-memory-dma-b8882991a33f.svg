@@ -1,0 +1,79 @@
+<svg role="img" aria-label="호스트 RAM · 장치 HBM · 온칩 DM · Tensor Unit 연산 · SPM" width="308pt" height="326pt"
+ viewBox="0.00 0.00 308.30 325.80" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(14.4 311.4)">
+<title>handbook</title>
+<g id="edge1" class="edge">
+<title>H&#45;&gt;B</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M80.29,-260.79C68.08,-252.67 59.19,-242.11 65.5,-230 68.55,-224.15 72.99,-219.04 78.02,-214.64"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="79.73,-216.41 83.68,-210.13 76.68,-212.58 79.73,-216.41"/>
+<text text-anchor="middle" x="102.5" y="-233" font-family="Noto Sans CJK KR" font-size="10.00" fill="#6e5456">PCIe DMA 업로드</text>
+</g>
+<g id="edge2" class="edge">
+<title>B&#45;&gt;H</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M131.89,-210.11C135.77,-216.07 139.51,-223.02 141.5,-230 143.88,-238.33 141.43,-247 137.37,-254.64"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="135.18,-253.52 133.65,-260.78 139.37,-256.06 135.18,-253.52"/>
+<text text-anchor="middle" x="184" y="-233" font-family="Noto Sans CJK KR" font-size="10.00" fill="#6e5456">PCIe DMA 다운로드</text>
+</g>
+<g id="edge3" class="edge">
+<title>B&#45;&gt;D</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M91.47,-173.91C85.04,-168.4 79.03,-161.7 75.5,-154 71.14,-144.5 75.69,-135.54 83.23,-127.99"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="85.24,-129.48 88.85,-123 81.99,-125.81 85.24,-129.48"/>
+<text text-anchor="middle" x="103" y="-146" font-family="Noto Sans CJK KR" font-size="10.00" fill="#6e5456">Tensor DMA</text>
+</g>
+<g id="edge4" class="edge">
+<title>D&#45;&gt;B</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M127.56,-123.12C131.31,-132.19 134.4,-143.58 132.5,-154 131.72,-158.24 130.49,-162.63 129.06,-166.83"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="126.66,-166.27 126.53,-173.68 131.26,-167.96 126.66,-166.27"/>
+<text text-anchor="middle" x="161" y="-146" font-family="Noto Sans CJK KR" font-size="10.00" fill="#6e5456">Tensor DMA</text>
+</g>
+<g id="edge5" class="edge">
+<title>D&#45;&gt;T</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M82.14,-99.08C62.44,-94.36 39.69,-85.11 27.5,-67 21.96,-58.76 25.5,-49.71 31.93,-41.7"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="33.89,-43.19 36.77,-36.35 30.26,-39.9 33.89,-43.19"/>
+<text text-anchor="middle" x="40.5" y="-59" font-family="Noto Sans CJK KR" font-size="10.00" fill="#6e5456">Fetch</text>
+</g>
+<g id="edge7" class="edge">
+<title>D&#45;&gt;P</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M130.37,-86.64C136.63,-77.51 144.46,-66.13 151.5,-56 154.58,-51.57 157.88,-46.85 161.06,-42.31"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="163.27,-43.43 165.29,-36.29 159.27,-40.61 163.27,-43.43"/>
+<text text-anchor="middle" x="185.5" y="-59" font-family="Noto Sans CJK KR" font-size="10.00" fill="#6e5456">작은 인덱스 이동</text>
+</g>
+<g id="edge6" class="edge">
+<title>T&#45;&gt;D</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M66.57,-36.12C70.85,-45.6 76.77,-57.38 83.5,-67 87,-72 91.15,-76.99 95.36,-81.62"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="93.7,-83.43 100.28,-86.86 97.27,-80.08 93.7,-83.43"/>
+<text text-anchor="middle" x="102.5" y="-59" font-family="Noto Sans CJK KR" font-size="10.00" fill="#6e5456">Commit</text>
+</g>
+<g id="edge8" class="edge">
+<title>P&#45;&gt;D</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M204.51,-33.28C218.12,-42.41 230.08,-54.79 221.5,-67 207.94,-86.28 183.33,-95.57 161.56,-100.01"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="161.06,-97.61 154.62,-101.29 161.94,-102.43 161.06,-97.61"/>
+<text text-anchor="middle" x="252" y="-59" font-family="Noto Sans CJK KR" font-size="10.00" fill="#6e5456">Tensor DMA</text>
+</g>
+<g id="node1" class="node">
+<title>H</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M151.5,-297C151.5,-297 85.5,-297 85.5,-297 79.5,-297 73.5,-291 73.5,-285 73.5,-285 73.5,-273 73.5,-273 73.5,-267 79.5,-261 85.5,-261 85.5,-261 151.5,-261 151.5,-261 157.5,-261 163.5,-267 163.5,-273 163.5,-273 163.5,-285 163.5,-285 163.5,-291 157.5,-297 151.5,-297"/>
+<text text-anchor="middle" x="118.5" y="-275.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">호스트 RAM</text>
+</g>
+<g id="node2" class="node">
+<title>B</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M147,-210C147,-210 90,-210 90,-210 84,-210 78,-204 78,-198 78,-198 78,-186 78,-186 78,-180 84,-174 90,-174 90,-174 147,-174 147,-174 153,-174 159,-180 159,-186 159,-186 159,-198 159,-198 159,-204 153,-210 147,-210"/>
+<text text-anchor="middle" x="118.5" y="-188.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">장치 HBM</text>
+</g>
+<g id="node3" class="node">
+<title>D</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M142.5,-123C142.5,-123 94.5,-123 94.5,-123 88.5,-123 82.5,-117 82.5,-111 82.5,-111 82.5,-99 82.5,-99 82.5,-93 88.5,-87 94.5,-87 94.5,-87 142.5,-87 142.5,-87 148.5,-87 154.5,-93 154.5,-99 154.5,-99 154.5,-111 154.5,-111 154.5,-117 148.5,-123 142.5,-123"/>
+<text text-anchor="middle" x="118.5" y="-101.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">온칩 DM</text>
+</g>
+<g id="node4" class="node">
+<title>T</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M107,-36C107,-36 12,-36 12,-36 6,-36 0,-30 0,-24 0,-24 0,-12 0,-12 0,-6 6,0 12,0 12,0 107,0 107,0 113,0 119,-6 119,-12 119,-12 119,-24 119,-24 119,-30 113,-36 107,-36"/>
+<text text-anchor="middle" x="59.5" y="-14.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">Tensor Unit 연산</text>
+</g>
+<g id="node5" class="node">
+<title>P</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M192.5,-36C192.5,-36 162.5,-36 162.5,-36 156.5,-36 150.5,-30 150.5,-24 150.5,-24 150.5,-12 150.5,-12 150.5,-6 156.5,0 162.5,0 162.5,0 192.5,0 192.5,0 198.5,0 204.5,-6 204.5,-12 204.5,-12 204.5,-24 204.5,-24 204.5,-30 198.5,-36 192.5,-36"/>
+<text text-anchor="middle" x="177.5" y="-14.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">SPM</text>
+</g>
+</g>
+</svg>

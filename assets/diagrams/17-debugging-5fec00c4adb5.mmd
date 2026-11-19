@@ -1,0 +1,12 @@
+flowchart TB
+    A["원본 모델과 입력"] --> B["capture · binding · rule"]
+    B --> C["TCL compiler"]
+    C --> D["EDF와 ABI"]
+    D --> E["package와 reload"]
+    E --> F["NPU 실행"]
+    F --> G["수치와 상태 검증"]
+    G --> H["성능 비교"]
+    B --> I["지원 gap 재현"]
+    C --> J["recipe와 compiler log"]
+    D --> K["인수 · shape · fusion 계약"]
+    F --> L["공식 trace와 장치 오류"]

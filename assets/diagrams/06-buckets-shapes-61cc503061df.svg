@@ -1,0 +1,61 @@
+<svg role="img" aria-label="요청: 길이·배치·상태 · 실행계약 검사 · 호환되는 버킷 선택 · 패딩·마스크·바인딩 준비 · 선택한 EDF 실행 · 범위 초과 또는 불일치 처리" width="360pt" height="369pt"
+ viewBox="0.00 0.00 359.80 368.80" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(14.4 354.4)">
+<title>handbook</title>
+<g id="edge1" class="edge">
+<title>R&#45;&gt;V</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M164,-303.84C164,-294.12 164,-281.82 164,-271.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="166.45,-271.07 164,-264.07 161.55,-271.07 166.45,-271.07"/>
+</g>
+<g id="edge2" class="edge">
+<title>V&#45;&gt;B</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M144.29,-227.84C132.27,-217.38 116.8,-203.91 103.94,-192.71"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="105.5,-190.82 98.61,-188.07 102.28,-194.51 105.5,-190.82"/>
+</g>
+<g id="edge5" class="edge">
+<title>V&#45;&gt;F</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M183.71,-227.84C195.73,-217.38 211.2,-203.91 224.06,-192.71"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="225.72,-194.51 229.39,-188.07 222.5,-190.82 225.72,-194.51"/>
+</g>
+<g id="edge3" class="edge">
+<title>B&#45;&gt;P</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M79,-151.84C79,-142.12 79,-129.82 79,-119.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="81.45,-119.07 79,-112.07 76.55,-119.07 81.45,-119.07"/>
+</g>
+<g id="edge4" class="edge">
+<title>P&#45;&gt;E</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M79,-75.84C79,-66.12 79,-53.82 79,-43.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="81.45,-43.07 79,-36.07 76.55,-43.07 81.45,-43.07"/>
+</g>
+<g id="node1" class="node">
+<title>R</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M221,-340C221,-340 107,-340 107,-340 101,-340 95,-334 95,-328 95,-328 95,-316 95,-316 95,-310 101,-304 107,-304 107,-304 221,-304 221,-304 227,-304 233,-310 233,-316 233,-316 233,-328 233,-328 233,-334 227,-340 221,-340"/>
+<text text-anchor="middle" x="164" y="-318.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">요청: 길이·배치·상태</text>
+</g>
+<g id="node2" class="node">
+<title>V</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M201.5,-264C201.5,-264 126.5,-264 126.5,-264 120.5,-264 114.5,-258 114.5,-252 114.5,-252 114.5,-240 114.5,-240 114.5,-234 120.5,-228 126.5,-228 126.5,-228 201.5,-228 201.5,-228 207.5,-228 213.5,-234 213.5,-240 213.5,-240 213.5,-252 213.5,-252 213.5,-258 207.5,-264 201.5,-264"/>
+<text text-anchor="middle" x="164" y="-242.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">실행계약 검사</text>
+</g>
+<g id="node3" class="node">
+<title>B</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M129.5,-188C129.5,-188 28.5,-188 28.5,-188 22.5,-188 16.5,-182 16.5,-176 16.5,-176 16.5,-164 16.5,-164 16.5,-158 22.5,-152 28.5,-152 28.5,-152 129.5,-152 129.5,-152 135.5,-152 141.5,-158 141.5,-164 141.5,-164 141.5,-176 141.5,-176 141.5,-182 135.5,-188 129.5,-188"/>
+<text text-anchor="middle" x="79" y="-166.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">호환되는 버킷 선택</text>
+</g>
+<g id="node4" class="node">
+<title>P</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M146,-112C146,-112 12,-112 12,-112 6,-112 0,-106 0,-100 0,-100 0,-88 0,-88 0,-82 6,-76 12,-76 12,-76 146,-76 146,-76 152,-76 158,-82 158,-88 158,-88 158,-100 158,-100 158,-106 152,-112 146,-112"/>
+<text text-anchor="middle" x="79" y="-90.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">패딩·마스크·바인딩 준비</text>
+</g>
+<g id="node5" class="node">
+<title>E</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M123.5,-36C123.5,-36 34.5,-36 34.5,-36 28.5,-36 22.5,-30 22.5,-24 22.5,-24 22.5,-12 22.5,-12 22.5,-6 28.5,0 34.5,0 34.5,0 123.5,0 123.5,0 129.5,0 135.5,-6 135.5,-12 135.5,-12 135.5,-24 135.5,-24 135.5,-30 129.5,-36 123.5,-36"/>
+<text text-anchor="middle" x="79" y="-14.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">선택한 EDF 실행</text>
+</g>
+<g id="node6" class="node">
+<title>F</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M319,-188C319,-188 179,-188 179,-188 173,-188 167,-182 167,-176 167,-176 167,-164 167,-164 167,-158 173,-152 179,-152 179,-152 319,-152 319,-152 325,-152 331,-158 331,-164 331,-164 331,-176 331,-176 331,-182 325,-188 319,-188"/>
+<text text-anchor="middle" x="249" y="-166.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">범위 초과 또는 불일치 처리</text>
+</g>
+</g>
+</svg>

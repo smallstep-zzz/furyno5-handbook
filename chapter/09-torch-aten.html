@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="연산 스키마, 오버로드, 백엔드 구현을 구분하고 실제 등록 코드를 읽습니다."><meta name="theme-color" content="#fbfaf7"><title>PyTorch와 ATen 디스패처 · FuryNo5 개발 핸드북</title><link rel="icon" href="../assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="../assets/site.css"><script defer src="../assets/site.js"></script></head>
+<body data-root="../" data-chapter="09-torch-aten"><a class="skip" href="#content">본문으로 이동</a><header class="topbar"><button class="menu-toggle" type="button" aria-label="전체 목차 열기" aria-controls="sidebar" aria-expanded="false">☰</button><a class="brand" href="../index.html"><span class="brand-mark">Nº5</span>FuryNo5<small>DEVELOPER HANDBOOK</small></a><div class="top-actions"><a class="top-link" href="../sources.html">출처와 버전</a><button class="search-open" type="button" aria-label="핸드북 전체 검색"><span>전체 문서 검색</span><kbd>⌘ K</kbd></button></div></header><div class="progress" aria-hidden="true"></div><div class="mobile-shade"></div><aside class="sidebar" id="sidebar" aria-label="전체 목차"><nav><div class="nav-caption">시작하기</div><a class="nav-link"  href="../index.html"><span class="num">00</span><span>전체 지도와 읽는 방법</span></a><div class="nav-caption">I. 디바이스를 이해하기</div><a class="nav-link"  href="../chapter/01-hardware.html"><span class="num">01</span><span>RNGD · TCP · PE</span></a><a class="nav-link"  href="../chapter/02-memory-dma.html"><span class="num">02</span><span>메모리 · DMA · 배치</span></a><a class="nav-link"  href="../chapter/03-driver-runtime.html"><span class="num">03</span><span>드라이버와 공식 런타임</span></a><div class="nav-caption">II. 프로그램을 만들고 실행하기</div><a class="nav-link"  href="../chapter/04-tcl-edf.html"><span class="num">04</span><span>TCL 작성 · 컴파일 · 실행</span></a><a class="nav-link"  href="../chapter/05-graphs-fallback.html"><span class="num">05</span><span>실행그래프 · 오류 · 폴백</span></a><a class="nav-link"  href="../chapter/06-buckets-shapes.html"><span class="num">06</span><span>Shape · 버킷 · 컴파일 비용</span></a><a class="nav-link"  href="../chapter/07-optimization.html"><span class="num">07</span><span>최적화의 축과 우선순위</span></a><a class="nav-link"  href="../chapter/08-eisa-visa.html"><span class="num">08</span><span>eISA · vISA · furiosa-opt</span></a><div class="nav-caption">III. FuryNo5를 해부하기</div><a class="nav-link active" aria-current="page" href="../chapter/09-torch-aten.html"><span class="num">09</span><span>PyTorch · ATen · 등록</span></a><a class="nav-link"  href="../chapter/10-furyno5-architecture.html"><span class="num">10</span><span>FuryNo5 구조와 지원 범위</span></a><a class="nav-link"  href="../chapter/11-furyno5-compiler.html"><span class="num">11</span><span>FuryNo5 컴파일과 캐시</span></a><div class="nav-caption">IV. 모델 포팅과 서빙</div><a class="nav-link"  href="../chapter/12-fxbx.html"><span class="num">12</span><span>fxbX 포맷과 실행계획</span></a><a class="nav-link"  href="../chapter/13-porting-fha.html"><span class="num">13</span><span>모델 포팅 · FHA 자동화</span></a><a class="nav-link"  href="../chapter/14-serving-vllm.html"><span class="num">14</span><span>vLLM · 서빙 브리지</span></a><a class="nav-link"  href="../chapter/15-multi-npu.html"><span class="num">15</span><span>PE · 여러 카드 · 여러 서버</span></a><div class="nav-caption">V. 검증과 다음 개발</div><a class="nav-link"  href="../chapter/16-furyboost.html"><span class="num">16</span><span>FuryBoost 실측과 남은 과제</span></a><a class="nav-link"  href="../chapter/17-debugging.html"><span class="num">17</span><span>측정 · 추적 · 실패 재현</span></a><div class="nav-caption">참고와 검증</div><a class="nav-link"  href="../glossary.html"><span class="num">·</span><span>약어와 용어 사전</span></a><a class="nav-link"  href="../sources.html"><span class="num">·</span><span>출처 · 버전 · 접근 범위</span></a><a class="nav-link"  href="../review.html"><span class="num">·</span><span>검토 기록과 미해결 질문</span></a></nav><div class="side-foot">비공식 개발 핸드북 · 2026.11.19<br>공식 SDK와 프로젝트 구현을 구분합니다.<br><a href="https://github.com/smallstep-zzz/furyno5-handbook">원고와 변경 이력 ↗</a></div></aside><div class="shell"><main class="page" id="content"><div class="eyebrow">III. FuryNo5를 해부하기 / CHAPTER 09</div><h1>PyTorch와 ATen 디스패처</h1><p class="dek">연산 스키마, 오버로드, 백엔드 구현을 구분하고 실제 등록 코드를 읽습니다.</p><div class="page-meta"><span>검토 2026.11.19</span><span>SDK 2026.4 계열 / 버전별 표기</span><span class="readtime">약 10분</span><span><a href="https://github.com/smallstep-zzz/furyno5-handbook/blob/main/content/09-torch-aten.md">원고</a></span></div><details class="mobile-toc"><summary>이 장의 목차</summary><div><a class="" href="#왜-aten이-만들어졌는가">왜 ATen이 만들어졌는가</a><a class="" href="#다섯-단어를-구분하자">다섯 단어를 구분하자</a><a class="" href="#eager-호출에서는-어떤-일이-일어나는가">eager 호출에서는 어떤 일이 일어나는가</a><a class="" href="#장치별-구현은-어떻게-등록하는가">장치별 구현은 어떻게 등록하는가</a><a class="" href="#cpu-폴백은-누가-결정하는가">CPU 폴백은 누가 결정하는가</a><a class="" href="#torch-compile-backend와-dispatcher-backend는-다르다">torch.compile backend와 Dispatcher backend는 다르다</a><a class="" href="#aten은-몇-개이며-어떤-종류가-있는가">ATen은 몇 개이며 어떤 종류가 있는가</a><a class="" href="#설치본에서-재현하는-방법">설치본에서 재현하는 방법</a><a class="" href="#출처">출처</a></div></details><noscript><p class="noscript">본문과 그림은 JavaScript 없이 읽을 수 있습니다. 검색과 조절 실험에는 JavaScript가 필요합니다.</p></noscript><article class="article"><p><strong>ATen(A Tensor Library)은 PyTorch의 텐서 연산 계층이고, Dispatcher는 지금 호출한 연산의 실행 구현을 고르는 계층이다.</strong> ATen은 RNGD의 명령어 집합이 아니다. 같은 <code>aten::mm</code>도 CPU(Central Processing Unit), GPU(Graphics Processing Unit), NPU(Neural Processing Unit)에서 전혀 다른 코드로 실행될 수 있다. 이 구분이 있어야 “ATen을 지원한다”는 말이 무엇을 보장하는지 정확하게 판단할 수 있다. <a href="https://docs.pytorch.org/cppdocs/api/aten/index.html">PyTorch ATen</a></p>
+<blockquote>
+<p><strong>이 장의 기준</strong><br>인터페이스 설명은 PyTorch 공식 자료, 숫자는 PyTorch <strong>v2.10.0</strong> 소스와 FuryNo5가 보존한 <strong>Torch 2.10.0+cpu / furiosa-torch 2026.4.0</strong> 스냅샷을 사용한다. 최신 설치본의 숫자는 아래 스크립트로 다시 센다. 문서 작성 환경에는 Torch와 NPU가 없으므로 여기의 예제를 RNGD에서 새로 실행했다고 주장하지 않는다.</p>
+</blockquote>
+<h2 id="왜-aten이-만들어졌는가"><a class="heading-anchor" href="#왜-aten이-만들어졌는가">왜 ATen이 만들어졌는가</a></h2>
+<p>초기 Torch 계열에는 CPU용 TH(TorcH), CUDA(Compute Unified Device Architecture)용 THC(TorcH Cuda) 등 여러 저수준 라이브러리가 있었다. PyTorch 팀은 내부 구조를 재설계하면서 Python API(Application Programming Interface)와 닮은 C++ 텐서 API를 제공하는 ATen을 만들었다. 2018년 회고는 ATen을 독립 사용도 가능한 C++11 라이브러리로 설명한다. 따라서 “여러 하드웨어가 동일한 연산 의미에 대응할 수 있게 한다”는 설명은 오늘날의 역할에 맞지만, <strong>새 하드웨어용 명령어 표만 만들기 위해 탄생했다는 역사 설명은 지나친 단순화</strong>다. <a href="https://github.com/zdevito/ATen/blob/master/aten/src/README.md">초기 저수준 라이브러리 설명</a> · <a href="https://pytorch.org/blog/a-year-in/">PyTorch 팀의 2018년 회고</a></p>
+<p>지금은 <code>native_functions.yaml</code>에 연산의 스키마와 관련 정보가 들어가고, 코드 생성기가 C++ 선언·Python 바인딩·dispatch 연결 코드를 만든다. 모델 개발자는 <code>torch.add</code>를 사용하고, 장치 개발자는 그 연산의 의미를 지키는 backend 구현을 연결한다. 등록 경계가 있으므로 Python 함수마다 하드웨어별 분기를 넣지 않아도 된다. <a href="https://docs.pytorch.org/devlogs/dispatcher/2026-04-16-how-does-the-dispatcher-work/">Dispatcher 내부 구조</a></p>
+<h2 id="다섯-단어를-구분하자"><a class="heading-anchor" href="#다섯-단어를-구분하자">다섯 단어를 구분하자</a></h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>용어</th>
+<th>예</th>
+<th>실제 의미</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Python 함수</td>
+<td><code>torch.add(x, y)</code></td>
+<td>사용자가 호출하는 표면 API</td>
+</tr>
+<tr>
+<td>연산 묶음, operator packet</td>
+<td><code>aten::add</code></td>
+<td>같은 기본 이름에 속한 overload 집합</td>
+</tr>
+<tr>
+<td>overload와 schema</td>
+<td><code>aten::add.Tensor</code></td>
+<td>인수·반환·변경/alias 계약까지 정한 호출 형태</td>
+</tr>
+<tr>
+<td>backend kernel</td>
+<td>CPU add, PrivateUse1 add</td>
+<td>해당 dispatch key에서 연산을 수행하는 구현</td>
+</tr>
+<tr>
+<td>장치 명령·EDF</td>
+<td>RNGD 실행 프로그램</td>
+<td>컴파일 후 장치가 처리하는 수준의 산출물</td>
+</tr>
+</tbody></table>
+</div><p>스키마의 예인 <code>add.Tensor(Tensor self, Tensor other, *, Scalar alpha=1) -&gt; Tensor</code>는 텐서끼리 더하는 계약이다. <code>add.Scalar</code>는 두 번째 인수가 스칼라인 다른 overload다. <code>add.out</code>은 결과 버퍼를 받는 형태이므로 메모리 변경 계약도 다르다. <strong>이들을 하나로 세는 표와 별개로 세는 표의 개수를 비교하면 안 된다.</strong> <a href="https://github.com/pytorch/pytorch/blob/449b1768410104d3ed79d3bcfe4ba1d65c7f22c0/aten/src/ATen/native/native_functions.yaml">고정된 native_functions.yaml</a></p>
+<h2 id="eager-호출에서는-어떤-일이-일어나는가"><a class="heading-anchor" href="#eager-호출에서는-어떤-일이-일어나는가">eager 호출에서는 어떤 일이 일어나는가</a></h2>
+<figure class="diagram"><img src="../assets/diagrams/09-torch-aten-afd250792aad.svg" alt="PyTorch와 ATen 디스패처 · 도식 1" loading="lazy"><figcaption>도식 1 · PyTorch와 ATen 디스패처 — 설명을 위해 단순화한 관계도. 실제 호출 조건과 근거는 본문을 함께 읽으세요.</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
+    A[&quot;torch.add(x, y)&quot;] --&gt; B[&quot;aten::add.Tensor&quot;]
+    B --&gt; C[&quot;Dispatcher: tensor와 thread 상태&quot;]
+    C --&gt; D[&quot;Autograd · Autocast 등의 처리&quot;]
+    D --&gt; E[&quot;backend 구현 선택&quot;]
+    E --&gt; F[&quot;CPU kernel&quot;]
+    E --&gt; G[&quot;CUDA kernel&quot;]
+    E --&gt; H[&quot;PrivateUse1 kernel&quot;]</pre></details></figure><p>Dispatcher는 입력 텐서의 dispatch key와 현재 스레드의 상태를 함께 보고 실행할 구현을 고른다. 자동 미분·혼합 정밀도·배치 변환 같은 처리가 먼저 개입한 뒤, 다음 구현으로 다시 dispatch할 수도 있다. CPU 텐서를 주었다면 등록된 CPU 구현으로 가는 것이 정상이다. NPU 장치를 뜻하는 key를 가진 텐서라면 해당 장치 구현을 찾는다. <a href="https://docs.pytorch.org/docs/stable/notes/extending.html">PyTorch 확장 노트</a></p>
+<p><strong>Dispatcher가 호출될 때마다 TCL(Tensor Contraction Language)을 생성하거나 컴파일하는 것은 아니다.</strong> Dispatcher의 역할은 구현 선택이다. 선택된 backend가 이미 준비된 커널을 실행할지, 캐시를 확인할지, 최초 호출에 컴파일할지는 backend 정책이다. FuryNo5의 명시적 준비 경로는 준비 함수에서 컴파일하고, 실행 함수에서는 준비된 callable을 사용한다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/aten_runtime.py#L210-L276">FuryNo5 aten_runtime.py</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
+<p>또한 Python 함수 한 개와 ATen 한 개, ATen 한 개와 EDF 한 개는 일대일 관계가 아니다. 복합 함수는 여러 연산으로 분해될 수 있고, compiler는 여러 연산을 한 실행 영역으로 합칠 수 있다. <code>view</code>처럼 조건에 따라 메타데이터만 바뀌는 연산도 있다. graph capture와 backend lowering을 분리해서 읽어야 한다. <a href="https://docs.pytorch.org/docs/stable/user_guide/torch_compiler/export.html">PyTorch export</a></p>
+<h2 id="장치별-구현은-어떻게-등록하는가"><a class="heading-anchor" href="#장치별-구현은-어떻게-등록하는가">장치별 구현은 어떻게 등록하는가</a></h2>
+<p>C++ backend의 등록 모양은 다음과 같다. <strong>구조를 보여주는 발췌이며, 이것만으로 새로운 장치를 완성하는 코드는 아니다.</strong> 실제 backend에는 텐서 할당, 복사, 장치 guard, 스트림, 수명 처리 등도 필요하다.</p>
+<div class="codebox"><div class="codebar"><span>cpp</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-cpp">// backend_add는 별도로 구현해야 하는 실제 장치 함수다.
+TORCH_LIBRARY_IMPL(aten, PrivateUse1, m) {
+    m.impl(&quot;add.Tensor&quot;, TORCH_FN(backend_add));
+}
+</code></pre></div>
+<p><code>aten</code>은 기존 연산 namespace, <code>PrivateUse1</code>은 외부 장치 backend용 dispatch key, <code>add.Tensor</code>는 연결 대상이다. 새로운 연산 정의와 기존 연산의 구현 등록은 다르다. PyTorch는 <code>TORCH_LIBRARY</code>와 <code>TORCH_LIBRARY_IMPL</code>, Python의 <code>torch.library</code>를 통해 이 경계를 제공한다. <a href="https://docs.pytorch.org/cppdocs/api/library/registration.html">C++ 등록 API</a> · <a href="https://docs.pytorch.org/tutorials/advanced/privateuseone.html">새 backend 통합</a></p>
+<p>다음은 NPU 없이도 등록과 호출의 차이를 볼 수 있는 <strong>CPU 교육용 예제</strong>다. 기존 <code>aten::add</code>를 바꾸지 않고, 새 namespace에 연산을 만든다.</p>
+<div class="codebox"><div class="codebar"><span>python</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-python">import torch
+
+lib = torch.library.Library(&quot;handbook_demo&quot;, &quot;DEF&quot;)
+lib.define(&quot;plus_one(Tensor x) -&gt; Tensor&quot;)
+
+def cpu_impl(x):
+    return x + 1
+
+def meta_impl(x):
+    # 실제 값 계산 없이 출력의 shape/dtype을 알려준다.
+    return torch.empty_like(x)
+
+lib.impl(&quot;plus_one&quot;, cpu_impl, &quot;CPU&quot;)
+lib.impl(&quot;plus_one&quot;, meta_impl, &quot;Meta&quot;)
+
+x = torch.tensor([2.0, 4.0])
+print(torch.ops.handbook_demo.plus_one(x))  # tensor([3., 5.])
+</code></pre></div>
+<p><code>Meta</code> 구현은 출력 메타데이터를 전달하기 위한 것이다. Meta가 있다고 NPU 계산이 구현된 것은 아니다. custom operator를 <code>torch.compile</code>·export와 함께 쓰려면 실제 연산과 FakeTensor/Meta 결과의 shape·dtype·stride 계약도 맞아야 한다. 장치 구현 함수 안에서 같은 장치의 동일 연산을 그대로 다시 호출하면 재귀가 생길 수 있으므로, 실제 커널 호출 또는 올바른 redispatch 설계가 필요하다. <a href="https://docs.pytorch.org/docs/2.10/library.html">torch.library 2.10</a></p>
+<h2 id="cpu-폴백은-누가-결정하는가"><a class="heading-anchor" href="#cpu-폴백은-누가-결정하는가">CPU 폴백은 누가 결정하는가</a></h2>
+<p>PrivateUse1 backend는 미구현 연산을 CPU로 보내는 fallback 함수를 <strong>등록할 수 있다</strong>. 공식 튜토리얼도 fallback 등록 코드를 별도로 제시한다. 이것은 PyTorch의 확장 수단이지, 모든 NPU가 EDF를 찾지 못하면 자동 CPU 실행을 한다는 보장이 아니다. fallback이 없거나 backend 정책이 오류를 선택하면 예외가 발생할 수 있다. <a href="https://docs.pytorch.org/tutorials/advanced/privateuseone.html">PrivateUse1 fallback</a></p>
+<p>FuryNo5의 공개 <code>optimize(..., fallback=&quot;error&quot;)</code>는 <code>&quot;error&quot;</code> 이외 값을 거부한다. 제한된 준비 경로는 <code>furiosa.torch.config.set_cpu_fallback(False)</code>도 설정한다. 선택적 CPU 기준 구현을 등록하는 <code>allow_cpu_reference</code>는 명시적 비교 기능이며, NPU에서 실패한 실행을 자동으로 CPU에 보내는 규칙이 아니다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tclmachine/__init__.py#L18-L23">공개 진입점</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span> · <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/aten_runtime.py#L59-L119">준비된 연산 등록</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
+<h2 id="torch-compile-backend와-dispatcher-backend는-다르다"><a class="heading-anchor" href="#torch-compile-backend와-dispatcher-backend는-다르다">torch.compile backend와 Dispatcher backend는 다르다</a></h2>
+<figure class="diagram"><img src="../assets/diagrams/09-torch-aten-6b61cc0bf954.svg" alt="PyTorch와 ATen 디스패처 · 도식 2" loading="lazy"><figcaption>도식 2 · PyTorch와 ATen 디스패처 — 설명을 위해 단순화한 관계도. 실제 호출 조건과 근거는 본문을 함께 읽으세요.</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
+    A[&quot;PyTorch 모델&quot;] --&gt; B[&quot;eager 실행&quot;]
+    A --&gt; C[&quot;torch.compile 또는 torch.export&quot;]
+    B --&gt; D[&quot;연산별 Dispatcher&quot;]
+    C --&gt; E[&quot;FX graph와 ATen nodes&quot;]
+    E --&gt; F[&quot;graph backend 또는 FuryNo5 producer&quot;]
+    F --&gt; G[&quot;융합 · 분할 · TCL · EDF&quot;]
+    G --&gt; H[&quot;준비된 실행 계획&quot;]
+    D --&gt; I[&quot;등록된 backend 구현&quot;]
+    H --&gt; I</pre></details></figure><p><code>torch.compile</code>의 custom backend는 graph와 example input을 받아 실행 callable을 반환한다. AOTAutograd(Ahead-of-Time Autograd)를 사용하는 경로는 더 작은 함수형 ATen 집합을 backend 경계로 사용할 수 있다. 반면 <code>torch.library</code> 등록은 특정 연산과 dispatch key의 구현을 연결한다. 둘은 함께 쓸 수 있지만, “torch.compile backend 등록 = 모든 ATen의 NPU 구현 등록”은 아니다. <a href="https://docs.pytorch.org/docs/main/user_guide/torch_compiler/torch.compiler_custom_backends.html">Custom Backends</a></p>
+<p>FuryNo5도 두 경로를 구분한다. <code>optimize</code>는 제한된 연산을 준비한 후 복사한 FX graph를 custom op로 바꾼다. <code>export_model</code>은 더 넓은 의미 규칙과 실행 계획 생성기를 사용해 파일을 생산한다. 두 함수의 지원 범위가 같다고 추정하지 않는다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/aten_runtime.py">aten_runtime.py</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span> · <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/execution_plan.py">execution_plan.py</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
+<h2 id="aten은-몇-개이며-어떤-종류가-있는가"><a class="heading-anchor" href="#aten은-몇-개이며-어떤-종류가-있는가">ATen은 몇 개이며 어떤 종류가 있는가</a></h2>
+<p>이번 조사에서 <strong>PyTorch v2.10.0의 native_functions.yaml에 직접 선언된 schema는 2,666개, 기본 연산명은 1,542개</strong>였다. 정규식 <code>^- func: (.+)$</code>로 선언을 수집하고, 괄호 앞 이름의 첫 점 이후를 overload로 분리해 집계했다. 이 숫자는 YAML의 명시적 선언 수다. 빌드 시 생성되는 variant, 설치된 확장, 등록 상태를 포함한 런타임 목록과 같다는 주장이 아니다. <a href="https://github.com/pytorch/pytorch/blob/449b1768410104d3ed79d3bcfe4ba1d65c7f22c0/aten/src/ATen/native/native_functions.yaml">집계한 파일·고정 commit</a></p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>집계 대상</th>
+<th>기준</th>
+<th align="right">수</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>native YAML의 기본 연산명</td>
+<td>PyTorch v2.10.0 고정 소스</td>
+<td align="right">1,542</td>
+</tr>
+<tr>
+<td>native YAML의 overload 포함 선언</td>
+<td>같은 파일의 명시적 <code>func</code> 항목</td>
+<td align="right">2,666</td>
+</tr>
+<tr>
+<td>Core ATen 기본 연산명</td>
+<td>보존된 Torch 2.10.0+cpu 설치본</td>
+<td align="right">163</td>
+</tr>
+<tr>
+<td>Core ATen overload</td>
+<td>같은 설치본의 <code>torch.Tag.core</code></td>
+<td align="right">192</td>
+</tr>
+<tr>
+<td>그중 FuryNo5 추론 검토 대상</td>
+<td>역전파 전용 7개 제외</td>
+<td align="right">185</td>
+</tr>
+</tbody></table>
+</div><p>Core ATen은 다른 연산을 구성하는 데 사용할 수 있는 더 작은 함수형 집합이다. 전체 ATen과 동일하지 않으며, 공식 문서도 계속 변하는 집합이라고 설명한다. FuryNo5의 192개 숫자는 저장된 목록과 해시가 있는 특정 시점의 관측이다. <a href="https://docs.pytorch.org/docs/main/user_guide/torch_compiler/torch.compiler_ir.html">Core IR(Intermediate Representation)</a> · <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/validation/core-aten-20261110/baseline.json">고정 baseline.json</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>의미 계열</th>
+<th>대표 연산</th>
+<th>포팅에서 확인할 계약</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>텐서 생성·복사</td>
+<td>empty, zeros, clone, copy</td>
+<td>초기화·소유권·장치 간 이동</td>
+</tr>
+<tr>
+<td>모양·배치</td>
+<td>view, reshape, permute, expand</td>
+<td>stride, alias, 실제 복사 필요 여부</td>
+</tr>
+<tr>
+<td>원소별 계산</td>
+<td>add, mul, relu, exp</td>
+<td>broadcasting, dtype promotion, 특수값</td>
+</tr>
+<tr>
+<td>축약</td>
+<td>sum, mean, amax</td>
+<td>reduction 축, 누산 dtype, 순서</td>
+</tr>
+<tr>
+<td>수축·선형대수</td>
+<td>mm, bmm, matmul</td>
+<td>batch 축과 축약 축, weight layout</td>
+</tr>
+<tr>
+<td>인덱싱·갱신</td>
+<td>gather, scatter, index_select</td>
+<td>인덱스 범위·중복·변경 의미</td>
+</tr>
+<tr>
+<td>신경망 복합 연산</td>
+<td>convolution, norm, attention</td>
+<td>분해 전 의미·정밀도 경계</td>
+</tr>
+<tr>
+<td>특수 영역</td>
+<td>sparse, FFT, linalg, random, backward</td>
+<td>저장형식·결정성·추론 범위</td>
+</tr>
+</tbody></table>
+</div><p>이 표는 학습을 위한 의미 분류이며 PyTorch의 공식 상호배타적 분류표는 아니다. 모든 계열이 RNGD에 구현되었다는 뜻도 아니다.</p>
+<h2 id="설치본에서-재현하는-방법"><a class="heading-anchor" href="#설치본에서-재현하는-방법">설치본에서 재현하는 방법</a></h2>
+<p><a href="../examples/aten_inventory.py">aten_inventory.py</a>는 등록된 ATen overload, 기본 이름, schema, Core 태그를 서로 구분해 JSON(JavaScript Object Notation)에 저장한다. <code>torch._C</code>와 overload의 내부 속성을 사용하는 <strong>진단 도구</strong>이므로 Torch 업그레이드 후 다시 확인한다.</p>
+<div class="codebox"><div class="codebar"><span>bash</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-bash">python examples/aten_inventory.py --out aten-inventory.json
+
+# 실제 backend를 import한 뒤의 목록을 별도로 관측하려면:
+python examples/aten_inventory.py --import-module furiosa.torch \
+  --out aten-inventory-with-furiosa.json
+</code></pre></div>
+<p>FuryNo5 안에는 Core 집합에 특화된 동일 목적의 진입점도 있다.</p>
+<div class="codebox"><div class="codebar"><span>bash</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-bash">python -m tplmachine.research.core_aten snapshot --out core-baseline.json
+</code></pre></div>
+<p>실제 모델이 사용하는 목록은 전체 ATen 수와 별도로 뽑는다. 작은 모델에서 다음 코드를 적용하면 graph target을 직접 볼 수 있다.</p>
+<div class="codebox"><div class="codebar"><span>python</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-python">import torch
+model = torch.nn.Linear(8, 4).eval().requires_grad_(False)
+ep = torch.export.export(model, (torch.randn(2, 8),), strict=False)
+for node in ep.graph.nodes:
+    if node.op == &quot;call_function&quot;:
+        print(node.name, node.target, node.meta.get(&quot;val&quot;))
+</code></pre></div>
+<p>모델 수, 관측 node 수, 지원 overload 수, 검증한 shape/dtype 수를 각각 기록하면 과장된 “지원율”을 피할 수 있다. 다음 장은 이 호출 경계를 FuryNo5 코드의 실제 파일에 연결한다.</p>
+<h2 id="출처"><a class="heading-anchor" href="#출처">출처</a></h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>자료</th>
+<th>이 장에서 확인한 내용</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a href="https://docs.pytorch.org/cppdocs/api/aten/index.html">ATen C++ 설명</a></td>
+<td>정식 명칭과 텐서 라이브러리 역할</td>
+</tr>
+<tr>
+<td><a href="https://pytorch.org/blog/a-year-in/">2018년 PyTorch 회고</a></td>
+<td>ATen 내부 재설계 역사</td>
+</tr>
+<tr>
+<td><a href="https://github.com/pytorch/pytorch/blob/449b1768410104d3ed79d3bcfe4ba1d65c7f22c0/aten/src/ATen/native/native_functions.yaml">PyTorch v2.10.0 선언 파일</a></td>
+<td>1,542 이름·2,666 명시적 schema 재집계</td>
+</tr>
+<tr>
+<td><a href="https://docs.pytorch.org/devlogs/dispatcher/2026-04-16-how-does-the-dispatcher-work/">Dispatcher DevLog</a></td>
+<td>key·코드 생성·실행 구현 선택</td>
+</tr>
+<tr>
+<td><a href="https://docs.pytorch.org/tutorials/advanced/privateuseone.html">PrivateUse1</a></td>
+<td>장치 구현과 fallback의 명시적 등록</td>
+</tr>
+<tr>
+<td><a href="https://docs.pytorch.org/docs/2.10/library.html">torch.library 2.10</a></td>
+<td>Python 등록·Meta/FakeTensor 계약</td>
+</tr>
+<tr>
+<td><a href="https://docs.pytorch.org/docs/main/user_guide/torch_compiler/torch.compiler_ir.html">Core ATen IR</a></td>
+<td>축소된 함수형 집합</td>
+</tr>
+<tr>
+<td><a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/research/core_aten.py">FuryNo5 Core snapshot 구현</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></td>
+<td>목록·버전·증거 구분</td>
+</tr>
+</tbody></table>
+</div><p>FuryNo5 소스 링크는 조사 시점에 비공개 저장소였으므로 열람 권한이 필요하다.</p>
+</article><nav class="next-prev" aria-label="이전과 다음 장"><a href="../chapter/08-eisa-visa.html"><small>← 이전 장</small><b>eISA 질문에서 vISA 실습으로</b></a><a href="../chapter/10-furyno5-architecture.html"><small>다음 장 →</small><b>FuryNo5의 실제 구조</b></a></nav><footer class="footer">FuryNo5 개발 핸드북 · 비공식 자료<br>공식 문서와 소스의 권리는 각 프로젝트에 있습니다. 코드 인용은 출처와 함께 표시합니다.<br><a href="../review.html">검토 기록과 남은 질문</a> · <a href="../sources.html">출처와 버전</a> · <a href="../glossary.html">용어 사전</a></footer></main></div><aside class="right-toc" aria-label="이 장의 목차"><h2>이 장에서 다루는 내용</h2><a class="" href="#왜-aten이-만들어졌는가">왜 ATen이 만들어졌는가</a><a class="" href="#다섯-단어를-구분하자">다섯 단어를 구분하자</a><a class="" href="#eager-호출에서는-어떤-일이-일어나는가">eager 호출에서는 어떤 일이 일어나는가</a><a class="" href="#장치별-구현은-어떻게-등록하는가">장치별 구현은 어떻게 등록하는가</a><a class="" href="#cpu-폴백은-누가-결정하는가">CPU 폴백은 누가 결정하는가</a><a class="" href="#torch-compile-backend와-dispatcher-backend는-다르다">torch.compile backend와 Dispatcher backend는 다르다</a><a class="" href="#aten은-몇-개이며-어떤-종류가-있는가">ATen은 몇 개이며 어떤 종류가 있는가</a><a class="" href="#설치본에서-재현하는-방법">설치본에서 재현하는 방법</a><a class="" href="#출처">출처</a></aside><dialog class="search-dialog" aria-label="문서 검색"><div class="search-head"><input type="search" aria-label="검색어" placeholder="DMA, EDF, 폴백, 버킷…" autocomplete="off"><button class="close-search" type="button">닫기</button></div><div class="search-status" role="status">용어나 함수 이름을 입력하세요.</div><div class="search-results"></div></dialog></body></html>

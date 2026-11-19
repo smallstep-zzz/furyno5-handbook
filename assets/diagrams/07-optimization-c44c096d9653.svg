@@ -1,0 +1,76 @@
+<svg role="img" aria-label="첫 EDF · 중간 결과 D2H · CPU tensor · 다음 입력 H2D · 둘째 EDF · 첫 EDF · 장치에 남은 중간 tensor · 둘째 EDF" width="310pt" height="369pt"
+ viewBox="0.00 0.00 309.80 368.80" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(14.4 354.4)">
+<title>handbook</title>
+<g id="edge1" class="edge">
+<title>A&#45;&gt;B</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M52,-303.84C52,-294.12 52,-281.82 52,-271.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="54.45,-271.07 52,-264.07 49.55,-271.07 54.45,-271.07"/>
+</g>
+<g id="edge2" class="edge">
+<title>B&#45;&gt;C</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M52,-227.84C52,-218.12 52,-205.82 52,-195.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="54.45,-195.07 52,-188.07 49.55,-195.07 54.45,-195.07"/>
+</g>
+<g id="edge3" class="edge">
+<title>C&#45;&gt;D</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M52,-151.84C52,-142.12 52,-129.82 52,-119.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="54.45,-119.07 52,-112.07 49.55,-119.07 54.45,-119.07"/>
+</g>
+<g id="edge4" class="edge">
+<title>D&#45;&gt;E</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M52,-75.84C52,-66.12 52,-53.82 52,-43.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="54.45,-43.07 52,-36.07 49.55,-43.07 54.45,-43.07"/>
+</g>
+<g id="edge5" class="edge">
+<title>F&#45;&gt;G</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M205,-303.84C205,-294.12 205,-281.82 205,-271.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="207.45,-271.07 205,-264.07 202.55,-271.07 207.45,-271.07"/>
+</g>
+<g id="edge6" class="edge">
+<title>G&#45;&gt;H</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M205,-227.84C205,-218.12 205,-205.82 205,-195.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="207.45,-195.07 205,-188.07 202.55,-195.07 207.45,-195.07"/>
+</g>
+<g id="node1" class="node">
+<title>A</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M72.5,-340C72.5,-340 31.5,-340 31.5,-340 25.5,-340 19.5,-334 19.5,-328 19.5,-328 19.5,-316 19.5,-316 19.5,-310 25.5,-304 31.5,-304 31.5,-304 72.5,-304 72.5,-304 78.5,-304 84.5,-310 84.5,-316 84.5,-316 84.5,-328 84.5,-328 84.5,-334 78.5,-340 72.5,-340"/>
+<text text-anchor="middle" x="52" y="-318.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">첫 EDF</text>
+</g>
+<g id="node2" class="node">
+<title>B</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M92,-264C92,-264 12,-264 12,-264 6,-264 0,-258 0,-252 0,-252 0,-240 0,-240 0,-234 6,-228 12,-228 12,-228 92,-228 92,-228 98,-228 104,-234 104,-240 104,-240 104,-252 104,-252 104,-258 98,-264 92,-264"/>
+<text text-anchor="middle" x="52" y="-242.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">중간 결과 D2H</text>
+</g>
+<g id="node3" class="node">
+<title>C</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M86,-188C86,-188 18,-188 18,-188 12,-188 6,-182 6,-176 6,-176 6,-164 6,-164 6,-158 12,-152 18,-152 18,-152 86,-152 86,-152 92,-152 98,-158 98,-164 98,-164 98,-176 98,-176 98,-182 92,-188 86,-188"/>
+<text text-anchor="middle" x="52" y="-166.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">CPU tensor</text>
+</g>
+<g id="node4" class="node">
+<title>D</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M92,-112C92,-112 12,-112 12,-112 6,-112 0,-106 0,-100 0,-100 0,-88 0,-88 0,-82 6,-76 12,-76 12,-76 92,-76 92,-76 98,-76 104,-82 104,-88 104,-88 104,-100 104,-100 104,-106 98,-112 92,-112"/>
+<text text-anchor="middle" x="52" y="-90.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">다음 입력 H2D</text>
+</g>
+<g id="node5" class="node">
+<title>E</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M78,-36C78,-36 26,-36 26,-36 20,-36 14,-30 14,-24 14,-24 14,-12 14,-12 14,-6 20,0 26,0 26,0 78,0 78,0 84,0 90,-6 90,-12 90,-12 90,-24 90,-24 90,-30 84,-36 78,-36"/>
+<text text-anchor="middle" x="52" y="-14.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">둘째 EDF</text>
+</g>
+<g id="node6" class="node">
+<title>F</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M225.5,-340C225.5,-340 184.5,-340 184.5,-340 178.5,-340 172.5,-334 172.5,-328 172.5,-328 172.5,-316 172.5,-316 172.5,-310 178.5,-304 184.5,-304 184.5,-304 225.5,-304 225.5,-304 231.5,-304 237.5,-310 237.5,-316 237.5,-316 237.5,-328 237.5,-328 237.5,-334 231.5,-340 225.5,-340"/>
+<text text-anchor="middle" x="205" y="-318.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">첫 EDF</text>
+</g>
+<g id="node7" class="node">
+<title>G</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M269,-264C269,-264 141,-264 141,-264 135,-264 129,-258 129,-252 129,-252 129,-240 129,-240 129,-234 135,-228 141,-228 141,-228 269,-228 269,-228 275,-228 281,-234 281,-240 281,-240 281,-252 281,-252 281,-258 275,-264 269,-264"/>
+<text text-anchor="middle" x="205" y="-242.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">장치에 남은 중간 tensor</text>
+</g>
+<g id="node8" class="node">
+<title>H</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M231,-188C231,-188 179,-188 179,-188 173,-188 167,-182 167,-176 167,-176 167,-164 167,-164 167,-158 173,-152 179,-152 179,-152 231,-152 231,-152 237,-152 243,-158 243,-164 243,-164 243,-176 243,-176 243,-182 237,-188 231,-188"/>
+<text text-anchor="middle" x="205" y="-166.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">둘째 EDF</text>
+</g>
+</g>
+</svg>

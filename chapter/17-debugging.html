@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="느린 이유를 좁히고 다시 검증할 수 있도록 관측 지점을 기록합니다."><meta name="theme-color" content="#fbfaf7"><title>측정과 디버깅 실습 · FuryNo5 개발 핸드북</title><link rel="icon" href="../assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="../assets/site.css"><script defer src="../assets/site.js"></script></head>
+<body data-root="../" data-chapter="17-debugging"><a class="skip" href="#content">본문으로 이동</a><header class="topbar"><button class="menu-toggle" type="button" aria-label="전체 목차 열기" aria-controls="sidebar" aria-expanded="false">☰</button><a class="brand" href="../index.html"><span class="brand-mark">Nº5</span>FuryNo5<small>DEVELOPER HANDBOOK</small></a><div class="top-actions"><a class="top-link" href="../sources.html">출처와 버전</a><button class="search-open" type="button" aria-label="핸드북 전체 검색"><span>전체 문서 검색</span><kbd>⌘ K</kbd></button></div></header><div class="progress" aria-hidden="true"></div><div class="mobile-shade"></div><aside class="sidebar" id="sidebar" aria-label="전체 목차"><nav><div class="nav-caption">시작하기</div><a class="nav-link"  href="../index.html"><span class="num">00</span><span>전체 지도와 읽는 방법</span></a><div class="nav-caption">I. 디바이스를 이해하기</div><a class="nav-link"  href="../chapter/01-hardware.html"><span class="num">01</span><span>RNGD · TCP · PE</span></a><a class="nav-link"  href="../chapter/02-memory-dma.html"><span class="num">02</span><span>메모리 · DMA · 배치</span></a><a class="nav-link"  href="../chapter/03-driver-runtime.html"><span class="num">03</span><span>드라이버와 공식 런타임</span></a><div class="nav-caption">II. 프로그램을 만들고 실행하기</div><a class="nav-link"  href="../chapter/04-tcl-edf.html"><span class="num">04</span><span>TCL 작성 · 컴파일 · 실행</span></a><a class="nav-link"  href="../chapter/05-graphs-fallback.html"><span class="num">05</span><span>실행그래프 · 오류 · 폴백</span></a><a class="nav-link"  href="../chapter/06-buckets-shapes.html"><span class="num">06</span><span>Shape · 버킷 · 컴파일 비용</span></a><a class="nav-link"  href="../chapter/07-optimization.html"><span class="num">07</span><span>최적화의 축과 우선순위</span></a><a class="nav-link"  href="../chapter/08-eisa-visa.html"><span class="num">08</span><span>eISA · vISA · furiosa-opt</span></a><div class="nav-caption">III. FuryNo5를 해부하기</div><a class="nav-link"  href="../chapter/09-torch-aten.html"><span class="num">09</span><span>PyTorch · ATen · 등록</span></a><a class="nav-link"  href="../chapter/10-furyno5-architecture.html"><span class="num">10</span><span>FuryNo5 구조와 지원 범위</span></a><a class="nav-link"  href="../chapter/11-furyno5-compiler.html"><span class="num">11</span><span>FuryNo5 컴파일과 캐시</span></a><div class="nav-caption">IV. 모델 포팅과 서빙</div><a class="nav-link"  href="../chapter/12-fxbx.html"><span class="num">12</span><span>fxbX 포맷과 실행계획</span></a><a class="nav-link"  href="../chapter/13-porting-fha.html"><span class="num">13</span><span>모델 포팅 · FHA 자동화</span></a><a class="nav-link"  href="../chapter/14-serving-vllm.html"><span class="num">14</span><span>vLLM · 서빙 브리지</span></a><a class="nav-link"  href="../chapter/15-multi-npu.html"><span class="num">15</span><span>PE · 여러 카드 · 여러 서버</span></a><div class="nav-caption">V. 검증과 다음 개발</div><a class="nav-link"  href="../chapter/16-furyboost.html"><span class="num">16</span><span>FuryBoost 실측과 남은 과제</span></a><a class="nav-link active" aria-current="page" href="../chapter/17-debugging.html"><span class="num">17</span><span>측정 · 추적 · 실패 재현</span></a><div class="nav-caption">참고와 검증</div><a class="nav-link"  href="../glossary.html"><span class="num">·</span><span>약어와 용어 사전</span></a><a class="nav-link"  href="../sources.html"><span class="num">·</span><span>출처 · 버전 · 접근 범위</span></a><a class="nav-link"  href="../review.html"><span class="num">·</span><span>검토 기록과 미해결 질문</span></a></nav><div class="side-foot">비공식 개발 핸드북 · 2026.11.19<br>공식 SDK와 프로젝트 구현을 구분합니다.<br><a href="https://github.com/smallstep-zzz/furyno5-handbook">원고와 변경 이력 ↗</a></div></aside><div class="shell"><main class="page" id="content"><div class="eyebrow">V. 검증과 다음 개발 / CHAPTER 17</div><h1>측정과 디버깅 실습</h1><p class="dek">느린 이유를 좁히고 다시 검증할 수 있도록 관측 지점을 기록합니다.</p><div class="page-meta"><span>검토 2026.11.19</span><span>SDK 2026.4 계열 / 버전별 표기</span><span class="readtime">약 12분</span><span><a href="https://github.com/smallstep-zzz/furyno5-handbook/blob/main/content/17-debugging.md">원고</a></span></div><details class="mobile-toc"><summary>이 장의 목차</summary><div><a class="" href="#먼저-어느-층에서-실패했는지-구분한다">먼저 어느 층에서 실패했는지 구분한다</a><a class="" href="#실습-1-환경-지문과-입력-계약을-남긴다">실습 1. 환경 지문과 입력 계약을 남긴다</a><a class="" href="#실습-2-미해결-node를-독립-문제-수로-오해하지-않는다">실습 2. 미해결 node를 독립 문제 수로 오해하지 않는다</a><a class="" href="#실습-3-느리거나-실패한-compiler-작업-하나만-재현한다">실습 3. 느리거나 실패한 compiler 작업 하나만 재현한다</a><a class="" href="#실습-4-실행-증거를-수집한다">실습 4. 실행 증거를 수집한다</a><a class="" href="#실습-5-trace에서-병목-후보를-찾는다">실습 5. trace에서 병목 후보를 찾는다</a><a class="" href="#실습-6-trace와-별개로-완료-시간을-잰다">실습 6. trace와 별개로 완료 시간을 잰다</a><a class="" href="#실습-7-수치-실패는-첫-경계에서-찾는다">실습 7. 수치 실패는 첫 경계에서 찾는다</a><a class="" href="#furiosa-opt를-어디에-연결할-것인가">furiosa-opt를 어디에 연결할 것인가</a><a class="" href="#좋은-실패-보고서의-최소-내용">좋은 실패 보고서의 최소 내용</a><a class="" href="#출처">출처</a></div></details><noscript><p class="noscript">본문과 그림은 JavaScript 없이 읽을 수 있습니다. 검색과 조절 실험에는 JavaScript가 필요합니다.</p></noscript><article class="article"><p><strong>“안 된다”를 최초 실패 단계, 정확한 입력 계약, 산출물, 실행 증거로 나누면 고칠 파일이 보인다.</strong> 이 장은 모델 전체를 매번 다시 돌리기보다, 현재 문제를 증명하는 최소 경로를 만드는 실습이다. 소스 기준은 FuryNo5 commit <code>bba9efea8201aec48150514a35d0b637d29d107e</code>이며, 명령을 실행할 환경의 SDK(Software Development Kit) 버전을 먼저 기록한다.</p>
+<h2 id="먼저-어느-층에서-실패했는지-구분한다"><a class="heading-anchor" href="#먼저-어느-층에서-실패했는지-구분한다">먼저 어느 층에서 실패했는지 구분한다</a></h2>
+<figure class="diagram"><img src="../assets/diagrams/17-debugging-5fec00c4adb5.svg" alt="측정과 디버깅 실습 · 도식 1" loading="lazy"><figcaption>도식 1 · 측정과 디버깅 실습 — 설명을 위해 단순화한 관계도. 실제 호출 조건과 근거는 본문을 함께 읽으세요.</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
+    A[&quot;원본 모델과 입력&quot;] --&gt; B[&quot;capture · binding · rule&quot;]
+    B --&gt; C[&quot;TCL compiler&quot;]
+    C --&gt; D[&quot;EDF와 ABI&quot;]
+    D --&gt; E[&quot;package와 reload&quot;]
+    E --&gt; F[&quot;NPU 실행&quot;]
+    F --&gt; G[&quot;수치와 상태 검증&quot;]
+    G --&gt; H[&quot;성능 비교&quot;]
+    B --&gt; I[&quot;지원 gap 재현&quot;]
+    C --&gt; J[&quot;recipe와 compiler log&quot;]
+    D --&gt; K[&quot;인수 · shape · fusion 계약&quot;]
+    F --&gt; L[&quot;공식 trace와 장치 오류&quot;]</pre></details></figure><div class="table-wrap"><table>
+<thead>
+<tr>
+<th>처음 실패한 지점</th>
+<th>필요한 증거</th>
+<th>우선 볼 코드</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>capture</td>
+<td>최초 달라진 graph, 원본/변환 CPU 결과</td>
+<td><code>graph_capture.py</code></td>
+</tr>
+<tr>
+<td>binding</td>
+<td>인수 순서, shape/dtype/stride/offset, state</td>
+<td><code>edf_export.py</code></td>
+</tr>
+<tr>
+<td>rule</td>
+<td>직접 차단 이유와 영향을 받은 node</td>
+<td>해당 <code>*_rules.py</code></td>
+</tr>
+<tr>
+<td>compile</td>
+<td>정확한 TCL, compiler version, exit/timeout, log</td>
+<td><code>compile_job.py</code></td>
+</tr>
+<tr>
+<td>ABI(Application Binary Interface)</td>
+<td>공식 EDF loader의 입출력 정보</td>
+<td><code>tcl_compiler._verify_abi</code></td>
+</tr>
+<tr>
+<td>package</td>
+<td>manifest·파일 해시·계획 연결</td>
+<td>producer와 fxbX consumer</td>
+</tr>
+<tr>
+<td>runtime</td>
+<td>expected step과 공식 Task, CPU route</td>
+<td><code>verified_worker.py</code></td>
+</tr>
+<tr>
+<td>numerical</td>
+<td>최초 오차 좌표, dtype, 허용오차, 입력</td>
+<td>해당 의미 규칙과 oracle</td>
+</tr>
+<tr>
+<td>performance</td>
+<td>cold/warm 범위, 완료 기준, trace</td>
+<td><code>profile_hotspots.py</code></td>
+</tr>
+</tbody></table>
+</div><p>소스의 수정 진입점은 다음과 같다. NPU 작업을 시작하는 명령이 아니라, 해당 단계의 소유 파일과 점검 항목을 안내한다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/REPAIR_GUIDE.md">수정 가이드</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
+<div class="codebox"><div class="codebar"><span>bash</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-bash">python -m tplmachine.repair route compile --kind fp32_contraction
+</code></pre></div>
+<h2 id="실습-1-환경-지문과-입력-계약을-남긴다"><a class="heading-anchor" href="#실습-1-환경-지문과-입력-계약을-남긴다">실습 1. 환경 지문과 입력 계약을 남긴다</a></h2>
+<p>다음은 읽기 전용 정보 수집 예제다. <code>furiosa-smi</code>의 정보는 장치 존재·버전·상태를 파악하는 자료이며, 특정 모델이 NPU에서 실행되었다는 증거는 아니다.</p>
+<div class="codebox"><div class="codebar"><span>bash</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-bash">python --version
+furiosa-tcc --version
+furiosa-tcc --help
+furiosa-smi info --format json
+</code></pre></div>
+<p>package 버전은 다음처럼 수집한다. 설치되어 있지 않으면 없는 상태로 남긴다.</p>
+<div class="codebox"><div class="codebar"><span>python</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-python">import importlib.metadata as md
+import json
+
+versions = {}
+for name in (&quot;torch&quot;, &quot;furiosa-torch&quot;, &quot;furiosa-tcc&quot;, &quot;fxbx&quot;, &quot;tplmachine&quot;):
+    try:
+        versions[name] = md.version(name)
+    except md.PackageNotFoundError:
+        versions[name] = None
+print(json.dumps(versions, indent=2))
+</code></pre></div>
+<p>입력 tensor는 shape뿐 아니라 <code>dtype</code>, <code>stride()</code>, <code>storage_offset()</code>, <code>requires_grad</code>, 장치, 정적 속성을 함께 기록한다. 같은 <code>[1,128,128]</code>이라도 permutation의 view인지 contiguous 복사인지에 따라 규칙과 비용이 달라진다.</p>
+<div class="codebox"><div class="codebar"><span>python</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-python">def tensor_contract(x):
+    return {
+        &quot;shape&quot;: list(x.shape),
+        &quot;dtype&quot;: str(x.dtype),
+        &quot;stride&quot;: list(x.stride()),
+        &quot;storage_offset&quot;: x.storage_offset(),
+        &quot;device&quot;: str(x.device),
+        &quot;requires_grad&quot;: x.requires_grad,
+    }
+</code></pre></div>
+<p>이 계약은 모델/입력의 실제 값을 공개하지 않고도 실패 원인을 좁히는 데 도움이 된다. 정적 상수의 값에 따라 specialization했다면 값 해시와 그 guard도 필요하다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/execution_plan.py#L20-L38">계획의 계약·guard 관리</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
+<h2 id="실습-2-미해결-node를-독립-문제-수로-오해하지-않는다"><a class="heading-anchor" href="#실습-2-미해결-node를-독립-문제-수로-오해하지-않는다">실습 2. 미해결 node를 독립 문제 수로 오해하지 않는다</a></h2>
+<p><code>export_model(..., preflight_only=True)</code> 결과의 <code>operator-inventory.json</code>에는 metadata admission, 직접 규칙/계약 gap, 선행 binding dependency가 나뉘어 있다. 첫 <code>transpose</code> 결과를 만들지 못해 그 뒤 100개 node를 연결하지 못했다면, 101개 TCL을 새로 작성해야 한다는 뜻이 아니다.</p>
+<div class="codebox"><div class="codebar"><span>python</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-python">import json
+from collections import Counter
+from pathlib import Path
+
+root = Path(&quot;model.fxbx.plan&quot;)
+inventory = json.loads((root / &quot;operator-inventory.json&quot;).read_text())
+print(Counter(row[&quot;admission&quot;] for row in inventory[&quot;nodes&quot;]))
+
+groups = json.loads((root / &quot;failure-groups.json&quot;).read_text())
+for row in sorted(groups, key=lambda x: -x[&quot;occurrences&quot;])[:5]:
+    print(row[&quot;op&quot;], row[&quot;occurrences&quot;], row[&quot;reason&quot;])
+</code></pre></div>
+<p>이 예제는 해당 실패 파일이 있는 경우에 실행한다. 통과한 preflight에 <code>failure-groups.json</code>이 없는 것은 정상이다. source 위치·대표 shape·최초 직접 차단을 보고 공통 원인을 고친 후, 영향을 받은 모델만 다시 검사한다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/execution_plan.py#L1140-L1193">진단 생성부</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
+<h2 id="실습-3-느리거나-실패한-compiler-작업-하나만-재현한다"><a class="heading-anchor" href="#실습-3-느리거나-실패한-compiler-작업-하나만-재현한다">실습 3. 느리거나 실패한 compiler 작업 하나만 재현한다</a></h2>
+<p>먼저 <code>compile-status.json</code>에서 실패한 kernel key를 고른다. 다음 명령은 보존된 요청을 조회하고, 선택한 요청 하나만 다시 컴파일하는 실제 CLI(Command-Line Interface)다.</p>
+<div class="codebox"><div class="codebar"><span>bash</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-bash"># 먼저 작은 목록 확인
+python -m tplmachine.compile_recipe model.fxbx.plan/compile-requests.json
+
+# FAILED_KEY는 위 목록에 실제로 존재하는 키로 교체
+python -m tplmachine.compile_recipe model.fxbx.plan/compile-requests.json \
+  --key FAILED_KEY --output one-kernel-result.json
+</code></pre></div>
+<p>이 경로는 모델을 다시 다운로드하거나 전체 graph를 다시 캡처할 필요를 줄인다. <code>compiled_not_numerically_validated</code>는 ABI까지 컴파일 단계가 통과했다는 보고이며, NPU 정답 검증은 아직 남아 있다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/compile_recipe.py">compile_recipe.py</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
+<p><code>compile-attempts</code>의 해당 attempt에는 <code>source.tc</code>, <code>compile.log</code>, <code>result.json</code>이 있다. 결과의 <code>last_stage</code>, <code>elapsed_s</code>, <code>returncode</code>, <code>timeout_s</code>를 같이 읽는다. 시간제한 종료를 “하드웨어 미지원”으로 캐시하지 않는다. 현재 기본 timeout이 무제한이므로 작업 예산이 필요한 경우 명시적으로 지정한다.</p>
+<div class="codebox"><div class="codebar"><span>bash</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-bash">FURYNO5_COMPILE_TIMEOUT_S=1800 \
+  python -m tplmachine.compile_recipe model.fxbx.plan/compile-requests.json \
+  --key FAILED_KEY --output bounded-retry.json
+</code></pre></div>
+<p>여기서 1,800초는 이 예제의 작업 예산일 뿐 성공 예상시간이 아니다. 의미·정밀도를 바꿔 빨리 끝나게 하기 전에, 정확한 재현 source와 메모리·thread 경쟁을 확인한다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/compile_job.py">compile_job.py</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
+<h2 id="실습-4-실행-증거를-수집한다"><a class="heading-anchor" href="#실습-4-실행-증거를-수집한다">실습 4. 실행 증거를 수집한다</a></h2>
+<p>다음 함수는 <strong>이미 준비된 fxbX runtime</strong>과 입력 tuple을 받아 공식 profiler로 한 요청을 기록한다. <code>FXBX_TRACE_STEPS</code>는 runtime을 만들기 전에 설정한다. profiler 활성화 시간은 성능 비교의 정답으로 사용하지 않는다.</p>
+<div class="codebox"><div class="codebar"><span>python</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-python">import os
+from pathlib import Path
+from furiosa.torch.profiler import Profiler
+
+os.environ[&quot;FXBX_TRACE_STEPS&quot;] = &quot;1&quot;
+
+def record_one(runtime, inputs, trace_path=&quot;request-trace.json&quot;):
+    destination = Path(trace_path)
+    if destination.exists():
+        raise FileExistsError(destination)
+    with Profiler(str(destination)):
+        outputs = runtime.predict(inputs)
+    return outputs
+</code></pre></div>
+<p>FuryNo5의 현재 검증기는 <code>execution_plan::forward::...</code> host span과 이에 대응하는 <code>::Task::execution_plan::...</code> 이름을 대조하고, <code>run_by_cpu</code> 이벤트를 확인한다. 예상한 step이 빠지거나 엉뚱한 step이 들어 있으면 증거 불완전으로 본다. 정적 상수 준비의 예외는 별도 분류한다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/verified_worker.py#L21-L29">실제 trace_evidence</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
+<p>다음 관측만으로는 충분하지 않다.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>관측</th>
+<th>확인되는 것</th>
+<th>추가로 필요한 것</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>tensor.device == &quot;furiosa:0&quot;</code></td>
+<td>tensor의 장치 표기</td>
+<td>실제 실행 task</td>
+</tr>
+<tr>
+<td>SMI 사용률 상승</td>
+<td>그 시간 장치 활동</td>
+<td>내 요청/내 step과의 연결</td>
+</tr>
+<tr>
+<td>compiler 반환 성공</td>
+<td>산출물 생성</td>
+<td>실행·수치</td>
+</tr>
+<tr>
+<td>host launch span</td>
+<td>제출 시도</td>
+<td>완료된 장치 task</td>
+</tr>
+<tr>
+<td>CPU route 0</td>
+<td>해당 collector가 그 이름을 못 봄</td>
+<td>누락 step·collector 범위 확인</td>
+</tr>
+</tbody></table>
+</div><p>다른 adapter나 병합 실행 모드에서 trace 구조가 바뀌면 이름 규칙도 검토해야 한다. 텍스트 검색 결과를 하드웨어 인증으로 승격하지 않는다.</p>
+<h2 id="실습-5-trace에서-병목-후보를-찾는다"><a class="heading-anchor" href="#실습-5-trace에서-병목-후보를-찾는다">실습 5. trace에서 병목 후보를 찾는다</a></h2>
+<p><a href="../examples/trace_report.py">trace_report.py</a>는 계획과 trace를 받아 step 관측 누락, CPU route 표식, kernel별 task work를 요약한다.</p>
+<div class="codebox"><div class="codebar"><span>bash</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-bash">python examples/trace_report.py \
+  model.fxbx.plan/execution-plan.json request-trace.json \
+  --entry forward --out trace-summary.json
+</code></pre></div>
+<p>이 도구는 <strong>진단 도구</strong>다. 숫자·tensor·파일 무결성 검사를 하지 않으므로 성공 인증서를 출력하지 않는다. trace의 시간 단위는 Chrome trace의 microsecond 규약과 현재 adapter의 형식을 전제로 한다. task 합에는 겹친 task가 중복 포함될 수 있다.</p>
+<p>producer 설치본에서는 더 엄격한 해당 버전의 hotspot 기능을 사용할 수도 있다.</p>
+<div class="codebox"><div class="codebar"><span>python</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-python">import json
+from pathlib import Path
+from tplmachine.profile_hotspots import rank_hotspots
+
+plan = json.loads(Path(&quot;model.fxbx.plan/execution-plan.json&quot;).read_text())
+events = json.loads(Path(&quot;request-trace.json&quot;).read_text())
+for row in rank_hotspots(plan, events, entry=&quot;forward&quot;, limit=5):
+    print(row[&quot;kernel&quot;], row[&quot;calls&quot;], row[&quot;task_us&quot;])
+</code></pre></div>
+<p>현재 함수는 상태 갱신이 있는 entry나 불완전한 timing coverage를 제한하고, CPU route가 관측되면 순위를 만들지 않는다. 결과의 <code>task_us</code>는 end-to-end latency 예측치가 아니다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/profile_hotspots.py">hotspot 구현</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
+<p>가장 느린 kernel key를 찾았다면 <code>compile-requests.json</code>의 같은 key로 의미 계열과 shape를 연결한다. 이후 TCL source, layout, 크기, 반복 횟수, 입출력 이동을 검토한다. 이름이 같은 EDF가 여러 입력에서 호출될 수 있으므로 단일 이벤트를 전체 모델 병목으로 일반화하지 않는다.</p>
+<h2 id="실습-6-trace와-별개로-완료-시간을-잰다"><a class="heading-anchor" href="#실습-6-trace와-별개로-완료-시간을-잰다">실습 6. trace와 별개로 완료 시간을 잰다</a></h2>
+<p>다음 함수는 <strong>반환 시 실제 결과가 완료된 callable</strong>을 측정한다. 일반 비동기 launch 함수에 그대로 사용하면 제출 시간만 측정하므로 부적절하다. fxbX의 CPU 결과를 반환하는 <code>predict</code> 경로처럼 완료가 확인되는 함수를 전달하거나, 장치 resident 경로의 공식 완료 대기를 callable 안에 넣는다.</p>
+<div class="codebox"><div class="codebar"><span>python</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-python">from time import perf_counter_ns
+from statistics import median
+from math import ceil
+
+def measure_completed(call, *, warmup=5, repeats=30):
+    for _ in range(warmup):
+        call()
+    samples = []
+    for _ in range(repeats):
+        start = perf_counter_ns()
+        call()
+        samples.append(perf_counter_ns() - start)
+    ordered = sorted(samples)
+    return {
+        &quot;median_ns&quot;: median(samples),
+        &quot;p95_ns&quot;: ordered[ceil(0.95 * len(ordered)) - 1],
+        &quot;samples_ns&quot;: samples,
+        &quot;scope&quot;: &quot;callable must return completed outputs&quot;,
+    }
+</code></pre></div>
+<p>30회는 튜토리얼 시작값이지 tail latency를 확정하기에 충분하다는 보장이 아니다. 짧은 kernel은 여러 호출을 한 block으로 묶어 측정 비용을 줄이고, A/B/B/A처럼 순서를 바꾸어 시스템 변화의 영향을 관찰한다. compile·profiling과 성능 측정을 같은 CPU 자원에서 동시에 수행하면 host contention이 섞일 수 있다. FuryNo5의 보존된 runtime 선택 실험도 준비와 측정 구간을 나누었다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/RUNTIME_SELECTION.md">실측 프로토콜</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
+<h2 id="실습-7-수치-실패는-첫-경계에서-찾는다"><a class="heading-anchor" href="#실습-7-수치-실패는-첫-경계에서-찾는다">실습 7. 수치 실패는 첫 경계에서 찾는다</a></h2>
+<p>원본 CPU 결과 → 정규화 CPU 결과 → 각 EDF의 NPU 결과 → 최종 package 결과 순서로 비교한다. 원본과 정규화 CPU가 이미 다르면 물리 NPU kernel부터 수정할 이유가 없다.</p>
+<div class="codebox"><div class="codebar"><span>python</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-python"># reference와 actual은 같은 shape/dtype 계약의 CPU tensor.
+import torch
+
+def error_report(reference, actual, *, atol, rtol):
+    if reference.shape != actual.shape:
+        return {&quot;shape_mismatch&quot;: True}
+    expected = reference.to(torch.float64)
+    got = actual.to(torch.float64)
+    error = (got - expected).abs()
+    limit = atol + rtol * expected.abs()
+    bad = (~torch.isfinite(got)) | (~torch.isfinite(expected)) | (error &gt; limit)
+    where = bad.nonzero()
+    first = where[0].tolist() if where.numel() else None
+    return {
+        &quot;outside_tolerance&quot;: int(bad.sum()),
+        &quot;max_abs_error&quot;: float(error.max()) if error.numel() else 0.0,
+        &quot;first_bad_index&quot;: first,
+    }
+</code></pre></div>
+<p>이 예제는 유한 실수 결과를 기대하는 간단한 진단 정책이다. 정상 출력에 NaN/Inf가 허용되는 연산은 별도의 명시적 비교 정책이 필요하고, 정수·bool·인덱스는 정확한 일치를 확인한다. <code>max_abs_error</code> 하나만으로 실패 위치를 숨기거나, 관측 결과에 맞춰 허용오차를 자동으로 늘리지 않는다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/verified_worker.py#L44-L48">독립 출력 비교 구현</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
+<p>상태를 가진 모델은 첫 호출만 맞아서는 부족하다. 입력 변경, 반복 호출, reset 뒤 결과, state-only 출력 처리까지 확인한다. 고정 shape의 state slot 검증을 동적 KV(Key/Value) paging 검증과 동일시하지 않는다.</p>
+<h2 id="furiosa-opt를-어디에-연결할-것인가"><a class="heading-anchor" href="#furiosa-opt를-어디에-연결할-것인가">furiosa-opt를 어디에 연결할 것인가</a></h2>
+<p>TCL 기반 문제는 먼저 보존된 TCL·compiler 로그·EDF trace로 좁힌다. <code>furiosa-opt</code>의 schedule/low-level dump는 해당 도구로 빌드되는 kernel이나 재현용 vISA(virtual Instruction Set Architecture) 구현의 병목을 조사할 때 사용한다. 임의의 SDK EDF를 넣으면 원래 Python/TCL과 모든 물리 schedule이 자동 복원된다고 가정하지 않는다.</p>
+<p>FuryNo5의 <code>official_tools.capabilities()</code>는 설치된 <code>furiosa-tcc --help</code>에서 <code>--evaluate-tcl</code> 등 지원 옵션을 확인한다. 지원하는 경우의 cycle estimate와 NPU task 측정치를 구분해서 보존한다. eISA와 opt 도구의 구체적인 재현·schedule viewer 절차는 08장을 따른다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/official_tools.py#L13-L24">capability probe</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span> · <a href="https://developer.furiosa.ai/furiosa-opt/book/quick-start/setup-and-tooling.html">공식 도구 안내</a></p>
+<h2 id="좋은-실패-보고서의-최소-내용"><a class="heading-anchor" href="#좋은-실패-보고서의-최소-내용">좋은 실패 보고서의 최소 내용</a></h2>
+<p>한 문제당 다음 내용을 남기면 다음 개발자가 전체 모델을 다시 분석할 필요가 줄어든다.</p>
+<ul>
+<li>원본 commit, SDK/compiler/driver, target·fusion·mesh.</li>
+<li>최초 실패 단계와 원래 오류 메시지.</li>
+<li>operator overload와 입력 shape/dtype/stride/속성.</li>
+<li>해당 source·recipe·EDF·plan의 경로와 해시.</li>
+<li>실행한 검사, 통과한 범위, 아직 모르는 범위.</li>
+<li>다음 실험 하나와 성공·실패를 가르는 고정 조건.</li>
+</ul>
+<p><strong>문서 검증 상태:</strong> 이 핸드북의 보조 스크립트는 정적 구문과 합성 진단 입력으로 확인한다. 기록된 과거 RNGD 결과는 원본 증거와 날짜를 붙인다. 이번 집필 환경에서 새 NPU 수치·성능 검증을 수행한 것은 아니다.</p>
+<h2 id="출처"><a class="heading-anchor" href="#출처">출처</a></h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>자료</th>
+<th>확인 범위</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/REPAIR_GUIDE.md">FuryNo5 수정 가이드</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></td>
+<td>단계별 소유권과 재현 순서</td>
+</tr>
+<tr>
+<td><a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/compile_recipe.py">compile_recipe.py</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></td>
+<td>단일 커널 재현 CLI</td>
+</tr>
+<tr>
+<td><a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/compile_job.py">compile_job.py</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></td>
+<td>timeout·실패·원본 증거</td>
+</tr>
+<tr>
+<td><a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/verified_worker.py">verified_worker.py</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></td>
+<td>독립 소비자 수치·NPU trace 검사</td>
+</tr>
+<tr>
+<td><a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/profile_hotspots.py">profile_hotspots.py</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></td>
+<td>실제 plan-step timing 연결</td>
+</tr>
+<tr>
+<td><a href="https://developer.furiosa.ai/furiosa-opt/book/quick-start/setup-and-tooling.html">공식 opt setup</a></td>
+<td>kernel optimizer·schedule viewer 역할</td>
+</tr>
+</tbody></table>
+</div></article><nav class="next-prev" aria-label="이전과 다음 장"><a href="../chapter/16-furyboost.html"><small>← 이전 장</small><b>FuryBoost 실험 회고</b></a><a href="../glossary.html"><small>다음 장 →</small><b>용어 사전</b></a></nav><footer class="footer">FuryNo5 개발 핸드북 · 비공식 자료<br>공식 문서와 소스의 권리는 각 프로젝트에 있습니다. 코드 인용은 출처와 함께 표시합니다.<br><a href="../review.html">검토 기록과 남은 질문</a> · <a href="../sources.html">출처와 버전</a> · <a href="../glossary.html">용어 사전</a></footer></main></div><aside class="right-toc" aria-label="이 장의 목차"><h2>이 장에서 다루는 내용</h2><a class="" href="#먼저-어느-층에서-실패했는지-구분한다">먼저 어느 층에서 실패했는지 구분한다</a><a class="" href="#실습-1-환경-지문과-입력-계약을-남긴다">실습 1. 환경 지문과 입력 계약을 남긴다</a><a class="" href="#실습-2-미해결-node를-독립-문제-수로-오해하지-않는다">실습 2. 미해결 node를 독립 문제 수로 오해하지 않는다</a><a class="" href="#실습-3-느리거나-실패한-compiler-작업-하나만-재현한다">실습 3. 느리거나 실패한 compiler 작업 하나만 재현한다</a><a class="" href="#실습-4-실행-증거를-수집한다">실습 4. 실행 증거를 수집한다</a><a class="" href="#실습-5-trace에서-병목-후보를-찾는다">실습 5. trace에서 병목 후보를 찾는다</a><a class="" href="#실습-6-trace와-별개로-완료-시간을-잰다">실습 6. trace와 별개로 완료 시간을 잰다</a><a class="" href="#실습-7-수치-실패는-첫-경계에서-찾는다">실습 7. 수치 실패는 첫 경계에서 찾는다</a><a class="" href="#furiosa-opt를-어디에-연결할-것인가">furiosa-opt를 어디에 연결할 것인가</a><a class="" href="#좋은-실패-보고서의-최소-내용">좋은 실패 보고서의 최소 내용</a><a class="" href="#출처">출처</a></aside><dialog class="search-dialog" aria-label="문서 검색"><div class="search-head"><input type="search" aria-label="검색어" placeholder="DMA, EDF, 폴백, 버킷…" autocomplete="off"><button class="close-search" type="button">닫기</button></div><div class="search-status" role="status">용어나 함수 이름을 입력하세요.</div><div class="search-results"></div></dialog></body></html>

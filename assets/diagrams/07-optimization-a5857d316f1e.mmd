@@ -1,0 +1,7 @@
+flowchart TB
+    A["처음 요청"] --> B["capture · compile"]
+    B --> C["파일 읽기 · 검증 · 장치 적재"]
+    C --> D["입력 준비 · H2D"]
+    D --> E["장치 실행과 host dispatch"]
+    E --> F["완료 대기 · D2H · 후처리"]
+    G["따뜻한 반복 요청"] --> D

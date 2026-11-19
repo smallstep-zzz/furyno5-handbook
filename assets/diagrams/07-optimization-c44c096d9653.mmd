@@ -1,0 +1,7 @@
+flowchart TB
+    A["첫 EDF"] --> B["중간 결과 D2H"]
+    B --> C["CPU tensor"]
+    C --> D["다음 입력 H2D"]
+    D --> E["둘째 EDF"]
+    F["첫 EDF"] --> G["장치에 남은 중간 tensor"]
+    G --> H["둘째 EDF"]

@@ -1,0 +1,86 @@
+<svg role="img" aria-label="모델·TCL · 컴파일러 · 실행 산출물 · 호스트 런타임 · 입력·가중치·상태 · Linux 장치 드라이버 · 펌웨어·PE 실행 계층 · Tensor Unit·DMA" width="273pt" height="521pt"
+ viewBox="0.00 0.00 273.30 520.80" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(14.4 506.4)">
+<title>handbook</title>
+<g id="edge1" class="edge">
+<title>M&#45;&gt;C</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M54,-455.84C54,-446.12 54,-433.82 54,-423.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="56.45,-423.07 54,-416.07 51.55,-423.07 56.45,-423.07"/>
+</g>
+<g id="edge2" class="edge">
+<title>C&#45;&gt;A</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M54,-379.84C54,-370.12 54,-357.82 54,-347.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="56.45,-347.07 54,-340.07 51.55,-347.07 56.45,-347.07"/>
+</g>
+<g id="edge3" class="edge">
+<title>A&#45;&gt;R</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M69.08,-303.84C78.02,-293.66 89.46,-280.63 99.13,-269.62"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="101.23,-270.95 104.01,-264.07 97.55,-267.71 101.23,-270.95"/>
+</g>
+<g id="edge5" class="edge">
+<title>R&#45;&gt;D</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M106.94,-227.84C99.85,-217.75 90.8,-204.87 83.11,-193.92"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="85.02,-192.39 79,-188.07 81.02,-195.21 85.02,-192.39"/>
+</g>
+<g id="edge4" class="edge">
+<title>I&#45;&gt;R</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M168.92,-303.84C159.98,-293.66 148.54,-280.63 138.87,-269.62"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="140.45,-267.71 133.99,-264.07 136.77,-270.95 140.45,-267.71"/>
+</g>
+<g id="edge6" class="edge">
+<title>D&#45;&gt;F</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M67,-151.84C67,-142.12 67,-129.82 67,-119.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="69.45,-119.07 67,-112.07 64.55,-119.07 69.45,-119.07"/>
+</g>
+<g id="edge7" class="edge">
+<title>F&#45;&gt;N</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M79.06,-75.84C86.15,-65.75 95.2,-52.87 102.89,-41.92"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="104.98,-43.21 107,-36.07 100.98,-40.39 104.98,-43.21"/>
+</g>
+<g id="edge8" class="edge">
+<title>N&#45;&gt;R</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M129.64,-36.24C135.75,-47.18 142.83,-61.9 146,-76 156.92,-124.57 156.92,-139.43 146,-188 143.4,-199.57 138.17,-211.55 133,-221.52"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="130.8,-220.44 129.64,-227.76 135.11,-222.76 130.8,-220.44"/>
+</g>
+<g id="node1" class="node">
+<title>M</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M81.5,-492C81.5,-492 26.5,-492 26.5,-492 20.5,-492 14.5,-486 14.5,-480 14.5,-480 14.5,-468 14.5,-468 14.5,-462 20.5,-456 26.5,-456 26.5,-456 81.5,-456 81.5,-456 87.5,-456 93.5,-462 93.5,-468 93.5,-468 93.5,-480 93.5,-480 93.5,-486 87.5,-492 81.5,-492"/>
+<text text-anchor="middle" x="54" y="-470.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">모델·TCL</text>
+</g>
+<g id="node2" class="node">
+<title>C</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M79,-416C79,-416 29,-416 29,-416 23,-416 17,-410 17,-404 17,-404 17,-392 17,-392 17,-386 23,-380 29,-380 29,-380 79,-380 79,-380 85,-380 91,-386 91,-392 91,-392 91,-404 91,-404 91,-410 85,-416 79,-416"/>
+<text text-anchor="middle" x="54" y="-394.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">컴파일러</text>
+</g>
+<g id="node3" class="node">
+<title>A</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M86,-340C86,-340 22,-340 22,-340 16,-340 10,-334 10,-328 10,-328 10,-316 10,-316 10,-310 16,-304 22,-304 22,-304 86,-304 86,-304 92,-304 98,-310 98,-316 98,-316 98,-328 98,-328 98,-334 92,-340 86,-340"/>
+<text text-anchor="middle" x="54" y="-318.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">실행 산출물</text>
+</g>
+<g id="node4" class="node">
+<title>R</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M156.5,-264C156.5,-264 81.5,-264 81.5,-264 75.5,-264 69.5,-258 69.5,-252 69.5,-252 69.5,-240 69.5,-240 69.5,-234 75.5,-228 81.5,-228 81.5,-228 156.5,-228 156.5,-228 162.5,-228 168.5,-234 168.5,-240 168.5,-240 168.5,-252 168.5,-252 168.5,-258 162.5,-264 156.5,-264"/>
+<text text-anchor="middle" x="119" y="-242.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">호스트 런타임</text>
+</g>
+<g id="node5" class="node">
+<title>I</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M232.5,-340C232.5,-340 135.5,-340 135.5,-340 129.5,-340 123.5,-334 123.5,-328 123.5,-328 123.5,-316 123.5,-316 123.5,-310 129.5,-304 135.5,-304 135.5,-304 232.5,-304 232.5,-304 238.5,-304 244.5,-310 244.5,-316 244.5,-316 244.5,-328 244.5,-328 244.5,-334 238.5,-340 232.5,-340"/>
+<text text-anchor="middle" x="184" y="-318.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">입력·가중치·상태</text>
+</g>
+<g id="node6" class="node">
+<title>D</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M121.5,-188C121.5,-188 12.5,-188 12.5,-188 6.5,-188 0.5,-182 0.5,-176 0.5,-176 0.5,-164 0.5,-164 0.5,-158 6.5,-152 12.5,-152 12.5,-152 121.5,-152 121.5,-152 127.5,-152 133.5,-158 133.5,-164 133.5,-164 133.5,-176 133.5,-176 133.5,-182 127.5,-188 121.5,-188"/>
+<text text-anchor="middle" x="67" y="-166.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">Linux 장치 드라이버</text>
+</g>
+<g id="node7" class="node">
+<title>F</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M122,-112C122,-112 12,-112 12,-112 6,-112 0,-106 0,-100 0,-100 0,-88 0,-88 0,-82 6,-76 12,-76 12,-76 122,-76 122,-76 128,-76 134,-82 134,-88 134,-88 134,-100 134,-100 134,-106 128,-112 122,-112"/>
+<text text-anchor="middle" x="67" y="-90.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">펌웨어·PE 실행 계층</text>
+</g>
+<g id="node8" class="node">
+<title>N</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M169.5,-36C169.5,-36 68.5,-36 68.5,-36 62.5,-36 56.5,-30 56.5,-24 56.5,-24 56.5,-12 56.5,-12 56.5,-6 62.5,0 68.5,0 68.5,0 169.5,0 169.5,0 175.5,0 181.5,-6 181.5,-12 181.5,-12 181.5,-24 181.5,-24 181.5,-30 175.5,-36 169.5,-36"/>
+<text text-anchor="middle" x="119" y="-14.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">Tensor Unit·DMA</text>
+</g>
+</g>
+</svg>

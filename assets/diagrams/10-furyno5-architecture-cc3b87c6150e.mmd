@@ -1,0 +1,11 @@
+flowchart TB
+    A["모델 + 예제 입력 + 상태 계약"] --> B["capture와 의미 정규화"]
+    B --> C["shape · dtype · layout 규칙"]
+    C --> D["영역 선택과 TCL 생성"]
+    D --> E["공식 compiler와 EDF ABI 확인"]
+    E --> F["tensor 연결 + 실행 계획"]
+    F --> G["fxbX: 검증 · 적재 · 실행"]
+    C --> H["지원 gap과 재현 recipe"]
+    D --> I["비용 예측과 후보 탐색"]
+    I --> J["별도 수치 · trace · 성능 검증"]
+    J --> D

@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="공식 플러그인의 경로와 FuryNo5·fxbX에 아직 필요한 연결을 설명합니다."><meta name="theme-color" content="#fbfaf7"><title>vLLM 서빙과 연결 과제 · FuryNo5 개발 핸드북</title><link rel="icon" href="../assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="../assets/site.css"><script defer src="../assets/site.js"></script></head>
+<body data-root="../" data-chapter="14-serving-vllm"><a class="skip" href="#content">본문으로 이동</a><header class="topbar"><button class="menu-toggle" type="button" aria-label="전체 목차 열기" aria-controls="sidebar" aria-expanded="false">☰</button><a class="brand" href="../index.html"><span class="brand-mark">Nº5</span>FuryNo5<small>DEVELOPER HANDBOOK</small></a><div class="top-actions"><a class="top-link" href="../sources.html">출처와 버전</a><button class="search-open" type="button" aria-label="핸드북 전체 검색"><span>전체 문서 검색</span><kbd>⌘ K</kbd></button></div></header><div class="progress" aria-hidden="true"></div><div class="mobile-shade"></div><aside class="sidebar" id="sidebar" aria-label="전체 목차"><nav><div class="nav-caption">시작하기</div><a class="nav-link"  href="../index.html"><span class="num">00</span><span>전체 지도와 읽는 방법</span></a><div class="nav-caption">I. 디바이스를 이해하기</div><a class="nav-link"  href="../chapter/01-hardware.html"><span class="num">01</span><span>RNGD · TCP · PE</span></a><a class="nav-link"  href="../chapter/02-memory-dma.html"><span class="num">02</span><span>메모리 · DMA · 배치</span></a><a class="nav-link"  href="../chapter/03-driver-runtime.html"><span class="num">03</span><span>드라이버와 공식 런타임</span></a><div class="nav-caption">II. 프로그램을 만들고 실행하기</div><a class="nav-link"  href="../chapter/04-tcl-edf.html"><span class="num">04</span><span>TCL 작성 · 컴파일 · 실행</span></a><a class="nav-link"  href="../chapter/05-graphs-fallback.html"><span class="num">05</span><span>실행그래프 · 오류 · 폴백</span></a><a class="nav-link"  href="../chapter/06-buckets-shapes.html"><span class="num">06</span><span>Shape · 버킷 · 컴파일 비용</span></a><a class="nav-link"  href="../chapter/07-optimization.html"><span class="num">07</span><span>최적화의 축과 우선순위</span></a><a class="nav-link"  href="../chapter/08-eisa-visa.html"><span class="num">08</span><span>eISA · vISA · furiosa-opt</span></a><div class="nav-caption">III. FuryNo5를 해부하기</div><a class="nav-link"  href="../chapter/09-torch-aten.html"><span class="num">09</span><span>PyTorch · ATen · 등록</span></a><a class="nav-link"  href="../chapter/10-furyno5-architecture.html"><span class="num">10</span><span>FuryNo5 구조와 지원 범위</span></a><a class="nav-link"  href="../chapter/11-furyno5-compiler.html"><span class="num">11</span><span>FuryNo5 컴파일과 캐시</span></a><div class="nav-caption">IV. 모델 포팅과 서빙</div><a class="nav-link"  href="../chapter/12-fxbx.html"><span class="num">12</span><span>fxbX 포맷과 실행계획</span></a><a class="nav-link"  href="../chapter/13-porting-fha.html"><span class="num">13</span><span>모델 포팅 · FHA 자동화</span></a><a class="nav-link active" aria-current="page" href="../chapter/14-serving-vllm.html"><span class="num">14</span><span>vLLM · 서빙 브리지</span></a><a class="nav-link"  href="../chapter/15-multi-npu.html"><span class="num">15</span><span>PE · 여러 카드 · 여러 서버</span></a><div class="nav-caption">V. 검증과 다음 개발</div><a class="nav-link"  href="../chapter/16-furyboost.html"><span class="num">16</span><span>FuryBoost 실측과 남은 과제</span></a><a class="nav-link"  href="../chapter/17-debugging.html"><span class="num">17</span><span>측정 · 추적 · 실패 재현</span></a><div class="nav-caption">참고와 검증</div><a class="nav-link"  href="../glossary.html"><span class="num">·</span><span>약어와 용어 사전</span></a><a class="nav-link"  href="../sources.html"><span class="num">·</span><span>출처 · 버전 · 접근 범위</span></a><a class="nav-link"  href="../review.html"><span class="num">·</span><span>검토 기록과 미해결 질문</span></a></nav><div class="side-foot">비공식 개발 핸드북 · 2026.11.19<br>공식 SDK와 프로젝트 구현을 구분합니다.<br><a href="https://github.com/smallstep-zzz/furyno5-handbook">원고와 변경 이력 ↗</a></div></aside><div class="shell"><main class="page" id="content"><div class="eyebrow">IV. 모델 포팅과 서빙 / CHAPTER 14</div><h1>vLLM 서빙과 연결 과제</h1><p class="dek">공식 플러그인의 경로와 FuryNo5·fxbX에 아직 필요한 연결을 설명합니다.</p><div class="page-meta"><span>검토 2026.11.19</span><span>SDK 2026.4 계열 / 버전별 표기</span><span class="readtime">약 9분</span><span><a href="https://github.com/smallstep-zzz/furyno5-handbook/blob/main/content/14-serving-vllm.md">원고</a></span></div><details class="mobile-toc"><summary>이 장의 목차</summary><div><a class="" href="#1-vllm은-무엇을-담당하는가">1. vLLM은 무엇을 담당하는가</a><a class="" href="#2-공식-furiosa-llm과-무엇이-다른가">2. 공식 Furiosa-LLM과 무엇이 다른가</a><a class="" href="#3-plugin이-등록되는-정확한-위치">3. plugin이 등록되는 정확한 위치</a><a class="" href="#4-재현-가능한-설치의-기준">4. 재현 가능한 설치의 기준</a><a class="" href="#5-먼저-지원-모델로-http-왕복을-확인한다">5. 먼저 지원 모델로 HTTP 왕복을 확인한다</a><a class="" href="#6-문서와-코드가-어긋난-부분도-기록한다">6. 문서와 코드가 어긋난 부분도 기록한다</a><a class="" href="#7-furyno5-fxbx를-붙이기-위해-남은-계약">7. FuryNo5·fxbX를 붙이기 위해 남은 계약</a><a class="" href="#출처">출처</a></div></details><noscript><p class="noscript">본문과 그림은 JavaScript 없이 읽을 수 있습니다. 검색과 조절 실험에는 JavaScript가 필요합니다.</p></noscript><article class="article"><p><strong>공식 furiosa-opt-vllm은 사용할 수 있는 별도 서빙 경로다. 그러나 fxbX 파일을 그대로 넣는 범용 loader는 아니다.</strong> vLLM이 요청과 KV(Key–Value) cache block을 관리하고, Furiosa 플러그인이 엔진 호출로 바꾸며, 엔진은 자신이 컴파일한 모델을 실행한다. FuryNo5의 임의 실행 계획을 연결하려면 이 사이의 계약을 구현해야 한다. 조회 기준은 2026-11-19, <code>furiosa-opt-models c982976</code>이다. <a href="https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/README.md">공식 저장소</a> · <a href="https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/docs/design/architecture.md">엔진 구조</a></p>
+<h2 id="1-vllm은-무엇을-담당하는가"><a class="heading-anchor" href="#1-vllm은-무엇을-담당하는가">1. vLLM은 무엇을 담당하는가</a></h2>
+<p>vLLM은 LLM(Large Language Model) 추론과 서빙 프레임워크의 이름이다. 요청을 받고, 여러 sequence를 한 step에 배치하며, KV cache에 사용할 block을 정하고, 모델 결과로 다음 토큰을 고른다. 요청 처리·스케줄링과 모델의 수학 연산을 나눠야 같은 서빙 정책을 다른 하드웨어에서 사용할 수 있다. 외부 하드웨어는 platform plugin과 worker를 통해 연결한다. <a href="https://docs.vllm.ai/en/stable/design/plugin_system/">vLLM plugin interface</a></p>
+<p>여기서 cache block은 이전 토큰의 attention용 K와 V를 저장하는 단위다. EDF bucket은 컴파일된 실행 규격을 고르는 단위다. 둘 다 실행 효율에 중요하지만 같은 개념이 아니다. block table은 요청의 논리적 위치를 cache 저장 위치로 대응시키고, bucket 또는 엔진의 compiled row envelope는 한 번에 실행 가능한 계산량을 제한한다. <a href="https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/docs/engine/frameworks.md">요청과 block 변환</a> · <a href="https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/docs/engine/python.md">엔진 request 예</a></p>
+<figure class="diagram"><img src="../assets/diagrams/14-serving-vllm-fd70a06a7546.svg" alt="vLLM 서빙과 연결 과제 · 도식 1" loading="lazy"><figcaption>도식 1 · vLLM 서빙과 연결 과제 — 설명을 위해 단순화한 관계도. 실제 호출 조건과 근거는 본문을 함께 읽으세요.</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
+    A[&quot;HTTP 요청과 tokenizer&quot;] --&gt; B[&quot;vLLM scheduler&quot;]
+    B --&gt; C[&quot;Furiosa platform과 worker&quot;]
+    C --&gt; D[&quot;요청·block·sampling 변환&quot;]
+    D --&gt; E[&quot;furiosa-opt-engine&quot;]
+    E --&gt; F[&quot;컴파일된 모델 함수&quot;]
+    F --&gt; G[&quot;장치 런타임과 RNGD&quot;]
+    G --&gt; D
+    D --&gt; H[&quot;토큰과 응답&quot;]</pre></details></figure><h2 id="2-공식-furiosa-llm과-무엇이-다른가"><a class="heading-anchor" href="#2-공식-furiosa-llm과-무엇이-다른가">2. 공식 Furiosa-LLM과 무엇이 다른가</a></h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>경로</th>
+<th>모델 실행의 중심</th>
+<th>배포 계약</th>
+<th>FuryNo5 산출물과 현재 관계</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Furiosa-LLM</td>
+<td>공식 architecture-aware 모델 실행기</td>
+<td>HF assets + 호환 공식 FXB</td>
+<td>커스텀 계획을 자동 등록하는 공개 범용 연결은 확인되지 않음</td>
+</tr>
+<tr>
+<td>furiosa-opt-vllm</td>
+<td>vLLM + Rust 기반 opt engine/model</td>
+<td>엔진에 컴파일된 model type + HF checkpoint</td>
+<td>fxbX reader 없이 자체 registry·model 계약 사용</td>
+</tr>
+<tr>
+<td>fxbX <code>serve</code></td>
+<td>fxbX adapter와 자체 HTTP 처리</td>
+<td>fxbX package 계약</td>
+<td>자체 실행 가능 모델에 대한 기존 경로</td>
+</tr>
+<tr>
+<td>제안하는 fxbX-vLLM 연결</td>
+<td>vLLM worker ↔ fxbX execution session</td>
+<td>아래 7절의 추가 계약 필요</td>
+<td>이 장에서는 설계 과제로 분류</td>
+</tr>
+</tbody></table>
+</div><p>fxbX의 HTTP endpoint가 OpenAI-compatible 형태라는 것과 vLLM의 scheduler가 fxbX를 사용한다는 것은 다르다. 현재 fxbX의 비스트리밍 endpoint는 공개 API 모양을 맞춘 서비스이며, 그 사실만으로 continuous batching, paged attention, 분산 KV를 얻지는 않는다. <a href="https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/README.md">fxbX HTTP 안내</a> · <a href="https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/hug_engine.py">현재 adapter</a></p>
+<h2 id="3-plugin이-등록되는-정확한-위치"><a class="heading-anchor" href="#3-plugin이-등록되는-정확한-위치">3. plugin이 등록되는 정확한 위치</a></h2>
+<p>공식 플러그인의 <code>pyproject.toml</code>은 아래 Python entry point를 등록한다.</p>
+<div class="codebox"><div class="codebar"><span>toml</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-toml">[project.entry-points.&quot;vllm.platform_plugins&quot;]
+furiosa = &quot;furiosa_opt_vllm:register&quot;
+</code></pre></div>
+<p><a href="https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/integrations/furiosa-opt-vllm/pyproject.toml">출처: 공식 plugin pyproject</a></p>
+<p><code>platform.py</code>는 지원하지 않는 옵션을 초기에 검사하고 <code>FuriosaWorker</code>를 선택한다. <code>worker.py</code>는 엔진·모델을 적재하고 cache 용량·실행을 연결한다. <code>generation/sequence.py</code>는 scheduler output을 요청으로 묶고, <code>generation/__init__.py</code>와 <code>selection.py</code>는 device argmax와 host sampling을 구분한다. 디바이스가 처리한 결과를 vLLM이 이해하는 token·logprob·request 순서로 바꾸는 코드가 integration의 핵심이다. <a href="https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/integrations/furiosa-opt-vllm/furiosa_opt_vllm/platform.py">platform</a> · <a href="https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/integrations/furiosa-opt-vllm/furiosa_opt_vllm/worker.py">worker</a> · <a href="https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/integrations/furiosa-opt-vllm/furiosa_opt_vllm/generation/__init__.py">generation</a></p>
+<h2 id="4-재현-가능한-설치의-기준"><a class="heading-anchor" href="#4-재현-가능한-설치의-기준">4. 재현 가능한 설치의 기준</a></h2>
+<p>현재 checkout은 아래 조합을 요구한다. “최신 pip 설치”보다 이 조합을 함께 보존하는 것이 중요하다.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>항목</th>
+<th>조회한 소스의 조건</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>호스트</td>
+<td>Linux x86_64</td>
+</tr>
+<tr>
+<td>RNGD driver</td>
+<td>SDK 2026.4 이상 계열</td>
+</tr>
+<tr>
+<td>vLLM plugin</td>
+<td>0.1.0</td>
+</tr>
+<tr>
+<td>vLLM wheel</td>
+<td>0.31.0 CPU wheel</td>
+</tr>
+<tr>
+<td>Python</td>
+<td>3.11 이상, 3.15 미만</td>
+</tr>
+<tr>
+<td>glibc</td>
+<td>CPU wheel 때문에 2.39 이상</td>
+</tr>
+<tr>
+<td>compiler</td>
+<td>Cargo.toml의 furiosa-opt-preview revision <code>9481ae2db8c465b9c7008dcfa787721982789d3e</code>와 맞는 snapshot</td>
+</tr>
+<tr>
+<td>도구</td>
+<td>uv, rustup, host C compiler, AArch64 cross-toolchain</td>
+</tr>
+</tbody></table>
+</div><p><a href="https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/docs/getting-started/installation.md">설치 문서</a> · <a href="https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/integrations/furiosa-opt-vllm/pyproject.toml">dependency 실제 값</a> · <a href="https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/Cargo.toml">compiler revision</a></p>
+<p>예전 SDK 환경에 이 dependency를 섞기보다 별도 virtual environment에서 사용한다. CPU wheel이라는 이름은 “모델 본체를 CPU에서 실행한다”는 뜻이 아니다. 이 플러그인은 vLLM의 host scheduler/sampling 기반을 사용하고 모델 본체는 Furiosa 엔진으로 보낸다.</p>
+<p>공식 설치 문서가 제시한 compiler 설치 진입점은 다음이다. <code>cargo-binstall</code>이 준비되어 있어야 한다. 이 명령은 preview 기본 branch의 snapshot을 받으므로, <strong>고정한 모델 저장소의 Cargo revision과 맞는 compiler인지 확인해야 한다.</strong> 나중에 재현할 때 해당 snapshot을 확보하지 못하면 임의 최신 compiler로 성공을 가정하지 않는다.</p>
+<div class="codebox"><div class="codebar"><span>bash</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-bash">cargo binstall --git https://github.com/furiosa-ai/furiosa-opt-preview cargo-furiosa-opt
+</code></pre></div>
+<p>모델 저장소와 플러그인을 설치한다.</p>
+<div class="codebox"><div class="codebar"><span>bash</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-bash">git clone https://github.com/furiosa-ai/furiosa-opt-models
+cd furiosa-opt-models
+git checkout c982976100d18d7a9641d5a8c22b89cec4544049
+uv venv
+source .venv/bin/activate
+CARGO=cargo-furiosa-opt uv pip install --torch-backend cpu ./integrations/furiosa-opt-vllm
+python -c &quot;import furiosa_opt_engine as e; print(e.LoadOptions())&quot;
+</code></pre></div>
+<p>마지막 import 검사는 장치를 열거나 모델을 실행하지 않는다. plugin 설치는 engine과 model function을 컴파일하므로 빌드 시간이 든다. compiler mismatch 메시지가 나면 revision을 맞추고 재시도한다. driver mismatch도 실제 사례가 있다. 포럼에서는 opt 0.8.1과 구형 driver 2026.3.1 조합이 장치를 열지 못했고 2026.4.0 driver가 필요하다고 안내했다. 이 과거 사건을 현재 모든 버전의 호환표로 일반화하지 않는다. <a href="https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/docs/getting-started/installation.md">공식 설치 흐름</a> · <a href="https://forums.furiosa.ai/t/furioa-opt-support-matrix-driver-version/464">Furiosa 포럼</a></p>
+<h2 id="5-먼저-지원-모델로-http-왕복을-확인한다"><a class="heading-anchor" href="#5-먼저-지원-모델로-http-왕복을-확인한다">5. 먼저 지원 모델로 HTTP 왕복을 확인한다</a></h2>
+<p>공식 quickstart의 지원 예는 Qwen3-1.7B다. checkpoint 다운로드·접근 조건과 장치 메모리가 준비된 환경에서 실행한다. 이 명령은 모델 serving을 시작한다.</p>
+<div class="codebox"><div class="codebar"><span>bash</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-bash">vllm serve Qwen/Qwen3-1.7B --host 127.0.0.1 --port 8000
+</code></pre></div>
+<p>다른 터미널에서 작은 요청을 보낸다.</p>
+<div class="codebox"><div class="codebar"><span>bash</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-bash">curl http://127.0.0.1:8000/v1/completions   -H 'Content-Type: application/json'   -d '{&quot;model&quot;:&quot;Qwen/Qwen3-1.7B&quot;,&quot;prompt&quot;:&quot;The capital of Korea is&quot;,&quot;max_tokens&quot;:12,&quot;temperature&quot;:0}'
+</code></pre></div>
+<p><a href="https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/docs/getting-started/quickstart.md">공식 quickstart</a></p>
+<p>로그에는 선택된 platform, model type, compiled window·row 제한, cache 할당을 남긴다. 다음에는 한 요청의 수치·출력을 확인하고, 여러 동시 요청에서 잘못된 block 공유나 요청 취소 뒤의 상태 재사용이 없는지 검사한다. 이 단계에서 모델 생성이 되더라도 FuryNo5의 커스텀 package가 지원된 것은 아니다.</p>
+<p>Python 진입점도 vLLM API를 그대로 사용한다. 아래 예는 위와 동일한 지원 모델에 대한 사용 예다.</p>
+<div class="codebox"><div class="codebar"><span>python</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-python">from vllm import LLM, SamplingParams
+
+if __name__ == &quot;__main__&quot;:
+    model = LLM(model=&quot;Qwen/Qwen3-1.7B&quot;)
+    outputs = model.generate(
+        [&quot;The capital of Korea is&quot;],
+        SamplingParams(temperature=0, max_tokens=12),
+    )
+    print(outputs[0].outputs[0].text)
+</code></pre></div>
+<h2 id="6-문서와-코드가-어긋난-부분도-기록한다"><a class="heading-anchor" href="#6-문서와-코드가-어긋난-부분도-기록한다">6. 문서와 코드가 어긋난 부분도 기록한다</a></h2>
+<p>이번 조사에서 같은 commit의 일부 문서가 구현을 따라오지 못한 부분을 확인했다. 따라서 기능표는 README 문장 하나만으로 결정하지 않았다.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>쟁점</th>
+<th>문서의 서술</th>
+<th>코드·테스트에서 확인한 내용</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Data Parallelism(DP)</td>
+<td>옵션 문서에는 degree 1</td>
+<td>dense 모델의 독립 replica DP 경로와 DP=2 token test 존재</td>
+</tr>
+<tr>
+<td>sampling</td>
+<td>framework 설명 일부는 greedy 이외 거절</td>
+<td>generation은 device argmax와 host logits sampling을 분기</td>
+</tr>
+<tr>
+<td>Pipeline Parallelism(PP)·여러 node</td>
+<td>미지원</td>
+<td>admission에서 PP=1, nnodes=1 요구</td>
+</tr>
+<tr>
+<td>Tensor Parallelism(TP)</td>
+<td>컴파일된 chip 수</td>
+<td>engine LoadOptions의 chips 선택으로 전달</td>
+</tr>
+</tbody></table>
+</div><p>DP가 무제한 지원된다는 뜻도 아니다. 현재 admission은 multiprocessing backend를 요구하고 MoE(Mixture of Experts), speculative decoding, KV offload 조합 등에 별도 제한을 건다. 테스트 파일이 존재한다는 사실을 이번 편집 환경의 실제 NPU 통과 결과로 바꾸어 쓰지 않는다. <a href="https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/docs/serving/vllm.md">옵션 문서</a> · <a href="https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/integrations/furiosa-opt-vllm/furiosa_opt_vllm/admission.py">admission 실제 검사</a> · <a href="https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/integrations/furiosa-opt-vllm/tests/test_parallelism.py">parallelism 테스트</a></p>
+<h2 id="7-furyno5-fxbx를-붙이기-위해-남은-계약"><a class="heading-anchor" href="#7-furyno5-fxbx를-붙이기-위해-남은-계약">7. FuryNo5·fxbX를 붙이기 위해 남은 계약</a></h2>
+<p>다음은 <strong>현재 구현 완료 주장이 아닌 개발 설계</strong>다. vLLM을 재구현할 필요는 없지만, EDF를 호출하는 함수 하나만 등록해서도 충분하지 않다.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>연결 지점</th>
+<th>추가로 정의할 내용</th>
+<th>합격 증거</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>모델 적재</td>
+<td>package hash, SDK·ABI, 외부 weights, entry 목록</td>
+<td>새 프로세스·잘못된 버전 거절</td>
+</tr>
+<tr>
+<td>prefill/decode</td>
+<td>토큰·position·mask·row packing 규칙</td>
+<td>여러 길이·batch의 reference 대조</td>
+</tr>
+<tr>
+<td>KV cache</td>
+<td>block layout, layer/group별 dtype, 소유권</td>
+<td>요청 교차·회수·재사용 검증</td>
+</tr>
+<tr>
+<td>상태</td>
+<td>recurrent state·reset·cancel·재시작</td>
+<td>요청 간 상태 독립</td>
+</tr>
+<tr>
+<td>출력</td>
+<td>logits 또는 token, sampling 적용 위치</td>
+<td>greedy·sampling·logprobs 계약</td>
+</tr>
+<tr>
+<td>scheduler</td>
+<td>허용 batch·bucket 선택, padding·backpressure</td>
+<td>TTFT·TPOT·throughput과 tail latency</td>
+</tr>
+<tr>
+<td>오류</td>
+<td>accepted와 completed 구별, 세션 실패 처리</td>
+<td>async 실패를 성공 응답으로 보고하지 않음</td>
+</tr>
+</tbody></table>
+</div><p>TTFT(Time To First Token)는 첫 토큰 지연, TPOT(Time Per Output Token)는 이후 토큰당 시간이다. 이 둘과 요청 throughput은 같은 목표가 아니다. 첫 연결은 한 모델·한 shape 규격·greedy·한 장치에서 시작하고, cache 관리와 batch를 단계적으로 추가하는 편이 원인 추적에 유리하다. 이는 FuryNo5의 권장 개발 순서이며 사용하는 모델과 서비스 요구에 따라 달라질 수 있다.</p>
+<p>기존 FHA 조사에서도 checkpoint metadata 선검사·tensor별 적재 같은 설계는 현재 fxbX에 적용했지만, Rust preview engine과 vLLM plugin의 직접 ABI 연결은 별도 검증 과제로 남겼다. 11월 10일 기록을 최신 plugin의 기능 제한으로 그대로 인용하지 않고, <strong>우리 프로젝트의 통합 상태를 설명하는 근거</strong>로만 사용한다. <a href="https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/docs/FURIOSA_OPT_MODELS_ADOPTION_PLAN.md">FHA 적용 기록</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
+<h2 id="출처"><a class="heading-anchor" href="#출처">출처</a></h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>자료</th>
+<th>용도</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a href="https://docs.vllm.ai/en/stable/design/plugin_system/">vLLM plugin system</a></td>
+<td>외부 platform/worker 등록 계약</td>
+</tr>
+<tr>
+<td><a href="https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/docs/getting-started/installation.md">공식 opt-models 설치</a>, <a href="https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/integrations/furiosa-opt-vllm/pyproject.toml">pyproject</a></td>
+<td>실제 dependency·설치</td>
+</tr>
+<tr>
+<td><a href="https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/docs/design/architecture.md">architecture</a>, <a href="https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/docs/engine/python.md">engine Python</a></td>
+<td>소유권·비동기 완료</td>
+</tr>
+<tr>
+<td><a href="https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/integrations/furiosa-opt-vllm/furiosa_opt_vllm/admission.py">admission</a>, <a href="https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/integrations/furiosa-opt-vllm/furiosa_opt_vllm/generation/__init__.py">generation</a></td>
+<td>문서와 코드 대조</td>
+</tr>
+<tr>
+<td><a href="https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/integrations/furiosa-opt-vllm/tests/test_parallelism.py">parallelism tests</a></td>
+<td>구현된 제한적 병렬성</td>
+</tr>
+<tr>
+<td><a href="https://forums.furiosa.ai/t/furioa-opt-support-matrix-driver-version/464">Furiosa driver 포럼</a></td>
+<td>과거 버전 호환 문제</td>
+</tr>
+<tr>
+<td><a href="https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/docs/FURIOSA_OPT_MODELS_ADOPTION_PLAN.md">FHA adoption 기록</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></td>
+<td>우리 통합 경계 — 접근 권한 필요</td>
+</tr>
+</tbody></table>
+</div></article><nav class="next-prev" aria-label="이전과 다음 장"><a href="../chapter/13-porting-fha.html"><small>← 이전 장</small><b>모델 포팅과 FHA</b></a><a href="../chapter/15-multi-npu.html"><small>다음 장 →</small><b>여러 NPU로 확장하기</b></a></nav><footer class="footer">FuryNo5 개발 핸드북 · 비공식 자료<br>공식 문서와 소스의 권리는 각 프로젝트에 있습니다. 코드 인용은 출처와 함께 표시합니다.<br><a href="../review.html">검토 기록과 남은 질문</a> · <a href="../sources.html">출처와 버전</a> · <a href="../glossary.html">용어 사전</a></footer></main></div><aside class="right-toc" aria-label="이 장의 목차"><h2>이 장에서 다루는 내용</h2><a class="" href="#1-vllm은-무엇을-담당하는가">1. vLLM은 무엇을 담당하는가</a><a class="" href="#2-공식-furiosa-llm과-무엇이-다른가">2. 공식 Furiosa-LLM과 무엇이 다른가</a><a class="" href="#3-plugin이-등록되는-정확한-위치">3. plugin이 등록되는 정확한 위치</a><a class="" href="#4-재현-가능한-설치의-기준">4. 재현 가능한 설치의 기준</a><a class="" href="#5-먼저-지원-모델로-http-왕복을-확인한다">5. 먼저 지원 모델로 HTTP 왕복을 확인한다</a><a class="" href="#6-문서와-코드가-어긋난-부분도-기록한다">6. 문서와 코드가 어긋난 부분도 기록한다</a><a class="" href="#7-furyno5-fxbx를-붙이기-위해-남은-계약">7. FuryNo5·fxbX를 붙이기 위해 남은 계약</a><a class="" href="#출처">출처</a></aside><dialog class="search-dialog" aria-label="문서 검색"><div class="search-head"><input type="search" aria-label="검색어" placeholder="DMA, EDF, 폴백, 버킷…" autocomplete="off"><button class="close-search" type="button">닫기</button></div><div class="search-status" role="status">용어나 함수 이름을 입력하세요.</div><div class="search-results"></div></dialog></body></html>

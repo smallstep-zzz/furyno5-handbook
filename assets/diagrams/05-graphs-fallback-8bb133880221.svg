@@ -1,0 +1,86 @@
+<svg role="img" aria-label="모델의 수식·상태 · 모델 그래프 · 영역별 커널 컴파일 · 커널 사이 연결 계획 · EDF 묶음 · 로더·실행 세션 · 서비스 요청·버킷 선택 · NPU 실행" width="406pt" height="445pt"
+ viewBox="0.00 0.00 405.80 444.80" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(14.4 430.4)">
+<title>handbook</title>
+<g id="edge1" class="edge">
+<title>M&#45;&gt;G</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M138.5,-379.84C138.5,-370.12 138.5,-357.82 138.5,-347.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="140.95,-347.07 138.5,-340.07 136.05,-347.07 140.95,-347.07"/>
+</g>
+<g id="edge2" class="edge">
+<title>G&#45;&gt;K</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M120.87,-303.84C110.23,-293.47 96.55,-280.15 85.11,-269.02"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="86.76,-267.2 80.03,-264.07 83.34,-270.71 86.76,-267.2"/>
+</g>
+<g id="edge3" class="edge">
+<title>G&#45;&gt;P</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M156.13,-303.84C166.77,-293.47 180.45,-280.15 191.89,-269.02"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="193.66,-270.71 196.97,-264.07 190.24,-267.2 193.66,-270.71"/>
+</g>
+<g id="edge4" class="edge">
+<title>K&#45;&gt;E</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M71.31,-227.84C76.4,-217.94 82.86,-205.35 88.42,-194.53"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="90.72,-195.42 91.73,-188.07 86.36,-193.18 90.72,-195.42"/>
+</g>
+<g id="edge6" class="edge">
+<title>P&#45;&gt;R</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M212.32,-227.79C208.94,-201.12 202.43,-149.7 198.57,-119.26"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="200.96,-118.64 197.65,-112.01 196.1,-119.26 200.96,-118.64"/>
+</g>
+<g id="edge5" class="edge">
+<title>E&#45;&gt;R</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M122.53,-151.84C136.08,-141.28 153.56,-127.67 168.01,-116.42"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="169.57,-118.3 173.59,-112.07 166.56,-114.44 169.57,-118.3"/>
+</g>
+<g id="edge8" class="edge">
+<title>R&#45;&gt;N</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M195.5,-75.84C195.5,-66.12 195.5,-53.82 195.5,-43.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="197.95,-43.07 195.5,-36.07 193.05,-43.07 197.95,-43.07"/>
+</g>
+<g id="edge7" class="edge">
+<title>Q&#45;&gt;R</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M279.99,-151.84C264.16,-141.19 243.71,-127.43 226.89,-116.12"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="228.05,-113.94 220.87,-112.07 225.31,-118.01 228.05,-113.94"/>
+</g>
+<g id="node1" class="node">
+<title>M</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M185,-416C185,-416 92,-416 92,-416 86,-416 80,-410 80,-404 80,-404 80,-392 80,-392 80,-386 86,-380 92,-380 92,-380 185,-380 185,-380 191,-380 197,-386 197,-392 197,-392 197,-404 197,-404 197,-410 191,-416 185,-416"/>
+<text text-anchor="middle" x="138.5" y="-394.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">모델의 수식·상태</text>
+</g>
+<g id="node2" class="node">
+<title>G</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M170.5,-340C170.5,-340 106.5,-340 106.5,-340 100.5,-340 94.5,-334 94.5,-328 94.5,-328 94.5,-316 94.5,-316 94.5,-310 100.5,-304 106.5,-304 106.5,-304 170.5,-304 170.5,-304 176.5,-304 182.5,-310 182.5,-316 182.5,-316 182.5,-328 182.5,-328 182.5,-334 176.5,-340 170.5,-340"/>
+<text text-anchor="middle" x="138.5" y="-318.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">모델 그래프</text>
+</g>
+<g id="node3" class="node">
+<title>K</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M113,-264C113,-264 12,-264 12,-264 6,-264 0,-258 0,-252 0,-252 0,-240 0,-240 0,-234 6,-228 12,-228 12,-228 113,-228 113,-228 119,-228 125,-234 125,-240 125,-240 125,-252 125,-252 125,-258 119,-264 113,-264"/>
+<text text-anchor="middle" x="62.5" y="-242.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">영역별 커널 컴파일</text>
+</g>
+<g id="node4" class="node">
+<title>P</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M266.5,-264C266.5,-264 162.5,-264 162.5,-264 156.5,-264 150.5,-258 150.5,-252 150.5,-252 150.5,-240 150.5,-240 150.5,-234 156.5,-228 162.5,-228 162.5,-228 266.5,-228 266.5,-228 272.5,-228 278.5,-234 278.5,-240 278.5,-240 278.5,-252 278.5,-252 278.5,-258 272.5,-264 266.5,-264"/>
+<text text-anchor="middle" x="214.5" y="-242.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">커널 사이 연결 계획</text>
+</g>
+<g id="node5" class="node">
+<title>E</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M126.5,-188C126.5,-188 74.5,-188 74.5,-188 68.5,-188 62.5,-182 62.5,-176 62.5,-176 62.5,-164 62.5,-164 62.5,-158 68.5,-152 74.5,-152 74.5,-152 126.5,-152 126.5,-152 132.5,-152 138.5,-158 138.5,-164 138.5,-164 138.5,-176 138.5,-176 138.5,-182 132.5,-188 126.5,-188"/>
+<text text-anchor="middle" x="100.5" y="-166.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">EDF 묶음</text>
+</g>
+<g id="node6" class="node">
+<title>R</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M236.5,-112C236.5,-112 154.5,-112 154.5,-112 148.5,-112 142.5,-106 142.5,-100 142.5,-100 142.5,-88 142.5,-88 142.5,-82 148.5,-76 154.5,-76 154.5,-76 236.5,-76 236.5,-76 242.5,-76 248.5,-82 248.5,-88 248.5,-88 248.5,-100 248.5,-100 248.5,-106 242.5,-112 236.5,-112"/>
+<text text-anchor="middle" x="195.5" y="-90.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">로더·실행 세션</text>
+</g>
+<g id="node7" class="node">
+<title>Q</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M365,-188C365,-188 246,-188 246,-188 240,-188 234,-182 234,-176 234,-176 234,-164 234,-164 234,-158 240,-152 246,-152 246,-152 365,-152 365,-152 371,-152 377,-158 377,-164 377,-164 377,-176 377,-176 377,-182 371,-188 365,-188"/>
+<text text-anchor="middle" x="305.5" y="-166.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">서비스 요청·버킷 선택</text>
+</g>
+<g id="node8" class="node">
+<title>N</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M223.5,-36C223.5,-36 167.5,-36 167.5,-36 161.5,-36 155.5,-30 155.5,-24 155.5,-24 155.5,-12 155.5,-12 155.5,-6 161.5,0 167.5,0 167.5,0 223.5,0 223.5,0 229.5,0 235.5,-6 235.5,-12 235.5,-12 235.5,-24 235.5,-24 235.5,-30 229.5,-36 223.5,-36"/>
+<text text-anchor="middle" x="195.5" y="-14.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">NPU 실행</text>
+</g>
+</g>
+</svg>

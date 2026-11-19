@@ -1,0 +1,107 @@
+<svg role="img" aria-label="모델 + 예제 입력 + 상태 계약 · capture와 의미 정규화 · shape · dtype · layout 규칙 · 영역 선택과 TCL 생성 · 공식 compiler와 EDF ABI 확인 · tensor 연결 + 실행 계획 · fxbX: 검증 · 적재 · 실행 · 지원 gap과 재현 recipe · 비용 예측과 후보 탐색 · 별도 수치 · trace · 성능 검증" width="554pt" height="531pt"
+ viewBox="0.00 0.00 554.30 530.80" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(14.4 516.4)">
+<title>handbook</title>
+<g id="edge1" class="edge">
+<title>A&#45;&gt;B</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M367,-465.84C367,-456.12 367,-443.82 367,-433.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="369.45,-433.07 367,-426.07 364.55,-433.07 369.45,-433.07"/>
+</g>
+<g id="edge2" class="edge">
+<title>B&#45;&gt;C</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M367,-389.86C367,-380.33 367,-368.21 367,-357.23"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="369.45,-357.22 367,-350.22 364.55,-357.22 369.45,-357.22"/>
+</g>
+<g id="edge3" class="edge">
+<title>C&#45;&gt;D</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M343.6,-303.99C331.98,-293.07 317.98,-279.9 306.37,-268.98"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="307.99,-267.14 301.22,-264.13 304.64,-270.71 307.99,-267.14"/>
+</g>
+<g id="edge7" class="edge">
+<title>C&#45;&gt;H</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M390.4,-303.99C402.02,-293.07 416.02,-279.9 427.63,-268.98"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="429.36,-270.71 432.78,-264.13 426.01,-267.14 429.36,-270.71"/>
+</g>
+<g id="edge4" class="edge">
+<title>D&#45;&gt;E</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M239.16,-227.84C210.78,-216.72 173.73,-202.22 144.17,-190.64"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="145.01,-188.34 137.6,-188.07 143.22,-192.9 145.01,-188.34"/>
+</g>
+<g id="edge8" class="edge">
+<title>D&#45;&gt;I</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M283,-227.84C283,-218.12 283,-205.82 283,-195.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="285.45,-195.07 283,-188.07 280.55,-195.07 285.45,-195.07"/>
+</g>
+<g id="edge5" class="edge">
+<title>E&#45;&gt;F</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M94,-151.84C94,-142.12 94,-129.82 94,-119.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="96.45,-119.07 94,-112.07 91.55,-119.07 96.45,-119.07"/>
+</g>
+<g id="edge6" class="edge">
+<title>F&#45;&gt;G</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M94,-75.84C94,-66.12 94,-53.82 94,-43.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="96.45,-43.07 94,-36.07 91.55,-43.07 96.45,-43.07"/>
+</g>
+<g id="edge9" class="edge">
+<title>I&#45;&gt;J</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M295.52,-151.84C302.89,-141.75 312.28,-128.87 320.27,-117.92"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="322.4,-119.17 324.54,-112.07 318.44,-116.28 322.4,-119.17"/>
+</g>
+<g id="edge10" class="edge">
+<title>J&#45;&gt;D</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M349.76,-112.2C362.34,-131.45 377.97,-163.19 365,-188 357.06,-203.19 343.02,-215.15 328.78,-224.11"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="327.42,-222.07 322.68,-227.77 329.94,-226.27 327.42,-222.07"/>
+</g>
+<g id="node1" class="node">
+<title>A</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M441.5,-502C441.5,-502 292.5,-502 292.5,-502 286.5,-502 280.5,-496 280.5,-490 280.5,-490 280.5,-478 280.5,-478 280.5,-472 286.5,-466 292.5,-466 292.5,-466 441.5,-466 441.5,-466 447.5,-466 453.5,-472 453.5,-478 453.5,-478 453.5,-490 453.5,-490 453.5,-496 447.5,-502 441.5,-502"/>
+<text text-anchor="middle" x="367" y="-480.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">모델 + 예제 입력 + 상태 계약</text>
+</g>
+<g id="node2" class="node">
+<title>B</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M428,-426C428,-426 306,-426 306,-426 300,-426 294,-420 294,-414 294,-414 294,-402 294,-402 294,-396 300,-390 306,-390 306,-390 428,-390 428,-390 434,-390 440,-396 440,-402 440,-402 440,-414 440,-414 440,-420 434,-426 428,-426"/>
+<text text-anchor="middle" x="367" y="-404.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">capture와 의미 정규화</text>
+</g>
+<g id="node3" class="node">
+<title>C</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M433,-350C433,-350 301,-350 301,-350 295,-350 289,-344 289,-338 289,-338 289,-316 289,-316 289,-310 295,-304 301,-304 301,-304 433,-304 433,-304 439,-304 445,-310 445,-316 445,-316 445,-338 445,-338 445,-344 439,-350 433,-350"/>
+<text text-anchor="middle" x="367" y="-330.4" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">shape · dtype · layout</text>
+<text text-anchor="middle" x="367" y="-317.4" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">규칙</text>
+</g>
+<g id="node4" class="node">
+<title>D</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M339.5,-264C339.5,-264 226.5,-264 226.5,-264 220.5,-264 214.5,-258 214.5,-252 214.5,-252 214.5,-240 214.5,-240 214.5,-234 220.5,-228 226.5,-228 226.5,-228 339.5,-228 339.5,-228 345.5,-228 351.5,-234 351.5,-240 351.5,-240 351.5,-252 351.5,-252 351.5,-258 345.5,-264 339.5,-264"/>
+<text text-anchor="middle" x="283" y="-242.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">영역 선택과 TCL 생성</text>
+</g>
+<g id="node5" class="node">
+<title>E</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M176,-188C176,-188 12,-188 12,-188 6,-188 0,-182 0,-176 0,-176 0,-164 0,-164 0,-158 6,-152 12,-152 12,-152 176,-152 176,-152 182,-152 188,-158 188,-164 188,-164 188,-176 188,-176 188,-182 182,-188 176,-188"/>
+<text text-anchor="middle" x="94" y="-166.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">공식 compiler와 EDF ABI 확인</text>
+</g>
+<g id="node6" class="node">
+<title>F</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M157.5,-112C157.5,-112 30.5,-112 30.5,-112 24.5,-112 18.5,-106 18.5,-100 18.5,-100 18.5,-88 18.5,-88 18.5,-82 24.5,-76 30.5,-76 30.5,-76 157.5,-76 157.5,-76 163.5,-76 169.5,-82 169.5,-88 169.5,-88 169.5,-100 169.5,-100 169.5,-106 163.5,-112 157.5,-112"/>
+<text text-anchor="middle" x="94" y="-90.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">tensor 연결 + 실행 계획</text>
+</g>
+<g id="node7" class="node">
+<title>G</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M158,-36C158,-36 30,-36 30,-36 24,-36 18,-30 18,-24 18,-24 18,-12 18,-12 18,-6 24,0 30,0 30,0 158,0 158,0 164,0 170,-6 170,-12 170,-12 170,-24 170,-24 170,-30 164,-36 158,-36"/>
+<text text-anchor="middle" x="94" y="-14.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">fxbX: 검증 · 적재 · 실행</text>
+</g>
+<g id="node8" class="node">
+<title>H</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M513.5,-264C513.5,-264 388.5,-264 388.5,-264 382.5,-264 376.5,-258 376.5,-252 376.5,-252 376.5,-240 376.5,-240 376.5,-234 382.5,-228 388.5,-228 388.5,-228 513.5,-228 513.5,-228 519.5,-228 525.5,-234 525.5,-240 525.5,-240 525.5,-252 525.5,-252 525.5,-258 519.5,-264 513.5,-264"/>
+<text text-anchor="middle" x="451" y="-242.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">지원 gap과 재현 recipe</text>
+</g>
+<g id="node9" class="node">
+<title>I</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M340.5,-188C340.5,-188 225.5,-188 225.5,-188 219.5,-188 213.5,-182 213.5,-176 213.5,-176 213.5,-164 213.5,-164 213.5,-158 219.5,-152 225.5,-152 225.5,-152 340.5,-152 340.5,-152 346.5,-152 352.5,-158 352.5,-164 352.5,-164 352.5,-176 352.5,-176 352.5,-182 346.5,-188 340.5,-188"/>
+<text text-anchor="middle" x="283" y="-166.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">비용 예측과 후보 탐색</text>
+</g>
+<g id="node10" class="node">
+<title>J</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M414.5,-112C414.5,-112 259.5,-112 259.5,-112 253.5,-112 247.5,-106 247.5,-100 247.5,-100 247.5,-88 247.5,-88 247.5,-82 253.5,-76 259.5,-76 259.5,-76 414.5,-76 414.5,-76 420.5,-76 426.5,-82 426.5,-88 426.5,-88 426.5,-100 426.5,-100 426.5,-106 420.5,-112 414.5,-112"/>
+<text text-anchor="middle" x="337" y="-90.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">별도 수치 · trace · 성능 검증</text>
+</g>
+</g>
+</svg>

@@ -1,0 +1,87 @@
+<svg role="img" aria-label="HTTP 요청과 tokenizer · vLLM scheduler · Furiosa platform과 worker · 요청·block·sampling 변환 · furiosa-opt-engine · 컴파일된 모델 함수 · 장치 런타임과 RNGD · 토큰과 응답" width="318pt" height="531pt"
+ viewBox="0.00 0.00 318.30 530.80" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(14.4 516.4)">
+<title>handbook</title>
+<g id="edge1" class="edge">
+<title>A&#45;&gt;B</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M203,-465.84C203,-456.12 203,-443.82 203,-433.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="205.45,-433.07 203,-426.07 200.55,-433.07 205.45,-433.07"/>
+</g>
+<g id="edge2" class="edge">
+<title>B&#45;&gt;C</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M203,-389.86C203,-380.33 203,-368.21 203,-357.23"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="205.45,-357.22 203,-350.22 200.55,-357.22 205.45,-357.22"/>
+</g>
+<g id="edge3" class="edge">
+<title>C&#45;&gt;D</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M203,-303.99C203,-293.85 203,-281.79 203,-271.37"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="205.45,-271.13 203,-264.13 200.55,-271.13 205.45,-271.13"/>
+</g>
+<g id="edge4" class="edge">
+<title>D&#45;&gt;E</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M171.46,-227.84C151.55,-217 125.71,-202.95 104.72,-191.52"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="105.69,-189.26 98.37,-188.07 103.35,-193.57 105.69,-189.26"/>
+</g>
+<g id="edge8" class="edge">
+<title>D&#45;&gt;H</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M203,-227.84C203,-218.12 203,-205.82 203,-195.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="205.45,-195.07 203,-188.07 200.55,-195.07 205.45,-195.07"/>
+</g>
+<g id="edge5" class="edge">
+<title>E&#45;&gt;F</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M80.68,-151.84C88.8,-141.66 99.19,-128.63 107.97,-117.62"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="109.94,-119.07 112.39,-112.07 106.11,-116.02 109.94,-119.07"/>
+</g>
+<g id="edge6" class="edge">
+<title>F&#45;&gt;G</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M137.6,-75.84C144.41,-65.75 153.11,-52.87 160.51,-41.92"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="162.58,-43.24 164.47,-36.07 158.52,-40.5 162.58,-43.24"/>
+</g>
+<g id="edge7" class="edge">
+<title>G&#45;&gt;D</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M191.57,-36.32C211.95,-60.28 246.64,-105.83 260,-152 264.45,-167.37 266.12,-173.22 260,-188 254.34,-201.65 243.66,-213.74 233.05,-223.23"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="231.26,-221.54 227.54,-227.95 234.45,-225.26 231.26,-221.54"/>
+</g>
+<g id="node1" class="node">
+<title>A</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M267,-502C267,-502 139,-502 139,-502 133,-502 127,-496 127,-490 127,-490 127,-478 127,-478 127,-472 133,-466 139,-466 139,-466 267,-466 267,-466 273,-466 279,-472 279,-478 279,-478 279,-490 279,-490 279,-496 273,-502 267,-502"/>
+<text text-anchor="middle" x="203" y="-480.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">HTTP 요청과 tokenizer</text>
+</g>
+<g id="node2" class="node">
+<title>B</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M249,-426C249,-426 157,-426 157,-426 151,-426 145,-420 145,-414 145,-414 145,-402 145,-402 145,-396 151,-390 157,-390 157,-390 249,-390 249,-390 255,-390 261,-396 261,-402 261,-402 261,-414 261,-414 261,-420 255,-426 249,-426"/>
+<text text-anchor="middle" x="203" y="-404.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">vLLM scheduler</text>
+</g>
+<g id="node3" class="node">
+<title>C</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M258,-350C258,-350 148,-350 148,-350 142,-350 136,-344 136,-338 136,-338 136,-316 136,-316 136,-310 142,-304 148,-304 148,-304 258,-304 258,-304 264,-304 270,-310 270,-316 270,-316 270,-338 270,-338 270,-344 264,-350 258,-350"/>
+<text text-anchor="middle" x="203" y="-330.4" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">Furiosa platform과</text>
+<text text-anchor="middle" x="203" y="-317.4" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">worker</text>
+</g>
+<g id="node4" class="node">
+<title>D</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M277.5,-264C277.5,-264 128.5,-264 128.5,-264 122.5,-264 116.5,-258 116.5,-252 116.5,-252 116.5,-240 116.5,-240 116.5,-234 122.5,-228 128.5,-228 128.5,-228 277.5,-228 277.5,-228 283.5,-228 289.5,-234 289.5,-240 289.5,-240 289.5,-252 289.5,-252 289.5,-258 283.5,-264 277.5,-264"/>
+<text text-anchor="middle" x="203" y="-242.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">요청·block·sampling 변환</text>
+</g>
+<g id="node5" class="node">
+<title>E</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M122,-188C122,-188 12,-188 12,-188 6,-188 0,-182 0,-176 0,-176 0,-164 0,-164 0,-158 6,-152 12,-152 12,-152 122,-152 122,-152 128,-152 134,-158 134,-164 134,-164 134,-176 134,-176 134,-182 128,-188 122,-188"/>
+<text text-anchor="middle" x="67" y="-166.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">furiosa&#45;opt&#45;engine</text>
+</g>
+<g id="node6" class="node">
+<title>F</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M176.5,-112C176.5,-112 75.5,-112 75.5,-112 69.5,-112 63.5,-106 63.5,-100 63.5,-100 63.5,-88 63.5,-88 63.5,-82 69.5,-76 75.5,-76 75.5,-76 176.5,-76 176.5,-76 182.5,-76 188.5,-82 188.5,-88 188.5,-88 188.5,-100 188.5,-100 188.5,-106 182.5,-112 176.5,-112"/>
+<text text-anchor="middle" x="126" y="-90.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">컴파일된 모델 함수</text>
+</g>
+<g id="node7" class="node">
+<title>G</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M231.5,-36C231.5,-36 120.5,-36 120.5,-36 114.5,-36 108.5,-30 108.5,-24 108.5,-24 108.5,-12 108.5,-12 108.5,-6 114.5,0 120.5,0 120.5,0 231.5,0 231.5,0 237.5,0 243.5,-6 243.5,-12 243.5,-12 243.5,-24 243.5,-24 243.5,-30 237.5,-36 231.5,-36"/>
+<text text-anchor="middle" x="176" y="-14.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">장치 런타임과 RNGD</text>
+</g>
+<g id="node8" class="node">
+<title>H</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M235,-188C235,-188 171,-188 171,-188 165,-188 159,-182 159,-176 159,-176 159,-164 159,-164 159,-158 165,-152 171,-152 171,-152 235,-152 235,-152 241,-152 247,-158 247,-164 247,-164 247,-176 247,-176 247,-182 241,-188 235,-188"/>
+<text text-anchor="middle" x="203" y="-166.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">토큰과 응답</text>
+</g>
+</g>
+</svg>

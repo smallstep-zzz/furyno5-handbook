@@ -1,0 +1,9 @@
+flowchart TB
+    C["RNGD 한 칩"] --> G0["Cluster 0"]
+    C --> G1["Cluster 1"]
+    G0 --> P0["PE 0–3"]
+    G1 --> P1["PE 4–7"]
+    P0 --> S0["각 PE에 64 slice"]
+    P1 --> S1["각 PE에 64 slice"]
+    S0 --> L0["각 slice에 8 lane"]
+    S1 --> L1["각 slice에 8 lane"]

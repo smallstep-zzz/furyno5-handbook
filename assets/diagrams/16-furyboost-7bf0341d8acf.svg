@@ -1,0 +1,87 @@
+<svg role="img" aria-label="CPU: 훈련 데이터 binning · NPU: bin·target·예측 상주 · 후보 비교 마스크 · gradient·Hessian·count 집계 · 후보 gain 계산 · CPU: 최종 후보 선택 · NPU: 행 라우팅·예측 갱신 · 다음 round 또는 최종 모델" width="259pt" height="607pt"
+ viewBox="0.00 0.00 259.30 606.80" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(14.4 592.4)">
+<title>handbook</title>
+<g id="edge1" class="edge">
+<title>A&#45;&gt;B</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M143,-541.84C143,-532.12 143,-519.82 143,-509.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="145.45,-509.07 143,-502.07 140.55,-509.07 145.45,-509.07"/>
+</g>
+<g id="edge2" class="edge">
+<title>B&#45;&gt;C</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M143,-465.84C143,-456.12 143,-443.82 143,-433.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="145.45,-433.07 143,-426.07 140.55,-433.07 145.45,-433.07"/>
+</g>
+<g id="edge3" class="edge">
+<title>C&#45;&gt;D</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M129.98,-389.86C122.47,-379.97 112.83,-367.28 104.25,-355.98"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="106.06,-354.31 99.87,-350.22 102.16,-357.27 106.06,-354.31"/>
+</g>
+<g id="edge4" class="edge">
+<title>D&#45;&gt;E</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M84.39,-303.99C85.03,-293.85 85.8,-281.79 86.46,-271.37"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="88.92,-271.27 86.92,-264.13 84.03,-270.96 88.92,-271.27"/>
+</g>
+<g id="edge5" class="edge">
+<title>E&#45;&gt;F</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M89.86,-227.84C90.91,-218.12 92.24,-205.82 93.39,-195.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="95.84,-195.29 94.15,-188.07 90.97,-194.77 95.84,-195.29"/>
+</g>
+<g id="edge6" class="edge">
+<title>F&#45;&gt;G</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M108.06,-151.84C115.15,-141.75 124.2,-128.87 131.89,-117.92"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="133.98,-119.21 136,-112.07 129.98,-116.39 133.98,-119.21"/>
+</g>
+<g id="edge7" class="edge">
+<title>G&#45;&gt;C</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M158.51,-112.27C164.57,-123.23 171.64,-137.94 175,-152 198.9,-252.12 188.01,-318.87 179,-350 175.5,-362.1 168.57,-374.11 161.73,-383.96"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="159.62,-382.68 157.5,-389.79 163.59,-385.56 159.62,-382.68"/>
+</g>
+<g id="edge8" class="edge">
+<title>G&#45;&gt;H</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M148,-75.84C148,-66.12 148,-53.82 148,-43.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="150.45,-43.07 148,-36.07 145.55,-43.07 150.45,-43.07"/>
+</g>
+<g id="node1" class="node">
+<title>A</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M213,-578C213,-578 73,-578 73,-578 67,-578 61,-572 61,-566 61,-566 61,-554 61,-554 61,-548 67,-542 73,-542 73,-542 213,-542 213,-542 219,-542 225,-548 225,-554 225,-554 225,-566 225,-566 225,-572 219,-578 213,-578"/>
+<text text-anchor="middle" x="143" y="-556.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">CPU: 훈련 데이터 binning</text>
+</g>
+<g id="node2" class="node">
+<title>B</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M217.5,-502C217.5,-502 68.5,-502 68.5,-502 62.5,-502 56.5,-496 56.5,-490 56.5,-490 56.5,-478 56.5,-478 56.5,-472 62.5,-466 68.5,-466 68.5,-466 217.5,-466 217.5,-466 223.5,-466 229.5,-472 229.5,-478 229.5,-478 229.5,-490 229.5,-490 229.5,-496 223.5,-502 217.5,-502"/>
+<text text-anchor="middle" x="143" y="-480.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">NPU: bin·target·예측 상주</text>
+</g>
+<g id="node3" class="node">
+<title>C</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M187.5,-426C187.5,-426 98.5,-426 98.5,-426 92.5,-426 86.5,-420 86.5,-414 86.5,-414 86.5,-402 86.5,-402 86.5,-396 92.5,-390 98.5,-390 98.5,-390 187.5,-390 187.5,-390 193.5,-390 199.5,-396 199.5,-402 199.5,-402 199.5,-414 199.5,-414 199.5,-420 193.5,-426 187.5,-426"/>
+<text text-anchor="middle" x="143" y="-404.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">후보 비교 마스크</text>
+</g>
+<g id="node4" class="node">
+<title>D</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M154,-350C154,-350 12,-350 12,-350 6,-350 0,-344 0,-338 0,-338 0,-316 0,-316 0,-310 6,-304 12,-304 12,-304 154,-304 154,-304 160,-304 166,-310 166,-316 166,-316 166,-338 166,-338 166,-344 160,-350 154,-350"/>
+<text text-anchor="middle" x="83" y="-330.4" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">gradient·Hessian·count</text>
+<text text-anchor="middle" x="83" y="-317.4" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">집계</text>
+</g>
+<g id="node5" class="node">
+<title>E</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M128,-264C128,-264 48,-264 48,-264 42,-264 36,-258 36,-252 36,-252 36,-240 36,-240 36,-234 42,-228 48,-228 48,-228 128,-228 128,-228 134,-228 140,-234 140,-240 140,-240 140,-252 140,-252 140,-258 134,-264 128,-264"/>
+<text text-anchor="middle" x="88" y="-242.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">후보 gain 계산</text>
+</g>
+<g id="node6" class="node">
+<title>F</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M150,-188C150,-188 42,-188 42,-188 36,-188 30,-182 30,-176 30,-176 30,-164 30,-164 30,-158 36,-152 42,-152 42,-152 150,-152 150,-152 156,-152 162,-158 162,-164 162,-164 162,-176 162,-176 162,-182 156,-188 150,-188"/>
+<text text-anchor="middle" x="96" y="-166.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">CPU: 최종 후보 선택</text>
+</g>
+<g id="node7" class="node">
+<title>G</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M217.5,-112C217.5,-112 78.5,-112 78.5,-112 72.5,-112 66.5,-106 66.5,-100 66.5,-100 66.5,-88 66.5,-88 66.5,-82 72.5,-76 78.5,-76 78.5,-76 217.5,-76 217.5,-76 223.5,-76 229.5,-82 229.5,-88 229.5,-88 229.5,-100 229.5,-100 229.5,-106 223.5,-112 217.5,-112"/>
+<text text-anchor="middle" x="148" y="-90.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">NPU: 행 라우팅·예측 갱신</text>
+</g>
+<g id="node8" class="node">
+<title>H</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M218.5,-36C218.5,-36 77.5,-36 77.5,-36 71.5,-36 65.5,-30 65.5,-24 65.5,-24 65.5,-12 65.5,-12 65.5,-6 71.5,0 77.5,0 77.5,0 218.5,0 218.5,0 224.5,0 230.5,-6 230.5,-12 230.5,-12 230.5,-24 230.5,-24 230.5,-30 224.5,-36 218.5,-36"/>
+<text text-anchor="middle" x="148" y="-14.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">다음 round 또는 최종 모델</text>
+</g>
+</g>
+</svg>

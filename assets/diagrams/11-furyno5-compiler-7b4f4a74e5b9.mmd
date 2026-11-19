@@ -1,0 +1,8 @@
+flowchart TB
+    A["입력 x와 외부 weight"] --> B["step 0: kernel A"]
+    B --> C["중간 tensor h"]
+    C --> D["step 1: kernel B"]
+    D --> E["사용자 출력 y"]
+    D --> F["선택적 next state"]
+    G["기존 state slot"] --> B
+    F --> G

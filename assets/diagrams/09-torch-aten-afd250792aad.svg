@@ -1,0 +1,83 @@
+<svg role="img" aria-label="torch.add(x, y) · aten::add.Tensor · Dispatcher: tensor와 thread 상태 · Autograd · Autocast 등의 처리 · backend 구현 선택 · CPU kernel · CUDA kernel · PrivateUse1 kernel" width="405pt" height="465pt"
+ viewBox="0.00 0.00 404.80 464.80" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(14.4 450.4)">
+<title>handbook</title>
+<g id="edge1" class="edge">
+<title>A&#45;&gt;B</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M167,-399.84C167,-390.12 167,-377.82 167,-367.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="169.45,-367.07 167,-360.07 164.55,-367.07 169.45,-367.07"/>
+</g>
+<g id="edge2" class="edge">
+<title>B&#45;&gt;C</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M167,-323.86C167,-314.33 167,-302.21 167,-291.23"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="169.45,-291.22 167,-284.22 164.55,-291.22 169.45,-291.22"/>
+</g>
+<g id="edge3" class="edge">
+<title>C&#45;&gt;D</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M167,-237.93C167,-227.98 167,-216.08 167,-205.39"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="169.45,-205.21 167,-198.21 164.55,-205.21 169.45,-205.21"/>
+</g>
+<g id="edge4" class="edge">
+<title>D&#45;&gt;E</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M167,-151.99C167,-141.85 167,-129.79 167,-119.37"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="169.45,-119.13 167,-112.13 164.55,-119.13 169.45,-119.13"/>
+</g>
+<g id="edge5" class="edge">
+<title>E&#45;&gt;F</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M138.94,-75.84C121.37,-65.1 98.63,-51.19 80.04,-39.82"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="81.16,-37.63 73.91,-36.07 78.61,-41.81 81.16,-37.63"/>
+</g>
+<g id="edge6" class="edge">
+<title>E&#45;&gt;G</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M167,-75.84C167,-66.12 167,-53.82 167,-43.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="169.45,-43.07 167,-36.07 164.55,-43.07 169.45,-43.07"/>
+</g>
+<g id="edge7" class="edge">
+<title>E&#45;&gt;H</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M199.93,-75.84C220.81,-64.96 247.93,-50.83 269.9,-39.38"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="271.17,-41.48 276.24,-36.07 268.9,-37.13 271.17,-41.48"/>
+</g>
+<g id="node1" class="node">
+<title>A</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M209.5,-436C209.5,-436 124.5,-436 124.5,-436 118.5,-436 112.5,-430 112.5,-424 112.5,-424 112.5,-412 112.5,-412 112.5,-406 118.5,-400 124.5,-400 124.5,-400 209.5,-400 209.5,-400 215.5,-400 221.5,-406 221.5,-412 221.5,-412 221.5,-424 221.5,-424 221.5,-430 215.5,-436 209.5,-436"/>
+<text text-anchor="middle" x="167" y="-414.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">torch.add(x, y)</text>
+</g>
+<g id="node2" class="node">
+<title>B</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M216,-360C216,-360 118,-360 118,-360 112,-360 106,-354 106,-348 106,-348 106,-336 106,-336 106,-330 112,-324 118,-324 118,-324 216,-324 216,-324 222,-324 228,-330 228,-336 228,-336 228,-348 228,-348 228,-354 222,-360 216,-360"/>
+<text text-anchor="middle" x="167" y="-338.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">aten::add.Tensor</text>
+</g>
+<g id="node3" class="node">
+<title>C</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M226.5,-284C226.5,-284 107.5,-284 107.5,-284 101.5,-284 95.5,-278 95.5,-272 95.5,-272 95.5,-250 95.5,-250 95.5,-244 101.5,-238 107.5,-238 107.5,-238 226.5,-238 226.5,-238 232.5,-238 238.5,-244 238.5,-250 238.5,-250 238.5,-272 238.5,-272 238.5,-278 232.5,-284 226.5,-284"/>
+<text text-anchor="middle" x="167" y="-264.4" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">Dispatcher: tensor와</text>
+<text text-anchor="middle" x="167" y="-251.4" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">thread 상태</text>
+</g>
+<g id="node4" class="node">
+<title>D</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M239.5,-198C239.5,-198 94.5,-198 94.5,-198 88.5,-198 82.5,-192 82.5,-186 82.5,-186 82.5,-164 82.5,-164 82.5,-158 88.5,-152 94.5,-152 94.5,-152 239.5,-152 239.5,-152 245.5,-152 251.5,-158 251.5,-164 251.5,-164 251.5,-186 251.5,-186 251.5,-192 245.5,-198 239.5,-198"/>
+<text text-anchor="middle" x="167" y="-178.4" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">Autograd · Autocast 등의</text>
+<text text-anchor="middle" x="167" y="-165.4" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">처리</text>
+</g>
+<g id="node5" class="node">
+<title>E</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M219,-112C219,-112 115,-112 115,-112 109,-112 103,-106 103,-100 103,-100 103,-88 103,-88 103,-82 109,-76 115,-76 115,-76 219,-76 219,-76 225,-76 231,-82 231,-88 231,-88 231,-100 231,-100 231,-106 225,-112 219,-112"/>
+<text text-anchor="middle" x="167" y="-90.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">backend 구현 선택</text>
+</g>
+<g id="node6" class="node">
+<title>F</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M80,-36C80,-36 12,-36 12,-36 6,-36 0,-30 0,-24 0,-24 0,-12 0,-12 0,-6 6,0 12,0 12,0 80,0 80,0 86,0 92,-6 92,-12 92,-12 92,-24 92,-24 92,-30 86,-36 80,-36"/>
+<text text-anchor="middle" x="46" y="-14.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">CPU kernel</text>
+</g>
+<g id="node7" class="node">
+<title>G</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M205,-36C205,-36 129,-36 129,-36 123,-36 117,-30 117,-24 117,-24 117,-12 117,-12 117,-6 123,0 129,0 129,0 205,0 205,0 211,0 217,-6 217,-12 217,-12 217,-24 217,-24 217,-30 211,-36 205,-36"/>
+<text text-anchor="middle" x="167" y="-14.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">CUDA kernel</text>
+</g>
+<g id="node8" class="node">
+<title>H</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M364,-36C364,-36 254,-36 254,-36 248,-36 242,-30 242,-24 242,-24 242,-12 242,-12 242,-6 248,0 254,0 254,0 364,0 364,0 370,0 376,-6 376,-12 376,-12 376,-24 376,-24 376,-30 370,-36 364,-36"/>
+<text text-anchor="middle" x="309" y="-14.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">PrivateUse1 kernel</text>
+</g>
+</g>
+</svg>

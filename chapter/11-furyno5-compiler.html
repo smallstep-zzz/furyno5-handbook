@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="ATen 그래프를 TCL과 EDF로 바꾸고 재사용하는 구현을 추적합니다."><meta name="theme-color" content="#fbfaf7"><title>FuryNo5 컴파일 경로 · FuryNo5 개발 핸드북</title><link rel="icon" href="../assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="../assets/site.css"><script defer src="../assets/site.js"></script></head>
+<body data-root="../" data-chapter="11-furyno5-compiler"><a class="skip" href="#content">본문으로 이동</a><header class="topbar"><button class="menu-toggle" type="button" aria-label="전체 목차 열기" aria-controls="sidebar" aria-expanded="false">☰</button><a class="brand" href="../index.html"><span class="brand-mark">Nº5</span>FuryNo5<small>DEVELOPER HANDBOOK</small></a><div class="top-actions"><a class="top-link" href="../sources.html">출처와 버전</a><button class="search-open" type="button" aria-label="핸드북 전체 검색"><span>전체 문서 검색</span><kbd>⌘ K</kbd></button></div></header><div class="progress" aria-hidden="true"></div><div class="mobile-shade"></div><aside class="sidebar" id="sidebar" aria-label="전체 목차"><nav><div class="nav-caption">시작하기</div><a class="nav-link"  href="../index.html"><span class="num">00</span><span>전체 지도와 읽는 방법</span></a><div class="nav-caption">I. 디바이스를 이해하기</div><a class="nav-link"  href="../chapter/01-hardware.html"><span class="num">01</span><span>RNGD · TCP · PE</span></a><a class="nav-link"  href="../chapter/02-memory-dma.html"><span class="num">02</span><span>메모리 · DMA · 배치</span></a><a class="nav-link"  href="../chapter/03-driver-runtime.html"><span class="num">03</span><span>드라이버와 공식 런타임</span></a><div class="nav-caption">II. 프로그램을 만들고 실행하기</div><a class="nav-link"  href="../chapter/04-tcl-edf.html"><span class="num">04</span><span>TCL 작성 · 컴파일 · 실행</span></a><a class="nav-link"  href="../chapter/05-graphs-fallback.html"><span class="num">05</span><span>실행그래프 · 오류 · 폴백</span></a><a class="nav-link"  href="../chapter/06-buckets-shapes.html"><span class="num">06</span><span>Shape · 버킷 · 컴파일 비용</span></a><a class="nav-link"  href="../chapter/07-optimization.html"><span class="num">07</span><span>최적화의 축과 우선순위</span></a><a class="nav-link"  href="../chapter/08-eisa-visa.html"><span class="num">08</span><span>eISA · vISA · furiosa-opt</span></a><div class="nav-caption">III. FuryNo5를 해부하기</div><a class="nav-link"  href="../chapter/09-torch-aten.html"><span class="num">09</span><span>PyTorch · ATen · 등록</span></a><a class="nav-link"  href="../chapter/10-furyno5-architecture.html"><span class="num">10</span><span>FuryNo5 구조와 지원 범위</span></a><a class="nav-link active" aria-current="page" href="../chapter/11-furyno5-compiler.html"><span class="num">11</span><span>FuryNo5 컴파일과 캐시</span></a><div class="nav-caption">IV. 모델 포팅과 서빙</div><a class="nav-link"  href="../chapter/12-fxbx.html"><span class="num">12</span><span>fxbX 포맷과 실행계획</span></a><a class="nav-link"  href="../chapter/13-porting-fha.html"><span class="num">13</span><span>모델 포팅 · FHA 자동화</span></a><a class="nav-link"  href="../chapter/14-serving-vllm.html"><span class="num">14</span><span>vLLM · 서빙 브리지</span></a><a class="nav-link"  href="../chapter/15-multi-npu.html"><span class="num">15</span><span>PE · 여러 카드 · 여러 서버</span></a><div class="nav-caption">V. 검증과 다음 개발</div><a class="nav-link"  href="../chapter/16-furyboost.html"><span class="num">16</span><span>FuryBoost 실측과 남은 과제</span></a><a class="nav-link"  href="../chapter/17-debugging.html"><span class="num">17</span><span>측정 · 추적 · 실패 재현</span></a><div class="nav-caption">참고와 검증</div><a class="nav-link"  href="../glossary.html"><span class="num">·</span><span>약어와 용어 사전</span></a><a class="nav-link"  href="../sources.html"><span class="num">·</span><span>출처 · 버전 · 접근 범위</span></a><a class="nav-link"  href="../review.html"><span class="num">·</span><span>검토 기록과 미해결 질문</span></a></nav><div class="side-foot">비공식 개발 핸드북 · 2026.11.19<br>공식 SDK와 프로젝트 구현을 구분합니다.<br><a href="https://github.com/smallstep-zzz/furyno5-handbook">원고와 변경 이력 ↗</a></div></aside><div class="shell"><main class="page" id="content"><div class="eyebrow">III. FuryNo5를 해부하기 / CHAPTER 11</div><h1>FuryNo5 컴파일 경로</h1><p class="dek">ATen 그래프를 TCL과 EDF로 바꾸고 재사용하는 구현을 추적합니다.</p><div class="page-meta"><span>검토 2026.11.19</span><span>SDK 2026.4 계열 / 버전별 표기</span><span class="readtime">약 12분</span><span><a href="https://github.com/smallstep-zzz/furyno5-handbook/blob/main/content/11-furyno5-compiler.md">원고</a></span></div><details class="mobile-toc"><summary>이 장의 목차</summary><div><a class="" href="#1-캡처-python-모델을-추론-그래프로-고정한다">1. 캡처: Python 모델을 추론 그래프로 고정한다</a><a class="" href="#2-바인딩과-사전검사-값이-무엇인지-먼저-확정한다">2. 바인딩과 사전검사: 값이 무엇인지 먼저 확정한다</a><a class="" href="#3-의미-계열을-선택한다">3. 의미 계열을 선택한다</a><a class="" href="#4-tcl을-생성한다-축의-이름이-계산-의미를-보존한다">4. TCL을 생성한다: 축의 이름이 계산 의미를 보존한다</a><a class="" href="#5-compiler-호출-진짜-edf를-만든다">5. compiler 호출: 진짜 EDF를 만든다</a><a class="" href="#6-edf가-생긴-뒤에도-abi를-검사한다">6. EDF가 생긴 뒤에도 ABI를 검사한다</a><a class="" href="#7-두-종류의-cache가-재컴파일을-줄인다">7. 두 종류의 cache가 재컴파일을 줄인다</a><a class="" href="#8-실행-계획-edf에-tensor의-연결을-더한다">8. 실행 계획: EDF에 tensor의 연결을 더한다</a><a class="" href="#9-최적화가-들어가는-자리와-실패-시-처리">9. 최적화가 들어가는 자리와 실패 시 처리</a><a class="" href="#출처">출처</a></div></details><noscript><p class="noscript">본문과 그림은 JavaScript 없이 읽을 수 있습니다. 검색과 조절 실험에는 JavaScript가 필요합니다.</p></noscript><article class="article"><p><strong>FuryNo5는 모델의 계산 의미와 입출력 연결을 결정하고, 실제 RNGD 코드 생성은 공식 compiler에 맡긴다.</strong> 이 장은 <code>export_model</code> 호출 한 번이 어떤 파일을 거쳐 산출물을 만드는지 설명한다. 아래 경로는 commit <code>bba9efea8201aec48150514a35d0b637d29d107e</code>의 실제 코드 기준이다. 앞 장의 제한된 <code>optimize</code> custom op 경로와 구분한다.</p>
+<h2 id="1-캡처-python-모델을-추론-그래프로-고정한다"><a class="heading-anchor" href="#1-캡처-python-모델을-추론-그래프로-고정한다">1. 캡처: Python 모델을 추론 그래프로 고정한다</a></h2>
+<p>출발점은 <code>tclmachine.export_model</code>이고 실질 구현은 <code>tplmachine/execution_plan.py</code>다. 먼저 <code>graph_capture.capture_for_export</code>가 <code>torch.no_grad()</code> 아래에서 <code>torch.export.export(..., strict=False)</code>를 호출한다. 이미 <code>ExportedProgram</code>이면 다시 모델을 실행해 캡처하지 않고 정규화로 간다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/graph_capture.py#L188-L195">capture_for_export</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
+<div class="codebox"><div class="codebar"><span>python</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-python"># graph_capture.py의 핵심 발췌
+with torch.no_grad():
+    exported = torch.export.export(model, tuple(inputs), strict=False)
+return normalize_exported(exported, preserve_layer_norm=preserve_layer_norm)
+</code></pre></div>
+<p><code>strict=False</code>를 “어떤 Python 코드도 반드시 캡처한다”로 해석하면 안 된다. 그래프에 나타나는 데이터 의존 제어 흐름, 상태 변경, alias, 입력 계약의 한계는 여전히 검토해야 한다. FuryNo5의 정규화는 eval dropout, 알려진 guard, 필요한 public decomposition 등을 좁게 처리한다. 모든 연산을 무조건 가장 작은 primitive로 풀지는 않는다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/graph_capture.py#L83-L127">정규화 코드</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
+<p>여기서 **decomposition(분해)**은 복합 연산을 더 기본적인 연산으로 표현하는 것이다. 수학적으로 같아 보여도 중간 dtype, 반올림 위치, mask 처리, alias 의미가 달라질 수 있다. <code>build_verified_model</code>은 최종 계획용 그래프를 원본 CPU 결과와 비교하는 검사를 추가한다. 일반 <code>export_model</code> 호출만으로 그 수치 검사가 완료된 것은 아니다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/verified_build.py">검증 producer</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
+<h2 id="2-바인딩과-사전검사-값이-무엇인지-먼저-확정한다"><a class="heading-anchor" href="#2-바인딩과-사전검사-값이-무엇인지-먼저-확정한다">2. 바인딩과 사전검사: 값이 무엇인지 먼저 확정한다</a></h2>
+<p><code>bind_exported</code>는 평평한 tensor tuple인 사용자 입력과, export에서 분리된 parameter·buffer를 연결한다. 비영속 buffer는 <code>exported.constants</code>에서 읽지만, 임의의 상수나 Python 상태를 모두 바인딩하는 것은 아니다. 그 밖의 입력 종류는 별도 binder가 필요하다는 오류를 낸다. 이 경로의 tensor는 CPU에 있고 contiguous하며 양의 정적 차원을 가져야 한다. shape가 같아도 인수 순서나 stride가 다르면 같은 ABI(Application Binary Interface)가 아니다. 정적 상태를 사용하는 모델은 실행계획의 <code>state_inputs</code>와 <code>state_updates</code>로 명시하며, 일반 사용자 입력과 구분한다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/edf_export.py#L33-L109">바인딩 구현</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span> · <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/execution_plan.py#L355-L408">계획 옵션</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
+<p>다음 호출은 컴파일 전에 규칙·바인딩 차단을 찾아내는 데 쓴다.</p>
+<div class="codebox"><div class="codebar"><span>python</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-python"># model은 eval 상태이며 모든 parameter가 frozen이어야 한다.
+from tclmachine import export_model
+
+report = export_model(
+    model, example_inputs, &quot;preflight-only.fxbx&quot;,
+    preflight_only=True,
+)
+print(report[&quot;status&quot;])       # 통과하면 admitted_not_compiled
+print(report[&quot;compilation&quot;])  # not_run
+print(report[&quot;npu_execution&quot;])  # not_run
+</code></pre></div>
+<p>preflight 중 SDK를 이용한 실제 NPU 실행은 요청하지 않는다. 그러나 설치된 producer와 matching fxbX package는 필요할 수 있다. 규칙에 막히면 <code>EXECUTION_RULE_GAP</code>을 던지고, <code>.plan/preflight.json</code>, <code>failure-groups.json</code>, <code>operator-inventory.json</code>에 이유를 남긴다. <strong>앞선 값이 없어 후속 node를 연결하지 못한 오류와 실제 규칙 부재를 따로 기록</strong>하므로 미해결 node 수가 모두 독립 커널 개발 과제는 아니다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/execution_plan.py#L1140-L1193">진단 생성부</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
+<h2 id="3-의미-계열을-선택한다"><a class="heading-anchor" href="#3-의미-계열을-선택한다">3. 의미 계열을 선택한다</a></h2>
+<p><code>compiler_registry.py</code>는 모델 이름 대신 의미 계열을 컴파일 함수에 연결한다. 실제 등록의 일부는 다음과 같다.</p>
+<div class="codebox"><div class="codebar"><span>python</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-python"># compiler_registry.py에서 발췌
+SEMANTIC_COMPILERS = {
+    'pointwise': ('pointwise_rules', 'compile_pointwise'),
+    'reduction': ('reduction_rules', 'compile_reduction'),
+    'softmax': ('softmax_rules', 'compile_softmax'),
+    'batched_matmul': ('batched_matmul', 'compile_batched_matmul'),
+    # 나머지 계열은 원본 파일 참조
+}
+</code></pre></div>
+<p>공통 함수 계약은 <code>compile_*(specs, attrs, *, artifact_root) -&gt; EDF contract</code>다. <code>specs</code>에는 shape·dtype·stride, <code>attrs</code>에는 축·상수 인수 등 연산 속성이 들어간다. 예를 들어 reduction은 축 목록과 <code>keepdim</code>을 검사하고, pointwise는 broadcasting과 dtype 계약을 확인한다. 모델 ID나 Python class 이름을 여기의 분기 기준으로 쓰지 않는다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/compiler_registry.py">등록표</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span> · <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/reduction_rules.py">축약 규칙</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
+<p>파일 이름이나 docstring만 보고 정밀도를 단정하지 않는 것도 중요하다. 예를 들어 현재 reduction 생성기는 <code>mean</code>의 중간 결과를 FP32로 두고, <code>sum</code>에서는 요청한 출력 dtype을 생성 코드에 반영한다. “모든 reduction이 무조건 FP32 누산”처럼 한 문장으로 뭉개지 말고, 실제 emitted TCL과 컴파일 결과의 dtype 경계를 확인해야 한다.</p>
+<h2 id="4-tcl을-생성한다-축의-이름이-계산-의미를-보존한다"><a class="heading-anchor" href="#4-tcl을-생성한다-축의-이름이-계산-의미를-보존한다">4. TCL을 생성한다: 축의 이름이 계산 의미를 보존한다</a></h2>
+<p>먼저 <strong>compiler 진입점에 분기가 있다</strong>. <code>edf_export.export_edf()</code>는 설치 환경에 <code>furiosa.native_common.compiler.compile</code>이 있으면 <code>target_ir=&#39;edf&#39;</code>로 호출한다. 해당 import를 사용할 수 없을 때만 <code>tcl_edf.export_single_aten()</code>으로 간다. SDK compiler가 실패했다고 CPU로 넘어가거나 모든 실패를 TCL로 재시도하는 코드는 아니다. native 경로도 정확히 한 개의 <code>CompiledGraph</code>와 <code>is_edf() == True</code>를 요구한다. 아래 설명은 Python TCL 및 생성된 TCL 텍스트를 사용하는 경로이며, 모든 단일 EDF가 반드시 이 경로로 만들어진다는 뜻은 아니다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/edf_export.py#L171-L215">실제 compiler 선택</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
+<p>단일 수축 경로는 <code>tcl_edf.export_single_aten</code>에서 적절한 Python TCL kernel과 구체적인 축 크기를 선택한다. <code>M</code>, <code>N</code>, <code>K</code>는 단순 변수 이름이 아니라 어느 차원을 유지하고 축약하는지 설명하는 축이다. Linear weight가 <code>[N,K]</code>인지 일반 mm의 오른쪽 입력이 <code>[K,N]</code>인지가 출력 ABI에 영향을 준다.</p>
+<div class="codebox"><div class="codebar"><span>python</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-python"># tcl_edf.py의 실제 specialization 부분
+specialized = tcl.specialize_kernel(kernel, dimensions)
+source = (
+    specialized if isinstance(specialized, tcl.Kernel)
+    else tcl.Kernel.from_edsl(specialized)
+).dsl
+</code></pre></div>
+<p>이후 <code>compile_source(source, base_contract, ...)</code>로 보낸다. 따라서 “TCL은 Python이니 compiler에 .py를 그대로 던진다”가 아니라, <strong>Python eDSL(embedded Domain-Specific Language) 표현을 구체화하고 TCL 표현을 얻는 경로</strong>가 존재한다. 다른 의미 계열은 검증된 메타데이터에서 TCL 텍스트를 직접 생성하기도 한다. 둘 모두 최종 compiler와 EDF 계약 검사를 공유한다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/tcl_edf.py#L113-L120">단일 EDF 경로</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
+<p>여러 연산을 합치는 <code>tcl_region.emit_region</code>은 제한된 SSA(Static Single Assignment) 형태를 사용한다. 각 결과는 고유 이름으로 한 번 정의되고, 사용하기 전에 입력이나 선행 결과로 존재해야 한다. 이 생성기의 현재 허용 범위는 BF16의 mm/bmm/linear/add/ReLU, 최대 8개 연산과 입출력 합 16개, 생성 tensor 크기 합 64 MiB다. 이 64 MiB는 <strong>논리적인 admission 제한</strong>이며 물리 HBM(High Bandwidth Memory) 점유 측정치가 아니다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/tcl_region.py#L35-L107">영역 생성기</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
+<h2 id="5-compiler-호출-진짜-edf를-만든다"><a class="heading-anchor" href="#5-compiler-호출-진짜-edf를-만든다">5. compiler 호출: 진짜 EDF를 만든다</a></h2>
+<p><code>compile_source</code>는 <code>furiosa-tcc --version</code>과 Torch·SDK(Software Development Kit) package 버전을 기록한다. 현재 producer의 기본 target은 <code>renegade-8pe</code>이고, 공식 compiler cache는 끈 채 FuryNo5 자신의 검증된 산출물 cache를 관리한다. <code>--no-compiler-cache</code>가 곧 “재사용 없음”을 뜻하지는 않는다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/tcl_compiler.py#L158-L234">compile_source</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
+<p>실제 subprocess의 명령 구성은 다음과 같다.</p>
+<div class="codebox"><div class="codebar"><span>python</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-python"># compile_job.py에서 발췌
+command = [
+    'furiosa-tcc', *flags,
+    '--output', str(attempt / 'model.edf'),
+    str(attempt / 'source.tc'),
+]
+</code></pre></div>
+<p>동일 경로를 터미널에서 읽으면 다음 형태다. <strong>이미 생성·검토한 source.tc를 대상으로 하는 명령</strong>이며 Python eDSL 원본 파일을 대입하지 않는다.</p>
+<div class="codebox"><div class="codebar"><span>bash</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-bash">furiosa-tcc --target-npu renegade-8pe --no-compiler-cache \
+  --output model.edf source.tc
+</code></pre></div>
+<p>실제 작업은 <code>source.tc</code>, <code>compile.log</code>, <code>result.json</code>을 보존한다. 현재 소스의 기본 compiler timeout은 무제한이며 <code>FURYNO5_COMPILE_TIMEOUT_S</code>에 양의 초를 주면 제한한다. 예전 문서의 고정 timeout 값을 현재 동작으로 옮기지 않는다. timeout, signal 종료, 환경 오류, 결정적인 compiler 거절은 서로 다른 결과다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/compile_job.py#L39-L106">컴파일 작업 관리</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
+<h2 id="6-edf가-생긴-뒤에도-abi를-검사한다"><a class="heading-anchor" href="#6-edf가-생긴-뒤에도-abi를-검사한다">6. EDF가 생긴 뒤에도 ABI를 검사한다</a></h2>
+<p><code>tcl_compiler._verify_abi</code>는 공식 <code>sdk.ir.Runnable.from_serialized_edf</code>로 EDF bytes를 읽는다. 실제 입출력 개수와 <code>expected_num_fusion == 8</code>을 검사하고 shape 표현을 기록한다.</p>
+<div class="codebox"><div class="codebar"><span>python</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-python"># tcl_compiler.py에서 발췌
+edf_loader = sdk.ir.Runnable.from_serialized_edf
+runnable = edf_loader(raw)
+</code></pre></div>
+<p>이 단계의 기본 계약은 <code>arity_verified=True</code>, <code>logical_to_physical_metadata=&quot;unknown&quot;</code>이다. 별도의 명시적 ABI reader가 모든 metadata를 확인한 경우에만 그 부분을 verified로 올린다. 즉 기본 코드가 입출력 개수를 확인했다고 해서 논리 stride와 물리 메모리 배치의 모든 관계까지 증명했다는 뜻은 아니다. 또한 이 로더 검사만으로 NPU 실행·수치 검증이 된 것은 아니다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/tcl_compiler.py#L112-L136">ABI 검증</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
+<h2 id="7-두-종류의-cache가-재컴파일을-줄인다"><a class="heading-anchor" href="#7-두-종류의-cache가-재컴파일을-줄인다">7. 두 종류의 cache가 재컴파일을 줄인다</a></h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>cache</th>
+<th>키에 포함되는 핵심 정보</th>
+<th>아끼는 작업</th>
+<th>검증</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>typed kernel index</td>
+<td>의미 계열·specs·속성·영향받는 source·SDK/compiler</td>
+<td>동일한 의미 계약의 생성/컴파일</td>
+<td>scope 비교와 EDF SHA-256</td>
+</tr>
+<tr>
+<td>exact TCL source index</td>
+<td>정확한 source·base contract·compiler 문맥·mesh</td>
+<td>서로 다른 상위 경로가 만든 같은 TCL의 재컴파일</td>
+<td>source 계약·크기·해시·공식 loader ABI</td>
+</tr>
+</tbody></table>
+</div><p><code>compiler_sources(kind)</code>는 특정 계열의 코드 생성에 영향을 주는 파일만 지문에 포함한다. 관계없는 문서나 다른 규칙을 고쳤다고 모든 EDF를 다시 만들 필요가 없도록 하기 위함이다. 반대로 공통 helper 변경을 목록에서 빼먹으면 오래된 EDF를 잘못 재사용할 수 있다. <strong>cache hit는 성능 최적화이면서 정확성 계약</strong>이다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/execution_plan.py#L76-L143">typed cache</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span> · <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/compiler_registry.py#L30-L52">source 의존성</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
+<p>손상된 index나 사라진 산출물은 원래 recipe로 복구할 수 있다. 하지만 기존 EDF bytes의 checksum이 달라졌다면 정상 cache miss처럼 묵살하지 않는다. 검증된 정확한 compiler 거절만 별도 저장하며, 단순 timeout이나 환경 오류를 영구 미지원으로 바꾸지 않는다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/tcl_compiler.py#L48-L109">cache 구현</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span> · <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/compile_job.py#L68-L96">거절 분류</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
+<h2 id="8-실행-계획-edf에-tensor의-연결을-더한다"><a class="heading-anchor" href="#8-실행-계획-edf에-tensor의-연결을-더한다">8. 실행 계획: EDF에 tensor의 연결을 더한다</a></h2>
+<figure class="diagram"><img src="../assets/diagrams/11-furyno5-compiler-7b4f4a74e5b9.svg" alt="FuryNo5 컴파일 경로 · 도식 1" loading="lazy"><figcaption>도식 1 · FuryNo5 컴파일 경로 — 설명을 위해 단순화한 관계도. 실제 호출 조건과 근거는 본문을 함께 읽으세요.</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
+    A[&quot;입력 x와 외부 weight&quot;] --&gt; B[&quot;step 0: kernel A&quot;]
+    B --&gt; C[&quot;중간 tensor h&quot;]
+    C --&gt; D[&quot;step 1: kernel B&quot;]
+    D --&gt; E[&quot;사용자 출력 y&quot;]
+    D --&gt; F[&quot;선택적 next state&quot;]
+    G[&quot;기존 state slot&quot;] --&gt; B
+    F --&gt; G</pre></details></figure><p>EDF 목록만으로는 어느 커널의 어느 출력이 다음 입력인지, 가중치가 어디서 오는지 알 수 없다. 계획은 <code>tensors</code>, <code>kernels</code>, <code>entries</code>를 결합한다. <code>entries[&quot;forward&quot;]</code>에는 입력, 순서 있는 steps, 출력, 상태 갱신이 들어간다. 각 step은 kernel key와 tensor ID로 입출력을 연결한다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/execution_plan.py#L1227-L1283">계획 조립부</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
+<p>아래 코드는 <strong>실제 산출물을 읽는 예제</strong>다. 손으로 가짜 manifest를 만들어 실행하기보다 producer가 만든 계획을 먼저 확인한다.</p>
+<div class="codebox"><div class="codebar"><span>python</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-python">import json
+from pathlib import Path
+
+plan = json.loads(
+    Path(&quot;tiny.fxbx.plan/execution-plan.json&quot;).read_text()
+)
+entry = plan[&quot;entries&quot;][&quot;forward&quot;]
+for index, step in enumerate(entry[&quot;steps&quot;]):
+    key = step[&quot;kernel&quot;]
+    kernel = plan[&quot;kernels&quot;][key]
+    print(index, key, step[&quot;inputs&quot;], &quot;-&gt;&quot;, step[&quot;outputs&quot;])
+    print(&quot;EDF:&quot;, kernel[&quot;edf_sha256&quot;])
+print(&quot;state updates:&quot;, entry[&quot;state_updates&quot;])
+</code></pre></div>
+<p>같은 EDF를 여러 step이 재사용할 수 있으므로 고유 EDF 개수와 실행 호출 횟수는 다르다. 정적 값 준비와 NPU compute도 <code>execution_kind</code>로 구분한다. 이름 있는 여러 entry를 묶는 <code>execution_program.py</code>는 공유 weight와 state 계약을 확인한다. 이 계약이 있다는 이유만으로 동적 KV(Key/Value) paging 또는 외부 serving engine의 buffer ABI와 호환된다고 보장하지 않는다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/execution_program.py">다중 entry 생산자</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
+<h2 id="9-최적화가-들어가는-자리와-실패-시-처리"><a class="heading-anchor" href="#9-최적화가-들어가는-자리와-실패-시-처리">9. 최적화가 들어가는 자리와 실패 시 처리</a></h2>
+<p>FuryNo5는 의미가 맞는 작은 닫힌 영역을 결합하고, 명시적 layout 경계를 생성하며, 반복 shape의 EDF를 재사용한다. compiler는 그 결과를 받아 물리 타일링과 schedule을 결정한다. producer의 영역 분할과 compiler의 장치 타일링은 같은 최적화가 아니다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/NATIVE_REGION_VALIDATION.md">영역 검증 문서</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
+<p>선택적 fusion의 컴파일이나 ABI 확인이 실패하면 기존 개별 <strong>NPU</strong> 계획으로 돌아가는 경로가 있다. 이것은 CPU fallback이 아니다. 개별 커널도 실패하면 오류가 유지된다. 일부 결정적 실패에는 bounded split retry가 있지만, 임의의 미지원 연산을 항상 해결하는 만능 분할기는 아니다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/execution_plan.py#L1211-L1226">fusion 실패 처리</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span> · <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/execution_plan.py#L331-L353">분할 재시도</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>판단</th>
+<th>증거 파일</th>
+<th>다음 행동</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>규칙이 막힘</td>
+<td>preflight·operator inventory</td>
+<td>의미 계열/바인딩 수정</td>
+</tr>
+<tr>
+<td>compile이 오래 걸림</td>
+<td>compile-status·attempt result·log</td>
+<td>정확한 recipe 하나 재현</td>
+</tr>
+<tr>
+<td>EDF를 다시 만들고 있음</td>
+<td>compile scope·source-cache key</td>
+<td>환경/소스/계약 변화 확인</td>
+</tr>
+<tr>
+<td>파일은 만들어졌음</td>
+<td>result: built_not_runtime_validated</td>
+<td>독립 replay·수치·trace 확인</td>
+</tr>
+<tr>
+<td>NPU는 실행되지만 느림</td>
+<td>stage trace·warm wall time</td>
+<td>07장 순서로 병목 최적화</td>
+</tr>
+</tbody></table>
+</div><p><code>built_not_runtime_validated</code>에서 <code>verified</code>까지의 거리를 줄이는 것이 다음 개발의 중요한 목표다. 생성 코드의 양보다 <strong>재현 가능한 계약, 올바른 캐시, 실행 경계의 관측 가능성</strong>이 범용 포팅을 지속 가능하게 만든다.</p>
+<h2 id="출처"><a class="heading-anchor" href="#출처">출처</a></h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>자료</th>
+<th>확인 범위</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/graph_capture.py">graph_capture.py</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></td>
+<td>추론 캡처·의미 정규화</td>
+</tr>
+<tr>
+<td><a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/edf_export.py">edf_export.py</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></td>
+<td>입력 바인딩 한계·native compiler/TCL 분기</td>
+</tr>
+<tr>
+<td><a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/tcl_edf.py">tcl_edf.py</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></td>
+<td>Python TCL specialization</td>
+</tr>
+<tr>
+<td><a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/tcl_region.py">tcl_region.py</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></td>
+<td>작은 SSA 영역 생성·정밀도 경계</td>
+</tr>
+<tr>
+<td><a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/tcl_compiler.py">tcl_compiler.py</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></td>
+<td>정확한 source cache·loader ABI</td>
+</tr>
+<tr>
+<td><a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/compile_job.py">compile_job.py</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></td>
+<td>subprocess 명령·실패 증거</td>
+</tr>
+<tr>
+<td><a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/execution_plan.py">execution_plan.py</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></td>
+<td>영역·병렬 compiler·실행 계획·fallback 구분</td>
+</tr>
+<tr>
+<td><a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/COMPILE_QUALITY.md">컴파일 품질 관리</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></td>
+<td>실제 수치 검증과 실패 재현 정책</td>
+</tr>
+</tbody></table>
+</div><p>소스 링크는 열람 권한이 필요할 수 있다. 물리 메모리 배치·전체 모델 수치·실기기 성능은 별도 검증 범위다.</p>
+</article><nav class="next-prev" aria-label="이전과 다음 장"><a href="../chapter/10-furyno5-architecture.html"><small>← 이전 장</small><b>FuryNo5의 실제 구조</b></a><a href="../chapter/12-fxbx.html"><small>다음 장 →</small><b>fxbX의 포맷과 실행기</b></a></nav><footer class="footer">FuryNo5 개발 핸드북 · 비공식 자료<br>공식 문서와 소스의 권리는 각 프로젝트에 있습니다. 코드 인용은 출처와 함께 표시합니다.<br><a href="../review.html">검토 기록과 남은 질문</a> · <a href="../sources.html">출처와 버전</a> · <a href="../glossary.html">용어 사전</a></footer></main></div><aside class="right-toc" aria-label="이 장의 목차"><h2>이 장에서 다루는 내용</h2><a class="" href="#1-캡처-python-모델을-추론-그래프로-고정한다">1. 캡처: Python 모델을 추론 그래프로 고정한다</a><a class="" href="#2-바인딩과-사전검사-값이-무엇인지-먼저-확정한다">2. 바인딩과 사전검사: 값이 무엇인지 먼저 확정한다</a><a class="" href="#3-의미-계열을-선택한다">3. 의미 계열을 선택한다</a><a class="" href="#4-tcl을-생성한다-축의-이름이-계산-의미를-보존한다">4. TCL을 생성한다: 축의 이름이 계산 의미를 보존한다</a><a class="" href="#5-compiler-호출-진짜-edf를-만든다">5. compiler 호출: 진짜 EDF를 만든다</a><a class="" href="#6-edf가-생긴-뒤에도-abi를-검사한다">6. EDF가 생긴 뒤에도 ABI를 검사한다</a><a class="" href="#7-두-종류의-cache가-재컴파일을-줄인다">7. 두 종류의 cache가 재컴파일을 줄인다</a><a class="" href="#8-실행-계획-edf에-tensor의-연결을-더한다">8. 실행 계획: EDF에 tensor의 연결을 더한다</a><a class="" href="#9-최적화가-들어가는-자리와-실패-시-처리">9. 최적화가 들어가는 자리와 실패 시 처리</a><a class="" href="#출처">출처</a></aside><dialog class="search-dialog" aria-label="문서 검색"><div class="search-head"><input type="search" aria-label="검색어" placeholder="DMA, EDF, 폴백, 버킷…" autocomplete="off"><button class="close-search" type="button">닫기</button></div><div class="search-status" role="status">용어나 함수 이름을 입력하세요.</div><div class="search-results"></div></dialog></body></html>

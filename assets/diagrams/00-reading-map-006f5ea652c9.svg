@@ -1,0 +1,91 @@
+<svg role="img" aria-label="모델 또는 커널 작성 · 공식 모델 · FXB · PyTorch · FuryNo5 · Rust · vISA · Furiosa-LLM · SDK Runnable · fxbX · furiosa-opt-rt · 드라이버와 RNGD" width="433pt" height="293pt"
+ viewBox="0.00 0.00 432.80 292.80" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(14.4 278.4)">
+<title>handbook</title>
+<g id="edge1" class="edge">
+<title>M&#45;&gt;A</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M168.67,-227.84C146.82,-216.91 118.41,-202.7 95.46,-191.23"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="96.5,-189.01 89.14,-188.07 94.31,-193.39 96.5,-189.01"/>
+</g>
+<g id="edge2" class="edge">
+<title>M&#45;&gt;B</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M203,-227.84C203,-218.12 203,-205.82 203,-195.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="205.45,-195.07 203,-188.07 200.55,-195.07 205.45,-195.07"/>
+</g>
+<g id="edge3" class="edge">
+<title>M&#45;&gt;C</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M236.17,-227.84C257.19,-216.96 284.5,-202.83 306.62,-191.38"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="307.92,-193.46 313.01,-188.07 305.67,-189.11 307.92,-193.46"/>
+</g>
+<g id="edge4" class="edge">
+<title>A&#45;&gt;L</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M55,-151.84C55,-142.12 55,-129.82 55,-119.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="57.45,-119.07 55,-112.07 52.55,-119.07 57.45,-119.07"/>
+</g>
+<g id="edge5" class="edge">
+<title>B&#45;&gt;F</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M202.77,-151.84C202.64,-142.12 202.47,-129.82 202.33,-119.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="204.78,-119.04 202.23,-112.07 199.88,-119.1 204.78,-119.04"/>
+</g>
+<g id="edge6" class="edge">
+<title>C&#45;&gt;O</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M347.39,-151.84C348.18,-142.12 349.18,-129.82 350.04,-119.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="352.49,-119.25 350.62,-112.07 347.61,-118.85 352.49,-119.25"/>
+</g>
+<g id="edge7" class="edge">
+<title>L&#45;&gt;N</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M89.09,-75.84C110.8,-64.91 139.02,-50.7 161.81,-39.23"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="162.94,-41.41 168.09,-36.07 160.74,-37.03 162.94,-41.41"/>
+</g>
+<g id="edge8" class="edge">
+<title>F&#45;&gt;N</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M202,-75.84C202,-66.12 202,-53.82 202,-43.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="204.45,-43.07 202,-36.07 199.55,-43.07 204.45,-43.07"/>
+</g>
+<g id="edge9" class="edge">
+<title>O&#45;&gt;N</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M317.21,-75.84C295.06,-64.91 266.27,-50.7 243.01,-39.23"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="243.96,-36.97 236.6,-36.07 241.8,-41.36 243.96,-36.97"/>
+</g>
+<g id="node1" class="node">
+<title>M</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M255,-264C255,-264 151,-264 151,-264 145,-264 139,-258 139,-252 139,-252 139,-240 139,-240 139,-234 145,-228 151,-228 151,-228 255,-228 255,-228 261,-228 267,-234 267,-240 267,-240 267,-252 267,-252 267,-258 261,-264 255,-264"/>
+<text text-anchor="middle" x="203" y="-242.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">모델 또는 커널 작성</text>
+</g>
+<g id="node2" class="node">
+<title>A</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M98,-188C98,-188 12,-188 12,-188 6,-188 0,-182 0,-176 0,-176 0,-164 0,-164 0,-158 6,-152 12,-152 12,-152 98,-152 98,-152 104,-152 110,-158 110,-164 110,-164 110,-176 110,-176 110,-182 104,-188 98,-188"/>
+<text text-anchor="middle" x="55" y="-166.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">공식 모델 · FXB</text>
+</g>
+<g id="node3" class="node">
+<title>B</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M258.5,-188C258.5,-188 147.5,-188 147.5,-188 141.5,-188 135.5,-182 135.5,-176 135.5,-176 135.5,-164 135.5,-164 135.5,-158 141.5,-152 147.5,-152 147.5,-152 258.5,-152 258.5,-152 264.5,-152 270.5,-158 270.5,-164 270.5,-164 270.5,-176 270.5,-176 270.5,-182 264.5,-188 258.5,-188"/>
+<text text-anchor="middle" x="203" y="-166.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">PyTorch · FuryNo5</text>
+</g>
+<g id="node4" class="node">
+<title>C</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M379.5,-188C379.5,-188 312.5,-188 312.5,-188 306.5,-188 300.5,-182 300.5,-176 300.5,-176 300.5,-164 300.5,-164 300.5,-158 306.5,-152 312.5,-152 312.5,-152 379.5,-152 379.5,-152 385.5,-152 391.5,-158 391.5,-164 391.5,-164 391.5,-176 391.5,-176 391.5,-182 385.5,-188 379.5,-188"/>
+<text text-anchor="middle" x="346" y="-166.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">Rust · vISA</text>
+</g>
+<g id="node5" class="node">
+<title>L</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M92,-112C92,-112 18,-112 18,-112 12,-112 6,-106 6,-100 6,-100 6,-88 6,-88 6,-82 12,-76 18,-76 18,-76 92,-76 92,-76 98,-76 104,-82 104,-88 104,-88 104,-100 104,-100 104,-106 98,-112 92,-112"/>
+<text text-anchor="middle" x="55" y="-90.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">Furiosa&#45;LLM</text>
+</g>
+<g id="node6" class="node">
+<title>F</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M263,-112C263,-112 141,-112 141,-112 135,-112 129,-106 129,-100 129,-100 129,-88 129,-88 129,-82 135,-76 141,-76 141,-76 263,-76 263,-76 269,-76 275,-82 275,-88 275,-88 275,-100 275,-100 275,-106 269,-112 263,-112"/>
+<text text-anchor="middle" x="202" y="-90.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">SDK Runnable · fxbX</text>
+</g>
+<g id="node7" class="node">
+<title>O</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M392,-112C392,-112 312,-112 312,-112 306,-112 300,-106 300,-100 300,-100 300,-88 300,-88 300,-82 306,-76 312,-76 312,-76 392,-76 392,-76 398,-76 404,-82 404,-88 404,-88 404,-100 404,-100 404,-106 398,-112 392,-112"/>
+<text text-anchor="middle" x="352" y="-90.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">furiosa&#45;opt&#45;rt</text>
+</g>
+<g id="node8" class="node">
+<title>N</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M250.5,-36C250.5,-36 153.5,-36 153.5,-36 147.5,-36 141.5,-30 141.5,-24 141.5,-24 141.5,-12 141.5,-12 141.5,-6 147.5,0 153.5,0 153.5,0 250.5,0 250.5,0 256.5,0 262.5,-6 262.5,-12 262.5,-12 262.5,-24 262.5,-24 262.5,-30 256.5,-36 250.5,-36"/>
+<text text-anchor="middle" x="202" y="-14.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">드라이버와 RNGD</text>
+</g>
+</g>
+</svg>

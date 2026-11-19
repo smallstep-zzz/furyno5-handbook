@@ -1,0 +1,8 @@
+flowchart TB
+    P["Python TCL 커널"] --> S["축 크기 특수화"]
+    S --> T["TCL 텍스트 IR"]
+    T --> C["furiosa-tcc"]
+    C --> E["EDF"]
+    C --> X["컴파일 진단·실패 로그"]
+    E --> A["입출력 ABI 확인"]
+    A --> R["장치 런타임에 적재"]

@@ -1,0 +1,23 @@
+[
+  {"id":"00-reading-map","title":"이 책을 읽는 방법","short":"전체 지도와 읽는 방법","part":"시작하기","summary":"무엇을 구현했고, 무엇을 검증했는가. 코드와 근거를 따라가는 개발자의 지도.","output":"index.html"},
+  {"id":"01-hardware","title":"RNGD 하드웨어","short":"RNGD · TCP · PE","part":"I. 디바이스를 이해하기","summary":"연산 장치와 메모리 계층을 통해 NPU의 실행 단위를 이해합니다."},
+  {"id":"02-memory-dma","title":"메모리와 DMA","short":"메모리 · DMA · 배치","part":"I. 디바이스를 이해하기","summary":"호스트에서 HBM으로, HBM에서 계산 장치로. 데이터 이동과 수명을 추적합니다."},
+  {"id":"03-driver-runtime","title":"드라이버부터 런타임까지","short":"드라이버와 공식 런타임","part":"I. 디바이스를 이해하기","summary":"운영체제, 드라이버, 펌웨어, 런타임, Furiosa-LLM의 책임을 나눕니다."},
+  {"id":"04-tcl-edf","title":"TCL에서 EDF까지","short":"TCL 작성 · 컴파일 · 실행","part":"II. 프로그램을 만들고 실행하기","summary":"축과 데코레이터에서 시작해 컴파일된 프로그램을 실행하는 경로입니다."},
+  {"id":"05-graphs-fallback","title":"실행그래프와 실패 경계","short":"실행그래프 · 오류 · 폴백","part":"II. 프로그램을 만들고 실행하기","summary":"그래프가 맡는 일과 EDF가 맡는 일, 프로그램이 없을 때의 동작을 구분합니다."},
+  {"id":"06-buckets-shapes","title":"Shape와 버킷 설계","short":"Shape · 버킷 · 컴파일 비용","part":"II. 프로그램을 만들고 실행하기","summary":"어떤 입력 조건을 미리 준비하고 실행 중 무엇을 선택할지 설계합니다."},
+  {"id":"07-optimization","title":"최적화의 축과 우선순위","short":"최적화의 축과 우선순위","part":"II. 프로그램을 만들고 실행하기","summary":"정확도, 전송, 배치, 융합, 정밀도, 동시성을 근거에 따라 조정합니다."},
+  {"id":"08-eisa-visa","title":"eISA 질문에서 vISA 실습으로","short":"eISA · vISA · furiosa-opt","part":"II. 프로그램을 만들고 실행하기","summary":"공개된 저수준 프로그래밍 경로와 정적 스케줄 분석 도구를 살펴봅니다."},
+  {"id":"09-torch-aten","title":"PyTorch와 ATen 디스패처","short":"PyTorch · ATen · 등록","part":"III. FuryNo5를 해부하기","summary":"연산 스키마, 오버로드, 백엔드 구현을 구분하고 실제 등록 코드를 읽습니다."},
+  {"id":"10-furyno5-architecture","title":"FuryNo5의 실제 구조","short":"FuryNo5 구조와 지원 범위","part":"III. FuryNo5를 해부하기","summary":"지원 목표와 검증 범위를 분리하고 실제 파일과 함수의 연결을 따라갑니다."},
+  {"id":"11-furyno5-compiler","title":"FuryNo5 컴파일 경로","short":"FuryNo5 컴파일과 캐시","part":"III. FuryNo5를 해부하기","summary":"ATen 그래프를 TCL과 EDF로 바꾸고 재사용하는 구현을 추적합니다."},
+  {"id":"12-fxbx","title":"fxbX의 포맷과 실행기","short":"fxbX 포맷과 실행계획","part":"IV. 모델 포팅과 서빙","summary":"공식 FXB를 참고한 비공식 확장과 서로 다른 패키지 실행 경로를 구분합니다."},
+  {"id":"13-porting-fha","title":"모델 포팅과 FHA","short":"모델 포팅 · FHA 자동화","part":"IV. 모델 포팅과 서빙","summary":"작은 모델의 진단, 컴파일, 패키징, 검증을 실제 명령으로 연결합니다."},
+  {"id":"14-serving-vllm","title":"vLLM 서빙과 연결 과제","short":"vLLM · 서빙 브리지","part":"IV. 모델 포팅과 서빙","summary":"공식 플러그인의 경로와 FuryNo5·fxbX에 아직 필요한 연결을 설명합니다."},
+  {"id":"15-multi-npu","title":"여러 NPU로 확장하기","short":"PE · 여러 카드 · 여러 서버","part":"IV. 모델 포팅과 서빙","summary":"장치 내부 융합과 모델 병렬, 데이터 병렬, 서버 라우팅을 구분합니다."},
+  {"id":"16-furyboost","title":"FuryBoost 실험 회고","short":"FuryBoost 실측과 남은 과제","part":"V. 검증과 다음 개발","summary":"CPU 기준선보다 느렸던 결과를 준비 비용, 연산, 정확도로 나누어 해석합니다."},
+  {"id":"17-debugging","title":"측정과 디버깅 실습","short":"측정 · 추적 · 실패 재현","part":"V. 검증과 다음 개발","summary":"느린 이유를 좁히고 다시 검증할 수 있도록 관측 지점을 기록합니다."},
+  {"id":"glossary","title":"용어 사전","short":"약어와 용어 사전","part":"참고와 검증","summary":"약어의 풀네임과 이 핸드북에서 사용하는 정확한 의미입니다.","output":"glossary.html"},
+  {"id":"sources","title":"출처와 버전 기록","short":"출처 · 버전 · 접근 범위","part":"참고와 검증","summary":"공식 문서, 소스 커밋, 포럼 사례를 구분해 기록합니다.","output":"sources.html"},
+  {"id":"review","title":"이번 개편의 회고","short":"검토 기록과 미해결 질문","part":"참고와 검증","summary":"기존 문서에서 바뀐 주장, 미확인 경계, 이후 갱신할 항목을 남깁니다.","output":"review.html"}
+]

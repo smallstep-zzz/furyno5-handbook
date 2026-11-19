@@ -1,0 +1,86 @@
+<svg role="img" aria-label="원본 모델과 대표 입력 · 사전 분석 · 공통 규칙과 shape 계약 · TCL 컴파일과 EDF · 실행 계획과 fxbX 패키지 · 새 프로세스 적재 · 수치·Task·상태 검증 · 미해결 특징과 최소 재현" width="237pt" height="597pt"
+ viewBox="0.00 0.00 236.80 596.80" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(14.4 582.4)">
+<title>handbook</title>
+<g id="edge1" class="edge">
+<title>A&#45;&gt;B</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M76,-531.84C76,-522.12 76,-509.82 76,-499.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="78.45,-499.07 76,-492.07 73.55,-499.07 78.45,-499.07"/>
+</g>
+<g id="edge2" class="edge">
+<title>B&#45;&gt;C</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M64.2,-455.92C57.41,-445.04 49.54,-430.33 46,-416 42.16,-400.47 42.16,-395.53 46,-380 48.9,-368.24 54.72,-356.24 60.46,-346.29"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="62.69,-347.34 64.2,-340.08 58.49,-344.82 62.69,-347.34"/>
+</g>
+<g id="edge7" class="edge">
+<title>B&#45;&gt;H</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M89.22,-455.84C97.06,-445.66 107.09,-432.63 115.58,-421.62"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="117.52,-423.11 119.85,-416.07 113.64,-420.12 117.52,-423.11"/>
+</g>
+<g id="edge3" class="edge">
+<title>C&#45;&gt;D</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M76,-303.84C76,-294.12 76,-281.82 76,-271.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="78.45,-271.07 76,-264.07 73.55,-271.07 78.45,-271.07"/>
+</g>
+<g id="edge4" class="edge">
+<title>D&#45;&gt;E</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M76,-227.84C76,-218.12 76,-205.82 76,-195.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="78.45,-195.07 76,-188.07 73.55,-195.07 78.45,-195.07"/>
+</g>
+<g id="edge5" class="edge">
+<title>E&#45;&gt;F</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M76,-151.84C76,-142.12 76,-129.82 76,-119.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="78.45,-119.07 76,-112.07 73.55,-119.07 78.45,-119.07"/>
+</g>
+<g id="edge6" class="edge">
+<title>F&#45;&gt;G</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M76,-75.84C76,-66.12 76,-53.82 76,-43.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="78.45,-43.07 76,-36.07 73.55,-43.07 78.45,-43.07"/>
+</g>
+<g id="edge8" class="edge">
+<title>H&#45;&gt;C</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M119.78,-379.84C111.94,-369.66 101.91,-356.63 93.42,-345.62"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="95.36,-344.12 89.15,-340.07 91.48,-347.11 95.36,-344.12"/>
+</g>
+<g id="node1" class="node">
+<title>A</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M133.5,-568C133.5,-568 18.5,-568 18.5,-568 12.5,-568 6.5,-562 6.5,-556 6.5,-556 6.5,-544 6.5,-544 6.5,-538 12.5,-532 18.5,-532 18.5,-532 133.5,-532 133.5,-532 139.5,-532 145.5,-538 145.5,-544 145.5,-544 145.5,-556 145.5,-556 145.5,-562 139.5,-568 133.5,-568"/>
+<text text-anchor="middle" x="76" y="-546.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">원본 모델과 대표 입력</text>
+</g>
+<g id="node2" class="node">
+<title>B</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M102.5,-492C102.5,-492 49.5,-492 49.5,-492 43.5,-492 37.5,-486 37.5,-480 37.5,-480 37.5,-468 37.5,-468 37.5,-462 43.5,-456 49.5,-456 49.5,-456 102.5,-456 102.5,-456 108.5,-456 114.5,-462 114.5,-468 114.5,-468 114.5,-480 114.5,-480 114.5,-486 108.5,-492 102.5,-492"/>
+<text text-anchor="middle" x="76" y="-470.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">사전 분석</text>
+</g>
+<g id="node3" class="node">
+<title>C</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M139,-340C139,-340 13,-340 13,-340 7,-340 1,-334 1,-328 1,-328 1,-316 1,-316 1,-310 7,-304 13,-304 13,-304 139,-304 139,-304 145,-304 151,-310 151,-316 151,-316 151,-328 151,-328 151,-334 145,-340 139,-340"/>
+<text text-anchor="middle" x="76" y="-318.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">공통 규칙과 shape 계약</text>
+</g>
+<g id="node4" class="node">
+<title>D</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M125,-264C125,-264 27,-264 27,-264 21,-264 15,-258 15,-252 15,-252 15,-240 15,-240 15,-234 21,-228 27,-228 27,-228 125,-228 125,-228 131,-228 137,-234 137,-240 137,-240 137,-252 137,-252 137,-258 131,-264 125,-264"/>
+<text text-anchor="middle" x="76" y="-242.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">TCL 컴파일과 EDF</text>
+</g>
+<g id="node5" class="node">
+<title>E</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M140,-188C140,-188 12,-188 12,-188 6,-188 0,-182 0,-176 0,-176 0,-164 0,-164 0,-158 6,-152 12,-152 12,-152 140,-152 140,-152 146,-152 152,-158 152,-164 152,-164 152,-176 152,-176 152,-182 146,-188 140,-188"/>
+<text text-anchor="middle" x="76" y="-166.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">실행 계획과 fxbX 패키지</text>
+</g>
+<g id="node6" class="node">
+<title>F</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M120.5,-112C120.5,-112 31.5,-112 31.5,-112 25.5,-112 19.5,-106 19.5,-100 19.5,-100 19.5,-88 19.5,-88 19.5,-82 25.5,-76 31.5,-76 31.5,-76 120.5,-76 120.5,-76 126.5,-76 132.5,-82 132.5,-88 132.5,-88 132.5,-100 132.5,-100 132.5,-106 126.5,-112 120.5,-112"/>
+<text text-anchor="middle" x="76" y="-90.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">새 프로세스 적재</text>
+</g>
+<g id="node7" class="node">
+<title>G</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M132.5,-36C132.5,-36 19.5,-36 19.5,-36 13.5,-36 7.5,-30 7.5,-24 7.5,-24 7.5,-12 7.5,-12 7.5,-6 13.5,0 19.5,0 19.5,0 132.5,0 132.5,0 138.5,0 144.5,-6 144.5,-12 144.5,-12 144.5,-24 144.5,-24 144.5,-30 138.5,-36 132.5,-36"/>
+<text text-anchor="middle" x="76" y="-14.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">수치·Task·상태 검증</text>
+</g>
+<g id="node8" class="node">
+<title>H</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M196,-416C196,-416 70,-416 70,-416 64,-416 58,-410 58,-404 58,-404 58,-392 58,-392 58,-386 64,-380 70,-380 70,-380 196,-380 196,-380 202,-380 208,-386 208,-392 208,-392 208,-404 208,-404 208,-410 202,-416 196,-416"/>
+<text text-anchor="middle" x="133" y="-394.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">미해결 특징과 최소 재현</text>
+</g>
+</g>
+</svg>

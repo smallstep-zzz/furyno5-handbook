@@ -1,0 +1,10 @@
+flowchart TB
+    A["PyTorch 모델"] --> B["eager 실행"]
+    A --> C["torch.compile 또는 torch.export"]
+    B --> D["연산별 Dispatcher"]
+    C --> E["FX graph와 ATen nodes"]
+    E --> F["graph backend 또는 FuryNo5 producer"]
+    F --> G["융합 · 분할 · TCL · EDF"]
+    G --> H["준비된 실행 계획"]
+    D --> I["등록된 backend 구현"]
+    H --> I

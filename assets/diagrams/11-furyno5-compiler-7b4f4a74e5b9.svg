@@ -1,0 +1,76 @@
+<svg role="img" aria-label="입력 x와 외부 weight · step 0: kernel A · 중간 tensor h · step 1: kernel B · 사용자 출력 y · 선택적 next state · 기존 state slot" width="329pt" height="445pt"
+ viewBox="0.00 0.00 329.30 444.80" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(14.4 430.4)">
+<title>handbook</title>
+<g id="edge1" class="edge">
+<title>A&#45;&gt;B</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M231.5,-379.84C231.5,-370.12 231.5,-357.82 231.5,-347.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="233.95,-347.07 231.5,-340.07 229.05,-347.07 233.95,-347.07"/>
+</g>
+<g id="edge2" class="edge">
+<title>B&#45;&gt;C</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M221.29,-303.84C215.35,-293.84 207.78,-281.11 201.31,-270.23"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="203.33,-268.83 197.65,-264.07 199.12,-271.34 203.33,-268.83"/>
+</g>
+<g id="edge3" class="edge">
+<title>C&#45;&gt;D</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M186.34,-227.84C185.68,-218.12 184.85,-205.82 184.13,-195.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="186.57,-194.89 183.65,-188.07 181.68,-195.22 186.57,-194.89"/>
+</g>
+<g id="edge4" class="edge">
+<title>D&#45;&gt;E</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M151.42,-151.84C131.8,-141 106.35,-126.95 85.67,-115.52"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="86.72,-113.31 79.41,-112.07 84.35,-117.6 86.72,-113.31"/>
+</g>
+<g id="edge5" class="edge">
+<title>D&#45;&gt;F</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M182.5,-151.84C182.5,-142.12 182.5,-129.82 182.5,-119.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="184.95,-119.07 182.5,-112.07 180.05,-119.07 184.95,-119.07"/>
+</g>
+<g id="edge7" class="edge">
+<title>F&#45;&gt;G</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M193.86,-75.84C200.54,-65.75 209.07,-52.87 216.32,-41.92"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="218.37,-43.26 220.2,-36.07 214.29,-40.55 218.37,-43.26"/>
+</g>
+<g id="edge6" class="edge">
+<title>G&#45;&gt;B</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M240.96,-36.39C246.4,-47.39 252.69,-62.11 255.5,-76 272.05,-157.93 265.24,-181.73 250.5,-264 248.5,-275.18 244.76,-287.16 241.13,-297.24"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="238.8,-296.46 238.65,-303.88 243.39,-298.17 238.8,-296.46"/>
+</g>
+<g id="node1" class="node">
+<title>A</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M288.5,-416C288.5,-416 174.5,-416 174.5,-416 168.5,-416 162.5,-410 162.5,-404 162.5,-404 162.5,-392 162.5,-392 162.5,-386 168.5,-380 174.5,-380 174.5,-380 288.5,-380 288.5,-380 294.5,-380 300.5,-386 300.5,-392 300.5,-392 300.5,-404 300.5,-404 300.5,-410 294.5,-416 288.5,-416"/>
+<text text-anchor="middle" x="231.5" y="-394.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">입력 x와 외부 weight</text>
+</g>
+<g id="node2" class="node">
+<title>B</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M277,-340C277,-340 186,-340 186,-340 180,-340 174,-334 174,-328 174,-328 174,-316 174,-316 174,-310 180,-304 186,-304 186,-304 277,-304 277,-304 283,-304 289,-310 289,-316 289,-316 289,-328 289,-328 289,-334 283,-340 277,-340"/>
+<text text-anchor="middle" x="231.5" y="-318.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">step 0: kernel A</text>
+</g>
+<g id="node3" class="node">
+<title>C</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M226,-264C226,-264 149,-264 149,-264 143,-264 137,-258 137,-252 137,-252 137,-240 137,-240 137,-234 143,-228 149,-228 149,-228 226,-228 226,-228 232,-228 238,-234 238,-240 238,-240 238,-252 238,-252 238,-258 232,-264 226,-264"/>
+<text text-anchor="middle" x="187.5" y="-242.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">중간 tensor h</text>
+</g>
+<g id="node4" class="node">
+<title>D</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M228.5,-188C228.5,-188 136.5,-188 136.5,-188 130.5,-188 124.5,-182 124.5,-176 124.5,-176 124.5,-164 124.5,-164 124.5,-158 130.5,-152 136.5,-152 136.5,-152 228.5,-152 228.5,-152 234.5,-152 240.5,-158 240.5,-164 240.5,-164 240.5,-176 240.5,-176 240.5,-182 234.5,-188 228.5,-188"/>
+<text text-anchor="middle" x="182.5" y="-166.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">step 1: kernel B</text>
+</g>
+<g id="node5" class="node">
+<title>E</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M85,-112C85,-112 12,-112 12,-112 6,-112 0,-106 0,-100 0,-100 0,-88 0,-88 0,-82 6,-76 12,-76 12,-76 85,-76 85,-76 91,-76 97,-82 97,-88 97,-88 97,-100 97,-100 97,-106 91,-112 85,-112"/>
+<text text-anchor="middle" x="48.5" y="-90.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">사용자 출력 y</text>
+</g>
+<g id="node6" class="node">
+<title>F</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M231,-112C231,-112 134,-112 134,-112 128,-112 122,-106 122,-100 122,-100 122,-88 122,-88 122,-82 128,-76 134,-76 134,-76 231,-76 231,-76 237,-76 243,-82 243,-88 243,-88 243,-100 243,-100 243,-106 237,-112 231,-112"/>
+<text text-anchor="middle" x="182.5" y="-90.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">선택적 next state</text>
+</g>
+<g id="node7" class="node">
+<title>G</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M272,-36C272,-36 191,-36 191,-36 185,-36 179,-30 179,-24 179,-24 179,-12 179,-12 179,-6 185,0 191,0 191,0 272,0 272,0 278,0 284,-6 284,-12 284,-12 284,-24 284,-24 284,-30 278,-36 272,-36"/>
+<text text-anchor="middle" x="231.5" y="-14.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">기존 state slot</text>
+</g>
+</g>
+</svg>

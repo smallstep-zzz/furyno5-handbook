@@ -1,0 +1,81 @@
+<svg role="img" aria-label="Python TCL 커널 · 축 크기 특수화 · TCL 텍스트 IR · furiosa-tcc · EDF · 컴파일 진단·실패 로그 · 입출력 ABI 확인 · 장치 런타임에 적재" width="287pt" height="521pt"
+ viewBox="0.00 0.00 286.80 520.80" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(14.4 506.4)">
+<title>handbook</title>
+<g id="edge1" class="edge">
+<title>P&#45;&gt;S</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M124.5,-455.84C124.5,-446.12 124.5,-433.82 124.5,-423.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="126.95,-423.07 124.5,-416.07 122.05,-423.07 126.95,-423.07"/>
+</g>
+<g id="edge2" class="edge">
+<title>S&#45;&gt;T</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M124.5,-379.84C124.5,-370.12 124.5,-357.82 124.5,-347.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="126.95,-347.07 124.5,-340.07 122.05,-347.07 126.95,-347.07"/>
+</g>
+<g id="edge3" class="edge">
+<title>T&#45;&gt;C</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M124.5,-303.84C124.5,-294.12 124.5,-281.82 124.5,-271.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="126.95,-271.07 124.5,-264.07 122.05,-271.07 126.95,-271.07"/>
+</g>
+<g id="edge4" class="edge">
+<title>C&#45;&gt;E</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M110.12,-227.84C101.59,-217.66 90.68,-204.63 81.45,-193.62"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="83.18,-191.86 76.8,-188.07 79.42,-195.01 83.18,-191.86"/>
+</g>
+<g id="edge5" class="edge">
+<title>C&#45;&gt;X</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M138.88,-227.84C147.41,-217.66 158.32,-204.63 167.55,-193.62"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="169.58,-195.01 172.2,-188.07 165.82,-191.86 169.58,-195.01"/>
+</g>
+<g id="edge6" class="edge">
+<title>E&#45;&gt;A</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M62.5,-151.84C62.5,-142.12 62.5,-129.82 62.5,-119.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="64.95,-119.07 62.5,-112.07 60.05,-119.07 64.95,-119.07"/>
+</g>
+<g id="edge7" class="edge">
+<title>A&#45;&gt;R</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M62.5,-75.84C62.5,-66.12 62.5,-53.82 62.5,-43.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="64.95,-43.07 62.5,-36.07 60.05,-43.07 64.95,-43.07"/>
+</g>
+<g id="node1" class="node">
+<title>P</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M172,-492C172,-492 77,-492 77,-492 71,-492 65,-486 65,-480 65,-480 65,-468 65,-468 65,-462 71,-456 77,-456 77,-456 172,-456 172,-456 178,-456 184,-462 184,-468 184,-468 184,-480 184,-480 184,-486 178,-492 172,-492"/>
+<text text-anchor="middle" x="124.5" y="-470.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">Python TCL 커널</text>
+</g>
+<g id="node2" class="node">
+<title>S</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M163.5,-416C163.5,-416 85.5,-416 85.5,-416 79.5,-416 73.5,-410 73.5,-404 73.5,-404 73.5,-392 73.5,-392 73.5,-386 79.5,-380 85.5,-380 85.5,-380 163.5,-380 163.5,-380 169.5,-380 175.5,-386 175.5,-392 175.5,-392 175.5,-404 175.5,-404 175.5,-410 169.5,-416 163.5,-416"/>
+<text text-anchor="middle" x="124.5" y="-394.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">축 크기 특수화</text>
+</g>
+<g id="node3" class="node">
+<title>T</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M163,-340C163,-340 86,-340 86,-340 80,-340 74,-334 74,-328 74,-328 74,-316 74,-316 74,-310 80,-304 86,-304 86,-304 163,-304 163,-304 169,-304 175,-310 175,-316 175,-316 175,-328 175,-328 175,-334 169,-340 163,-340"/>
+<text text-anchor="middle" x="124.5" y="-318.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">TCL 텍스트 IR</text>
+</g>
+<g id="node4" class="node">
+<title>C</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M156,-264C156,-264 93,-264 93,-264 87,-264 81,-258 81,-252 81,-252 81,-240 81,-240 81,-234 87,-228 93,-228 93,-228 156,-228 156,-228 162,-228 168,-234 168,-240 168,-240 168,-252 168,-252 168,-258 162,-264 156,-264"/>
+<text text-anchor="middle" x="124.5" y="-242.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">furiosa&#45;tcc</text>
+</g>
+<g id="node5" class="node">
+<title>E</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M77.5,-188C77.5,-188 47.5,-188 47.5,-188 41.5,-188 35.5,-182 35.5,-176 35.5,-176 35.5,-164 35.5,-164 35.5,-158 41.5,-152 47.5,-152 47.5,-152 77.5,-152 77.5,-152 83.5,-152 89.5,-158 89.5,-164 89.5,-164 89.5,-176 89.5,-176 89.5,-182 83.5,-188 77.5,-188"/>
+<text text-anchor="middle" x="62.5" y="-166.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">EDF</text>
+</g>
+<g id="node6" class="node">
+<title>X</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M246,-188C246,-188 127,-188 127,-188 121,-188 115,-182 115,-176 115,-176 115,-164 115,-164 115,-158 121,-152 127,-152 127,-152 246,-152 246,-152 252,-152 258,-158 258,-164 258,-164 258,-176 258,-176 258,-182 252,-188 246,-188"/>
+<text text-anchor="middle" x="186.5" y="-166.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">컴파일 진단·실패 로그</text>
+</g>
+<g id="node7" class="node">
+<title>A</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M105.5,-112C105.5,-112 19.5,-112 19.5,-112 13.5,-112 7.5,-106 7.5,-100 7.5,-100 7.5,-88 7.5,-88 7.5,-82 13.5,-76 19.5,-76 19.5,-76 105.5,-76 105.5,-76 111.5,-76 117.5,-82 117.5,-88 117.5,-88 117.5,-100 117.5,-100 117.5,-106 111.5,-112 105.5,-112"/>
+<text text-anchor="middle" x="62.5" y="-90.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">입출력 ABI 확인</text>
+</g>
+<g id="node8" class="node">
+<title>R</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M113,-36C113,-36 12,-36 12,-36 6,-36 0,-30 0,-24 0,-24 0,-12 0,-12 0,-6 6,0 12,0 12,0 113,0 113,0 119,0 125,-6 125,-12 125,-12 125,-24 125,-24 125,-30 119,-36 113,-36"/>
+<text text-anchor="middle" x="62.5" y="-14.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">장치 런타임에 적재</text>
+</g>
+</g>
+</svg>

@@ -1,0 +1,77 @@
+<svg role="img" aria-label="FuryNo5: 그래프와 연산 계약 · genuine EDF와 실행 계획 · fxbX: 무결성·ABI·버전 검사 · 외부 가중치와 요청 상태 · SDK Runnable 또는 RunnableSequence · RNGD 실행과 완료 확인 · 공식 builder의 FXB · 호환 Furiosa-LLM 모델 실행기" width="409pt" height="455pt"
+ viewBox="0.00 0.00 408.80 454.80" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(14.4 440.4)">
+<title>handbook</title>
+<g id="edge1" class="edge">
+<title>A&#45;&gt;B</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M89.5,-389.84C89.5,-380.12 89.5,-367.82 89.5,-357.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="91.95,-357.07 89.5,-350.07 87.05,-357.07 91.95,-357.07"/>
+</g>
+<g id="edge2" class="edge">
+<title>B&#45;&gt;C</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M89.5,-313.84C89.5,-304.12 89.5,-291.82 89.5,-281.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="91.95,-281.07 89.5,-274.07 87.05,-281.07 91.95,-281.07"/>
+</g>
+<g id="edge3" class="edge">
+<title>C&#45;&gt;D</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M89.5,-237.84C89.5,-228.12 89.5,-215.82 89.5,-205.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="91.95,-205.07 89.5,-198.07 87.05,-205.07 91.95,-205.07"/>
+</g>
+<g id="edge4" class="edge">
+<title>D&#45;&gt;E</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M89.5,-161.86C89.5,-152.33 89.5,-140.21 89.5,-129.23"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="91.95,-129.22 89.5,-122.22 87.05,-129.22 91.95,-129.22"/>
+</g>
+<g id="edge5" class="edge">
+<title>E&#45;&gt;F</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M89.5,-75.99C89.5,-65.85 89.5,-53.79 89.5,-43.37"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="91.95,-43.13 89.5,-36.13 87.05,-43.13 91.95,-43.13"/>
+</g>
+<g id="edge6" class="edge">
+<title>G&#45;&gt;H</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M287.5,-389.84C287.5,-380.12 287.5,-367.82 287.5,-357.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="289.95,-357.07 287.5,-350.07 285.05,-357.07 289.95,-357.07"/>
+</g>
+<g id="node1" class="node">
+<title>A</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M167,-426C167,-426 12,-426 12,-426 6,-426 0,-420 0,-414 0,-414 0,-402 0,-402 0,-396 6,-390 12,-390 12,-390 167,-390 167,-390 173,-390 179,-396 179,-402 179,-402 179,-414 179,-414 179,-420 173,-426 167,-426"/>
+<text text-anchor="middle" x="89.5" y="-404.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">FuryNo5: 그래프와 연산 계약</text>
+</g>
+<g id="node2" class="node">
+<title>B</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M158,-350C158,-350 21,-350 21,-350 15,-350 9,-344 9,-338 9,-338 9,-326 9,-326 9,-320 15,-314 21,-314 21,-314 158,-314 158,-314 164,-314 170,-320 170,-326 170,-326 170,-338 170,-338 170,-344 164,-350 158,-350"/>
+<text text-anchor="middle" x="89.5" y="-328.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">genuine EDF와 실행 계획</text>
+</g>
+<g id="node3" class="node">
+<title>C</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M164,-274C164,-274 15,-274 15,-274 9,-274 3,-268 3,-262 3,-262 3,-250 3,-250 3,-244 9,-238 15,-238 15,-238 164,-238 164,-238 170,-238 176,-244 176,-250 176,-250 176,-262 176,-262 176,-268 170,-274 164,-274"/>
+<text text-anchor="middle" x="89.5" y="-252.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">fxbX: 무결성·ABI·버전 검사</text>
+</g>
+<g id="node4" class="node">
+<title>D</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M152.5,-198C152.5,-198 26.5,-198 26.5,-198 20.5,-198 14.5,-192 14.5,-186 14.5,-186 14.5,-174 14.5,-174 14.5,-168 20.5,-162 26.5,-162 26.5,-162 152.5,-162 152.5,-162 158.5,-162 164.5,-168 164.5,-174 164.5,-174 164.5,-186 164.5,-186 164.5,-192 158.5,-198 152.5,-198"/>
+<text text-anchor="middle" x="89.5" y="-176.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">외부 가중치와 요청 상태</text>
+</g>
+<g id="node5" class="node">
+<title>E</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M147.5,-122C147.5,-122 31.5,-122 31.5,-122 25.5,-122 19.5,-116 19.5,-110 19.5,-110 19.5,-88 19.5,-88 19.5,-82 25.5,-76 31.5,-76 31.5,-76 147.5,-76 147.5,-76 153.5,-76 159.5,-82 159.5,-88 159.5,-88 159.5,-110 159.5,-110 159.5,-116 153.5,-122 147.5,-122"/>
+<text text-anchor="middle" x="89.5" y="-102.4" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">SDK Runnable 또는</text>
+<text text-anchor="middle" x="89.5" y="-89.4" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">RunnableSequence</text>
+</g>
+<g id="node6" class="node">
+<title>F</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M152,-36C152,-36 27,-36 27,-36 21,-36 15,-30 15,-24 15,-24 15,-12 15,-12 15,-6 21,0 27,0 27,0 152,0 152,0 158,0 164,-6 164,-12 164,-12 164,-24 164,-24 164,-30 158,-36 152,-36"/>
+<text text-anchor="middle" x="89.5" y="-14.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">RNGD 실행과 완료 확인</text>
+</g>
+<g id="node7" class="node">
+<title>G</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M340.5,-426C340.5,-426 234.5,-426 234.5,-426 228.5,-426 222.5,-420 222.5,-414 222.5,-414 222.5,-402 222.5,-402 222.5,-396 228.5,-390 234.5,-390 234.5,-390 340.5,-390 340.5,-390 346.5,-390 352.5,-396 352.5,-402 352.5,-402 352.5,-414 352.5,-414 352.5,-420 346.5,-426 340.5,-426"/>
+<text text-anchor="middle" x="287.5" y="-404.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">공식 builder의 FXB</text>
+</g>
+<g id="node8" class="node">
+<title>H</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M368,-350C368,-350 207,-350 207,-350 201,-350 195,-344 195,-338 195,-338 195,-326 195,-326 195,-320 201,-314 207,-314 207,-314 368,-314 368,-314 374,-314 380,-320 380,-326 380,-326 380,-338 380,-338 380,-344 374,-350 368,-350"/>
+<text text-anchor="middle" x="287.5" y="-328.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">호환 Furiosa&#45;LLM 모델 실행기</text>
+</g>
+</g>
+</svg>

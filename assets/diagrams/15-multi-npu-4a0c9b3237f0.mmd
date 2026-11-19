@@ -1,0 +1,9 @@
+flowchart TB
+    R["여러 독립 요청"] --> Q["cache와 부하를 보는 라우터"]
+    Q --> A["복제본 A: 모델 전체"]
+    Q --> B["복제본 B: 모델 전체"]
+    A --> OA["A의 요청별 KV"]
+    B --> OB["B의 요청별 KV"]
+    S["한 큰 모델의 요청"] --> P1["stage 1: 앞 layer"]
+    P1 --> P2["stage 2: 뒤 layer"]
+    P2 --> O["결과"]

@@ -1,0 +1,71 @@
+<svg role="img" aria-label="처음 요청 · capture · compile · 파일 읽기 · 검증 · 장치 적재 · 입력 준비 · H2D · 장치 실행과 host dispatch · 완료 대기 · D2H · 후처리 · 따뜻한 반복 요청" width="340pt" height="445pt"
+ viewBox="0.00 0.00 339.80 444.80" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(14.4 430.4)">
+<title>handbook</title>
+<g id="edge1" class="edge">
+<title>A&#45;&gt;B</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M86.5,-379.84C86.5,-370.12 86.5,-357.82 86.5,-347.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="88.95,-347.07 86.5,-340.07 84.05,-347.07 88.95,-347.07"/>
+</g>
+<g id="edge2" class="edge">
+<title>B&#45;&gt;C</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M86.5,-303.84C86.5,-294.12 86.5,-281.82 86.5,-271.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="88.95,-271.07 86.5,-264.07 84.05,-271.07 88.95,-271.07"/>
+</g>
+<g id="edge3" class="edge">
+<title>C&#45;&gt;D</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M105.98,-227.84C117.86,-217.38 133.14,-203.91 145.85,-192.71"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="147.49,-194.54 151.12,-188.07 144.25,-190.86 147.49,-194.54"/>
+</g>
+<g id="edge4" class="edge">
+<title>D&#45;&gt;E</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M170.5,-151.84C170.5,-142.12 170.5,-129.82 170.5,-119.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="172.95,-119.07 170.5,-112.07 168.05,-119.07 172.95,-119.07"/>
+</g>
+<g id="edge5" class="edge">
+<title>E&#45;&gt;F</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M170.5,-75.84C170.5,-66.12 170.5,-53.82 170.5,-43.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="172.95,-43.07 170.5,-36.07 168.05,-43.07 172.95,-43.07"/>
+</g>
+<g id="edge6" class="edge">
+<title>G&#45;&gt;D</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M235.02,-227.84C223.14,-217.38 207.86,-203.91 195.15,-192.71"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="196.75,-190.86 189.88,-188.07 193.51,-194.54 196.75,-190.86"/>
+</g>
+<g id="node1" class="node">
+<title>A</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M113,-416C113,-416 60,-416 60,-416 54,-416 48,-410 48,-404 48,-404 48,-392 48,-392 48,-386 54,-380 60,-380 60,-380 113,-380 113,-380 119,-380 125,-386 125,-392 125,-392 125,-404 125,-404 125,-410 119,-416 113,-416"/>
+<text text-anchor="middle" x="86.5" y="-394.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">처음 요청</text>
+</g>
+<g id="node2" class="node">
+<title>B</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M140,-340C140,-340 33,-340 33,-340 27,-340 21,-334 21,-328 21,-328 21,-316 21,-316 21,-310 27,-304 33,-304 33,-304 140,-304 140,-304 146,-304 152,-310 152,-316 152,-316 152,-328 152,-328 152,-334 146,-340 140,-340"/>
+<text text-anchor="middle" x="86.5" y="-318.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">capture · compile</text>
+</g>
+<g id="node3" class="node">
+<title>C</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M161,-264C161,-264 12,-264 12,-264 6,-264 0,-258 0,-252 0,-252 0,-240 0,-240 0,-234 6,-228 12,-228 12,-228 161,-228 161,-228 167,-228 173,-234 173,-240 173,-240 173,-252 173,-252 173,-258 167,-264 161,-264"/>
+<text text-anchor="middle" x="86.5" y="-242.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">파일 읽기 · 검증 · 장치 적재</text>
+</g>
+<g id="node4" class="node">
+<title>D</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M215,-188C215,-188 126,-188 126,-188 120,-188 114,-182 114,-176 114,-176 114,-164 114,-164 114,-158 120,-152 126,-152 126,-152 215,-152 215,-152 221,-152 227,-158 227,-164 227,-164 227,-176 227,-176 227,-182 221,-188 215,-188"/>
+<text text-anchor="middle" x="170.5" y="-166.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">입력 준비 · H2D</text>
+</g>
+<g id="node5" class="node">
+<title>E</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M242,-112C242,-112 99,-112 99,-112 93,-112 87,-106 87,-100 87,-100 87,-88 87,-88 87,-82 93,-76 99,-76 99,-76 242,-76 242,-76 248,-76 254,-82 254,-88 254,-88 254,-100 254,-100 254,-106 248,-112 242,-112"/>
+<text text-anchor="middle" x="170.5" y="-90.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">장치 실행과 host dispatch</text>
+</g>
+<g id="node6" class="node">
+<title>F</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M238.5,-36C238.5,-36 102.5,-36 102.5,-36 96.5,-36 90.5,-30 90.5,-24 90.5,-24 90.5,-12 90.5,-12 90.5,-6 96.5,0 102.5,0 102.5,0 238.5,0 238.5,0 244.5,0 250.5,-6 250.5,-12 250.5,-12 250.5,-24 250.5,-24 250.5,-30 244.5,-36 238.5,-36"/>
+<text text-anchor="middle" x="170.5" y="-14.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">완료 대기 · D2H · 후처리</text>
+</g>
+<g id="node7" class="node">
+<title>G</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M299,-264C299,-264 210,-264 210,-264 204,-264 198,-258 198,-252 198,-252 198,-240 198,-240 198,-234 204,-228 210,-228 210,-228 299,-228 299,-228 305,-228 311,-234 311,-240 311,-240 311,-252 311,-252 311,-258 305,-264 299,-264"/>
+<text text-anchor="middle" x="254.5" y="-242.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">따뜻한 반복 요청</text>
+</g>
+</g>
+</svg>

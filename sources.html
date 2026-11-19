@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="공식 문서, 소스 커밋, 포럼 사례를 구분해 기록합니다."><meta name="theme-color" content="#fbfaf7"><title>출처와 버전 기록 · FuryNo5 개발 핸드북</title><link rel="icon" href="assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="assets/site.css"><script defer src="assets/site.js"></script></head>
+<body data-root="./" data-chapter="sources"><a class="skip" href="#content">본문으로 이동</a><header class="topbar"><button class="menu-toggle" type="button" aria-label="전체 목차 열기" aria-controls="sidebar" aria-expanded="false">☰</button><a class="brand" href="index.html"><span class="brand-mark">Nº5</span>FuryNo5<small>DEVELOPER HANDBOOK</small></a><div class="top-actions"><a class="top-link" href="sources.html">출처와 버전</a><button class="search-open" type="button" aria-label="핸드북 전체 검색"><span>전체 문서 검색</span><kbd>⌘ K</kbd></button></div></header><div class="progress" aria-hidden="true"></div><div class="mobile-shade"></div><aside class="sidebar" id="sidebar" aria-label="전체 목차"><nav><div class="nav-caption">시작하기</div><a class="nav-link"  href="index.html"><span class="num">00</span><span>전체 지도와 읽는 방법</span></a><div class="nav-caption">I. 디바이스를 이해하기</div><a class="nav-link"  href="chapter/01-hardware.html"><span class="num">01</span><span>RNGD · TCP · PE</span></a><a class="nav-link"  href="chapter/02-memory-dma.html"><span class="num">02</span><span>메모리 · DMA · 배치</span></a><a class="nav-link"  href="chapter/03-driver-runtime.html"><span class="num">03</span><span>드라이버와 공식 런타임</span></a><div class="nav-caption">II. 프로그램을 만들고 실행하기</div><a class="nav-link"  href="chapter/04-tcl-edf.html"><span class="num">04</span><span>TCL 작성 · 컴파일 · 실행</span></a><a class="nav-link"  href="chapter/05-graphs-fallback.html"><span class="num">05</span><span>실행그래프 · 오류 · 폴백</span></a><a class="nav-link"  href="chapter/06-buckets-shapes.html"><span class="num">06</span><span>Shape · 버킷 · 컴파일 비용</span></a><a class="nav-link"  href="chapter/07-optimization.html"><span class="num">07</span><span>최적화의 축과 우선순위</span></a><a class="nav-link"  href="chapter/08-eisa-visa.html"><span class="num">08</span><span>eISA · vISA · furiosa-opt</span></a><div class="nav-caption">III. FuryNo5를 해부하기</div><a class="nav-link"  href="chapter/09-torch-aten.html"><span class="num">09</span><span>PyTorch · ATen · 등록</span></a><a class="nav-link"  href="chapter/10-furyno5-architecture.html"><span class="num">10</span><span>FuryNo5 구조와 지원 범위</span></a><a class="nav-link"  href="chapter/11-furyno5-compiler.html"><span class="num">11</span><span>FuryNo5 컴파일과 캐시</span></a><div class="nav-caption">IV. 모델 포팅과 서빙</div><a class="nav-link"  href="chapter/12-fxbx.html"><span class="num">12</span><span>fxbX 포맷과 실행계획</span></a><a class="nav-link"  href="chapter/13-porting-fha.html"><span class="num">13</span><span>모델 포팅 · FHA 자동화</span></a><a class="nav-link"  href="chapter/14-serving-vllm.html"><span class="num">14</span><span>vLLM · 서빙 브리지</span></a><a class="nav-link"  href="chapter/15-multi-npu.html"><span class="num">15</span><span>PE · 여러 카드 · 여러 서버</span></a><div class="nav-caption">V. 검증과 다음 개발</div><a class="nav-link"  href="chapter/16-furyboost.html"><span class="num">16</span><span>FuryBoost 실측과 남은 과제</span></a><a class="nav-link"  href="chapter/17-debugging.html"><span class="num">17</span><span>측정 · 추적 · 실패 재현</span></a><div class="nav-caption">참고와 검증</div><a class="nav-link"  href="glossary.html"><span class="num">·</span><span>약어와 용어 사전</span></a><a class="nav-link active" aria-current="page" href="sources.html"><span class="num">·</span><span>출처 · 버전 · 접근 범위</span></a><a class="nav-link"  href="review.html"><span class="num">·</span><span>검토 기록과 미해결 질문</span></a></nav><div class="side-foot">비공식 개발 핸드북 · 2026.11.19<br>공식 SDK와 프로젝트 구현을 구분합니다.<br><a href="https://github.com/smallstep-zzz/furyno5-handbook">원고와 변경 이력 ↗</a></div></aside><div class="shell"><main class="page" id="content"><div class="eyebrow">참고와 검증 / REFERENCE</div><h1>출처와 버전 기록</h1><p class="dek">공식 문서, 소스 커밋, 포럼 사례를 구분해 기록합니다.</p><div class="page-meta"><span>검토 2026.11.19</span><span>SDK 2026.4 계열 / 버전별 표기</span><span class="readtime">약 8분</span><span><a href="https://github.com/smallstep-zzz/furyno5-handbook/blob/main/content/sources.md">원고</a></span></div><details class="mobile-toc"><summary>이 장의 목차</summary><div><a class="" href="#버전-기준-url의-숫자와-설치본은-다를-수-있다">버전 기준: URL의 숫자와 설치본은 다를 수 있다</a><a class="" href="#고정한-소스-스냅샷">고정한 소스 스냅샷</a><a class="" href="#근거를-다섯-종류로-나눠-읽는다">근거를 다섯 종류로 나눠 읽는다</a><a class="" href="#핵심-공식-문헌">핵심 공식 문헌</a><a class="" href="#코드-검사와-npu-실측의-구분">코드 검사와 NPU 실측의 구분</a><a class="" href="#재현-결과에-남길-최소-기록">재현 결과에 남길 최소 기록</a><a class="" href="#수정할-때-지켜야-할-규칙">수정할 때 지켜야 할 규칙</a><a class="" href="#출처">출처</a></div></details><noscript><p class="noscript">본문과 그림은 JavaScript 없이 읽을 수 있습니다. 검색과 조절 실험에는 JavaScript가 필요합니다.</p></noscript><article class="article"><p><strong>이 핸드북의 조사 기준일은 2026-11-19다.</strong> 공식 문서, 공개 구현, 사용자 프로젝트의 소스, 저장소에 보존된 기존 시험 결과를 함께 읽었다. 이들은 서로 다른 종류의 근거다. 코드가 존재하는 것, 공식 지원을 약속한 것, 특정 장비에서 한 번 측정한 것, 이번 편집 과정에서 새로 실행한 것을 같은 수준의 사실로 쓰지 않는다.</p>
+<p>각 장은 주장 가까이에 출처를 붙이고 마지막에 핵심 출처 표를 둔다. 모든 인용 URL은 빌드 과정에서 생성하는 <a href="data/source-index.json">전체 출처 색인</a>에서 확인할 수 있다. 이 페이지는 그 자료를 어떤 기준으로 읽고 재현해야 하는지 설명한다.</p>
+<h2 id="버전-기준-url의-숫자와-설치본은-다를-수-있다"><a class="heading-anchor" href="#버전-기준-url의-숫자와-설치본은-다를-수-있다">버전 기준: URL의 숫자와 설치본은 다를 수 있다</a></h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>대상</th>
+<th>이 책의 기준</th>
+<th>독자가 확인할 점</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>공식 SDK 문서</td>
+<td>2026.4 계열 중심</td>
+<td>조회 당시 <code>/v2026.4.0/</code> URL의 페이지 제목·헤더가 <strong>2026.4.1</strong>로 표시됐다. URL만으로 정확한 2026.4.0 API를 보장하지 않는다.</td>
+</tr>
+<tr>
+<td>2026.5 기능</td>
+<td>해당 beta release note에 한정</td>
+<td>예를 들어 <code>--evaluate-tcl</code>은 2026.5.0b0 변경으로 구분했다. 안정판 2026.4에 그대로 복사하지 않는다.</td>
+</tr>
+<tr>
+<td>furiosa-opt</td>
+<td><code>3d43bc9…</code> 고정 소스</td>
+<td>예제 template의 <code>furiosa-opt-std</code>는 0.10 계열이다. 0.8.1 포럼 토론과 현재 소스는 시점이 다르다.</td>
+</tr>
+<tr>
+<td>furiosa-opt-models</td>
+<td><code>c982976…</code> 고정 소스</td>
+<td>opt-vLLM 설치는 이 저장소의 compiler preview revision·wheel·Python 조건을 함께 맞춰야 한다. 일반 opt 예제 환경과 무조건 호환된다고 보지 않는다.</td>
+</tr>
+<tr>
+<td>PyTorch 연산 목록</td>
+<td>v2.10.0 소스 스냅샷</td>
+<td>연산 이름 수·overload 수·Core 목록 수는 다른 집계다. 미래 버전에서 같은 숫자라고 가정하지 않는다.</td>
+</tr>
+<tr>
+<td>사용자 프로젝트</td>
+<td>아래 표의 고정 커밋</td>
+<td><code>main</code> 최신 상태나 배포된 wheel과 이 책의 API가 같다는 보장은 없다.</td>
+</tr>
+</tbody></table>
+</div><p>SDK 문서의 버전 표시 차이는 <a href="https://developer.furiosa.ai/v2026.4.0/en/overview/software_stack.html">소프트웨어 스택</a>과 <a href="https://developer.furiosa.ai/v2026.4.0/en/overview/rngd.html">RNGD 개요</a>에서 확인했다. 2026.5 비용 추정은 <a href="https://developer.furiosa.ai/v2026.5.0b4/en/whatsnew/release-2026.5.0b0.html">해당 release note</a>, opt 버전은 <a href="https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/base-template/Cargo.toml.liquid">template 의존성</a>, opt-vLLM의 별도 조건은 <a href="https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/docs/getting-started/installation.md">설치 문서</a>와 <a href="https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/Cargo.toml">Cargo 의존성</a>을 근거로 한다.</p>
+<p>CLI(Command-Line Interface) 옵션은 설치본의 <code>--help</code>와 함께 확인한다. 문서의 명령이 오래된 설치본에서 거절되면 옵션을 임의로 바꿔 성공한 것처럼 해석하지 말고, 지원 버전과 대체 절차를 먼저 찾는다. API(Application Programming Interface) 예제도 함수 이름뿐 아니라 인수·반환형·입출력 ABI(Application Binary Interface)까지 해당 버전과 대조해야 한다.</p>
+<h2 id="고정한-소스-스냅샷"><a class="heading-anchor" href="#고정한-소스-스냅샷">고정한 소스 스냅샷</a></h2>
+<p>커밋 링크에는 전체 40자리 SHA가 들어 있다. 표의 짧은 표기는 읽기 편하게 줄인 표시다. 공개·비공개 여부는 조사 당시의 저장소 메타데이터 기준이며 나중에 바뀔 수 있다.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>저장소</th>
+<th>고정 커밋</th>
+<th>자료 성격·접근 범위</th>
+<th>이 책에서 확인한 역할</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>furiosa-ai/furiosa-opt</td>
+<td><a href="https://github.com/furiosa-ai/furiosa-opt/tree/3d43bc9d20f324af60e3006c3f1541938d7f5097">3d43bc9d20f3</a></td>
+<td>Furiosa 공식 공개 저장소</td>
+<td>vISA, 공간·메모리 mapping, 컴파일 도구, 정적 schedule, Rust runtime</td>
+</tr>
+<tr>
+<td>furiosa-ai/furiosa-opt-models</td>
+<td><a href="https://github.com/furiosa-ai/furiosa-opt-models/tree/c982976100d18d7a9641d5a8c22b89cec4544049">c982976100d1</a></td>
+<td>Furiosa 공식 공개 저장소</td>
+<td>모델 engine, vLLM plugin, 지원 옵션 검사, 설치 의존성</td>
+</tr>
+<tr>
+<td>pytorch/pytorch</td>
+<td><a href="https://github.com/pytorch/pytorch/tree/449b1768410104d3ed79d3bcfe4ba1d65c7f22c0">449b17684101</a></td>
+<td>PyTorch 공식 공개 저장소, v2.10.0</td>
+<td><code>native_functions.yaml</code>을 기준으로 ATen schema와 overload를 재현 가능하게 집계</td>
+</tr>
+<tr>
+<td>smallstep-zzz/FuryNo5</td>
+<td><a href="https://github.com/smallstep-zzz/FuryNo5/tree/bba9efea8201aec48150514a35d0b637d29d107e">bba9efea8201</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></td>
+<td>사용자 프로젝트, <strong>접근 권한 필요</strong></td>
+<td>실제 import 이름, 지원 경계, capture·TCL·EDF·cache·실행 계획 생산</td>
+</tr>
+<tr>
+<td>smallstep-zzz/fxbX</td>
+<td><a href="https://github.com/smallstep-zzz/fxbX/tree/03d993b4d1b36cdda209d61bbf447434c174b401">03d993b4d1b3</a></td>
+<td>사용자 프로젝트, 공개 저장소</td>
+<td>package 검사·외부 weights·EDF 적재·실행 계획 소비·현재 서빙 경로</td>
+</tr>
+<tr>
+<td>smallstep-zzz/Furiosa-Hug-Anything</td>
+<td><a href="https://github.com/smallstep-zzz/Furiosa-Hug-Anything/tree/8fc675f488763bef7c779ee037e8393ddd9f856a">8fc675f48876</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></td>
+<td>사용자 프로젝트, <strong>접근 권한 필요</strong></td>
+<td>포팅 역할 분담, producer bridge, 검증·자동화 절차</td>
+</tr>
+<tr>
+<td>smallstep-zzz/FuryBoost</td>
+<td><a href="https://github.com/smallstep-zzz/FuryBoost/tree/62faf49a29cc40230ee3df271b8f91ad8488eb5d">62faf49a29cc</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></td>
+<td>사용자 프로젝트, <strong>접근 권한 필요</strong></td>
+<td>트리 학습 구현, CPU 비교 원자료, 최적화 전후 결과</td>
+</tr>
+</tbody></table>
+</div><p>fxbX가 공개 저장소라는 사실은 Furiosa의 공식 지원 형식이라는 뜻이 아니다. 반대로 비공개 프로젝트의 소스가 근거로 쓰였다는 사실은 독자에게 자동으로 해당 저장소의 접근 권한이 생긴다는 뜻도 아니다. 권한 없는 독자도 큰 흐름을 읽을 수 있도록 본문에 역할·핵심 코드·확인 범위를 설명했지만, 원본 전체를 독립적으로 재검토하려면 저장소 접근이 필요하다.</p>
+<h2 id="근거를-다섯-종류로-나눠-읽는다"><a class="heading-anchor" href="#근거를-다섯-종류로-나눠-읽는다">근거를 다섯 종류로 나눠 읽는다</a></h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>근거 종류</th>
+<th>설명할 수 있는 것</th>
+<th>그 자료 하나로 확정할 수 없는 것</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>공식 문서·release note</td>
+<td>공개 API의 사용법, 명시한 지원 조건, 버전별 변경</td>
+<td>모든 내부 호출 경로, 임의 버전과 모델의 실측 성공</td>
+</tr>
+<tr>
+<td>공식 또는 사용자 프로젝트 소스</td>
+<td>해당 커밋의 분기·인수·검사·산출물·오류 처리</td>
+<td>배포 wheel이 같은 코드인지, 모든 장비에서 통과하는지</td>
+</tr>
+<tr>
+<td>공식 포럼 답변</td>
+<td>특정 날짜·버전·질문에 대한 개발팀 설명</td>
+<td>이후 릴리스에도 남아 있는 영구 제약</td>
+</tr>
+<tr>
+<td>보존된 시험 로그·보고서</td>
+<td>기록된 입력·환경·측정 범위에서 얻은 결과</td>
+<td>이번 편집 환경의 새 실행, 조건을 바꾼 일반적인 성능 우위</td>
+</tr>
+<tr>
+<td>이 책의 해석·제안</td>
+<td>기존 근거를 연결한 개발 순서, 검증 방법, 남은 설계</td>
+<td>제품의 공식 보증이나 구현 완료 상태</td>
+</tr>
+</tbody></table>
+</div><p>예를 들어 2026-10-12의 <a href="https://forums.furiosa.ai/t/furiosa-opt-v0-8-1-launch-host-cpu-cpu-2/479">opt 0.8.1 host CPU 토론</a>은 당시 동작을 설명한다. 이후 고정 소스의 <a href="https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-std/src/runtime/launch.rs">launch.rs</a>에는 <code>Prepared.submit()</code>과 <code>Submitted</code>가 있으므로 과거 답변을 그대로 “현재도 미구현”이라고 옮기지 않았다.</p>
+<p>또한 <a href="https://forums.furiosa.ai/t/furiosa-opt-compile-from-visa-furiosa-torch/487">compile_from_visa 포럼 답변</a>은 답변 시점에 해당 Python 연결이 내부 전용임을 설명한다. 이 자료만으로 이후 모든 버전의 공개 여부를 확정할 수 없으므로, 이 책은 독자가 쓸 수 있다고 확인한 공개 Rust 경로를 설명하고 별도 Python 연결은 미확인 경계로 남겼다.</p>
+<h2 id="핵심-공식-문헌"><a class="heading-anchor" href="#핵심-공식-문헌">핵심 공식 문헌</a></h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>자료</th>
+<th>읽는 목적</th>
+<th>연결되는 장</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a href="https://furiosa.ai/download/FuriosaAI-tensor-contraction-processor-isca24">TCP: A Tensor Contraction Processor for AI Workloads, ISCA 2024</a></td>
+<td>tensor contraction 중심 아키텍처의 설계 배경. 논문 시점 수치와 현재 제품 사양은 구분</td>
+<td><a href="chapter/01-hardware.html">1장</a>, <a href="chapter/02-memory-dma.html">2장</a></td>
+</tr>
+<tr>
+<td><a href="https://developer.furiosa.ai/v2026.4.0/en/overview/rngd.html">RNGD 하드웨어 개요</a></td>
+<td>제품의 공개 사양과 단위</td>
+<td><a href="chapter/01-hardware.html">1장</a></td>
+</tr>
+<tr>
+<td><a href="https://developer.furiosa.ai/v2026.4.0/en/overview/software_stack.html">Furiosa 소프트웨어 스택</a></td>
+<td>driver·firmware·PERT·compiler·runtime의 책임</td>
+<td><a href="chapter/03-driver-runtime.html">3장</a></td>
+</tr>
+<tr>
+<td><a href="https://developer.furiosa.ai/v2026.4.0/en/get_started/prerequisites.html">SDK prerequisites</a> · <a href="https://developer.furiosa.ai/v2026.4.0/en/device_management/system_management_interface/furiosa_smi_cli.html">SMI CLI</a></td>
+<td>장치와 호환 소프트웨어 준비·상태 확인</td>
+<td><a href="chapter/03-driver-runtime.html">3장</a>, <a href="chapter/04-tcl-edf.html">4장</a></td>
+</tr>
+<tr>
+<td><a href="https://furiosa.ai/blog/furiosa-sdk-2026-3-a-new-kernel-framework-and-the-models-it-unlocks">TCL을 소개한 SDK 2026.3 글</a></td>
+<td>Python 커널 언어의 도입 의도</td>
+<td><a href="chapter/04-tcl-edf.html">4장</a></td>
+</tr>
+<tr>
+<td><a href="https://developer.furiosa.ai/furiosa-opt/book/quick-start/setup-and-tooling.html">furiosa-opt Book</a></td>
+<td>Rust eDSL 개발 도구와 vISA 커널 실습의 진입점</td>
+<td><a href="chapter/02-memory-dma.html">2장</a>, <a href="chapter/08-eisa-visa.html">8장</a></td>
+</tr>
+<tr>
+<td><a href="https://developer.furiosa.ai/v2026.4.0/en/furiosa_llm/fxb.html">공식 FXB</a></td>
+<td>manifest·EDF·호환 cache·공식 bundle의 경계</td>
+<td><a href="chapter/05-graphs-fallback.html">5장</a>, <a href="chapter/06-buckets-shapes.html">6장</a>, <a href="chapter/12-fxbx.html">12장</a></td>
+</tr>
+<tr>
+<td><a href="https://developer.furiosa.ai/v2026.4.0/en/furiosa_llm/model-parallelism.html">공식 모델 병렬화</a></td>
+<td>PE 단위 TP·PP·DP 구성과 컴파일 시점의 결정</td>
+<td><a href="chapter/15-multi-npu.html">15장</a></td>
+</tr>
+<tr>
+<td><a href="https://docs.pytorch.org/tutorials/advanced/dispatcher.html">PyTorch Dispatcher</a> · <a href="https://docs.pytorch.org/cppdocs/api/aten/index.html">ATen</a></td>
+<td>연산 계약과 장치 구현 선택의 관계</td>
+<td><a href="chapter/09-torch-aten.html">9장</a></td>
+</tr>
+<tr>
+<td><a href="https://docs.vllm.ai/en/stable/design/plugin_system/">vLLM plugin system</a></td>
+<td>외부 장치 backend와 서빙 프레임워크를 연결하는 경계</td>
+<td><a href="chapter/14-serving-vllm.html">14장</a></td>
+</tr>
+</tbody></table>
+</div><p>공식 홈페이지의 개요는 개념의 출발점으로 쓰고, 구체적인 함수 호출·호환성·오류 처리는 가능한 한 해당 문서나 구현으로 내려가 확인했다. 사용자 프로젝트의 ATen 지원 범위도 README의 목표 문구만으로 판정하지 않고 실제 registry·변환 규칙·실행 경로를 구분했다.</p>
+<h2 id="코드-검사와-npu-실측의-구분"><a class="heading-anchor" href="#코드-검사와-npu-실측의-구분">코드 검사와 NPU 실측의 구분</a></h2>
+<p><strong>이번 핸드북 작성 환경에서는 RNGD에서 새 모델을 컴파일·실행하거나 새 성능 수치를 측정하지 않았다.</strong> 호출 API·정의 파일·CLI 구성·버전·실행 전제를 소스와 대조하고, 완전한 Python 예제의 문법을 검사했다. 예를 들어 5장의 병렬 컴파일 예제는 소스가 <code>spawn</code> 방식의 프로세스를 사용함을 확인하고 <code>main()</code> 보호를 추가했다. 이는 재현성을 높이는 코드 검토 결과이지 NPU 통과 결과는 아니다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/execution_plan.py">프로세스 생성 구현</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
+<p>8장의 Schedule Viewer 수치는 <strong>컴파일러가 만든 정적 schedule의 비용</strong>이다. 실제 host 대기·전송·장치 상태·요청 분포를 포함한 benchmark 결과로 바꾸어 읽지 않는다. <a href="https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/tools/schedule-viewer.md">Schedule Viewer 설명</a></p>
+<p>7장과 16장의 기존 성능 값은 해당 저장소의 보고서와 원자료를 설명한 것이다. 특히 FuryBoost는 NPU 측정값과 CPU 비교값의 tree 설정·threads·데이터 준비 범위·반복 조건을 함께 읽어야 한다. 하나의 kernel 개선과 전체 학습 시간 개선을 같은 값으로 취급하지 않는다. <a href="https://github.com/smallstep-zzz/FuryBoost/blob/62faf49a29cc40230ee3df271b8f91ad8488eb5d/reports/rngd-server3/higgs-dev2/full/comparison.json">FuryBoost 비교 원자료</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span>, <a href="https://github.com/smallstep-zzz/FuryBoost/blob/62faf49a29cc40230ee3df271b8f91ad8488eb5d/reports/rngd-server3/grouped-histograms/comparison.json">histogram 변경 전후</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
+<p>예제마다 다음 범위를 구별한다.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>표기·형태</th>
+<th>독자가 할 수 있는 해석</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>완전한 <code>.py</code> 예제</td>
+<td>명시한 패키지·장치·파일을 준비하고 독립 스크립트로 재현할 수 있도록 구성했다. 이 문서에서 NPU로 검증했다는 뜻은 아니다.</td>
+</tr>
+<tr>
+<td>“핵심 발췌”·함수 내부 fragment</td>
+<td>원본의 책임과 중요한 동작을 설명한다. 주변 정의·인수·호출자가 별도로 필요하다.</td>
+</tr>
+<tr>
+<td>“의사코드”·설계 표</td>
+<td>변경 방향이나 계약을 설명한다. 아직 존재하지 않는 API를 실행 명령처럼 제시한 것이 아니다.</td>
+</tr>
+<tr>
+<td>“기존 실측”</td>
+<td>원자료에 남은 결과다. 조건·단위·측정 범위를 유지해야 비교할 수 있다.</td>
+</tr>
+<tr>
+<td>“미확인”·“개발 과제”</td>
+<td>공개 근거 또는 구현·검증이 충분하지 않다. 완료된 기능으로 의존해서는 안 된다.</td>
+</tr>
+</tbody></table>
+</div><h2 id="재현-결과에-남길-최소-기록"><a class="heading-anchor" href="#재현-결과에-남길-최소-기록">재현 결과에 남길 최소 기록</a></h2>
+<p>먼저 <strong>어떤 프로그램을 어떤 환경에서 어떤 기준으로 검증했는지</strong>를 고정한다. 이 순서는 비교를 가능하게 하기 위한 핸드북의 권장 방법이며 모든 서비스에 같은 최적화 우선순위를 강요하는 규칙은 아니다.</p>
+<ol>
+<li><strong>환경</strong>: SDK·compiler·driver·firmware·Python·Torch 버전, 프로젝트 commit, 장치 수·PE 구성·mesh, host CPU와 NUMA 배치.</li>
+<li><strong>의미</strong>: 모델·가중치 revision, shape·dtype·stride, mask·상태 갱신 의미, reference 구현, 허용오차와 과제 품질 기준.</li>
+<li><strong>산출물</strong>: 생성한 TCL·EDF·package·실행 계획의 해시, compiler flags, 입출력 ABI, bucket 집합, 외부 weights 참조.</li>
+<li><strong>실행 증거</strong>: 준비·적재·실행의 성공 또는 실패, 실제 NPU Task, CPU fallback 정책, 반복 실행·새 입력·새 프로세스 적재 결과.</li>
+<li><strong>성능 범위</strong>: 컴파일·첫 로드·warm 실행·전체 요청을 분리한 시간, 전송 포함 여부, 동시성·요청 분포, 메모리 peak, 지연 분포.</li>
+</ol>
+<p>정답이 일치하는 것과 NPU에서 계산한 것은 서로 다른 질문이다. 반대로 NPU Task가 보인다고 모델의 의미가 맞는 것도 아니다. 둘을 함께 확인하는 절차는 <a href="chapter/05-graphs-fallback.html">5장</a>, 성능 측정의 축은 <a href="chapter/07-optimization.html">7장</a>, 이식 실습의 완료 기준은 <a href="chapter/13-porting-fha.html">13장</a>에 연결되어 있다.</p>
+<h2 id="수정할-때-지켜야-할-규칙"><a class="heading-anchor" href="#수정할-때-지켜야-할-규칙">수정할 때 지켜야 할 규칙</a></h2>
+<p>새 버전의 지원 범위를 추가할 때는 기존 설명을 조용히 덮어쓰기보다 <strong>변경된 버전·코드·검증 범위</strong>를 같이 남긴다. 문서와 코드가 다르면 어느 쪽이 어떤 시점을 나타내는지 적는다. 최신 브랜치 링크만 남기면 같은 주장을 나중에 재검토하기 어려우므로 중요한 구현과 시험 결과는 커밋을 고정한다.</p>
+<p>공식 풀네임을 확인하지 못한 약어는 확장하지 않는다. EDF, eISA에 대한 이 책의 경계가 여기에 해당한다. TCL은 Tensor Contraction Language, PERT는 PE Runtime으로 공식 확인되었으며 <a href="glossary.html">용어사전</a>에 명시했다. 새 근거가 생기면 출처와 함께 업데이트한다.</p>
+<h2 id="출처"><a class="heading-anchor" href="#출처">출처</a></h2>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>자료</th>
+<th>이 페이지에서 담당하는 근거</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a href="https://developer.furiosa.ai/v2026.4.0/en/overview/software_stack.html">공식 소프트웨어 스택</a></td>
+<td>SDK 문서 버전 표시·계층 책임·PERT 이름</td>
+</tr>
+<tr>
+<td><a href="https://developer.furiosa.ai/v2026.5.0b4/en/whatsnew/release-2026.5.0b0.html">2026.5.0b0 변경</a></td>
+<td>beta 기능을 안정판과 구분</td>
+</tr>
+<tr>
+<td><a href="https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-std/src/runtime/launch.rs">현재 opt launch.rs</a> · <a href="https://forums.furiosa.ai/t/furiosa-opt-v0-8-1-launch-host-cpu-cpu-2/479">과거 포럼</a></td>
+<td>시점이 다른 근거를 대조하는 예</td>
+</tr>
+<tr>
+<td><a href="https://forums.furiosa.ai/t/furiosa-opt-compile-from-visa-furiosa-torch/487">Python vISA 연결 포럼</a></td>
+<td>공개 API 확인 범위</td>
+</tr>
+<tr>
+<td><a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/execution_plan.py">FuryNo5 exporter</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></td>
+<td>코드 검토로 확인한 병렬 프로세스 실행 전제</td>
+</tr>
+<tr>
+<td><a href="data/source-index.json">전체 출처 색인</a></td>
+<td>각 장의 개별 인용 URL 목록</td>
+</tr>
+</tbody></table>
+</div></article><nav class="next-prev" aria-label="이전과 다음 장"><a href="glossary.html"><small>← 이전 장</small><b>용어 사전</b></a><a href="review.html"><small>다음 장 →</small><b>이번 개편의 회고</b></a></nav><footer class="footer">FuryNo5 개발 핸드북 · 비공식 자료<br>공식 문서와 소스의 권리는 각 프로젝트에 있습니다. 코드 인용은 출처와 함께 표시합니다.<br><a href="review.html">검토 기록과 남은 질문</a> · <a href="sources.html">출처와 버전</a> · <a href="glossary.html">용어 사전</a></footer></main></div><aside class="right-toc" aria-label="이 장의 목차"><h2>이 장에서 다루는 내용</h2><a class="" href="#버전-기준-url의-숫자와-설치본은-다를-수-있다">버전 기준: URL의 숫자와 설치본은 다를 수 있다</a><a class="" href="#고정한-소스-스냅샷">고정한 소스 스냅샷</a><a class="" href="#근거를-다섯-종류로-나눠-읽는다">근거를 다섯 종류로 나눠 읽는다</a><a class="" href="#핵심-공식-문헌">핵심 공식 문헌</a><a class="" href="#코드-검사와-npu-실측의-구분">코드 검사와 NPU 실측의 구분</a><a class="" href="#재현-결과에-남길-최소-기록">재현 결과에 남길 최소 기록</a><a class="" href="#수정할-때-지켜야-할-규칙">수정할 때 지켜야 할 규칙</a><a class="" href="#출처">출처</a></aside><dialog class="search-dialog" aria-label="문서 검색"><div class="search-head"><input type="search" aria-label="검색어" placeholder="DMA, EDF, 폴백, 버킷…" autocomplete="off"><button class="close-search" type="button">닫기</button></div><div class="search-status" role="status">용어나 함수 이름을 입력하세요.</div><div class="search-results"></div></dialog></body></html>

@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 960" width="460" height="960" role="img" aria-labelledby="title desc">
+<title id="title">FuryBoost dev3와 dev4의 동일 조건 HIGGS 학습 비교</title>
+<desc id="desc">기존 저장소의 실측 비교이며 새 측정이 아닙니다. 전체 학습 시간은 218.147초에서 184.767초로 15.3퍼센트 줄었습니다. EDF 호출은 3,548,364회에서 2,317,884회로 34.7퍼센트 줄었습니다. 평가 AUC는 두 버전 모두 0.76790903입니다. 1,050만 행 학습, 50만 행 평가, 트리 30개, 최대 깊이 5, 준비된 EDF로 각 버전 전체 학습을 한 번 실행했습니다.</desc>
+<style>text { font-family: "Noto Sans CJK KR", "Noto Sans KR", sans-serif; fill: #242629; } .muted {fill:#5a6268} .red {fill:#a92d35} .green {fill:#24685e} .bar3 {fill:#a92d35} .bar4 {fill:#24685e}</style>
+<rect width="460" height="960" fill="#fff"/>
+<text x="28" y="44" font-size="27" font-weight="700">FuryBoost dev3 → dev4</text>
+<text x="28" y="78" font-size="20" class="muted">HIGGS · 같은 조건의 학습 비교</text>
+<rect x="28" y="99" width="404" height="40" rx="8" fill="#f3f4f4"/>
+<text x="230" y="125" text-anchor="middle" font-size="17" font-weight="600">기존 저장소 실측 · 새 측정 아님</text>
+<text x="28" y="181" font-size="22" font-weight="700">전체 학습 시간</text>
+<text x="432" y="181" text-anchor="end" font-size="22" font-weight="700" class="green">15.3% 감소</text>
+<text x="28" y="218" font-size="20">dev3</text>
+<text x="432" y="218" text-anchor="end" font-size="25" font-weight="700" class="red">218.147 s</text>
+<rect x="28" y="231" width="404" height="29" rx="4" fill="#eef0f0"/>
+<rect x="28" y="231" width="352.5256" height="29" rx="4" class="bar3"/>
+<text x="28" y="303" font-size="20">dev4</text>
+<text x="432" y="303" text-anchor="end" font-size="25" font-weight="700" class="green">184.767 s</text>
+<rect x="28" y="316" width="404" height="29" rx="4" fill="#eef0f0"/>
+<rect x="28" y="316" width="298.5829" height="29" rx="4" class="bar4"/>
+<text x="28" y="373" font-size="15" class="muted">0</text>
+<text x="230" y="373" text-anchor="middle" font-size="15" class="muted">125</text>
+<text x="432" y="373" text-anchor="end" font-size="15" class="muted">250 s</text>
+<line x1="28" y1="397" x2="432" y2="397" stroke="#dde2e3"/>
+<text x="28" y="438" font-size="22" font-weight="700">EDF 호출 수</text>
+<text x="432" y="438" text-anchor="end" font-size="22" font-weight="700" class="green">34.7% 감소</text>
+<text x="28" y="475" font-size="20">dev3</text>
+<text x="432" y="475" text-anchor="end" font-size="25" font-weight="700" class="red">3,548,364회</text>
+<rect x="28" y="488" width="404" height="29" rx="4" fill="#eef0f0"/>
+<rect x="28" y="488" width="358.3848" height="29" rx="4" class="bar3"/>
+<text x="28" y="560" font-size="20">dev4</text>
+<text x="432" y="560" text-anchor="end" font-size="25" font-weight="700" class="green">2,317,884회</text>
+<rect x="28" y="573" width="404" height="29" rx="4" fill="#eef0f0"/>
+<rect x="28" y="573" width="234.1063" height="29" rx="4" class="bar4"/>
+<text x="28" y="630" font-size="15" class="muted">0</text>
+<text x="230" y="630" text-anchor="middle" font-size="15" class="muted">200만</text>
+<text x="432" y="630" text-anchor="end" font-size="15" class="muted">400만 회</text>
+<rect x="28" y="663" width="404" height="113" rx="10" fill="#f1f7f5"/>
+<text x="48" y="696" font-size="20" class="green" font-weight="600">평가 AUC · 두 버전 동일</text>
+<text x="48" y="739" font-size="32" class="green" font-weight="700">0.76790903</text>
+<text x="28" y="815" font-size="17" class="muted">학습 1,050만 행 · 평가 50만 행</text>
+<text x="28" y="843" font-size="17" class="muted">트리 30개 · 최대 깊이 5 · RNGD 1장</text>
+<text x="28" y="871" font-size="17" class="muted">준비된 EDF · 각 버전 전체 학습 1회</text>
+<text x="28" y="910" font-size="14" class="muted">출처: FuryBoost 62faf49 · grouped-histograms</text>
+<text x="28" y="933" font-size="14" class="muted">CPU 알고리즘과의 별도 비교는 본문 표 참고</text>
+</svg>

@@ -1,0 +1,91 @@
+<svg role="img" aria-label="Rust device 함수 · cargo furiosa-opt · vISA·명령 스케줄 · 컴파일 이미지·registry · furiosa-opt-std launch · furiosa-opt-rt · 드라이버·장치 펌웨어 · schedule JSON · Schedule Viewer" width="331pt" height="521pt"
+ viewBox="0.00 0.00 331.30 520.80" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(14.4 506.4)">
+<title>handbook</title>
+<g id="edge1" class="edge">
+<title>S&#45;&gt;C</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M158.5,-455.84C158.5,-446.12 158.5,-433.82 158.5,-423.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="160.95,-423.07 158.5,-416.07 156.05,-423.07 160.95,-423.07"/>
+</g>
+<g id="edge2" class="edge">
+<title>C&#45;&gt;V</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M158.5,-379.84C158.5,-370.12 158.5,-357.82 158.5,-347.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="160.95,-347.07 158.5,-340.07 156.05,-347.07 160.95,-347.07"/>
+</g>
+<g id="edge3" class="edge">
+<title>V&#45;&gt;I</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M140.41,-303.84C129.48,-293.47 115.44,-280.15 103.71,-269.02"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="105.26,-267.11 98.49,-264.07 101.88,-270.67 105.26,-267.11"/>
+</g>
+<g id="edge7" class="edge">
+<title>V&#45;&gt;J</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M177.29,-303.84C188.63,-293.47 203.21,-280.15 215.4,-269.02"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="217.3,-270.6 220.82,-264.07 213.99,-266.98 217.3,-270.6"/>
+</g>
+<g id="edge4" class="edge">
+<title>I&#45;&gt;R</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M79.8,-227.84C79.41,-218.12 78.91,-205.82 78.48,-195.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="80.92,-194.96 78.19,-188.07 76.03,-195.16 80.92,-194.96"/>
+</g>
+<g id="edge5" class="edge">
+<title>R&#45;&gt;T</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M77.5,-151.84C77.5,-142.12 77.5,-129.82 77.5,-119.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="79.95,-119.07 77.5,-112.07 75.05,-119.07 79.95,-119.07"/>
+</g>
+<g id="edge6" class="edge">
+<title>T&#45;&gt;D</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M77.5,-75.84C77.5,-66.12 77.5,-53.82 77.5,-43.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="79.95,-43.07 77.5,-36.07 75.05,-43.07 79.95,-43.07"/>
+</g>
+<g id="edge8" class="edge">
+<title>J&#45;&gt;W</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M239.96,-227.84C240.23,-218.12 240.56,-205.82 240.85,-195.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="243.3,-195.13 241.04,-188.07 238.4,-195 243.3,-195.13"/>
+</g>
+<g id="node1" class="node">
+<title>S</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M205.5,-492C205.5,-492 111.5,-492 111.5,-492 105.5,-492 99.5,-486 99.5,-480 99.5,-480 99.5,-468 99.5,-468 99.5,-462 105.5,-456 111.5,-456 111.5,-456 205.5,-456 205.5,-456 211.5,-456 217.5,-462 217.5,-468 217.5,-468 217.5,-480 217.5,-480 217.5,-486 211.5,-492 205.5,-492"/>
+<text text-anchor="middle" x="158.5" y="-470.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">Rust device 함수</text>
+</g>
+<g id="node2" class="node">
+<title>C</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M209,-416C209,-416 108,-416 108,-416 102,-416 96,-410 96,-404 96,-404 96,-392 96,-392 96,-386 102,-380 108,-380 108,-380 209,-380 209,-380 215,-380 221,-386 221,-392 221,-392 221,-404 221,-404 221,-410 215,-416 209,-416"/>
+<text text-anchor="middle" x="158.5" y="-394.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">cargo furiosa&#45;opt</text>
+</g>
+<g id="node3" class="node">
+<title>V</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M206,-340C206,-340 111,-340 111,-340 105,-340 99,-334 99,-328 99,-328 99,-316 99,-316 99,-310 105,-304 111,-304 111,-304 206,-304 206,-304 212,-304 218,-310 218,-316 218,-316 218,-328 218,-328 218,-334 212,-340 206,-340"/>
+<text text-anchor="middle" x="158.5" y="-318.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">vISA·명령 스케줄</text>
+</g>
+<g id="node4" class="node">
+<title>I</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M142.5,-264C142.5,-264 18.5,-264 18.5,-264 12.5,-264 6.5,-258 6.5,-252 6.5,-252 6.5,-240 6.5,-240 6.5,-234 12.5,-228 18.5,-228 18.5,-228 142.5,-228 142.5,-228 148.5,-228 154.5,-234 154.5,-240 154.5,-240 154.5,-252 154.5,-252 154.5,-258 148.5,-264 142.5,-264"/>
+<text text-anchor="middle" x="80.5" y="-242.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">컴파일 이미지·registry</text>
+</g>
+<g id="node5" class="node">
+<title>R</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M143,-188C143,-188 12,-188 12,-188 6,-188 0,-182 0,-176 0,-176 0,-164 0,-164 0,-158 6,-152 12,-152 12,-152 143,-152 143,-152 149,-152 155,-158 155,-164 155,-164 155,-176 155,-176 155,-182 149,-188 143,-188"/>
+<text text-anchor="middle" x="77.5" y="-166.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">furiosa&#45;opt&#45;std launch</text>
+</g>
+<g id="node6" class="node">
+<title>T</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M117.5,-112C117.5,-112 37.5,-112 37.5,-112 31.5,-112 25.5,-106 25.5,-100 25.5,-100 25.5,-88 25.5,-88 25.5,-82 31.5,-76 37.5,-76 37.5,-76 117.5,-76 117.5,-76 123.5,-76 129.5,-82 129.5,-88 129.5,-88 129.5,-100 129.5,-100 129.5,-106 123.5,-112 117.5,-112"/>
+<text text-anchor="middle" x="77.5" y="-90.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">furiosa&#45;opt&#45;rt</text>
+</g>
+<g id="node7" class="node">
+<title>D</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M135.5,-36C135.5,-36 19.5,-36 19.5,-36 13.5,-36 7.5,-30 7.5,-24 7.5,-24 7.5,-12 7.5,-12 7.5,-6 13.5,0 19.5,0 19.5,0 135.5,0 135.5,0 141.5,0 147.5,-6 147.5,-12 147.5,-12 147.5,-24 147.5,-24 147.5,-30 141.5,-36 135.5,-36"/>
+<text text-anchor="middle" x="77.5" y="-14.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">드라이버·장치 펌웨어</text>
+</g>
+<g id="node8" class="node">
+<title>J</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M285,-264C285,-264 194,-264 194,-264 188,-264 182,-258 182,-252 182,-252 182,-240 182,-240 182,-234 188,-228 194,-228 194,-228 285,-228 285,-228 291,-228 297,-234 297,-240 297,-240 297,-252 297,-252 297,-258 291,-264 285,-264"/>
+<text text-anchor="middle" x="239.5" y="-242.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">schedule JSON</text>
+</g>
+<g id="node9" class="node">
+<title>W</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M290.5,-188C290.5,-188 192.5,-188 192.5,-188 186.5,-188 180.5,-182 180.5,-176 180.5,-176 180.5,-164 180.5,-164 180.5,-158 186.5,-152 192.5,-152 192.5,-152 290.5,-152 290.5,-152 296.5,-152 302.5,-158 302.5,-164 302.5,-164 302.5,-176 302.5,-176 302.5,-182 296.5,-188 290.5,-188"/>
+<text text-anchor="middle" x="241.5" y="-166.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">Schedule Viewer</text>
+</g>
+</g>
+</svg>

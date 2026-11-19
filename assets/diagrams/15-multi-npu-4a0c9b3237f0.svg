@@ -1,0 +1,96 @@
+<svg role="img" aria-label="여러 독립 요청 · cache와 부하를 보는 라우터 · 복제본 A: 모델 전체 · 복제본 B: 모델 전체 · A의 요청별 KV · B의 요청별 KV · 한 큰 모델의 요청 · stage 1: 앞 layer · stage 2: 뒤 layer · 결과" width="493pt" height="293pt"
+ viewBox="0.00 0.00 493.30 292.80" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(14.4 278.4)">
+<title>handbook</title>
+<g id="edge1" class="edge">
+<title>R&#45;&gt;Q</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M172.5,-227.84C172.5,-218.12 172.5,-205.82 172.5,-195.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="174.95,-195.07 172.5,-188.07 170.05,-195.07 174.95,-195.07"/>
+</g>
+<g id="edge2" class="edge">
+<title>Q&#45;&gt;A</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M147.22,-151.84C131.54,-141.19 111.27,-127.43 94.61,-116.12"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="95.81,-113.97 88.64,-112.07 93.06,-118.03 95.81,-113.97"/>
+</g>
+<g id="edge3" class="edge">
+<title>Q&#45;&gt;B</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M182.71,-151.84C188.65,-141.84 196.22,-129.11 202.69,-118.23"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="204.88,-119.34 206.35,-112.07 200.67,-116.83 204.88,-119.34"/>
+</g>
+<g id="edge4" class="edge">
+<title>A&#45;&gt;OA</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M63.5,-75.84C63.5,-66.12 63.5,-53.82 63.5,-43.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="65.95,-43.07 63.5,-36.07 61.05,-43.07 65.95,-43.07"/>
+</g>
+<g id="edge5" class="edge">
+<title>B&#45;&gt;OB</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M216.5,-75.84C216.5,-66.12 216.5,-53.82 216.5,-43.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="218.95,-43.07 216.5,-36.07 214.05,-43.07 218.95,-43.07"/>
+</g>
+<g id="edge6" class="edge">
+<title>S&#45;&gt;P1</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M406.5,-227.84C406.5,-218.12 406.5,-205.82 406.5,-195.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="408.95,-195.07 406.5,-188.07 404.05,-195.07 408.95,-195.07"/>
+</g>
+<g id="edge7" class="edge">
+<title>P1&#45;&gt;P2</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M406.5,-151.84C406.5,-142.12 406.5,-129.82 406.5,-119.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="408.95,-119.07 406.5,-112.07 404.05,-119.07 408.95,-119.07"/>
+</g>
+<g id="edge8" class="edge">
+<title>P2&#45;&gt;O</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M406.5,-75.84C406.5,-66.12 406.5,-53.82 406.5,-43.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="408.95,-43.07 406.5,-36.07 404.05,-43.07 408.95,-43.07"/>
+</g>
+<g id="node1" class="node">
+<title>R</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M211.5,-264C211.5,-264 133.5,-264 133.5,-264 127.5,-264 121.5,-258 121.5,-252 121.5,-252 121.5,-240 121.5,-240 121.5,-234 127.5,-228 133.5,-228 133.5,-228 211.5,-228 211.5,-228 217.5,-228 223.5,-234 223.5,-240 223.5,-240 223.5,-252 223.5,-252 223.5,-258 217.5,-264 211.5,-264"/>
+<text text-anchor="middle" x="172.5" y="-242.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">여러 독립 요청</text>
+</g>
+<g id="node2" class="node">
+<title>Q</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M246.5,-188C246.5,-188 98.5,-188 98.5,-188 92.5,-188 86.5,-182 86.5,-176 86.5,-176 86.5,-164 86.5,-164 86.5,-158 92.5,-152 98.5,-152 98.5,-152 246.5,-152 246.5,-152 252.5,-152 258.5,-158 258.5,-164 258.5,-164 258.5,-176 258.5,-176 258.5,-182 252.5,-188 246.5,-188"/>
+<text text-anchor="middle" x="172.5" y="-166.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">cache와 부하를 보는 라우터</text>
+</g>
+<g id="node3" class="node">
+<title>A</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M115,-112C115,-112 12,-112 12,-112 6,-112 0,-106 0,-100 0,-100 0,-88 0,-88 0,-82 6,-76 12,-76 12,-76 115,-76 115,-76 121,-76 127,-82 127,-88 127,-88 127,-100 127,-100 127,-106 121,-112 115,-112"/>
+<text text-anchor="middle" x="63.5" y="-90.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">복제본 A: 모델 전체</text>
+</g>
+<g id="node4" class="node">
+<title>B</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M268.5,-112C268.5,-112 164.5,-112 164.5,-112 158.5,-112 152.5,-106 152.5,-100 152.5,-100 152.5,-88 152.5,-88 152.5,-82 158.5,-76 164.5,-76 164.5,-76 268.5,-76 268.5,-76 274.5,-76 280.5,-82 280.5,-88 280.5,-88 280.5,-100 280.5,-100 280.5,-106 274.5,-112 268.5,-112"/>
+<text text-anchor="middle" x="216.5" y="-90.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">복제본 B: 모델 전체</text>
+</g>
+<g id="node5" class="node">
+<title>OA</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M102,-36C102,-36 25,-36 25,-36 19,-36 13,-30 13,-24 13,-24 13,-12 13,-12 13,-6 19,0 25,0 25,0 102,0 102,0 108,0 114,-6 114,-12 114,-12 114,-24 114,-24 114,-30 108,-36 102,-36"/>
+<text text-anchor="middle" x="63.5" y="-14.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">A의 요청별 KV</text>
+</g>
+<g id="node6" class="node">
+<title>OB</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M255.5,-36C255.5,-36 177.5,-36 177.5,-36 171.5,-36 165.5,-30 165.5,-24 165.5,-24 165.5,-12 165.5,-12 165.5,-6 171.5,0 177.5,0 177.5,0 255.5,0 255.5,0 261.5,0 267.5,-6 267.5,-12 267.5,-12 267.5,-24 267.5,-24 267.5,-30 261.5,-36 255.5,-36"/>
+<text text-anchor="middle" x="216.5" y="-14.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">B의 요청별 KV</text>
+</g>
+<g id="node7" class="node">
+<title>S</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M452.5,-264C452.5,-264 360.5,-264 360.5,-264 354.5,-264 348.5,-258 348.5,-252 348.5,-252 348.5,-240 348.5,-240 348.5,-234 354.5,-228 360.5,-228 360.5,-228 452.5,-228 452.5,-228 458.5,-228 464.5,-234 464.5,-240 464.5,-240 464.5,-252 464.5,-252 464.5,-258 458.5,-264 452.5,-264"/>
+<text text-anchor="middle" x="406.5" y="-242.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">한 큰 모델의 요청</text>
+</g>
+<g id="node8" class="node">
+<title>P1</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M452.5,-188C452.5,-188 360.5,-188 360.5,-188 354.5,-188 348.5,-182 348.5,-176 348.5,-176 348.5,-164 348.5,-164 348.5,-158 354.5,-152 360.5,-152 360.5,-152 452.5,-152 452.5,-152 458.5,-152 464.5,-158 464.5,-164 464.5,-164 464.5,-176 464.5,-176 464.5,-182 458.5,-188 452.5,-188"/>
+<text text-anchor="middle" x="406.5" y="-166.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">stage 1: 앞 layer</text>
+</g>
+<g id="node9" class="node">
+<title>P2</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M452.5,-112C452.5,-112 360.5,-112 360.5,-112 354.5,-112 348.5,-106 348.5,-100 348.5,-100 348.5,-88 348.5,-88 348.5,-82 354.5,-76 360.5,-76 360.5,-76 452.5,-76 452.5,-76 458.5,-76 464.5,-82 464.5,-88 464.5,-88 464.5,-100 464.5,-100 464.5,-106 458.5,-112 452.5,-112"/>
+<text text-anchor="middle" x="406.5" y="-90.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">stage 2: 뒤 layer</text>
+</g>
+<g id="node10" class="node">
+<title>O</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M421.5,-36C421.5,-36 391.5,-36 391.5,-36 385.5,-36 379.5,-30 379.5,-24 379.5,-24 379.5,-12 379.5,-12 379.5,-6 385.5,0 391.5,0 391.5,0 421.5,0 421.5,0 427.5,0 433.5,-6 433.5,-12 433.5,-12 433.5,-24 433.5,-24 433.5,-30 427.5,-36 421.5,-36"/>
+<text text-anchor="middle" x="406.5" y="-14.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">결과</text>
+</g>
+</g>
+</svg>

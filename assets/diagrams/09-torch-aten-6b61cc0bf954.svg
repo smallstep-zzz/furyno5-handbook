@@ -1,0 +1,98 @@
+<svg role="img" aria-label="PyTorch 모델 · eager 실행 · torch.compile 또는 torch.export · 연산별 Dispatcher · FX graph와 ATen nodes · graph backend 또는 FuryNo5 producer · 융합 · 분할 · TCL · EDF · 준비된 실행 계획 · 등록된 backend 구현" width="324pt" height="541pt"
+ viewBox="0.00 0.00 324.30 540.80" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(14.4 526.4)">
+<title>handbook</title>
+<g id="edge1" class="edge">
+<title>A&#45;&gt;B</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M130.96,-475.86C121.22,-464.37 108.28,-449.11 97.69,-436.63"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="99.41,-434.86 93.01,-431.11 95.67,-438.03 99.41,-434.86"/>
+</g>
+<g id="edge2" class="edge">
+<title>A&#45;&gt;C</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M160.91,-475.86C169.88,-465.87 181.4,-453.05 191.63,-441.67"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="193.68,-443.06 196.53,-436.22 190.03,-439.78 193.68,-443.06"/>
+</g>
+<g id="edge3" class="edge">
+<title>B&#45;&gt;D</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M76.79,-394.88C73.94,-366.4 68.22,-309.2 64.95,-276.47"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="67.38,-276.21 64.25,-269.48 62.51,-276.69 67.38,-276.21"/>
+</g>
+<g id="edge4" class="edge">
+<title>C&#45;&gt;E</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M216.78,-389.99C216.91,-379.85 217.06,-367.79 217.19,-357.37"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="219.64,-357.16 217.28,-350.13 214.74,-357.1 219.64,-357.16"/>
+</g>
+<g id="edge8" class="edge">
+<title>D&#45;&gt;I</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M67.54,-232.64C79.38,-191.82 109,-89.69 122.54,-42.99"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="124.9,-43.65 124.5,-36.25 120.19,-42.29 124.9,-43.65"/>
+</g>
+<g id="edge5" class="edge">
+<title>E&#45;&gt;F</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M217.93,-313.86C218.18,-304.33 218.48,-292.21 218.76,-281.23"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="221.21,-281.28 218.94,-274.22 216.31,-281.15 221.21,-281.28"/>
+</g>
+<g id="edge6" class="edge">
+<title>F&#45;&gt;G</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M216.44,-227.99C215.01,-217.76 213.31,-205.55 211.85,-195.07"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="214.28,-194.73 210.89,-188.13 209.42,-195.4 214.28,-194.73"/>
+</g>
+<g id="edge7" class="edge">
+<title>G&#45;&gt;H</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M204.79,-151.84C202.69,-142.12 200.03,-129.82 197.72,-119.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="200.06,-118.39 196.19,-112.07 195.28,-119.43 200.06,-118.39"/>
+</g>
+<g id="edge9" class="edge">
+<title>H&#45;&gt;I</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M177.89,-75.84C169.22,-65.66 158.13,-52.63 148.76,-41.62"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="150.44,-39.81 144.03,-36.07 146.7,-42.99 150.44,-39.81"/>
+</g>
+<g id="node1" class="node">
+<title>A</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M183,-512C183,-512 108,-512 108,-512 102,-512 96,-506 96,-500 96,-500 96,-488 96,-488 96,-482 102,-476 108,-476 108,-476 183,-476 183,-476 189,-476 195,-482 195,-488 195,-488 195,-500 195,-500 195,-506 189,-512 183,-512"/>
+<text text-anchor="middle" x="145.5" y="-490.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">PyTorch 모델</text>
+</g>
+<g id="node2" class="node">
+<title>B</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M109.5,-431C109.5,-431 47.5,-431 47.5,-431 41.5,-431 35.5,-425 35.5,-419 35.5,-419 35.5,-407 35.5,-407 35.5,-401 41.5,-395 47.5,-395 47.5,-395 109.5,-395 109.5,-395 115.5,-395 121.5,-401 121.5,-407 121.5,-407 121.5,-419 121.5,-419 121.5,-425 115.5,-431 109.5,-431"/>
+<text text-anchor="middle" x="78.5" y="-409.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">eager 실행</text>
+</g>
+<g id="node3" class="node">
+<title>C</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M271,-436C271,-436 162,-436 162,-436 156,-436 150,-430 150,-424 150,-424 150,-402 150,-402 150,-396 156,-390 162,-390 162,-390 271,-390 271,-390 277,-390 283,-396 283,-402 283,-402 283,-424 283,-424 283,-430 277,-436 271,-436"/>
+<text text-anchor="middle" x="216.5" y="-416.4" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">torch.compile 또는</text>
+<text text-anchor="middle" x="216.5" y="-403.4" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">torch.export</text>
+</g>
+<g id="node4" class="node">
+<title>D</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M113,-269C113,-269 12,-269 12,-269 6,-269 0,-263 0,-257 0,-257 0,-245 0,-245 0,-239 6,-233 12,-233 12,-233 113,-233 113,-233 119,-233 125,-239 125,-245 125,-245 125,-257 125,-257 125,-263 119,-269 113,-269"/>
+<text text-anchor="middle" x="62.5" y="-247.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">연산별 Dispatcher</text>
+</g>
+<g id="node5" class="node">
+<title>E</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M283.5,-350C283.5,-350 151.5,-350 151.5,-350 145.5,-350 139.5,-344 139.5,-338 139.5,-338 139.5,-326 139.5,-326 139.5,-320 145.5,-314 151.5,-314 151.5,-314 283.5,-314 283.5,-314 289.5,-314 295.5,-320 295.5,-326 295.5,-326 295.5,-338 295.5,-338 295.5,-344 289.5,-350 283.5,-350"/>
+<text text-anchor="middle" x="217.5" y="-328.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">FX graph와 ATen nodes</text>
+</g>
+<g id="node6" class="node">
+<title>F</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M277,-274C277,-274 162,-274 162,-274 156,-274 150,-268 150,-262 150,-262 150,-240 150,-240 150,-234 156,-228 162,-228 162,-228 277,-228 277,-228 283,-228 289,-234 289,-240 289,-240 289,-262 289,-262 289,-268 283,-274 277,-274"/>
+<text text-anchor="middle" x="219.5" y="-254.4" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">graph backend 또는</text>
+<text text-anchor="middle" x="219.5" y="-241.4" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">FuryNo5 producer</text>
+</g>
+<g id="node7" class="node">
+<title>G</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M274,-188C274,-188 143,-188 143,-188 137,-188 131,-182 131,-176 131,-176 131,-164 131,-164 131,-158 137,-152 143,-152 143,-152 274,-152 274,-152 280,-152 286,-158 286,-164 286,-164 286,-176 286,-176 286,-182 280,-188 274,-188"/>
+<text text-anchor="middle" x="208.5" y="-166.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">융합 · 분할 · TCL · EDF</text>
+</g>
+<g id="node8" class="node">
+<title>H</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M237,-112C237,-112 148,-112 148,-112 142,-112 136,-106 136,-100 136,-100 136,-88 136,-88 136,-82 142,-76 148,-76 148,-76 237,-76 237,-76 243,-76 249,-82 249,-88 249,-88 249,-100 249,-100 249,-106 243,-112 237,-112"/>
+<text text-anchor="middle" x="192.5" y="-90.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">준비된 실행 계획</text>
+</g>
+<g id="node9" class="node">
+<title>I</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M187.5,-36C187.5,-36 71.5,-36 71.5,-36 65.5,-36 59.5,-30 59.5,-24 59.5,-24 59.5,-12 59.5,-12 59.5,-6 65.5,0 71.5,0 71.5,0 187.5,0 187.5,0 193.5,0 199.5,-6 199.5,-12 199.5,-12 199.5,-24 199.5,-24 199.5,-30 193.5,-36 187.5,-36"/>
+<text text-anchor="middle" x="129.5" y="-14.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">등록된 backend 구현</text>
+</g>
+</g>
+</svg>

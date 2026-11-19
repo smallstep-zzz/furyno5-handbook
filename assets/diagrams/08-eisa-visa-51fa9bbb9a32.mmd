@@ -1,0 +1,9 @@
+flowchart TB
+    S["Rust device 함수"] --> C["cargo furiosa-opt"]
+    C --> V["vISA·명령 스케줄"]
+    V --> I["컴파일 이미지·registry"]
+    I --> R["furiosa-opt-std launch"]
+    R --> T["furiosa-opt-rt"]
+    T --> D["드라이버·장치 펌웨어"]
+    V --> J["schedule JSON"]
+    J --> W["Schedule Viewer"]

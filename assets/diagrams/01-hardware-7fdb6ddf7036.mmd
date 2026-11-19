@@ -1,0 +1,8 @@
+flowchart TB
+    D["DM의 입력"] --> F["Fetch · 데이터 읽기"]
+    F --> S["Switch · Collect"]
+    S --> C["Contraction Engine"]
+    R["TRF의 반복 피연산자"] --> C
+    C --> V["Vector Engine"]
+    V --> T["Cast · Transpose"]
+    T --> W["Commit · DM에 저장"]

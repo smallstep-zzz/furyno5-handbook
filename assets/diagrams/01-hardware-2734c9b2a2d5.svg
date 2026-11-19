@@ -1,0 +1,91 @@
+<svg role="img" aria-label="RNGD 한 칩 · Cluster 0 · Cluster 1 · PE 0–3 · PE 4–7 · 각 PE에 64 slice · 각 PE에 64 slice · 각 slice에 8 lane · 각 slice에 8 lane" width="286pt" height="369pt"
+ viewBox="0.00 0.00 285.80 368.80" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(14.4 354.4)">
+<title>handbook</title>
+<g id="edge1" class="edge">
+<title>C&#45;&gt;G0</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M125.17,-303.84C118.22,-293.75 109.34,-280.87 101.8,-269.92"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="103.75,-268.44 97.76,-264.07 99.72,-271.22 103.75,-268.44"/>
+</g>
+<g id="edge2" class="edge">
+<title>C&#45;&gt;G1</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M149.99,-303.84C157.62,-293.75 167.37,-280.87 175.65,-269.92"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="177.81,-271.13 180.08,-264.07 173.9,-268.17 177.81,-271.13"/>
+</g>
+<g id="edge3" class="edge">
+<title>G0&#45;&gt;P0</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M83.91,-227.84C82.73,-218.12 81.23,-205.82 79.94,-195.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="82.35,-194.72 79.08,-188.07 77.49,-195.31 82.35,-194.72"/>
+</g>
+<g id="edge4" class="edge">
+<title>G1&#45;&gt;P1</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M193.46,-227.84C193.73,-218.12 194.06,-205.82 194.35,-195.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="196.8,-195.13 194.54,-188.07 191.9,-195 196.8,-195.13"/>
+</g>
+<g id="edge5" class="edge">
+<title>P0&#45;&gt;S0</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M72.83,-151.84C70.46,-142.12 67.47,-129.82 64.87,-119.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="67.19,-118.29 63.15,-112.07 62.43,-119.45 67.19,-118.29"/>
+</g>
+<g id="edge6" class="edge">
+<title>P1&#45;&gt;S1</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M195.7,-151.84C196.09,-142.12 196.59,-129.82 197.02,-119.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="199.47,-119.16 197.31,-112.07 194.58,-118.96 199.47,-119.16"/>
+</g>
+<g id="edge7" class="edge">
+<title>S0&#45;&gt;L0</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M58.77,-75.84C58.64,-66.12 58.47,-53.82 58.33,-43.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="60.78,-43.04 58.23,-36.07 55.88,-43.1 60.78,-43.04"/>
+</g>
+<g id="edge8" class="edge">
+<title>S1&#45;&gt;L1</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M198.23,-75.84C198.36,-66.12 198.53,-53.82 198.67,-43.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="201.12,-43.1 198.77,-36.07 196.22,-43.04 201.12,-43.1"/>
+</g>
+<g id="node1" class="node">
+<title>C</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M170,-340C170,-340 104,-340 104,-340 98,-340 92,-334 92,-328 92,-328 92,-316 92,-316 92,-310 98,-304 104,-304 104,-304 170,-304 170,-304 176,-304 182,-310 182,-316 182,-316 182,-328 182,-328 182,-334 176,-340 170,-340"/>
+<text text-anchor="middle" x="137" y="-318.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">RNGD 한 칩</text>
+</g>
+<g id="node2" class="node">
+<title>G0</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M113,-264C113,-264 59,-264 59,-264 53,-264 47,-258 47,-252 47,-252 47,-240 47,-240 47,-234 53,-228 59,-228 59,-228 113,-228 113,-228 119,-228 125,-234 125,-240 125,-240 125,-252 125,-252 125,-258 119,-264 113,-264"/>
+<text text-anchor="middle" x="86" y="-242.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">Cluster 0</text>
+</g>
+<g id="node3" class="node">
+<title>G1</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M220,-264C220,-264 166,-264 166,-264 160,-264 154,-258 154,-252 154,-252 154,-240 154,-240 154,-234 160,-228 166,-228 166,-228 220,-228 220,-228 226,-228 232,-234 232,-240 232,-240 232,-252 232,-252 232,-258 226,-264 220,-264"/>
+<text text-anchor="middle" x="193" y="-242.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">Cluster 1</text>
+</g>
+<g id="node4" class="node">
+<title>P0</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M98,-188C98,-188 56,-188 56,-188 50,-188 44,-182 44,-176 44,-176 44,-164 44,-164 44,-158 50,-152 56,-152 56,-152 98,-152 98,-152 104,-152 110,-158 110,-164 110,-164 110,-176 110,-176 110,-182 104,-188 98,-188"/>
+<text text-anchor="middle" x="77" y="-166.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">PE 0–3</text>
+</g>
+<g id="node5" class="node">
+<title>P1</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M216,-188C216,-188 174,-188 174,-188 168,-188 162,-182 162,-176 162,-176 162,-164 162,-164 162,-158 168,-152 174,-152 174,-152 216,-152 216,-152 222,-152 228,-158 228,-164 228,-164 228,-176 228,-176 228,-182 222,-188 216,-188"/>
+<text text-anchor="middle" x="195" y="-166.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">PE 4–7</text>
+</g>
+<g id="node6" class="node">
+<title>S0</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M103.5,-112C103.5,-112 14.5,-112 14.5,-112 8.5,-112 2.5,-106 2.5,-100 2.5,-100 2.5,-88 2.5,-88 2.5,-82 8.5,-76 14.5,-76 14.5,-76 103.5,-76 103.5,-76 109.5,-76 115.5,-82 115.5,-88 115.5,-88 115.5,-100 115.5,-100 115.5,-106 109.5,-112 103.5,-112"/>
+<text text-anchor="middle" x="59" y="-90.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">각 PE에 64 slice</text>
+</g>
+<g id="node7" class="node">
+<title>S1</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M242.5,-112C242.5,-112 153.5,-112 153.5,-112 147.5,-112 141.5,-106 141.5,-100 141.5,-100 141.5,-88 141.5,-88 141.5,-82 147.5,-76 153.5,-76 153.5,-76 242.5,-76 242.5,-76 248.5,-76 254.5,-82 254.5,-88 254.5,-88 254.5,-100 254.5,-100 254.5,-106 248.5,-112 242.5,-112"/>
+<text text-anchor="middle" x="198" y="-90.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">각 PE에 64 slice</text>
+</g>
+<g id="node8" class="node">
+<title>L0</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M104,-36C104,-36 12,-36 12,-36 6,-36 0,-30 0,-24 0,-24 0,-12 0,-12 0,-6 6,0 12,0 12,0 104,0 104,0 110,0 116,-6 116,-12 116,-12 116,-24 116,-24 116,-30 110,-36 104,-36"/>
+<text text-anchor="middle" x="58" y="-14.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">각 slice에 8 lane</text>
+</g>
+<g id="node9" class="node">
+<title>L1</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M245,-36C245,-36 153,-36 153,-36 147,-36 141,-30 141,-24 141,-24 141,-12 141,-12 141,-6 147,0 153,0 153,0 245,0 245,0 251,0 257,-6 257,-12 257,-12 257,-24 257,-24 257,-30 251,-36 245,-36"/>
+<text text-anchor="middle" x="199" y="-14.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">각 slice에 8 lane</text>
+</g>
+</g>
+</svg>

@@ -1,0 +1,121 @@
+<svg role="img" aria-label="원본 모델과 입력 · capture · binding · rule · TCL compiler · EDF와 ABI · package와 reload · NPU 실행 · 수치와 상태 검증 · 성능 비교 · 지원 gap 재현 · recipe와 compiler log · 인수 · shape · fusion 계약 · 공식 trace와 장치 오류" width="497pt" height="597pt"
+ viewBox="0.00 0.00 496.80 596.80" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(14.4 582.4)">
+<title>handbook</title>
+<g id="edge1" class="edge">
+<title>A&#45;&gt;B</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M353.5,-531.84C353.5,-522.12 353.5,-509.82 353.5,-499.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="355.95,-499.07 353.5,-492.07 351.05,-499.07 355.95,-499.07"/>
+</g>
+<g id="edge2" class="edge">
+<title>B&#45;&gt;C</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M338.89,-455.84C330.22,-445.66 319.13,-432.63 309.76,-421.62"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="311.44,-419.81 305.03,-416.07 307.7,-422.99 311.44,-419.81"/>
+</g>
+<g id="edge8" class="edge">
+<title>B&#45;&gt;I</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M368.34,-455.84C377.15,-445.66 388.41,-432.63 397.94,-421.62"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="400.01,-422.97 402.74,-416.07 396.3,-419.76 400.01,-422.97"/>
+</g>
+<g id="edge3" class="edge">
+<title>C&#45;&gt;D</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M274.03,-379.84C264.18,-369.56 251.54,-356.39 240.91,-345.32"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="242.49,-343.42 235.88,-340.07 238.96,-346.82 242.49,-343.42"/>
+</g>
+<g id="edge9" class="edge">
+<title>C&#45;&gt;J</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M306.97,-379.84C316.82,-369.56 329.46,-356.39 340.09,-345.32"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="342.04,-346.82 345.12,-340.07 338.51,-343.42 342.04,-346.82"/>
+</g>
+<g id="edge4" class="edge">
+<title>D&#45;&gt;E</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M199.55,-303.84C187.4,-293.38 171.75,-279.91 158.74,-268.71"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="160.24,-266.78 153.34,-264.07 157.05,-270.49 160.24,-266.78"/>
+</g>
+<g id="edge10" class="edge">
+<title>D&#45;&gt;K</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M239.68,-303.84C251.98,-293.38 267.81,-279.91 280.97,-268.71"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="282.69,-270.47 286.43,-264.07 279.51,-266.74 282.69,-270.47"/>
+</g>
+<g id="edge5" class="edge">
+<title>E&#45;&gt;F</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M133.5,-227.84C133.5,-218.12 133.5,-205.82 133.5,-195.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="135.95,-195.07 133.5,-188.07 131.05,-195.07 135.95,-195.07"/>
+</g>
+<g id="edge6" class="edge">
+<title>F&#45;&gt;G</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M115.64,-151.84C104.85,-141.47 91,-128.15 79.41,-117.02"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="81.01,-115.15 74.26,-112.07 77.61,-118.69 81.01,-115.15"/>
+</g>
+<g id="edge11" class="edge">
+<title>F&#45;&gt;L</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M151.36,-151.84C162.15,-141.47 176,-128.15 187.59,-117.02"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="189.39,-118.69 192.74,-112.07 185.99,-115.15 189.39,-118.69"/>
+</g>
+<g id="edge7" class="edge">
+<title>G&#45;&gt;H</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M56.5,-75.84C56.5,-66.12 56.5,-53.82 56.5,-43.15"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="58.95,-43.07 56.5,-36.07 54.05,-43.07 58.95,-43.07"/>
+</g>
+<g id="node1" class="node">
+<title>A</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M398,-568C398,-568 309,-568 309,-568 303,-568 297,-562 297,-556 297,-556 297,-544 297,-544 297,-538 303,-532 309,-532 309,-532 398,-532 398,-532 404,-532 410,-538 410,-544 410,-544 410,-556 410,-556 410,-562 404,-568 398,-568"/>
+<text text-anchor="middle" x="353.5" y="-546.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">원본 모델과 입력</text>
+</g>
+<g id="node2" class="node">
+<title>B</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M423,-492C423,-492 284,-492 284,-492 278,-492 272,-486 272,-480 272,-480 272,-468 272,-468 272,-462 278,-456 284,-456 284,-456 423,-456 423,-456 429,-456 435,-462 435,-468 435,-468 435,-480 435,-480 435,-486 429,-492 423,-492"/>
+<text text-anchor="middle" x="353.5" y="-470.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">capture · binding · rule</text>
+</g>
+<g id="node3" class="node">
+<title>C</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M330,-416C330,-416 251,-416 251,-416 245,-416 239,-410 239,-404 239,-404 239,-392 239,-392 239,-386 245,-380 251,-380 251,-380 330,-380 330,-380 336,-380 342,-386 342,-392 342,-392 342,-404 342,-404 342,-410 336,-416 330,-416"/>
+<text text-anchor="middle" x="290.5" y="-394.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">TCL compiler</text>
+</g>
+<g id="node4" class="node">
+<title>D</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M249.5,-340C249.5,-340 189.5,-340 189.5,-340 183.5,-340 177.5,-334 177.5,-328 177.5,-328 177.5,-316 177.5,-316 177.5,-310 183.5,-304 189.5,-304 189.5,-304 249.5,-304 249.5,-304 255.5,-304 261.5,-310 261.5,-316 261.5,-316 261.5,-328 261.5,-328 261.5,-334 255.5,-340 249.5,-340"/>
+<text text-anchor="middle" x="219.5" y="-318.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">EDF와 ABI</text>
+</g>
+<g id="node5" class="node">
+<title>E</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M184.5,-264C184.5,-264 82.5,-264 82.5,-264 76.5,-264 70.5,-258 70.5,-252 70.5,-252 70.5,-240 70.5,-240 70.5,-234 76.5,-228 82.5,-228 82.5,-228 184.5,-228 184.5,-228 190.5,-228 196.5,-234 196.5,-240 196.5,-240 196.5,-252 196.5,-252 196.5,-258 190.5,-264 184.5,-264"/>
+<text text-anchor="middle" x="133.5" y="-242.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">package와 reload</text>
+</g>
+<g id="node6" class="node">
+<title>F</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M161.5,-188C161.5,-188 105.5,-188 105.5,-188 99.5,-188 93.5,-182 93.5,-176 93.5,-176 93.5,-164 93.5,-164 93.5,-158 99.5,-152 105.5,-152 105.5,-152 161.5,-152 161.5,-152 167.5,-152 173.5,-158 173.5,-164 173.5,-164 173.5,-176 173.5,-176 173.5,-182 167.5,-188 161.5,-188"/>
+<text text-anchor="middle" x="133.5" y="-166.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">NPU 실행</text>
+</g>
+<g id="node7" class="node">
+<title>G</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M101,-112C101,-112 12,-112 12,-112 6,-112 0,-106 0,-100 0,-100 0,-88 0,-88 0,-82 6,-76 12,-76 12,-76 101,-76 101,-76 107,-76 113,-82 113,-88 113,-88 113,-100 113,-100 113,-106 107,-112 101,-112"/>
+<text text-anchor="middle" x="56.5" y="-90.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">수치와 상태 검증</text>
+</g>
+<g id="node8" class="node">
+<title>H</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M83,-36C83,-36 30,-36 30,-36 24,-36 18,-30 18,-24 18,-24 18,-12 18,-12 18,-6 24,0 30,0 30,0 83,0 83,0 89,0 95,-6 95,-12 95,-12 95,-24 95,-24 95,-30 89,-36 83,-36"/>
+<text text-anchor="middle" x="56.5" y="-14.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">성능 비교</text>
+</g>
+<g id="node9" class="node">
+<title>I</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M456,-416C456,-416 379,-416 379,-416 373,-416 367,-410 367,-404 367,-404 367,-392 367,-392 367,-386 373,-380 379,-380 379,-380 456,-380 456,-380 462,-380 468,-386 468,-392 468,-392 468,-404 468,-404 468,-410 462,-416 456,-416"/>
+<text text-anchor="middle" x="417.5" y="-394.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">지원 gap 재현</text>
+</g>
+<g id="node10" class="node">
+<title>J</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M424,-340C424,-340 299,-340 299,-340 293,-340 287,-334 287,-328 287,-328 287,-316 287,-316 287,-310 293,-304 299,-304 299,-304 424,-304 424,-304 430,-304 436,-310 436,-316 436,-316 436,-328 436,-328 436,-334 430,-340 424,-340"/>
+<text text-anchor="middle" x="361.5" y="-318.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">recipe와 compiler log</text>
+</g>
+<g id="node11" class="node">
+<title>K</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M379.5,-264C379.5,-264 233.5,-264 233.5,-264 227.5,-264 221.5,-258 221.5,-252 221.5,-252 221.5,-240 221.5,-240 221.5,-234 227.5,-228 233.5,-228 233.5,-228 379.5,-228 379.5,-228 385.5,-228 391.5,-234 391.5,-240 391.5,-240 391.5,-252 391.5,-252 391.5,-258 385.5,-264 379.5,-264"/>
+<text text-anchor="middle" x="306.5" y="-242.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">인수 · shape · fusion 계약</text>
+</g>
+<g id="node12" class="node">
+<title>L</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M271,-112C271,-112 150,-112 150,-112 144,-112 138,-106 138,-100 138,-100 138,-88 138,-88 138,-82 144,-76 150,-76 150,-76 271,-76 271,-76 277,-76 283,-82 283,-88 283,-88 283,-100 283,-100 283,-106 277,-112 271,-112"/>
+<text text-anchor="middle" x="210.5" y="-90.9" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">공식 trace와 장치 오류</text>
+</g>
+</g>
+</svg>
