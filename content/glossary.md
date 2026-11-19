@@ -2,6 +2,20 @@
 
 이 책에서 자주 만나는 용어를 정리했다. 약어에는 확인한 풀네임을 적고, 제품명·API 이름에는 임의의 어원을 붙이지 않았다. **EDF는 추가 조사에서 Executable Device Format이라는 공식 근거를 확인해 갱신했다. eISA의 독립적인 공식 풀네임·공개 API는 여전히 확인하지 못했다.** 아래의 “미확인”은 기능이 없다는 판정이 아니라 공개 근거의 경계를 뜻한다. 자세한 코드와 출처는 각 행의 장 링크에서 이어서 읽을 수 있다.
 
+## 모델을 구성하고 실행하는 기초
+
+`y = max(0, x × 2 − 1)`이라는 작은 계산을 기준으로 구분한다. 이 계산을 설명한 [시작 페이지](00-reading-map.md)와 같은 의미다.
+
+| 용어 | 작은 예 | 뜻과 주의할 점 |
+|---|---|---|
+| 모델, model | 곱하기 → 빼기 → 음수를 0으로 바꾸기 | 입력에서 출력을 만드는 계산 구조와 그 계산에 사용하는 매개변수를 함께 말한다. 모델 이름만으로 실제 장치 코드가 준비되지는 않는다. |
+| 가중치·매개변수, weight·parameter | 곱할 값 2, 보정값 −1 | 모델이 보관하는 값이다. 학습으로 정할 수 있고, 일반적인 추론에서는 고정해 여러 요청에 재사용한다. 입력 x와 구별한다. |
+| 추론, inference | `x=3`을 넣어 `y=5`를 구하기 | 준비된 모델의 규칙과 매개변수로 새 입력의 출력을 계산한다. 이 책의 장치 실행 설명은 주로 추론을 다룬다. |
+| 학습, training | 예측과 정답의 차이를 줄이도록 2와 −1을 수정 | 모델의 매개변수를 조정하는 과정이다. 한 번 추론을 실행하는 것과 목적·필요한 계산이 다르다. |
+| 커널, kernel | 곱하기만, 또는 곱하기·보정·ReLU를 묶은 장치 함수 | 장치가 수행할 계산 단위다. 여러 연산을 묶거나 한 연산을 여러 커널로 나눌 수 있어, 수학식의 기호 수와 커널 수가 같지는 않다. |
+| ReLU | `max(0, −1)=0`, `max(0, 5)=5` | Rectified Linear Unit. 음수는 0으로, 0 이상은 그대로 두는 함수다. 배열에서는 각 원소에 적용한다. |
+| 체크포인트, checkpoint | 저장한 가중치와 학습 상태 등 | 다시 읽어 모델을 구성하거나 학습을 이어갈 때 쓰는 저장물이다. 포함 항목은 형식에 따라 다르며, 가중치 파일을 곧바로 NPU 실행 바이너리로 보지 않는다. |
+
 ## 숫자·배열·행렬의 기초
 
 이 표는 본문 설명을 다시 찾는 색인이다. 처음 배우는 독자는 01·02장에서 작은 배열의 값이 실제로 바뀌는 과정을 함께 볼 수 있다.
@@ -15,7 +29,7 @@
 | 원소별 곱 | `[1,2,3]*[1,0,1]=[1,0,3]` | 같은 위치끼리 곱하며 자동으로 합산하지 않는다. 행렬곱과 구별한다. | [01](01-hardware.md) |
 | Σ와 합산 | `1+0+3=4` | 여러 항을 더한다는 표기다. 반복문에서 `total += term`을 수행하는 것과 연결해 읽는다. | [01](01-hardware.md) |
 | `einsum` | `"mk,kn->mn"` | Einstein summation 표기로 배열 계산을 적는 NumPy 함수다. 이 표기에서는 m·n을 출력에 남기고 k를 곱한 뒤 합산한다. | [01](01-hardware.md) |
-| `reshape` | `(6,) → (2,3)` | 총 원소 수를 유지하며 축 길이를 바꾼다. 원소를 임의로 재정렬하는 전치와 다르고, 항상 복사 없이 가능한 것도 아니다. | [02](02-memory-dma.md) |
+| `reshape` | `(6,) → (2,3)` | 총 원소 수를 유지하며 축 길이를 바꾼다. 축 순서를 바꾸는 전치와 다르고, 항상 복사 없이 가능한 것도 아니다. | [02](02-memory-dma.md) |
 | 전치, transpose | `A.T` | 축의 역할을 교환한다. 행렬에서 `A[m,k]`가 전치 결과의 `[k,m]`에 해당한다. | [02](02-memory-dma.md) |
 | layout, 메모리 배치 | 행부터 저장 / 열부터 저장 | 논리적인 배열의 값이 실제 메모리 위치에 대응하는 방식이다. 같은 shape라도 배치는 다를 수 있다. | [01](01-hardware.md), [02](02-memory-dma.md) |
 | view | `x.T`가 x와 저장 공간 공유 | 같은 저장 공간을 다른 모양·stride로 해석하는 배열이다. 한쪽 변경이 다른 쪽에 보일 수 있다. | [02](02-memory-dma.md) |
@@ -41,8 +55,8 @@
 | SRAM | Static Random Access Memory | RNGD 칩 안의 빠른 메모리를 설명할 때 쓰는 메모리 기술명. HBM보다 용량이 작아 재사용·배치가 중요하다. | [1장 하드웨어](01-hardware.md), [2장 메모리와 DMA](02-memory-dma.md) |
 | DM | Data Memory | vISA에서 명시적으로 다루는 온칩 데이터 메모리 공간. bank와 주소 배치가 전송 효율에 영향을 준다. | [2장 메모리와 DMA](02-memory-dma.md) |
 | SPM | Scratchpad Memory | 중간 데이터 등을 명시적으로 배치하는 scratchpad 공간. 범용 CPU의 자동 캐시처럼 가정하지 않는다. | [2장 메모리와 DMA](02-memory-dma.md) |
-| TRF | Tensor Register File | 텐서 연산에 사용하는 register file. 용량·배치 제약이 타일과 스케줄 선택에 연결된다. | [2장 메모리와 DMA](02-memory-dma.md), [8장 vISA](08-eisa-visa.md) |
-| VRF | Vector Register File | 벡터 연산용 register file. TRF와 이름·역할·접근 경로를 구별한다. | [2장 메모리와 DMA](02-memory-dma.md) |
+| TRF | Tensor Register File | 텐서 계산 가까이에 값을 잠시 보관하고 재사용하는 하드웨어 레지스터 저장소. 여기서 file은 디스크 파일이 아니라 레지스터의 묶음이다. 용량·배치 제약이 타일과 스케줄 선택에 연결된다. | [1장 연산 파이프라인](01-hardware.md), [8장 vISA](08-eisa-visa.md) |
+| VRF | Vector Register File | 벡터 연산에서 값을 보관하는 하드웨어 레지스터 저장소. TRF와 별도의 역할·접근 경로를 가지며 저장 장치의 파일이 아니다. | [1장 연산 파이프라인](01-hardware.md) |
 | DMA | Direct Memory Access | CPU가 모든 데이터를 직접 복사하는 대신 전용 엔진이 메모리 사이의 이동을 수행하는 방식. 완료와 의존성 관리는 여전히 필요하다. | [2장 메모리와 DMA](02-memory-dma.md) |
 | PDMA | PCIe DMA | host와 장치 HBM 사이를 PCIe로 이동하는 DMA 경로. 전송을 시작했다는 사실과 완료했다는 사실이 다르다. | [2장 메모리와 DMA](02-memory-dma.md) |
 | TDMA | Tensor DMA | 장치 내부 텐서 이동에 사용하는 DMA 경로. 복사와 함께 배치·변환을 생각해야 한다. | [2장 메모리와 DMA](02-memory-dma.md) |
@@ -78,7 +92,7 @@ PERT의 공식 확장은 **PE Runtime**이다. [공식 소프트웨어 스택](h
 |---|---|---|---|
 | TCL | Tensor Contraction Language | 텐서 축과 contraction을 표현하는 Furiosa의 Python 기반 커널 언어. 일반 Python 실행 결과를 저장하는 방식과 다르다. | [4장 TCL과 EDF](04-tcl-edf.md) |
 | eDSL | embedded Domain-Specific Language | Python·Rust 같은 host 언어 안에 들어 있는 특정 분야용 언어. 여기서는 컴파일 가능한 tensor 계산 표현을 만든다. | [4장 TCL과 EDF](04-tcl-edf.md), [8장 vISA](08-eisa-visa.md) |
-| vISA | Virtual Instruction Set Architecture | Furiosa가 공개 문서에서 사용하는 가상 명령어·커널 인터페이스. Rust eDSL과 furiosa-opt 도구를 통해 다룬다. | [8장 vISA와 eISA의 경계](08-eisa-visa.md) |
+| vISA | Virtual Instruction Set Architecture | 장치의 계산·메모리·스케줄을 표현하는 컴파일러 중간 표현(IR). Rust eDSL과 furiosa-opt 도구로 다루며, 실행기는 vISA 텍스트 자체가 아니라 컴파일된 실행물을 적재한다. | [8장 vISA와 eISA의 경계](08-eisa-visa.md) |
 | eISA | 공식 풀네임·독립 공개 API 미확인 | 요청에서 언급된 표기. 이 책은 공개 근거 없이 vISA의 동의어로 바꾸거나 별도 실행법을 만들지 않는다. | [8장 vISA와 eISA의 경계](08-eisa-visa.md) |
 | Axis | Axis | 텐서의 차원에 붙인 의미 있는 축. 행렬곱의 `M,K,N`에서 `K`를 축약하고 `M,N`을 출력에 남길 수 있다. | [4장 TCL과 EDF](04-tcl-edf.md), [7장 최적화](07-optimization.md) |
 | Shape | Shape | 각 차원의 길이. 컴파일된 커널이 허용하는 shape와 실제 입력 shape가 맞아야 한다. | [6장 Shape와 버킷](06-buckets-shapes.md) |

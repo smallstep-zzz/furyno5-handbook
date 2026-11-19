@@ -1,6 +1,6 @@
 <!doctype html>
-<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="공식 플러그인의 경로와 FuryNo5·fxbX에 아직 필요한 연결을 설명합니다."><meta name="theme-color" content="#fbfaf7"><title>vLLM 서빙과 연결 과제 · FuryNo5 개발 핸드북</title><link rel="icon" href="../assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="../assets/site.css?v=5454d41416bc"><script defer src="../assets/site.js?v=aeae33420bbb"></script></head>
-<body data-root="../" data-chapter="14-serving-vllm" data-search-version="e58e3b38bb8f"><a class="skip" href="#content">본문으로 이동</a><header class="topbar"><button class="menu-toggle" type="button" aria-label="전체 목차 열기" aria-controls="sidebar" aria-expanded="false">☰</button><a class="brand" href="../index.html"><span class="brand-mark">Nº5</span>FuryNo5<small>DEVELOPER HANDBOOK</small></a><div class="top-actions"><a class="top-link" href="../sources.html">출처와 버전</a><button class="search-open" type="button" aria-label="핸드북 전체 검색"><span>전체 문서 검색</span><kbd>⌘ K</kbd></button></div></header><div class="progress" aria-hidden="true"></div><div class="mobile-shade"></div><aside class="sidebar" id="sidebar" aria-label="전체 목차"><nav><div class="nav-caption">시작하기</div><a class="nav-link"  href="../index.html"><span class="num">00</span><span>전체 지도와 읽는 방법</span></a><div class="nav-caption">I. 디바이스를 이해하기</div><a class="nav-link"  href="../chapter/01-hardware.html"><span class="num">01</span><span>RNGD · TCP · PE</span></a><a class="nav-link"  href="../chapter/02-memory-dma.html"><span class="num">02</span><span>메모리 · DMA · 배치</span></a><a class="nav-link"  href="../chapter/03-driver-runtime.html"><span class="num">03</span><span>드라이버와 공식 런타임</span></a><div class="nav-caption">II. 프로그램을 만들고 실행하기</div><a class="nav-link"  href="../chapter/04-tcl-edf.html"><span class="num">04</span><span>TCL 작성 · 컴파일 · 실행</span></a><a class="nav-link"  href="../chapter/05-graphs-fallback.html"><span class="num">05</span><span>실행그래프 · 오류 · 폴백</span></a><a class="nav-link"  href="../chapter/06-buckets-shapes.html"><span class="num">06</span><span>Shape · 버킷 · 컴파일 비용</span></a><a class="nav-link"  href="../chapter/07-optimization.html"><span class="num">07</span><span>최적화의 축과 우선순위</span></a><a class="nav-link"  href="../chapter/08-eisa-visa.html"><span class="num">08</span><span>eISA · vISA · furiosa-opt</span></a><div class="nav-caption">III. FuryNo5를 해부하기</div><a class="nav-link"  href="../chapter/09-torch-aten.html"><span class="num">09</span><span>PyTorch · ATen · 등록</span></a><a class="nav-link"  href="../chapter/10-furyno5-architecture.html"><span class="num">10</span><span>FuryNo5 구조와 지원 범위</span></a><a class="nav-link"  href="../chapter/11-furyno5-compiler.html"><span class="num">11</span><span>FuryNo5 컴파일과 캐시</span></a><div class="nav-caption">IV. 모델 포팅과 서빙</div><a class="nav-link"  href="../chapter/12-fxbx.html"><span class="num">12</span><span>fxbX 포맷과 실행계획</span></a><a class="nav-link"  href="../chapter/13-porting-fha.html"><span class="num">13</span><span>포팅 · FHA · FuryAwesome</span></a><a class="nav-link active" aria-current="page" href="../chapter/14-serving-vllm.html"><span class="num">14</span><span>vLLM · 서빙 브리지</span></a><a class="nav-link"  href="../chapter/15-multi-npu.html"><span class="num">15</span><span>PE · 여러 카드 · 여러 서버</span></a><div class="nav-caption">V. 검증과 다음 개발</div><a class="nav-link"  href="../chapter/16-furyboost.html"><span class="num">16</span><span>FuryBoost 실측과 남은 과제</span></a><a class="nav-link"  href="../chapter/17-debugging.html"><span class="num">17</span><span>측정 · 추적 · 실패 재현</span></a><div class="nav-caption">VI. 생태계 비교와 최적화 연구</div><a class="nav-link"  href="../chapter/18-npu-ecosystems.html"><span class="num">18</span><span>다른 NPU의 지원 방식</span></a><a class="nav-link"  href="../chapter/19-model-optimization.html"><span class="num">19</span><span>모델 사전 최적화 · 연구</span></a><div class="nav-caption">참고와 검증</div><a class="nav-link"  href="../glossary.html"><span class="num">·</span><span>약어와 용어 사전</span></a><a class="nav-link"  href="../sources.html"><span class="num">·</span><span>출처 · 버전 · 접근 범위</span></a><a class="nav-link"  href="../review.html"><span class="num">·</span><span>검토 기록과 미해결 질문</span></a></nav><div class="side-foot">비공식 개발 핸드북 · 2026.11.19<br>공식 SDK와 프로젝트 구현을 구분합니다.<br><a href="https://github.com/smallstep-zzz/furyno5-handbook">원고와 변경 이력 ↗</a></div></aside><div class="shell"><main class="page" id="content"><div class="eyebrow">IV. 모델 포팅과 서빙 / CHAPTER 14</div><h1>vLLM 서빙과 연결 과제</h1><p class="dek">공식 플러그인의 경로와 FuryNo5·fxbX에 아직 필요한 연결을 설명합니다.</p><div class="page-meta"><span>검토 2026.11.19</span><span>SDK 2026.4 계열 / 버전별 표기</span><span class="readtime">약 17분</span><span><a href="https://github.com/smallstep-zzz/furyno5-handbook/blob/main/content/14-serving-vllm.md">원고</a></span></div><details class="mobile-toc"><summary>이 장의 목차</summary><div><a class="" href="#1-한-문장을-처리하는-동안-무엇이-남는가">1. 한 문장을 처리하는 동안 무엇이 남는가</a><a class="minor" href="#토큰과-배열에서-출발한다">토큰과 배열에서 출발한다</a><a class="minor" href="#prefill과-decode는-하는-일이-다르다">Prefill과 decode는 하는 일이 다르다</a><a class="minor" href="#요청-큐가-토큰마다-다시-기회를-주는-이유">요청 큐가 토큰마다 다시 기회를 주는 이유</a><a class="minor" href="#cache-block과-컴파일-bucket을-분리한다">Cache block과 컴파일 bucket을 분리한다</a><a class="" href="#2-공식-furiosa-llm과-무엇이-다른가">2. 공식 Furiosa-LLM과 무엇이 다른가</a><a class="" href="#3-plugin이-등록되는-정확한-위치">3. plugin이 등록되는 정확한 위치</a><a class="" href="#4-재현-가능한-설치의-기준">4. 재현 가능한 설치의 기준</a><a class="" href="#5-먼저-지원-모델로-http-왕복을-확인한다">5. 먼저 지원 모델로 HTTP 왕복을 확인한다</a><a class="" href="#6-문서와-코드가-어긋난-부분도-기록한다">6. 문서와 코드가 어긋난 부분도 기록한다</a><a class="" href="#7-furyno5-fxbx를-붙이기-위해-남은-계약">7. FuryNo5·fxbX를 붙이기 위해 남은 계약</a><a class="" href="#출처">출처</a></div></details><noscript><p class="noscript">본문과 그림은 JavaScript 없이 읽을 수 있습니다. 검색과 조절 실험에는 JavaScript가 필요합니다.</p></noscript><article class="article"><p>웹 서버에서 요청을 받으면 보통 작업을 큐에 넣고 worker가 처리한다. LLM(Large Language Model, 대규모 언어 모델) 서버도 여기서 시작하지만, 한 요청을 <strong>여러 번의 모델 실행에 걸쳐 계속 이어간다</strong>는 차이가 있다. 문장 전체를 한 번에 완성하는 대신 다음 토큰을 고르고, 그 토큰을 입력에 붙여 다음 계산을 하기 때문이다. 이 장에서는 요청 두 개가 들어왔을 때 어떤 상태를 보관하고 어떤 일을 NPU(Neural Processing Unit)에 보내야 하는지부터 따라간다.</p>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="공식 플러그인의 경로와 FuryNo5·fxbX에 아직 필요한 연결을 설명합니다."><meta name="theme-color" content="#fbfaf7"><title>vLLM 서빙과 연결 과제 · FuryNo5 개발 핸드북</title><link rel="icon" href="../assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="../assets/site.css?v=cb5aa5a870ba"><script defer src="../assets/site.js?v=aeae33420bbb"></script></head>
+<body data-root="../" data-chapter="14-serving-vllm" data-search-version="5328e86ff6da"><a class="skip" href="#content">본문으로 이동</a><header class="topbar"><button class="menu-toggle" type="button" aria-label="전체 목차 열기" aria-controls="sidebar" aria-expanded="false">☰</button><a class="brand" href="../index.html"><span class="brand-mark">Nº5</span>FuryNo5<small>DEVELOPER HANDBOOK</small></a><div class="top-actions"><a class="top-link" href="../sources.html">출처와 버전</a><button class="search-open" type="button" aria-label="핸드북 전체 검색"><span>전체 문서 검색</span><kbd>⌘ K</kbd></button></div></header><div class="progress" aria-hidden="true"></div><div class="mobile-shade"></div><aside class="sidebar" id="sidebar" aria-label="전체 목차"><nav><div class="nav-caption">시작하기</div><a class="nav-link"  href="../index.html"><span class="num">00</span><span>전체 지도와 읽는 방법</span></a><div class="nav-caption">I. 디바이스를 이해하기</div><a class="nav-link"  href="../chapter/01-hardware.html"><span class="num">01</span><span>RNGD · TCP · PE</span></a><a class="nav-link"  href="../chapter/02-memory-dma.html"><span class="num">02</span><span>메모리 · DMA · 배치</span></a><a class="nav-link"  href="../chapter/03-driver-runtime.html"><span class="num">03</span><span>드라이버와 공식 런타임</span></a><div class="nav-caption">II. 프로그램을 만들고 실행하기</div><a class="nav-link"  href="../chapter/04-tcl-edf.html"><span class="num">04</span><span>TCL 작성 · 컴파일 · 실행</span></a><a class="nav-link"  href="../chapter/05-graphs-fallback.html"><span class="num">05</span><span>실행그래프 · 오류 · 폴백</span></a><a class="nav-link"  href="../chapter/06-buckets-shapes.html"><span class="num">06</span><span>Shape · 버킷 · 컴파일 비용</span></a><a class="nav-link"  href="../chapter/07-optimization.html"><span class="num">07</span><span>최적화의 축과 우선순위</span></a><a class="nav-link"  href="../chapter/08-eisa-visa.html"><span class="num">08</span><span>eISA · vISA · furiosa-opt</span></a><div class="nav-caption">III. FuryNo5를 해부하기</div><a class="nav-link"  href="../chapter/09-torch-aten.html"><span class="num">09</span><span>PyTorch · ATen · 등록</span></a><a class="nav-link"  href="../chapter/10-furyno5-architecture.html"><span class="num">10</span><span>FuryNo5 구조와 지원 범위</span></a><a class="nav-link"  href="../chapter/11-furyno5-compiler.html"><span class="num">11</span><span>FuryNo5 컴파일과 캐시</span></a><div class="nav-caption">IV. 모델 포팅과 서빙</div><a class="nav-link"  href="../chapter/12-fxbx.html"><span class="num">12</span><span>fxbX 포맷과 실행계획</span></a><a class="nav-link"  href="../chapter/13-porting-fha.html"><span class="num">13</span><span>포팅 · FHA · FuryAwesome</span></a><a class="nav-link active" aria-current="page" href="../chapter/14-serving-vllm.html"><span class="num">14</span><span>vLLM · 서빙 브리지</span></a><a class="nav-link"  href="../chapter/15-multi-npu.html"><span class="num">15</span><span>PE · 여러 카드 · 여러 서버</span></a><div class="nav-caption">V. 검증과 다음 개발</div><a class="nav-link"  href="../chapter/16-furyboost.html"><span class="num">16</span><span>FuryBoost 실측과 남은 과제</span></a><a class="nav-link"  href="../chapter/17-debugging.html"><span class="num">17</span><span>측정 · 추적 · 실패 재현</span></a><div class="nav-caption">VI. 생태계 비교와 최적화 연구</div><a class="nav-link"  href="../chapter/18-npu-ecosystems.html"><span class="num">18</span><span>다른 NPU의 지원 방식</span></a><a class="nav-link"  href="../chapter/19-model-optimization.html"><span class="num">19</span><span>모델 사전 최적화 · 연구</span></a><div class="nav-caption">참고와 검증</div><a class="nav-link"  href="../glossary.html"><span class="num">·</span><span>약어와 용어 사전</span></a><a class="nav-link"  href="../sources.html"><span class="num">·</span><span>출처 · 버전 · 접근 범위</span></a><a class="nav-link"  href="../review.html"><span class="num">·</span><span>검토 기록과 미해결 질문</span></a><a class="nav-link"  href="../reader-review.html"><span class="num">·</span><span>3학년 독자 검토와 수정 기록</span></a></nav><div class="side-foot">비공식 개발 핸드북 · 2026.11.20<br>공식 SDK와 프로젝트 구현을 구분합니다.<br><a href="https://github.com/smallstep-zzz/furyno5-handbook">원고와 변경 이력 ↗</a></div></aside><div class="shell"><main class="page" id="content"><div class="eyebrow">IV. 모델 포팅과 서빙 / CHAPTER 14</div><h1>vLLM 서빙과 연결 과제</h1><p class="dek">공식 플러그인의 경로와 FuryNo5·fxbX에 아직 필요한 연결을 설명합니다.</p><div class="page-meta"><span>독자 검토 2026.11.20</span><span>SDK 2026.4 계열 / 버전별 표기</span><span class="readtime">약 23분</span><span><a href="https://github.com/smallstep-zzz/furyno5-handbook/blob/main/content/14-serving-vllm.md">원고</a></span></div><details class="mobile-toc"><summary>이 장의 목차</summary><div><a class="" href="#1-한-문장을-처리하는-동안-무엇이-남는가">1. 한 문장을 처리하는 동안 무엇이 남는가</a><a class="minor" href="#토큰과-배열에서-출발한다">토큰과 배열에서 출발한다</a><a class="minor" href="#prefill과-decode는-하는-일이-다르다">Prefill과 decode는 하는 일이 다르다</a><a class="minor" href="#요청-큐가-토큰마다-다시-기회를-주는-이유">요청 큐가 토큰마다 다시 기회를 주는 이유</a><a class="minor" href="#cache-block과-컴파일-bucket을-분리한다">Cache block과 컴파일 bucket을 분리한다</a><a class="" href="#2-공식-furiosa-llm과-무엇이-다른가">2. 공식 Furiosa-LLM과 무엇이 다른가</a><a class="" href="#3-plugin이-등록되는-정확한-위치">3. plugin이 등록되는 정확한 위치</a><a class="" href="#4-재현-가능한-설치의-기준">4. 재현 가능한 설치의 기준</a><a class="minor" href="#요구-commit과-설치-버전은-같은-문자열이-아니다">요구 commit과 설치 버전은 같은 문자열이 아니다</a><a class="minor" href="#고정-manifest로-설치한-뒤-실제-호출-경로를-확인한다">고정 manifest로 설치한 뒤 실제 호출 경로를 확인한다</a><a class="minor" href="#성공-여부를-세-단계로-나누어-판정한다">성공 여부를 세 단계로 나누어 판정한다</a><a class="" href="#5-먼저-지원-모델로-http-왕복을-확인한다">5. 먼저 지원 모델로 HTTP 왕복을 확인한다</a><a class="" href="#6-문서와-코드가-어긋난-부분도-기록한다">6. 문서와 코드가 어긋난 부분도 기록한다</a><a class="" href="#7-furyno5-fxbx를-붙이기-위해-남은-계약">7. FuryNo5·fxbX를 붙이기 위해 남은 계약</a><a class="" href="#출처">출처</a></div></details><noscript><p class="noscript">본문과 그림은 JavaScript 없이 읽을 수 있습니다. 검색과 조절 실험에는 JavaScript가 필요합니다.</p></noscript><article class="article"><p>웹 서버에서 요청을 받으면 보통 작업을 큐에 넣고 worker가 처리한다. LLM(Large Language Model, 대규모 언어 모델) 서버도 여기서 시작하지만, 한 요청을 <strong>여러 번의 모델 실행에 걸쳐 계속 이어간다</strong>는 차이가 있다. 문장 전체를 한 번에 완성하는 대신 다음 토큰을 고르고, 그 토큰을 입력에 붙여 다음 계산을 하기 때문이다. 이 장에서는 요청 두 개가 들어왔을 때 어떤 상태를 보관하고 어떤 일을 NPU(Neural Processing Unit)에 보내야 하는지부터 따라간다.</p>
 <p>그다음 실제 도구를 연결한다. <strong>공식 furiosa-opt-vllm은 vLLM의 요청 관리와 Furiosa 엔진을 연결하는 서빙 경로이며, 임의의 fxbX 파일을 읽는 범용 loader는 아니다.</strong> loader는 파일에서 실행 객체를 만드는 적재기다. 여기서 EDF는 장치에서 계산할 컴파일 결과 파일이고, 실행 계획은 어떤 EDF를 어떤 입출력·순서로 호출할지 적은 규격이다. FuryNo5가 만든 실행 계획을 이 서버에 연결하려면 파일 적재뿐 아니라 요청별 상태와 입출력 계약도 맞춰야 한다. 조회 기준은 2026-11-19, <code>furiosa-opt-models c982976</code>이다. <a href="https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/README.md">공식 저장소</a> · <a href="https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/docs/design/architecture.md">엔진 구조</a></p>
 <h2 id="1-한-문장을-처리하는-동안-무엇이-남는가"><a class="heading-anchor" href="#1-한-문장을-처리하는-동안-무엇이-남는가">1. 한 문장을 처리하는 동안 무엇이 남는가</a></h2>
 <h3 id="토큰과-배열에서-출발한다"><a class="heading-anchor" href="#토큰과-배열에서-출발한다">토큰과 배열에서 출발한다</a></h3>
@@ -91,6 +91,79 @@ print(physical_block, slot_in_block)  # 7 1
 </code></pre></div>
 <p>입력 <code>position=5</code>는 “A의 여섯 번째 토큰”이고 출력 <code>(7,1)</code>은 “물리 블록 7의 두 번째 자리”다. <strong>Paged attention</strong>은 이런 블록 대응을 사용해 attention의 KV를 찾아 읽는 방식이다. 블록을 배정하는 코드와 그 배치를 이해하는 계산 커널이 함께 맞아야 한다. 실제 토큰당 바이트 수와 블록 크기·배치 순서는 엔진의 계약을 따른다.</p>
 <p>반면 <strong>bucket(컴파일 규격 묶음)은</strong> “이 실행물은 이 정도 크기의 입력을 처리한다”는 계산 규격이다. 설명용 실행 규격이 토큰 행 1·4·8개라면 유효 행 3개를 처리할 때 4행 규격을 선택하고 1행을 padding(빈 자리 채우기)할 수 있다. 이 수는 위의 KV 블록 번호와 무관하다. <strong>Row packing(행 모으기)은</strong> 여러 요청의 유효 토큰 벡터를 실행 배열의 행에 배치하는 과정이고, <strong>layout(메모리 배치)은</strong> 그 논리적 행·열을 실제 메모리에서 어떤 순서로 저장하는지 뜻한다. 같은 shape라도 저장 순서가 다르면 엔진에 넘기는 주소 계산이 달라진다. <a href="https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/docs/engine/python.md">block·row 계약</a></p>
+<h4 id="모은-행을-다시-요청으로-돌려놓는다"><a class="heading-anchor" href="#모은-행을-다시-요청으로-돌려놓는다">모은 행을 다시 요청으로 돌려놓는다</a></h4>
+<p>A의 입력이 두 토큰, B의 입력이 한 토큰이고 4행 bucket을 골랐다고 하자. 값 배열만 이어 붙이면 “세 번째 행이 B의 첫 토큰”이라는 정보를 잃는다. 그래서 <strong>행의 값과 함께 행의 소유자·논리 위치·유효성을 대응시켜야 한다.</strong> 다음은 두 요청의 prefill만 묶는 교육용 배치다. 실제 엔진의 인자 순서나 메모리 ABI(Application Binary Interface)를 제시한 표는 아니다.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>실행 배열의 행</th>
+<th>요청</th>
+<th align="right">요청 안의 토큰 위치</th>
+<th>유효한 행인가?</th>
+<th>참조할 KV block table</th>
+<th>다음 토큰 선택에 쓸 행인가?</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0</td>
+<td>A</td>
+<td align="right">0</td>
+<td>예</td>
+<td>A의 <code>[2,7]</code></td>
+<td>아니오: A에 뒤 토큰이 더 있음</td>
+</tr>
+<tr>
+<td>1</td>
+<td>A</td>
+<td align="right">1</td>
+<td>예</td>
+<td>A의 <code>[2,7]</code></td>
+<td>예: A의 마지막 입력 위치</td>
+</tr>
+<tr>
+<td>2</td>
+<td>B</td>
+<td align="right">0</td>
+<td>예</td>
+<td>B의 <code>[4]</code></td>
+<td>예: B의 마지막 입력 위치</td>
+</tr>
+<tr>
+<td>3</td>
+<td>없음</td>
+<td align="right">의미 없음</td>
+<td>아니오: padding</td>
+<td>없음</td>
+<td>아니오</td>
+</tr>
+</tbody></table>
+</div><p>행 2의 요청 내 위치는 2가 아니라 <strong>0</strong>이다. 따라서 B의 첫 KV를 B의 block table로 찾아야 한다. attention도 같은 요청에서 볼 수 있는 위치만 참고해야 하므로 A의 위치들과 B의 위치들을 하나의 긴 문장처럼 섞으면 안 된다. padding 행은 계산 규격을 맞추는 자리이며 유효 출력이나 KV 갱신으로 세지 않는다.</p>
+<p>모델이 이 예에서 <strong>각 행의 후보별 logits를 돌려준다</strong>고 가정하자. A에는 행 1, B에는 행 2의 logits를 사용해 다음 토큰을 선택한다. <a href="../examples/row_packing_demo.py">row_packing_demo.py</a>는 이 마지막 대응만 실행하는 순수 Python 예다. logits는 직접 만든 숫자이며 모델 추론 결과가 아니다.</p>
+<div class="codebox"><div class="codebar"><span>python</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-python"># 실행 행 → (요청 ID, 요청 안 위치, 유효 여부)의 교육용 대응표
+rows = [(&quot;A&quot;, 0, True), (&quot;A&quot;, 1, True), (&quot;B&quot;, 0, True), (None, 0, False)]
+logits = [
+    [3.0, 1.0, 0.0],  # 행 0: A의 중간 위치이므로 다음 토큰 선택에는 쓰지 않는다.
+    [0.0, 4.0, 1.0],  # 행 1: A의 마지막 입력 위치 → 후보 번호 1
+    [5.0, 1.0, 0.0],  # 행 2: B의 마지막 입력 위치 → 후보 번호 0
+    [99.0, 99.0, 99.0],  # 행 3: 큰 숫자가 있어도 padding이므로 제외한다.
+]
+last_row = {}
+for row_index, (request_id, position, valid) in enumerate(rows):
+    if not valid:
+        continue
+    previous = last_row.get(request_id)
+    # 실행 배열의 마지막 행이 아니라, 요청별 가장 큰 논리 위치를 선택한다.
+    if previous is None or position &gt; rows[previous][1]:
+        last_row[request_id] = row_index
+next_candidate = {
+    request_id: max(range(len(logits[row])), key=lambda j: logits[row][j])
+    for request_id, row in last_row.items()
+}
+assert last_row == {&quot;A&quot;: 1, &quot;B&quot;: 2}
+assert next_candidate == {&quot;A&quot;: 1, &quot;B&quot;: 0}
+print(last_row, next_candidate)
+</code></pre></div>
+<p>입력의 행을 모으는 표와 출력의 행을 되돌리는 표가 같은 요청 ID를 공유한다. 실제 엔진이 마지막 행만 반환하거나 장치에서 곧바로 토큰을 선택하면 반환 형식은 달라지지만, 요청·위치·KV·출력을 연결해야 하는 문제는 남는다. 위 예는 prefill과 decode를 임의로 섞는 기능을 보장하지 않는다. 현 플러그인의 실제 행 구성과 반환 계약은 <code>generation/sequence.py</code>와 엔진 Python 문서에 정의되어 있다. <a href="https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/integrations/furiosa-opt-vllm/furiosa_opt_vllm/generation/sequence.py">요청 변환 코드</a> · <a href="https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/docs/engine/python.md">엔진의 rows·block 계약</a></p>
 <p>cache 용량도 계산해 볼 수 있다. <strong>Head(헤드)는</strong> attention이 서로 다른 벡터 묶음으로 정보를 비교하는 계산 단위다. 여기서는 K·V 벡터 묶음의 수를 KV head 수라고 부른다. 설명용으로 한 layer의 KV head가 2개, head당 벡터 길이가 4, 원소가 2바이트라면 토큰 하나는 <code>K와 V 2종 × head 2개 × 원소 4개 × 2바이트 = 32바이트</code>다. 토큰 3개는 96바이트이며 layer 수와 동시 요청 수가 늘면 그만큼 누적된다. 실제 모델의 head 수·dtype(원소 자료형)를 넣어야 실제 용량이 된다. 그래서 요청이 끝났을 때 cache를 회수하지 못하는 버그는 서버 메모리가 계속 증가하는 원인이 된다.</p>
 <figure class="diagram"><img src="../assets/diagrams/14-serving-vllm-163ad2a3922e.svg?v=2e9ac0093a04" alt="vLLM 서빙과 연결 과제 · 도식 1" loading="lazy"><figcaption>도식 1 · vLLM 서빙과 연결 과제 — 설명을 위해 단순화한 관계도. 실제 호출 조건과 근거는 본문을 함께 읽으세요.</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
     A[&quot;문자열과 요청 ID&quot;] --&gt; B[&quot;Tokenizer와 대기열&quot;]
@@ -193,20 +266,102 @@ furiosa = &quot;furiosa_opt_vllm:register&quot;
 </div><p><a href="https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/docs/getting-started/installation.md">설치 문서</a> · <a href="https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/integrations/furiosa-opt-vllm/pyproject.toml">dependency 실제 값</a> · <a href="https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/Cargo.toml">compiler revision</a></p>
 <p><strong>Cross-toolchain</strong>은 현재 호스트와 다른 CPU 구조의 실행 파일을 만드는 compiler·linker 묶음이다. 여기서 AArch64는 64-bit Arm 구조를 뜻한다. Python 패키지를 설치하는 과정에도 이런 별도 바이너리 빌드가 있으므로 Python 버전만 맞추는 것으로 설치 조건이 끝나지 않는다.</p>
 <p>예전 SDK 환경에 이 dependency를 섞기보다 별도 virtual environment에서 사용한다. CPU wheel이라는 이름은 “모델 본체를 CPU에서 실행한다”는 뜻이 아니다. 이 플러그인은 vLLM의 host scheduler/sampling 기반을 사용하고 모델 본체는 Furiosa 엔진으로 보낸다.</p>
-<p>공식 설치 문서가 제시한 compiler 설치 진입점은 다음이다. <code>cargo-binstall</code>이 준비되어 있어야 한다. 이 명령은 preview 기본 branch의 snapshot을 받으므로, <strong>고정한 모델 저장소의 Cargo revision과 맞는 compiler인지 확인해야 한다.</strong> 나중에 재현할 때 해당 snapshot을 확보하지 못하면 임의 최신 compiler로 성공을 가정하지 않는다.</p>
-<div class="codebox"><div class="codebar"><span>bash</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-bash">cargo binstall --git https://github.com/furiosa-ai/furiosa-opt-preview cargo-furiosa-opt
-</code></pre></div>
-<p>모델 저장소와 플러그인을 설치한다.</p>
+<h3 id="요구-commit과-설치-버전은-같은-문자열이-아니다"><a class="heading-anchor" href="#요구-commit과-설치-버전은-같은-문자열이-아니다">요구 commit과 설치 버전은 같은 문자열이 아니다</a></h3>
+<p>공식 설치 문서의 <code>cargo binstall --git https://github.com/furiosa-ai/furiosa-opt-preview cargo-furiosa-opt</code>는 preview 기본 branch의 manifest를 읽는다. 문서를 나중에 재현할 때는 그 branch가 이동했을 수 있으므로, 여기서는 <strong>고정 commit에서 읽은 manifest로 배포 바이너리를 고르는 방식</strong>을 쓴다. <code>cargo-binstall</code>은 미리 빌드된 Rust 실행 파일을 설치하는 도구이며, 아래 <code>--manifest-path</code>는 로컬 <code>Cargo.toml</code>의 패키지·다운로드 메타데이터를 읽는 실제 옵션이다. <code>--git</code>과 함께 쓰지 않는다. <a href="https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/docs/getting-started/installation.md">공식 설치 진입점</a> · <a href="https://github.com/cargo-bins/cargo-binstall/blob/17717041b8b8d177fd061e56dc8c40abe41120f2/crates/bin/src/args.rs">binstall 인자 계약</a> · <a href="https://github.com/cargo-bins/cargo-binstall/blob/17717041b8b8d177fd061e56dc8c40abe41120f2/crates/binstalk/src/ops/resolve.rs">manifest 버전 선택</a></p>
+<p>이 snapshot에서 대조할 값은 다음과 같다. 아래는 저장소에서 읽은 값이며 이 문서 작성 환경에 compiler를 설치해 관측한 출력이 아니다.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>식별자</th>
+<th>고정 소스의 값</th>
+<th>무엇을 식별하는가?</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>모델 저장소 commit</td>
+<td><code>c982976100d18d7a9641d5a8c22b89cec4544049</code></td>
+<td>모델·플러그인 코드 묶음</td>
+</tr>
+<tr>
+<td>그 저장소가 요구하는 preview commit</td>
+<td><code>9481ae2db8c465b9c7008dcfa787721982789d3e</code></td>
+<td><code>furiosa-opt-std</code>와 compiler snapshot의 기준</td>
+</tr>
+<tr>
+<td>그 preview의 compiler package version</td>
+<td><code>0.9.0+g3a4b00bb</code></td>
+<td>배포 바이너리와 설치 기록에서 대조할 버전</td>
+</tr>
+<tr>
+<td>그 preview의 Rust toolchain</td>
+<td><code>nightly-2026-05-01</code></td>
+<td>compiler가 사용하는 Rust nightly</td>
+</tr>
+</tbody></table>
+</div><p>즉 <code>9481ae…</code>와 <code>0.9.0+g3a4b00bb</code>가 문자열로 같아야 하는 것이 아니다. <strong>첫 값의 commit에서 읽은 manifest가 두 번째 버전을 가리키는 연결</strong>을 확인한다. 그 버전의 공개 release도 존재한다. preview의 <code>cargo-furiosa-opt/src/main.rs</code>는 설치 방법을 알리고 종료하는 stub이므로, 이 공개 저장소를 일반 <code>cargo install --git</code>로 소스 빌드하는 것을 배포 compiler 확보와 혼동하지 않는다. <a href="https://github.com/furiosa-ai/furiosa-opt-preview/blob/9481ae2db8c465b9c7008dcfa787721982789d3e/cargo-furiosa-opt/Cargo.toml">고정 manifest</a> · <a href="https://github.com/furiosa-ai/furiosa-opt-preview/blob/9481ae2db8c465b9c7008dcfa787721982789d3e/rust-toolchain.toml">Rust toolchain</a> · <a href="https://github.com/furiosa-ai/furiosa-opt-preview/releases/tag/v0.9.0%2Bg3a4b00bb">배포 release</a> · <a href="https://github.com/furiosa-ai/furiosa-opt-preview/blob/9481ae2db8c465b9c7008dcfa787721982789d3e/cargo-furiosa-opt/src/main.rs">공개 stub</a></p>
+<h3 id="고정-manifest로-설치한-뒤-실제-호출-경로를-확인한다"><a class="heading-anchor" href="#고정-manifest로-설치한-뒤-실제-호출-경로를-확인한다">고정 manifest로 설치한 뒤 실제 호출 경로를 확인한다</a></h3>
+<p>앞 표의 OS·cross-toolchain·uv·rustup·cargo-binstall이 준비된 새 작업 디렉터리에서 실행한다. 아래 두 저장소는 이웃 디렉터리에 놓인다.</p>
 <div class="codebox"><div class="codebar"><span>bash</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-bash">git clone https://github.com/furiosa-ai/furiosa-opt-models
 cd furiosa-opt-models
 git checkout c982976100d18d7a9641d5a8c22b89cec4544049
-uv venv  # 이 저장소 조합을 위한 독립 Python 환경 생성
+uv venv  # 이 조합을 위한 새 Python 환경을 만든다.
 source .venv/bin/activate
-# Rust 빌드가 사용할 Furiosa compiler 진입점을 지정한다.
-CARGO=cargo-furiosa-opt uv pip install --torch-backend cpu ./integrations/furiosa-opt-vllm
+git clone https://github.com/furiosa-ai/furiosa-opt-preview ../furiosa-opt-preview
+git -C ../furiosa-opt-preview checkout 9481ae2db8c465b9c7008dcfa787721982789d3e
+# 두 checkout의 실제 commit을 위 표와 대조한다.
+git rev-parse HEAD
+git -C ../furiosa-opt-preview rev-parse HEAD
+rustup toolchain install nightly-2026-05-01
+# --force는 기존 설치 기록이 있어도 이 manifest의 바이너리를 다시 설치한다.
+cargo binstall --force \
+  --manifest-path ../furiosa-opt-preview/cargo-furiosa-opt/Cargo.toml \
+  cargo-furiosa-opt
+# cargo-furiosa-opt v0.9.0+g3a4b00bb 항목이 있는지 확인한다.
+cargo install --list
+# 실제 실행되는 바이너리가 방금 설치한 경로인지 확인한다.
+command -v cargo-furiosa-opt
+</code></pre></div>
+<p><code>cargo install --list</code>는 Cargo 설치 기록의 패키지와 버전을 보여 준다. 반면 <code>command -v</code>는 현재 shell의 PATH에서 선택되는 실행 파일을 보여 준다. 기록이 맞아도 PATH 앞쪽의 다른 바이너리를 호출하면 다른 compiler를 쓰게 된다. 수동 복사 등으로 설치 기록이 없는 경우에는 이 목록만으로 버전을 증명할 수 없다. 확인할 수 없는 상태에서는 serving으로 넘어가지 않고 위의 고정 설치 경로부터 정리한다. <a href="https://doc.rust-lang.org/cargo/commands/cargo-install.html">Cargo의 설치 목록·설치 위치 계약</a></p>
+<p>이후 같은 모델 저장소 루트와 가상환경에서 플러그인을 빌드한다. <code>--no-cache</code>는 uv의 이전 wheel cache를 읽지 않도록 하는 옵션이다. 이 절에서는 새 checkout·새 가상환경을 전제로 하며 기존 컴파일 결과의 재사용 여부를 숨기지 않는다.</p>
+<div class="codebox"><div class="codebar"><span>bash</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-bash"># CARGO는 plugin 빌드가 호출할 compiler 진입점이다. -v로 빌드 과정을 확인한다.
+CARGO=cargo-furiosa-opt uv pip install -v --no-cache --torch-backend cpu \
+  ./integrations/furiosa-opt-vllm
+# import 검사는 장치를 열지 않는다.
 python -c &quot;import furiosa_opt_engine as e; print(e.LoadOptions())&quot;
 </code></pre></div>
-<p>마지막 import 검사는 장치를 열거나 모델을 실행하지 않는다. plugin 설치는 engine과 model function을 컴파일하므로 빌드 시간이 든다. compiler mismatch 메시지가 나면 revision을 맞추고 재시도한다. driver mismatch도 실제 사례가 있다. 포럼에서는 opt 0.8.1과 구형 driver 2026.3.1 조합이 장치를 열지 못했고 2026.4.0 driver가 필요하다고 안내했다. 이 과거 사건을 현재 모든 버전의 호환표로 일반화하지 않는다. <a href="https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/docs/getting-started/installation.md">공식 설치 흐름</a> · <a href="https://forums.furiosa.ai/t/furioa-opt-support-matrix-driver-version/464">Furiosa 포럼</a></p>
+<p><a href="https://docs.astral.sh/uv/reference/cli/">uv cache 옵션</a> · <a href="https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/docs/getting-started/installation.md">plugin 빌드·import 계약</a></p>
+<h3 id="성공-여부를-세-단계로-나누어-판정한다"><a class="heading-anchor" href="#성공-여부를-세-단계로-나누어-판정한다">성공 여부를 세 단계로 나누어 판정한다</a></h3>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>관측 결과</th>
+<th>알 수 있는 것</th>
+<th>다음 행동</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>설치 기록이 위 버전이고 PATH도 해당 설치를 가리킴</td>
+<td>의도한 compiler 배포본을 선택했는지 1차 대조함</td>
+<td>plugin의 실제 커널 빌드 로그 확인</td>
+</tr>
+<tr>
+<td>빌드에 <code>this kernel was expanded by rev …, but the driver is rev …</code> 발생</td>
+<td>커널을 전개한 compiler 측 revision과 실행 compiler 측 revision이 다름</td>
+<td>두 checkout·설치 manifest·PATH를 맞추고 다시 빌드. serving으로 진행하지 않음</td>
+</tr>
+<tr>
+<td>새 빌드 성공, engine import 성공</td>
+<td>커널 빌드와 Python 엔진 적재 단계 통과</td>
+<td>다음 절의 지원 모델로 실제 장치 실행 확인</td>
+</tr>
+<tr>
+<td>장치를 열 때 RNGD driver 호환 오류</td>
+<td>호스트 kernel driver·firmware 등 장치 stack의 호환성 문제</td>
+<td>사용 SDK의 설치 조건과 장치 로그 확인</td>
+</tr>
+</tbody></table>
+</div><p>위 오류 문장의 <code>driver</code>는 <strong>compiler driver</strong>를 가리킨다. OS가 NPU를 관리하는 RNGD kernel driver의 <code>2026.4</code> 같은 버전과 같은 식별자가 아니다. 두 문제를 구별해야 compiler를 다시 설치해도 해결되지 않는 장치 적재 오류를 진단할 수 있다. plugin 설치는 engine과 model function을 컴파일하므로 시간이 걸리며, import 성공만으로 NPU 실행을 증명하지 않는다.</p>
+<p>실제 과거 포럼 사례에서는 opt 0.8.1과 구형 RNGD driver 2026.3.1 조합이 장치를 열지 못했고 2026.4.0 driver가 필요하다고 안내했다. 이 사건을 현재 모든 버전의 호환표로 일반화하지 않는다. 이 절의 설치 명령은 공개 manifest·CLI·빌드 계약을 대조한 절차이며, 본 문서 작성 세션에서 SDK 설치나 NPU 실행을 수행한 기록은 아니다. <a href="https://forums.furiosa.ai/t/furioa-opt-support-matrix-driver-version/464">Furiosa 포럼</a></p>
 <h2 id="5-먼저-지원-모델로-http-왕복을-확인한다"><a class="heading-anchor" href="#5-먼저-지원-모델로-http-왕복을-확인한다">5. 먼저 지원 모델로 HTTP 왕복을 확인한다</a></h2>
 <p>공식 quickstart의 지원 예는 Qwen3-1.7B다. checkpoint 다운로드·접근 조건과 장치 메모리가 준비된 환경에서 실행한다. 이 명령은 모델 serving을 시작한다.</p>
 <div class="codebox"><div class="codebar"><span>bash</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-bash">vllm serve Qwen/Qwen3-1.7B --host 127.0.0.1 --port 8000
@@ -347,5 +502,17 @@ if __name__ == &quot;__main__&quot;:
 <td><a href="https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/docs/FURIOSA_OPT_MODELS_ADOPTION_PLAN.md">FHA adoption 기록</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></td>
 <td>우리 통합 경계 — 접근 권한 필요</td>
 </tr>
+<tr>
+<td><a href="https://github.com/furiosa-ai/furiosa-opt-preview/blob/9481ae2db8c465b9c7008dcfa787721982789d3e/cargo-furiosa-opt/Cargo.toml">preview compiler manifest</a>, <a href="https://github.com/furiosa-ai/furiosa-opt-preview/blob/9481ae2db8c465b9c7008dcfa787721982789d3e/rust-toolchain.toml">toolchain</a></td>
+<td>요구 revision→배포 버전·Rust nightly 대응</td>
+</tr>
+<tr>
+<td><a href="https://github.com/cargo-bins/cargo-binstall/blob/17717041b8b8d177fd061e56dc8c40abe41120f2/crates/bin/src/args.rs">cargo-binstall args</a>, <a href="https://github.com/cargo-bins/cargo-binstall/blob/17717041b8b8d177fd061e56dc8c40abe41120f2/crates/binstalk/src/ops/resolve.rs">버전 선택</a></td>
+<td>로컬 manifest를 사용하는 설치 계약</td>
+</tr>
+<tr>
+<td><a href="https://doc.rust-lang.org/cargo/commands/cargo-install.html">Cargo install</a>, <a href="https://docs.astral.sh/uv/reference/cli/">uv CLI</a></td>
+<td>설치 기록·경로·cache 검증 경계</td>
+</tr>
 </tbody></table>
-</div></article><nav class="next-prev" aria-label="이전과 다음 장"><a href="../chapter/13-porting-fha.html"><small>← 이전 장</small><b>모델 포팅과 FHA·FuryAwesome</b></a><a href="../chapter/15-multi-npu.html"><small>다음 장 →</small><b>여러 NPU로 확장하기</b></a></nav><footer class="footer">FuryNo5 개발 핸드북 · 비공식 자료<br>공식 문서와 소스의 권리는 각 프로젝트에 있습니다. 코드 인용은 출처와 함께 표시합니다.<br><a href="../review.html">검토 기록과 남은 질문</a> · <a href="../sources.html">출처와 버전</a> · <a href="../glossary.html">용어 사전</a></footer></main></div><aside class="right-toc" aria-label="이 장의 목차"><h2>이 장에서 다루는 내용</h2><a class="" href="#1-한-문장을-처리하는-동안-무엇이-남는가">1. 한 문장을 처리하는 동안 무엇이 남는가</a><a class="minor" href="#토큰과-배열에서-출발한다">토큰과 배열에서 출발한다</a><a class="minor" href="#prefill과-decode는-하는-일이-다르다">Prefill과 decode는 하는 일이 다르다</a><a class="minor" href="#요청-큐가-토큰마다-다시-기회를-주는-이유">요청 큐가 토큰마다 다시 기회를 주는 이유</a><a class="minor" href="#cache-block과-컴파일-bucket을-분리한다">Cache block과 컴파일 bucket을 분리한다</a><a class="" href="#2-공식-furiosa-llm과-무엇이-다른가">2. 공식 Furiosa-LLM과 무엇이 다른가</a><a class="" href="#3-plugin이-등록되는-정확한-위치">3. plugin이 등록되는 정확한 위치</a><a class="" href="#4-재현-가능한-설치의-기준">4. 재현 가능한 설치의 기준</a><a class="" href="#5-먼저-지원-모델로-http-왕복을-확인한다">5. 먼저 지원 모델로 HTTP 왕복을 확인한다</a><a class="" href="#6-문서와-코드가-어긋난-부분도-기록한다">6. 문서와 코드가 어긋난 부분도 기록한다</a><a class="" href="#7-furyno5-fxbx를-붙이기-위해-남은-계약">7. FuryNo5·fxbX를 붙이기 위해 남은 계약</a><a class="" href="#출처">출처</a></aside><dialog class="search-dialog" aria-label="문서 검색"><div class="search-head"><input type="search" aria-label="검색어" placeholder="DMA, EDF, 폴백, 버킷…" autocomplete="off"><button class="close-search" type="button">닫기</button></div><div class="search-status" role="status">용어나 함수 이름을 입력하세요.</div><div class="search-results"></div></dialog></body></html>
+</div></article><nav class="next-prev" aria-label="이전과 다음 장"><a href="../chapter/13-porting-fha.html"><small>← 이전 장</small><b>모델 포팅과 FHA·FuryAwesome</b></a><a href="../chapter/15-multi-npu.html"><small>다음 장 →</small><b>여러 NPU로 확장하기</b></a></nav><footer class="footer">FuryNo5 개발 핸드북 · 비공식 자료<br>공식 문서와 소스의 권리는 각 프로젝트에 있습니다. 코드 인용은 출처와 함께 표시합니다.<br><a href="../reader-review.html">3학년 독자 재검토</a> · <a href="../review.html">검토 기록과 남은 질문</a> · <a href="../sources.html">출처와 버전</a> · <a href="../glossary.html">용어 사전</a></footer></main></div><aside class="right-toc" aria-label="이 장의 목차"><h2>이 장에서 다루는 내용</h2><a class="" href="#1-한-문장을-처리하는-동안-무엇이-남는가">1. 한 문장을 처리하는 동안 무엇이 남는가</a><a class="minor" href="#토큰과-배열에서-출발한다">토큰과 배열에서 출발한다</a><a class="minor" href="#prefill과-decode는-하는-일이-다르다">Prefill과 decode는 하는 일이 다르다</a><a class="minor" href="#요청-큐가-토큰마다-다시-기회를-주는-이유">요청 큐가 토큰마다 다시 기회를 주는 이유</a><a class="minor" href="#cache-block과-컴파일-bucket을-분리한다">Cache block과 컴파일 bucket을 분리한다</a><a class="" href="#2-공식-furiosa-llm과-무엇이-다른가">2. 공식 Furiosa-LLM과 무엇이 다른가</a><a class="" href="#3-plugin이-등록되는-정확한-위치">3. plugin이 등록되는 정확한 위치</a><a class="" href="#4-재현-가능한-설치의-기준">4. 재현 가능한 설치의 기준</a><a class="minor" href="#요구-commit과-설치-버전은-같은-문자열이-아니다">요구 commit과 설치 버전은 같은 문자열이 아니다</a><a class="minor" href="#고정-manifest로-설치한-뒤-실제-호출-경로를-확인한다">고정 manifest로 설치한 뒤 실제 호출 경로를 확인한다</a><a class="minor" href="#성공-여부를-세-단계로-나누어-판정한다">성공 여부를 세 단계로 나누어 판정한다</a><a class="" href="#5-먼저-지원-모델로-http-왕복을-확인한다">5. 먼저 지원 모델로 HTTP 왕복을 확인한다</a><a class="" href="#6-문서와-코드가-어긋난-부분도-기록한다">6. 문서와 코드가 어긋난 부분도 기록한다</a><a class="" href="#7-furyno5-fxbx를-붙이기-위해-남은-계약">7. FuryNo5·fxbX를 붙이기 위해 남은 계약</a><a class="" href="#출처">출처</a></aside><dialog class="search-dialog" aria-label="문서 검색"><div class="search-head"><input type="search" aria-label="검색어" placeholder="DMA, EDF, 폴백, 버킷…" autocomplete="off"><button class="close-search" type="button">닫기</button></div><div class="search-status" role="status">용어나 함수 이름을 입력하세요.</div><div class="search-results"></div></dialog></body></html>

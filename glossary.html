@@ -1,7 +1,53 @@
 <!doctype html>
-<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="약어의 풀네임과 이 핸드북에서 사용하는 정확한 의미입니다."><meta name="theme-color" content="#fbfaf7"><title>용어 사전 · FuryNo5 개발 핸드북</title><link rel="icon" href="assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="assets/site.css?v=5454d41416bc"><script defer src="assets/site.js?v=aeae33420bbb"></script></head>
-<body data-root="./" data-chapter="glossary" data-search-version="e58e3b38bb8f"><a class="skip" href="#content">본문으로 이동</a><header class="topbar"><button class="menu-toggle" type="button" aria-label="전체 목차 열기" aria-controls="sidebar" aria-expanded="false">☰</button><a class="brand" href="index.html"><span class="brand-mark">Nº5</span>FuryNo5<small>DEVELOPER HANDBOOK</small></a><div class="top-actions"><a class="top-link" href="sources.html">출처와 버전</a><button class="search-open" type="button" aria-label="핸드북 전체 검색"><span>전체 문서 검색</span><kbd>⌘ K</kbd></button></div></header><div class="progress" aria-hidden="true"></div><div class="mobile-shade"></div><aside class="sidebar" id="sidebar" aria-label="전체 목차"><nav><div class="nav-caption">시작하기</div><a class="nav-link"  href="index.html"><span class="num">00</span><span>전체 지도와 읽는 방법</span></a><div class="nav-caption">I. 디바이스를 이해하기</div><a class="nav-link"  href="chapter/01-hardware.html"><span class="num">01</span><span>RNGD · TCP · PE</span></a><a class="nav-link"  href="chapter/02-memory-dma.html"><span class="num">02</span><span>메모리 · DMA · 배치</span></a><a class="nav-link"  href="chapter/03-driver-runtime.html"><span class="num">03</span><span>드라이버와 공식 런타임</span></a><div class="nav-caption">II. 프로그램을 만들고 실행하기</div><a class="nav-link"  href="chapter/04-tcl-edf.html"><span class="num">04</span><span>TCL 작성 · 컴파일 · 실행</span></a><a class="nav-link"  href="chapter/05-graphs-fallback.html"><span class="num">05</span><span>실행그래프 · 오류 · 폴백</span></a><a class="nav-link"  href="chapter/06-buckets-shapes.html"><span class="num">06</span><span>Shape · 버킷 · 컴파일 비용</span></a><a class="nav-link"  href="chapter/07-optimization.html"><span class="num">07</span><span>최적화의 축과 우선순위</span></a><a class="nav-link"  href="chapter/08-eisa-visa.html"><span class="num">08</span><span>eISA · vISA · furiosa-opt</span></a><div class="nav-caption">III. FuryNo5를 해부하기</div><a class="nav-link"  href="chapter/09-torch-aten.html"><span class="num">09</span><span>PyTorch · ATen · 등록</span></a><a class="nav-link"  href="chapter/10-furyno5-architecture.html"><span class="num">10</span><span>FuryNo5 구조와 지원 범위</span></a><a class="nav-link"  href="chapter/11-furyno5-compiler.html"><span class="num">11</span><span>FuryNo5 컴파일과 캐시</span></a><div class="nav-caption">IV. 모델 포팅과 서빙</div><a class="nav-link"  href="chapter/12-fxbx.html"><span class="num">12</span><span>fxbX 포맷과 실행계획</span></a><a class="nav-link"  href="chapter/13-porting-fha.html"><span class="num">13</span><span>포팅 · FHA · FuryAwesome</span></a><a class="nav-link"  href="chapter/14-serving-vllm.html"><span class="num">14</span><span>vLLM · 서빙 브리지</span></a><a class="nav-link"  href="chapter/15-multi-npu.html"><span class="num">15</span><span>PE · 여러 카드 · 여러 서버</span></a><div class="nav-caption">V. 검증과 다음 개발</div><a class="nav-link"  href="chapter/16-furyboost.html"><span class="num">16</span><span>FuryBoost 실측과 남은 과제</span></a><a class="nav-link"  href="chapter/17-debugging.html"><span class="num">17</span><span>측정 · 추적 · 실패 재현</span></a><div class="nav-caption">VI. 생태계 비교와 최적화 연구</div><a class="nav-link"  href="chapter/18-npu-ecosystems.html"><span class="num">18</span><span>다른 NPU의 지원 방식</span></a><a class="nav-link"  href="chapter/19-model-optimization.html"><span class="num">19</span><span>모델 사전 최적화 · 연구</span></a><div class="nav-caption">참고와 검증</div><a class="nav-link active" aria-current="page" href="glossary.html"><span class="num">·</span><span>약어와 용어 사전</span></a><a class="nav-link"  href="sources.html"><span class="num">·</span><span>출처 · 버전 · 접근 범위</span></a><a class="nav-link"  href="review.html"><span class="num">·</span><span>검토 기록과 미해결 질문</span></a></nav><div class="side-foot">비공식 개발 핸드북 · 2026.11.19<br>공식 SDK와 프로젝트 구현을 구분합니다.<br><a href="https://github.com/smallstep-zzz/furyno5-handbook">원고와 변경 이력 ↗</a></div></aside><div class="shell"><main class="page" id="content"><div class="eyebrow">참고와 검증 / REFERENCE</div><h1>용어 사전</h1><p class="dek">약어의 풀네임과 이 핸드북에서 사용하는 정확한 의미입니다.</p><div class="page-meta"><span>검토 2026.11.19</span><span>SDK 2026.4 계열 / 버전별 표기</span><span class="readtime">약 15분</span><span><a href="https://github.com/smallstep-zzz/furyno5-handbook/blob/main/content/glossary.md">원고</a></span></div><details class="mobile-toc"><summary>이 장의 목차</summary><div><a class="" href="#숫자-배열-행렬의-기초">숫자·배열·행렬의 기초</a><a class="" href="#장치와-메모리">장치와 메모리</a><a class="" href="#드라이버-컴파일러-런타임">드라이버·컴파일러·런타임</a><a class="" href="#커널-축-자료형">커널·축·자료형</a><a class="" href="#torch의-연산-경계">Torch의 연산 경계</a><a class="" href="#프로젝트와-실행-산출물">프로젝트와 실행 산출물</a><a class="" href="#llm-실행과-서빙">LLM 실행과 서빙</a><a class="" href="#생태계-비교와-모델-사전-최적화">생태계 비교와 모델 사전 최적화</a><a class="" href="#출처">출처</a></div></details><noscript><p class="noscript">본문과 그림은 JavaScript 없이 읽을 수 있습니다. 검색과 조절 실험에는 JavaScript가 필요합니다.</p></noscript><article class="article"><p>이 책에서 자주 만나는 용어를 정리했다. 약어에는 확인한 풀네임을 적고, 제품명·API 이름에는 임의의 어원을 붙이지 않았다. <strong>EDF는 추가 조사에서 Executable Device Format이라는 공식 근거를 확인해 갱신했다. eISA의 독립적인 공식 풀네임·공개 API는 여전히 확인하지 못했다.</strong> 아래의 “미확인”은 기능이 없다는 판정이 아니라 공개 근거의 경계를 뜻한다. 자세한 코드와 출처는 각 행의 장 링크에서 이어서 읽을 수 있다.</p>
-<h2 id="숫자-배열-행렬의-기초"><a class="heading-anchor" href="#숫자-배열-행렬의-기초">숫자·배열·행렬의 기초</a></h2>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="약어의 풀네임과 이 핸드북에서 사용하는 정확한 의미입니다."><meta name="theme-color" content="#fbfaf7"><title>용어 사전 · FuryNo5 개발 핸드북</title><link rel="icon" href="assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="assets/site.css?v=cb5aa5a870ba"><script defer src="assets/site.js?v=aeae33420bbb"></script></head>
+<body data-root="./" data-chapter="glossary" data-search-version="5328e86ff6da"><a class="skip" href="#content">본문으로 이동</a><header class="topbar"><button class="menu-toggle" type="button" aria-label="전체 목차 열기" aria-controls="sidebar" aria-expanded="false">☰</button><a class="brand" href="index.html"><span class="brand-mark">Nº5</span>FuryNo5<small>DEVELOPER HANDBOOK</small></a><div class="top-actions"><a class="top-link" href="sources.html">출처와 버전</a><button class="search-open" type="button" aria-label="핸드북 전체 검색"><span>전체 문서 검색</span><kbd>⌘ K</kbd></button></div></header><div class="progress" aria-hidden="true"></div><div class="mobile-shade"></div><aside class="sidebar" id="sidebar" aria-label="전체 목차"><nav><div class="nav-caption">시작하기</div><a class="nav-link"  href="index.html"><span class="num">00</span><span>전체 지도와 읽는 방법</span></a><div class="nav-caption">I. 디바이스를 이해하기</div><a class="nav-link"  href="chapter/01-hardware.html"><span class="num">01</span><span>RNGD · TCP · PE</span></a><a class="nav-link"  href="chapter/02-memory-dma.html"><span class="num">02</span><span>메모리 · DMA · 배치</span></a><a class="nav-link"  href="chapter/03-driver-runtime.html"><span class="num">03</span><span>드라이버와 공식 런타임</span></a><div class="nav-caption">II. 프로그램을 만들고 실행하기</div><a class="nav-link"  href="chapter/04-tcl-edf.html"><span class="num">04</span><span>TCL 작성 · 컴파일 · 실행</span></a><a class="nav-link"  href="chapter/05-graphs-fallback.html"><span class="num">05</span><span>실행그래프 · 오류 · 폴백</span></a><a class="nav-link"  href="chapter/06-buckets-shapes.html"><span class="num">06</span><span>Shape · 버킷 · 컴파일 비용</span></a><a class="nav-link"  href="chapter/07-optimization.html"><span class="num">07</span><span>최적화의 축과 우선순위</span></a><a class="nav-link"  href="chapter/08-eisa-visa.html"><span class="num">08</span><span>eISA · vISA · furiosa-opt</span></a><div class="nav-caption">III. FuryNo5를 해부하기</div><a class="nav-link"  href="chapter/09-torch-aten.html"><span class="num">09</span><span>PyTorch · ATen · 등록</span></a><a class="nav-link"  href="chapter/10-furyno5-architecture.html"><span class="num">10</span><span>FuryNo5 구조와 지원 범위</span></a><a class="nav-link"  href="chapter/11-furyno5-compiler.html"><span class="num">11</span><span>FuryNo5 컴파일과 캐시</span></a><div class="nav-caption">IV. 모델 포팅과 서빙</div><a class="nav-link"  href="chapter/12-fxbx.html"><span class="num">12</span><span>fxbX 포맷과 실행계획</span></a><a class="nav-link"  href="chapter/13-porting-fha.html"><span class="num">13</span><span>포팅 · FHA · FuryAwesome</span></a><a class="nav-link"  href="chapter/14-serving-vllm.html"><span class="num">14</span><span>vLLM · 서빙 브리지</span></a><a class="nav-link"  href="chapter/15-multi-npu.html"><span class="num">15</span><span>PE · 여러 카드 · 여러 서버</span></a><div class="nav-caption">V. 검증과 다음 개발</div><a class="nav-link"  href="chapter/16-furyboost.html"><span class="num">16</span><span>FuryBoost 실측과 남은 과제</span></a><a class="nav-link"  href="chapter/17-debugging.html"><span class="num">17</span><span>측정 · 추적 · 실패 재현</span></a><div class="nav-caption">VI. 생태계 비교와 최적화 연구</div><a class="nav-link"  href="chapter/18-npu-ecosystems.html"><span class="num">18</span><span>다른 NPU의 지원 방식</span></a><a class="nav-link"  href="chapter/19-model-optimization.html"><span class="num">19</span><span>모델 사전 최적화 · 연구</span></a><div class="nav-caption">참고와 검증</div><a class="nav-link active" aria-current="page" href="glossary.html"><span class="num">·</span><span>약어와 용어 사전</span></a><a class="nav-link"  href="sources.html"><span class="num">·</span><span>출처 · 버전 · 접근 범위</span></a><a class="nav-link"  href="review.html"><span class="num">·</span><span>검토 기록과 미해결 질문</span></a><a class="nav-link"  href="reader-review.html"><span class="num">·</span><span>3학년 독자 검토와 수정 기록</span></a></nav><div class="side-foot">비공식 개발 핸드북 · 2026.11.20<br>공식 SDK와 프로젝트 구현을 구분합니다.<br><a href="https://github.com/smallstep-zzz/furyno5-handbook">원고와 변경 이력 ↗</a></div></aside><div class="shell"><main class="page" id="content"><div class="eyebrow">참고와 검증 / REFERENCE</div><h1>용어 사전</h1><p class="dek">약어의 풀네임과 이 핸드북에서 사용하는 정확한 의미입니다.</p><div class="page-meta"><span>독자 검토 2026.11.20</span><span>SDK 2026.4 계열 / 버전별 표기</span><span class="readtime">약 16분</span><span><a href="https://github.com/smallstep-zzz/furyno5-handbook/blob/main/content/glossary.md">원고</a></span></div><details class="mobile-toc"><summary>이 장의 목차</summary><div><a class="" href="#모델을-구성하고-실행하는-기초">모델을 구성하고 실행하는 기초</a><a class="" href="#숫자-배열-행렬의-기초">숫자·배열·행렬의 기초</a><a class="" href="#장치와-메모리">장치와 메모리</a><a class="" href="#드라이버-컴파일러-런타임">드라이버·컴파일러·런타임</a><a class="" href="#커널-축-자료형">커널·축·자료형</a><a class="" href="#torch의-연산-경계">Torch의 연산 경계</a><a class="" href="#프로젝트와-실행-산출물">프로젝트와 실행 산출물</a><a class="" href="#llm-실행과-서빙">LLM 실행과 서빙</a><a class="" href="#생태계-비교와-모델-사전-최적화">생태계 비교와 모델 사전 최적화</a><a class="" href="#출처">출처</a></div></details><noscript><p class="noscript">본문과 그림은 JavaScript 없이 읽을 수 있습니다. 검색과 조절 실험에는 JavaScript가 필요합니다.</p></noscript><article class="article"><p>이 책에서 자주 만나는 용어를 정리했다. 약어에는 확인한 풀네임을 적고, 제품명·API 이름에는 임의의 어원을 붙이지 않았다. <strong>EDF는 추가 조사에서 Executable Device Format이라는 공식 근거를 확인해 갱신했다. eISA의 독립적인 공식 풀네임·공개 API는 여전히 확인하지 못했다.</strong> 아래의 “미확인”은 기능이 없다는 판정이 아니라 공개 근거의 경계를 뜻한다. 자세한 코드와 출처는 각 행의 장 링크에서 이어서 읽을 수 있다.</p>
+<h2 id="모델을-구성하고-실행하는-기초"><a class="heading-anchor" href="#모델을-구성하고-실행하는-기초">모델을 구성하고 실행하는 기초</a></h2>
+<p><code>y = max(0, x × 2 − 1)</code>이라는 작은 계산을 기준으로 구분한다. 이 계산을 설명한 <a href="index.html">시작 페이지</a>와 같은 의미다.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>용어</th>
+<th>작은 예</th>
+<th>뜻과 주의할 점</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>모델, model</td>
+<td>곱하기 → 빼기 → 음수를 0으로 바꾸기</td>
+<td>입력에서 출력을 만드는 계산 구조와 그 계산에 사용하는 매개변수를 함께 말한다. 모델 이름만으로 실제 장치 코드가 준비되지는 않는다.</td>
+</tr>
+<tr>
+<td>가중치·매개변수, weight·parameter</td>
+<td>곱할 값 2, 보정값 −1</td>
+<td>모델이 보관하는 값이다. 학습으로 정할 수 있고, 일반적인 추론에서는 고정해 여러 요청에 재사용한다. 입력 x와 구별한다.</td>
+</tr>
+<tr>
+<td>추론, inference</td>
+<td><code>x=3</code>을 넣어 <code>y=5</code>를 구하기</td>
+<td>준비된 모델의 규칙과 매개변수로 새 입력의 출력을 계산한다. 이 책의 장치 실행 설명은 주로 추론을 다룬다.</td>
+</tr>
+<tr>
+<td>학습, training</td>
+<td>예측과 정답의 차이를 줄이도록 2와 −1을 수정</td>
+<td>모델의 매개변수를 조정하는 과정이다. 한 번 추론을 실행하는 것과 목적·필요한 계산이 다르다.</td>
+</tr>
+<tr>
+<td>커널, kernel</td>
+<td>곱하기만, 또는 곱하기·보정·ReLU를 묶은 장치 함수</td>
+<td>장치가 수행할 계산 단위다. 여러 연산을 묶거나 한 연산을 여러 커널로 나눌 수 있어, 수학식의 기호 수와 커널 수가 같지는 않다.</td>
+</tr>
+<tr>
+<td>ReLU</td>
+<td><code>max(0, −1)=0</code>, <code>max(0, 5)=5</code></td>
+<td>Rectified Linear Unit. 음수는 0으로, 0 이상은 그대로 두는 함수다. 배열에서는 각 원소에 적용한다.</td>
+</tr>
+<tr>
+<td>체크포인트, checkpoint</td>
+<td>저장한 가중치와 학습 상태 등</td>
+<td>다시 읽어 모델을 구성하거나 학습을 이어갈 때 쓰는 저장물이다. 포함 항목은 형식에 따라 다르며, 가중치 파일을 곧바로 NPU 실행 바이너리로 보지 않는다.</td>
+</tr>
+</tbody></table>
+</div><h2 id="숫자-배열-행렬의-기초"><a class="heading-anchor" href="#숫자-배열-행렬의-기초">숫자·배열·행렬의 기초</a></h2>
 <p>이 표는 본문 설명을 다시 찾는 색인이다. 처음 배우는 독자는 01·02장에서 작은 배열의 값이 실제로 바뀌는 과정을 함께 볼 수 있다.</p>
 <div class="table-wrap"><table>
 <thead>
@@ -57,7 +103,7 @@
 <tr>
 <td><code>reshape</code></td>
 <td><code>(6,) → (2,3)</code></td>
-<td>총 원소 수를 유지하며 축 길이를 바꾼다. 원소를 임의로 재정렬하는 전치와 다르고, 항상 복사 없이 가능한 것도 아니다.</td>
+<td>총 원소 수를 유지하며 축 길이를 바꾼다. 축 순서를 바꾸는 전치와 다르고, 항상 복사 없이 가능한 것도 아니다.</td>
 <td><a href="chapter/02-memory-dma.html">02</a></td>
 </tr>
 <tr>
@@ -183,14 +229,14 @@
 <tr>
 <td>TRF</td>
 <td>Tensor Register File</td>
-<td>텐서 연산에 사용하는 register file. 용량·배치 제약이 타일과 스케줄 선택에 연결된다.</td>
-<td><a href="chapter/02-memory-dma.html">2장 메모리와 DMA</a>, <a href="chapter/08-eisa-visa.html">8장 vISA</a></td>
+<td>텐서 계산 가까이에 값을 잠시 보관하고 재사용하는 하드웨어 레지스터 저장소. 여기서 file은 디스크 파일이 아니라 레지스터의 묶음이다. 용량·배치 제약이 타일과 스케줄 선택에 연결된다.</td>
+<td><a href="chapter/01-hardware.html">1장 연산 파이프라인</a>, <a href="chapter/08-eisa-visa.html">8장 vISA</a></td>
 </tr>
 <tr>
 <td>VRF</td>
 <td>Vector Register File</td>
-<td>벡터 연산용 register file. TRF와 이름·역할·접근 경로를 구별한다.</td>
-<td><a href="chapter/02-memory-dma.html">2장 메모리와 DMA</a></td>
+<td>벡터 연산에서 값을 보관하는 하드웨어 레지스터 저장소. TRF와 별도의 역할·접근 경로를 가지며 저장 장치의 파일이 아니다.</td>
+<td><a href="chapter/01-hardware.html">1장 연산 파이프라인</a></td>
 </tr>
 <tr>
 <td>DMA</td>
@@ -345,7 +391,7 @@
 <tr>
 <td>vISA</td>
 <td>Virtual Instruction Set Architecture</td>
-<td>Furiosa가 공개 문서에서 사용하는 가상 명령어·커널 인터페이스. Rust eDSL과 furiosa-opt 도구를 통해 다룬다.</td>
+<td>장치의 계산·메모리·스케줄을 표현하는 컴파일러 중간 표현(IR). Rust eDSL과 furiosa-opt 도구로 다루며, 실행기는 vISA 텍스트 자체가 아니라 컴파일된 실행물을 적재한다.</td>
 <td><a href="chapter/08-eisa-visa.html">8장 vISA와 eISA의 경계</a></td>
 </tr>
 <tr>
@@ -729,4 +775,4 @@
 <td>버전·공개 범위·검증 수준</td>
 </tr>
 </tbody></table>
-</div></article><nav class="next-prev" aria-label="이전과 다음 장"><a href="chapter/19-model-optimization.html"><small>← 이전 장</small><b>모델과 실행 방식을 함께 최적화하기</b></a><a href="sources.html"><small>다음 장 →</small><b>출처와 버전 기록</b></a></nav><footer class="footer">FuryNo5 개발 핸드북 · 비공식 자료<br>공식 문서와 소스의 권리는 각 프로젝트에 있습니다. 코드 인용은 출처와 함께 표시합니다.<br><a href="review.html">검토 기록과 남은 질문</a> · <a href="sources.html">출처와 버전</a> · <a href="glossary.html">용어 사전</a></footer></main></div><aside class="right-toc" aria-label="이 장의 목차"><h2>이 장에서 다루는 내용</h2><a class="" href="#숫자-배열-행렬의-기초">숫자·배열·행렬의 기초</a><a class="" href="#장치와-메모리">장치와 메모리</a><a class="" href="#드라이버-컴파일러-런타임">드라이버·컴파일러·런타임</a><a class="" href="#커널-축-자료형">커널·축·자료형</a><a class="" href="#torch의-연산-경계">Torch의 연산 경계</a><a class="" href="#프로젝트와-실행-산출물">프로젝트와 실행 산출물</a><a class="" href="#llm-실행과-서빙">LLM 실행과 서빙</a><a class="" href="#생태계-비교와-모델-사전-최적화">생태계 비교와 모델 사전 최적화</a><a class="" href="#출처">출처</a></aside><dialog class="search-dialog" aria-label="문서 검색"><div class="search-head"><input type="search" aria-label="검색어" placeholder="DMA, EDF, 폴백, 버킷…" autocomplete="off"><button class="close-search" type="button">닫기</button></div><div class="search-status" role="status">용어나 함수 이름을 입력하세요.</div><div class="search-results"></div></dialog></body></html>
+</div></article><nav class="next-prev" aria-label="이전과 다음 장"><a href="chapter/19-model-optimization.html"><small>← 이전 장</small><b>모델과 실행 방식을 함께 최적화하기</b></a><a href="sources.html"><small>다음 장 →</small><b>출처와 버전 기록</b></a></nav><footer class="footer">FuryNo5 개발 핸드북 · 비공식 자료<br>공식 문서와 소스의 권리는 각 프로젝트에 있습니다. 코드 인용은 출처와 함께 표시합니다.<br><a href="reader-review.html">3학년 독자 재검토</a> · <a href="review.html">검토 기록과 남은 질문</a> · <a href="sources.html">출처와 버전</a> · <a href="glossary.html">용어 사전</a></footer></main></div><aside class="right-toc" aria-label="이 장의 목차"><h2>이 장에서 다루는 내용</h2><a class="" href="#모델을-구성하고-실행하는-기초">모델을 구성하고 실행하는 기초</a><a class="" href="#숫자-배열-행렬의-기초">숫자·배열·행렬의 기초</a><a class="" href="#장치와-메모리">장치와 메모리</a><a class="" href="#드라이버-컴파일러-런타임">드라이버·컴파일러·런타임</a><a class="" href="#커널-축-자료형">커널·축·자료형</a><a class="" href="#torch의-연산-경계">Torch의 연산 경계</a><a class="" href="#프로젝트와-실행-산출물">프로젝트와 실행 산출물</a><a class="" href="#llm-실행과-서빙">LLM 실행과 서빙</a><a class="" href="#생태계-비교와-모델-사전-최적화">생태계 비교와 모델 사전 최적화</a><a class="" href="#출처">출처</a></aside><dialog class="search-dialog" aria-label="문서 검색"><div class="search-head"><input type="search" aria-label="검색어" placeholder="DMA, EDF, 폴백, 버킷…" autocomplete="off"><button class="close-search" type="button">닫기</button></div><div class="search-status" role="status">용어나 함수 이름을 입력하세요.</div><div class="search-results"></div></dialog></body></html>

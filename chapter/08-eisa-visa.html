@@ -1,6 +1,6 @@
 <!doctype html>
-<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="공개된 저수준 프로그래밍 경로와 정적 스케줄 분석 도구를 살펴봅니다."><meta name="theme-color" content="#fbfaf7"><title>eISA 질문에서 vISA 실습으로 · FuryNo5 개발 핸드북</title><link rel="icon" href="../assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="../assets/site.css?v=5454d41416bc"><script defer src="../assets/site.js?v=aeae33420bbb"></script></head>
-<body data-root="../" data-chapter="08-eisa-visa" data-search-version="e58e3b38bb8f"><a class="skip" href="#content">본문으로 이동</a><header class="topbar"><button class="menu-toggle" type="button" aria-label="전체 목차 열기" aria-controls="sidebar" aria-expanded="false">☰</button><a class="brand" href="../index.html"><span class="brand-mark">Nº5</span>FuryNo5<small>DEVELOPER HANDBOOK</small></a><div class="top-actions"><a class="top-link" href="../sources.html">출처와 버전</a><button class="search-open" type="button" aria-label="핸드북 전체 검색"><span>전체 문서 검색</span><kbd>⌘ K</kbd></button></div></header><div class="progress" aria-hidden="true"></div><div class="mobile-shade"></div><aside class="sidebar" id="sidebar" aria-label="전체 목차"><nav><div class="nav-caption">시작하기</div><a class="nav-link"  href="../index.html"><span class="num">00</span><span>전체 지도와 읽는 방법</span></a><div class="nav-caption">I. 디바이스를 이해하기</div><a class="nav-link"  href="../chapter/01-hardware.html"><span class="num">01</span><span>RNGD · TCP · PE</span></a><a class="nav-link"  href="../chapter/02-memory-dma.html"><span class="num">02</span><span>메모리 · DMA · 배치</span></a><a class="nav-link"  href="../chapter/03-driver-runtime.html"><span class="num">03</span><span>드라이버와 공식 런타임</span></a><div class="nav-caption">II. 프로그램을 만들고 실행하기</div><a class="nav-link"  href="../chapter/04-tcl-edf.html"><span class="num">04</span><span>TCL 작성 · 컴파일 · 실행</span></a><a class="nav-link"  href="../chapter/05-graphs-fallback.html"><span class="num">05</span><span>실행그래프 · 오류 · 폴백</span></a><a class="nav-link"  href="../chapter/06-buckets-shapes.html"><span class="num">06</span><span>Shape · 버킷 · 컴파일 비용</span></a><a class="nav-link"  href="../chapter/07-optimization.html"><span class="num">07</span><span>최적화의 축과 우선순위</span></a><a class="nav-link active" aria-current="page" href="../chapter/08-eisa-visa.html"><span class="num">08</span><span>eISA · vISA · furiosa-opt</span></a><div class="nav-caption">III. FuryNo5를 해부하기</div><a class="nav-link"  href="../chapter/09-torch-aten.html"><span class="num">09</span><span>PyTorch · ATen · 등록</span></a><a class="nav-link"  href="../chapter/10-furyno5-architecture.html"><span class="num">10</span><span>FuryNo5 구조와 지원 범위</span></a><a class="nav-link"  href="../chapter/11-furyno5-compiler.html"><span class="num">11</span><span>FuryNo5 컴파일과 캐시</span></a><div class="nav-caption">IV. 모델 포팅과 서빙</div><a class="nav-link"  href="../chapter/12-fxbx.html"><span class="num">12</span><span>fxbX 포맷과 실행계획</span></a><a class="nav-link"  href="../chapter/13-porting-fha.html"><span class="num">13</span><span>포팅 · FHA · FuryAwesome</span></a><a class="nav-link"  href="../chapter/14-serving-vllm.html"><span class="num">14</span><span>vLLM · 서빙 브리지</span></a><a class="nav-link"  href="../chapter/15-multi-npu.html"><span class="num">15</span><span>PE · 여러 카드 · 여러 서버</span></a><div class="nav-caption">V. 검증과 다음 개발</div><a class="nav-link"  href="../chapter/16-furyboost.html"><span class="num">16</span><span>FuryBoost 실측과 남은 과제</span></a><a class="nav-link"  href="../chapter/17-debugging.html"><span class="num">17</span><span>측정 · 추적 · 실패 재현</span></a><div class="nav-caption">VI. 생태계 비교와 최적화 연구</div><a class="nav-link"  href="../chapter/18-npu-ecosystems.html"><span class="num">18</span><span>다른 NPU의 지원 방식</span></a><a class="nav-link"  href="../chapter/19-model-optimization.html"><span class="num">19</span><span>모델 사전 최적화 · 연구</span></a><div class="nav-caption">참고와 검증</div><a class="nav-link"  href="../glossary.html"><span class="num">·</span><span>약어와 용어 사전</span></a><a class="nav-link"  href="../sources.html"><span class="num">·</span><span>출처 · 버전 · 접근 범위</span></a><a class="nav-link"  href="../review.html"><span class="num">·</span><span>검토 기록과 미해결 질문</span></a></nav><div class="side-foot">비공식 개발 핸드북 · 2026.11.19<br>공식 SDK와 프로젝트 구현을 구분합니다.<br><a href="https://github.com/smallstep-zzz/furyno5-handbook">원고와 변경 이력 ↗</a></div></aside><div class="shell"><main class="page" id="content"><div class="eyebrow">II. 프로그램을 만들고 실행하기 / CHAPTER 08</div><h1>eISA 질문에서 vISA 실습으로</h1><p class="dek">공개된 저수준 프로그래밍 경로와 정적 스케줄 분석 도구를 살펴봅니다.</p><div class="page-meta"><span>검토 2026.11.19</span><span>SDK 2026.4 계열 / 버전별 표기</span><span class="readtime">약 28분</span><span><a href="https://github.com/smallstep-zzz/furyno5-handbook/blob/main/content/08-eisa-visa.md">원고</a></span></div><details class="mobile-toc"><summary>이 장의 목차</summary><div><a class="" href="#1-같은-행렬을-두-저장-순서로-표현한다">1. 같은 행렬을 두 저장 순서로 표현한다</a><a class="" href="#2-논리-축과-물리-자원의-이름을-구분한다">2. 논리 축과 물리 자원의 이름을 구분한다</a><a class="" href="#3-2-048개-정수를-256개-slice에-나누어-놓는다">3. 2,048개 정수를 256개 slice에 나누어 놓는다</a><a class="minor" href="#는-0을-채우라는-명령이-아니다"># 는 0을 채우라는 명령이 아니다</a><a class="" href="#4-저장된-값이-계산-경로로-흘러가는-과정">4. 저장된 값이 계산 경로로 흘러가는 과정</a><a class="minor" href="#time과-packet은-무엇을-세는가">Time과 Packet은 무엇을 세는가</a><a class="" href="#5-tcl과-visa가-컴파일러에-전달하는-정보">5. TCL과 vISA가 컴파일러에 전달하는 정보</a><a class="minor" href="#visa에서-컴파일된-실행물까지">vISA에서 컴파일된 실행물까지</a><a class="" href="#6-공식-template로-컴파일-실행-정답-비교">6. 공식 template로 컴파일·실행·정답 비교</a><a class="" href="#7-제출과-완료를-분리해-호스트-작업을-겹친다">7. 제출과 완료를 분리해 호스트 작업을 겹친다</a><a class="" href="#8-스케줄에서-데이터-대기와-자원-대기를-구분한다">8. 스케줄에서 데이터 대기와 자원 대기를 구분한다</a><a class="" href="#9-작은-구간부터-실험하는-네-가지-사례">9. 작은 구간부터 실험하는 네 가지 사례</a><a class="minor" href="#a-다음-가중치-준비와-현재-계산을-겹치기">A. 다음 가중치 준비와 현재 계산을 겹치기</a><a class="minor" href="#b-gather-scatter의-인덱스-단위를-맞추기">B. Gather·scatter의 인덱스 단위를 맞추기</a><a class="minor" href="#c-앞-출력과-뒤-입력의-배치를-맞추기">C. 앞 출력과 뒤 입력의 배치를 맞추기</a><a class="minor" href="#d-tcl의-느린-영역을-visa로-재현하기">D. TCL의 느린 영역을 vISA로 재현하기</a><a class="" href="#10-더-아래로-읽기-컴파일-이미지와-런타임-적재">10. 더 아래로 읽기: 컴파일 이미지와 런타임 적재</a><a class="minor" href="#코드-바이트와-실행-이미지의-차이">코드 바이트와 실행 이미지의 차이</a><a class="minor" href="#파일이-준비된-뒤-runtime이-추가하는-것">파일이 준비된 뒤 runtime이 추가하는 것</a><a class="minor" href="#relocation이라는-단어를-정확하게-사용하기">Relocation이라는 단어를 정확하게 사용하기</a><a class="minor" href="#이미지-형식과-장치-프로토콜도-버전-계약이다">이미지 형식과 장치 프로토콜도 버전 계약이다</a><a class="" href="#11-sdk와-opt-경로를-연결하려면-확인할-것">11. SDK와 opt 경로를 연결하려면 확인할 것</a><a class="" href="#출처">출처</a></div></details><noscript><p class="noscript">본문과 그림은 JavaScript 없이 읽을 수 있습니다. 검색과 조절 실험에는 JavaScript가 필요합니다.</p></noscript><article class="article"><p>CPU(Central Processing Unit)에서 C의 2차원 배열을 사용하여 <code>a[row][col]</code>을 읽으면, 결국 한 저장 공간 안의 어느 위치를 읽을지 정해야 한다. NPU(Neural Processing Unit)에서도 같은 문제가 있지만, 값이 여러 chip·PE·slice의 메모리에 나뉘고 여러 차례에 걸쳐 계산 경로로 전달될 수 있다. <strong>Mapping(매핑)은</strong> 이 논리 좌표와 실제 저장·처리 위치의 관계를 표현한다.</p>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="공개된 저수준 프로그래밍 경로와 정적 스케줄 분석 도구를 살펴봅니다."><meta name="theme-color" content="#fbfaf7"><title>eISA 질문에서 vISA 실습으로 · FuryNo5 개발 핸드북</title><link rel="icon" href="../assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="../assets/site.css?v=cb5aa5a870ba"><script defer src="../assets/site.js?v=aeae33420bbb"></script></head>
+<body data-root="../" data-chapter="08-eisa-visa" data-search-version="5328e86ff6da"><a class="skip" href="#content">본문으로 이동</a><header class="topbar"><button class="menu-toggle" type="button" aria-label="전체 목차 열기" aria-controls="sidebar" aria-expanded="false">☰</button><a class="brand" href="../index.html"><span class="brand-mark">Nº5</span>FuryNo5<small>DEVELOPER HANDBOOK</small></a><div class="top-actions"><a class="top-link" href="../sources.html">출처와 버전</a><button class="search-open" type="button" aria-label="핸드북 전체 검색"><span>전체 문서 검색</span><kbd>⌘ K</kbd></button></div></header><div class="progress" aria-hidden="true"></div><div class="mobile-shade"></div><aside class="sidebar" id="sidebar" aria-label="전체 목차"><nav><div class="nav-caption">시작하기</div><a class="nav-link"  href="../index.html"><span class="num">00</span><span>전체 지도와 읽는 방법</span></a><div class="nav-caption">I. 디바이스를 이해하기</div><a class="nav-link"  href="../chapter/01-hardware.html"><span class="num">01</span><span>RNGD · TCP · PE</span></a><a class="nav-link"  href="../chapter/02-memory-dma.html"><span class="num">02</span><span>메모리 · DMA · 배치</span></a><a class="nav-link"  href="../chapter/03-driver-runtime.html"><span class="num">03</span><span>드라이버와 공식 런타임</span></a><div class="nav-caption">II. 프로그램을 만들고 실행하기</div><a class="nav-link"  href="../chapter/04-tcl-edf.html"><span class="num">04</span><span>TCL 작성 · 컴파일 · 실행</span></a><a class="nav-link"  href="../chapter/05-graphs-fallback.html"><span class="num">05</span><span>실행그래프 · 오류 · 폴백</span></a><a class="nav-link"  href="../chapter/06-buckets-shapes.html"><span class="num">06</span><span>Shape · 버킷 · 컴파일 비용</span></a><a class="nav-link"  href="../chapter/07-optimization.html"><span class="num">07</span><span>최적화의 축과 우선순위</span></a><a class="nav-link active" aria-current="page" href="../chapter/08-eisa-visa.html"><span class="num">08</span><span>eISA · vISA · furiosa-opt</span></a><div class="nav-caption">III. FuryNo5를 해부하기</div><a class="nav-link"  href="../chapter/09-torch-aten.html"><span class="num">09</span><span>PyTorch · ATen · 등록</span></a><a class="nav-link"  href="../chapter/10-furyno5-architecture.html"><span class="num">10</span><span>FuryNo5 구조와 지원 범위</span></a><a class="nav-link"  href="../chapter/11-furyno5-compiler.html"><span class="num">11</span><span>FuryNo5 컴파일과 캐시</span></a><div class="nav-caption">IV. 모델 포팅과 서빙</div><a class="nav-link"  href="../chapter/12-fxbx.html"><span class="num">12</span><span>fxbX 포맷과 실행계획</span></a><a class="nav-link"  href="../chapter/13-porting-fha.html"><span class="num">13</span><span>포팅 · FHA · FuryAwesome</span></a><a class="nav-link"  href="../chapter/14-serving-vllm.html"><span class="num">14</span><span>vLLM · 서빙 브리지</span></a><a class="nav-link"  href="../chapter/15-multi-npu.html"><span class="num">15</span><span>PE · 여러 카드 · 여러 서버</span></a><div class="nav-caption">V. 검증과 다음 개발</div><a class="nav-link"  href="../chapter/16-furyboost.html"><span class="num">16</span><span>FuryBoost 실측과 남은 과제</span></a><a class="nav-link"  href="../chapter/17-debugging.html"><span class="num">17</span><span>측정 · 추적 · 실패 재현</span></a><div class="nav-caption">VI. 생태계 비교와 최적화 연구</div><a class="nav-link"  href="../chapter/18-npu-ecosystems.html"><span class="num">18</span><span>다른 NPU의 지원 방식</span></a><a class="nav-link"  href="../chapter/19-model-optimization.html"><span class="num">19</span><span>모델 사전 최적화 · 연구</span></a><div class="nav-caption">참고와 검증</div><a class="nav-link"  href="../glossary.html"><span class="num">·</span><span>약어와 용어 사전</span></a><a class="nav-link"  href="../sources.html"><span class="num">·</span><span>출처 · 버전 · 접근 범위</span></a><a class="nav-link"  href="../review.html"><span class="num">·</span><span>검토 기록과 미해결 질문</span></a><a class="nav-link"  href="../reader-review.html"><span class="num">·</span><span>3학년 독자 검토와 수정 기록</span></a></nav><div class="side-foot">비공식 개발 핸드북 · 2026.11.20<br>공식 SDK와 프로젝트 구현을 구분합니다.<br><a href="https://github.com/smallstep-zzz/furyno5-handbook">원고와 변경 이력 ↗</a></div></aside><div class="shell"><main class="page" id="content"><div class="eyebrow">II. 프로그램을 만들고 실행하기 / CHAPTER 08</div><h1>eISA 질문에서 vISA 실습으로</h1><p class="dek">공개된 저수준 프로그래밍 경로와 정적 스케줄 분석 도구를 살펴봅니다.</p><div class="page-meta"><span>독자 검토 2026.11.20</span><span>SDK 2026.4 계열 / 버전별 표기</span><span class="readtime">약 38분</span><span><a href="https://github.com/smallstep-zzz/furyno5-handbook/blob/main/content/08-eisa-visa.md">원고</a></span></div><details class="mobile-toc"><summary>이 장의 목차</summary><div><a class="" href="#1-같은-행렬을-두-저장-순서로-표현한다">1. 같은 행렬을 두 저장 순서로 표현한다</a><a class="" href="#2-논리-축과-물리-자원의-이름을-구분한다">2. 논리 축과 물리 자원의 이름을 구분한다</a><a class="" href="#3-2-048개-정수를-256개-slice에-나누어-놓는다">3. 2,048개 정수를 256개 slice에 나누어 놓는다</a><a class="minor" href="#는-0을-채우라는-명령이-아니다"># 는 0을 채우라는 명령이 아니다</a><a class="" href="#4-저장된-값이-계산-경로로-흘러가는-과정">4. 저장된 값이 계산 경로로 흘러가는 과정</a><a class="minor" href="#time과-packet은-무엇을-세는가">Time과 Packet은 무엇을 세는가</a><a class="minor" href="#한-slice에-16개가-있고-한-번에-8개씩-보낸다면">한 slice에 16개가 있고 한 번에 8개씩 보낸다면</a><a class="" href="#5-tcl과-visa가-컴파일러에-전달하는-정보">5. TCL과 vISA가 컴파일러에 전달하는 정보</a><a class="minor" href="#visa에서-컴파일된-실행물까지">vISA에서 컴파일된 실행물까지</a><a class="" href="#6-공식-template로-컴파일-실행-정답-비교">6. 공식 template로 컴파일·실행·정답 비교</a><a class="minor" href="#먼저-네-가지-버전을-각각-확인한다">먼저 네 가지 버전을 각각 확인한다</a><a class="minor" href="#compiler와-template을-고정해서-프로젝트를-만든다">Compiler와 template을 고정해서 프로젝트를 만든다</a><a class="minor" href="#허용-범위와-실제-선택된-라이브러리를-구분한다">허용 범위와 실제 선택된 라이브러리를 구분한다</a><a class="minor" href="#같은-기록으로-cpu-비교와-npu-검증을-순서대로-한다">같은 기록으로 CPU 비교와 NPU 검증을 순서대로 한다</a><a class="" href="#7-제출과-완료를-분리해-호스트-작업을-겹친다">7. 제출과 완료를 분리해 호스트 작업을 겹친다</a><a class="" href="#8-스케줄에서-데이터-대기와-자원-대기를-구분한다">8. 스케줄에서 데이터 대기와 자원 대기를 구분한다</a><a class="" href="#9-작은-구간부터-실험하는-네-가지-사례">9. 작은 구간부터 실험하는 네 가지 사례</a><a class="minor" href="#a-다음-가중치-준비와-현재-계산을-겹치기">A. 다음 가중치 준비와 현재 계산을 겹치기</a><a class="minor" href="#b-gather-scatter의-인덱스-단위를-맞추기">B. Gather·scatter의 인덱스 단위를 맞추기</a><a class="minor" href="#c-앞-출력과-뒤-입력의-배치를-맞추기">C. 앞 출력과 뒤 입력의 배치를 맞추기</a><a class="minor" href="#d-tcl의-느린-영역을-visa로-재현하기">D. TCL의 느린 영역을 vISA로 재현하기</a><a class="" href="#10-더-아래로-읽기-컴파일-이미지와-런타임-적재">10. 더 아래로 읽기: 컴파일 이미지와 런타임 적재</a><a class="minor" href="#코드-바이트와-실행-이미지의-차이">코드 바이트와 실행 이미지의 차이</a><a class="minor" href="#파일이-준비된-뒤-runtime이-추가하는-것">파일이 준비된 뒤 runtime이 추가하는 것</a><a class="minor" href="#relocation이라는-단어를-정확하게-사용하기">Relocation이라는 단어를 정확하게 사용하기</a><a class="minor" href="#이미지-형식과-장치-프로토콜도-버전-계약이다">이미지 형식과 장치 프로토콜도 버전 계약이다</a><a class="" href="#11-sdk와-opt-경로를-연결하려면-확인할-것">11. SDK와 opt 경로를 연결하려면 확인할 것</a><a class="" href="#출처">출처</a></div></details><noscript><p class="noscript">본문과 그림은 JavaScript 없이 읽을 수 있습니다. 검색과 조절 실험에는 JavaScript가 필요합니다.</p></noscript><article class="article"><p>CPU(Central Processing Unit)에서 C의 2차원 배열을 사용하여 <code>a[row][col]</code>을 읽으면, 결국 한 저장 공간 안의 어느 위치를 읽을지 정해야 한다. NPU(Neural Processing Unit)에서도 같은 문제가 있지만, 값이 여러 chip·PE·slice의 메모리에 나뉘고 여러 차례에 걸쳐 계산 경로로 전달될 수 있다. <strong>Mapping(매핑)은</strong> 이 논리 좌표와 실제 저장·처리 위치의 관계를 표현한다.</p>
 <p>이 장은 먼저 2×3 배열의 주소 계산부터 시작한다. 그 다음 공식 <code>constant_add</code> 예제의 2,048개 정수 중 <strong>37번 원소 하나가 어느 위치에 있고 어떻게 38이 되는지</strong> 따라간다. 계산식 <code>x+1</code>은 간단하게 유지하고, 메모리와 실행 경로를 읽는 데 집중한다.</p>
 <blockquote>
 <p><strong>명칭과 버전</strong> · ISA(Instruction Set Architecture)는 명령어 집합 구조다. 공개 프로그래밍 문서의 이름은 <strong>vISA(Virtual Instruction Set Architecture)다</strong>. 요청에 나온 eISA의 공식 풀네임과 독립적인 공개 실행 API(Application Programming Interface)는 이번 조사에서 확인하지 못했으므로 두 이름을 같다고 단정하지 않는다. 이 장은 <code>furiosa-opt</code> commit <code>3d43bc9d20f324af60e3006c3f1541938d7f5097</code>과 <code>furiosa-opt-std = &quot;0.10&quot;</code> template을 기준으로 한다. <a href="https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/introduction.md">공식 소개</a>, <a href="https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/base-template/Cargo.toml.liquid">template 의존성</a></p>
@@ -173,7 +173,55 @@ let dm = input.to_dm::&lt;Cluster, Slice, m![A % 8]&gt;(&amp;mut device.tdma);
 <h3 id="time과-packet은-무엇을-세는가"><a class="heading-anchor" href="#time과-packet은-무엇을-세는가">Time과 Packet은 무엇을 세는가</a></h3>
 <p>DM에 정지해 있는 배열을 계산 엔진에 공급할 때는 <strong>몇 차례에 걸쳐, 한 차례에 얼마씩 줄지</strong> 정한다. <code>Time</code>은 전달 반복의 순서이고, <code>Packet</code>은 그 반복에서 한 slice에 전달되는 원소 묶음이다. 이때 time step 하나가 항상 하드웨어 한 clock cycle과 같다는 뜻은 아니다. 패킷을 읽는 데 여러 접근이 필요할 수 있다. <a href="https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/moving-tensors/fetch-engine.md">Fetch Engine</a></p>
 <p>공식 예제는 <code>fetch::&lt;m![1], m![A % 8]&gt;()</code>를 사용한다. 한 번의 논리 전달 반복에서 각 active slice의 i32 8개를 읽는다. i32 하나는 4 bytes이므로 패킷은 32 bytes다. <strong>Collect</strong>는 뒤 엔진이 받는 32-byte 단위인 flit에 맞게 패킷을 정리한다. 이 예의 패킷은 이미 32 bytes여서 그 단위에 맞는다. 일반적으로 Collect는 작은 패킷에 padding을 더하거나 큰 패킷을 여러 단위로 나눌 수 있다. <a href="https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/computing-tensors/collect-engine.md">Collect Engine</a></p>
-<p>이제 읽기 쉽게 입력값을 <code>input[a]=a</code>라고 정한 <strong>설명용 추적</strong>을 하자. 실제 template의 시험 입력은 난수다.</p>
+<h3 id="한-slice에-16개가-있고-한-번에-8개씩-보낸다면"><a class="heading-anchor" href="#한-slice에-16개가-있고-한-번에-8개씩-보낸다면">한 slice에 16개가 있고 한 번에 8개씩 보낸다면</a></h3>
+<p>Time이 1인 예만 보면 시간 방향에 배치한다는 말이 잘 드러나지 않는다. 이번에는 논리 원소 4,096개를 256개 slice에 16개씩 놓고, slice마다 8개씩 두 번 보낸다고 가정하자. <strong>아래는 좌표를 검산하기 위한 교육용 mapping 모형</strong>이다. 이 변경을 넣은 Rust 커널이 compiler·메모리 제약을 통과했다거나 NPU에서 실행됐다고 주장하지 않는다.</p>
+<p>논리 원소 번호 a를 <code>a = 16×slice + 8×time + packet_position</code>으로 나눈다. 여기서 <code>time</code>은 0·1 두 번의 전달, <code>packet_position</code>은 그때 전달하는 8개 안의 위치 0~7이다.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th align="right">slice</th>
+<th align="right">time</th>
+<th>packet 위치 0~7에 들어가는 논리 원소</th>
+<th>그 slice의 DM Element 위치</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="right">0</td>
+<td align="right">0</td>
+<td>0, 1, …, 7</td>
+<td>0~7</td>
+</tr>
+<tr>
+<td align="right">0</td>
+<td align="right">1</td>
+<td>8, 9, …, 15</td>
+<td>8~15</td>
+</tr>
+<tr>
+<td align="right">4</td>
+<td align="right">0</td>
+<td>64, 65, …, 71</td>
+<td>0~7</td>
+</tr>
+<tr>
+<td align="right">4</td>
+<td align="right">1</td>
+<td>72, 73, …, 79</td>
+<td>8~15</td>
+</tr>
+</tbody></table>
+</div><p>예를 들어 a=77은 slice 4의 Element 13에 있다. 그 원소가 흐를 때는 두 번째 전달인 time 1의 packet 위치 5에 들어간다. time 0에 slice 4만 동작한다는 뜻은 아니다. 각 slice가 자기 첫 묶음을 공급하는 반복과 다음 묶음을 공급하는 반복을 구분한 것이다.</p>
+<div class="codebox"><div class="codebar"><span>python</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-python"># 좌표 분해의 검산이다. NPU API 호출이나 clock cycle 예측이 아니다.
+a = 77
+slice_id = a // 16                       # 원소 16개를 한 slice에 둔다: 4
+element = a % 16                         # 해당 slice 안의 저장 위치: 13
+time_index = element // 8                # 8개씩 보낼 때 몇 번째 묶음인가: 1
+packet_position = element % 8            # 그 묶음의 어느 원소인가: 5
+assert (slice_id, time_index, packet_position) == (4, 1, 5)
+assert 16 * slice_id + 8 * time_index + packet_position == a
+</code></pre></div>
+<p>저장 위치를 나타내는 <code>Element=13</code>과 한 전달 안의 <code>Packet 위치=5</code>는 이렇게 다른 좌표다. 또한 두 번의 전달이 곧 2 clock cycles라는 뜻도 아니다. 실제 읽기 폭·패킷 처리·뒤 엔진의 대기까지 고려한 스케줄이 필요하다. <a href="https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/mapping-tensors/spatial-temporal-dimensions.md">공식 공간·시간 차원의 구분</a></p>
+<p>다시 원래의 A=2,048, slice마다 8개, Time=1인 공식 template로 돌아온다. 읽기 쉽게 입력값을 <code>input[a]=a</code>라고 정한 <strong>설명용 추적</strong>을 하자. 실제 template의 시험 입력은 난수다.</p>
 <div class="table-wrap"><table>
 <thead>
 <tr>
@@ -272,28 +320,107 @@ let dm = input.to_dm::&lt;Cluster, Slice, m![A % 8]&gt;(&amp;mut device.tdma);
 <p>이때 컴파일은 실행 방법을 만드는 단계이고, 적재(load)는 그 결과를 현재 장치 자원에 준비하는 단계다. 실행할 입력 값은 호출 시 다시 연결한다.</p>
 <p><code>cargo</code>는 Rust의 빌드·의존성 도구다. <code>cargo-furiosa-opt</code>는 이 도구를 감싸 NPU build와 커널 사전 컴파일을 수행한다. 일반 <code>cargo run</code>은 CPU backend이고 <code>cargo furiosa-opt run</code>은 NPU backend다. CPU build가 성공했다고 NPU mapping까지 검증된 것은 아니다. <a href="https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/tools/kernel-optimizer.md">Kernel Optimizer</a></p>
 <h2 id="6-공식-template로-컴파일-실행-정답-비교"><a class="heading-anchor" href="#6-공식-template로-컴파일-실행-정답-비교">6. 공식 template로 컴파일·실행·정답 비교</a></h2>
-<p>Linux x86-64, matching Rust toolchain, 필요한 cross compiler 및 NPU 드라이버를 준비한다. 아래 설치 명령은 공식 Quick Start의 경로다. 배포된 compiler와 template 의존성이 일치하는지 반드시 확인하고, 실험 기록에는 <code>Cargo.lock</code>과 compiler version을 함께 보관한다. <a href="https://developer.furiosa.ai/furiosa-opt/book/quick-start/setup-and-tooling.html">Setup and Tooling</a></p>
-<div class="codebox"><div class="codebar"><span>bash</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-bash"># 이 template과 맞는 Rust toolchain을 준비한다.
+<h3 id="먼저-네-가지-버전을-각각-확인한다"><a class="heading-anchor" href="#먼저-네-가지-버전을-각각-확인한다">먼저 네 가지 버전을 각각 확인한다</a></h3>
+<p>Python 프로젝트에서 Python 버전·설치한 명령 도구·라이브러리 버전을 따로 확인하듯, 여기서도 숫자 하나로 환경을 대표할 수 없다. <strong>Template은</strong> 소스 파일을 만드는 틀이고, <strong>compiler는</strong> 그 소스를 NPU 실행물로 바꾸는 설치된 프로그램이다. <code>furiosa-opt-std</code>는 프로젝트가 사용하는 Rust 라이브러리다. Rust toolchain은 프로그램을 빌드하는 Rust compiler·Cargo 등의 도구 묶음이며, opt compiler도 그 Rust compiler의 내부 인터페이스에 연결된다.</p>
+<p>이 장의 기준 commit <code>3d43bc9d20f324af60e3006c3f1541938d7f5097</code>은 이번 재검토에서 조회한 공식 <code>v0.10.0</code> 태그와 같다. 해당 소스의 compiler package와 std crate는 각각 <code>0.10.0</code>이고, template은 std에 <code>&quot;0.10&quot;</code>이라는 <strong>허용 버전 범위</strong>를 선언한다. 따라서 아래에서는 compiler 배포와 template을 따로 고정한다. std와 compiler의 숫자가 같다는 이유만으로 모든 조합이 호환된다는 규칙을 만든 것은 아니다. <a href="https://api.github.com/repos/furiosa-ai/furiosa-opt/git/ref/tags/v0.10.0">태그가 가리키는 commit</a> · <a href="https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/cargo-furiosa-opt/Cargo.toml">compiler package·배포 위치</a> · <a href="https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-std/Cargo.toml">std package</a></p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>확인 대상</th>
+<th>이 장에서 선택하는 기준</th>
+<th>내 환경에서 읽을 관측값</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Template 소스</td>
+<td>전체 commit <code>3d43bc9d…</code>의 <code>base-template</code></td>
+<td>아래 생성 명령의 <code>--revision</code>과 보관한 원본 commit. 생성 프로젝트의 새 Git HEAD와 혼동하지 않음</td>
+</tr>
+<tr>
+<td>Compiler 배포</td>
+<td>공식 <code>cargo-furiosa-opt</code> <strong>0.10.0</strong> 배포물</td>
+<td>설치 완료 로그·<code>cargo install --list</code>의 package 버전, 실제로 선택되는 실행 파일 경로</td>
+</tr>
+<tr>
+<td>Rust toolchain</td>
+<td><strong><code>nightly-2026-05-01</code></strong></td>
+<td>프로젝트의 <code>rust-toolchain.toml</code>, <code>rustup show active-toolchain</code>, <code>rustc -Vv</code></td>
+</tr>
+<tr>
+<td>프로젝트 라이브러리</td>
+<td>원본 template의 <code>furiosa-opt-std = &quot;0.10&quot;</code>; 이 실습에서는 <code>=0.10.0</code>으로 좁힘</td>
+<td>프로젝트에서 생성한 <code>Cargo.lock</code>과 <code>cargo metadata</code>의 실제 <code>name</code>·<code>version</code>·<code>source</code></td>
+</tr>
+</tbody></table>
+</div><p>Rust compiler의 내부 ABI(Application Binary Interface)에 연결되는 도구이므로 공식 문서는 지정 nightly를 요구한다. Linux x86-64의 Ubuntu 22.04 이상, host 빌드 도구·<code>libclang</code>, NPU build용 AArch64 cross compiler도 필요하다. 실제 NPU 실행에는 SDK와 장치 드라이버가 추가로 필요하다. 14장의 별도 preview 모델 조합을 이 일반 kernel 실습의 설치 기준으로 가져오지 않는다. <a href="https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/quick-start/setup-and-tooling.md">고정 버전 설치 전제</a> · <a href="https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/base-template/rust-toolchain.toml">template toolchain</a></p>
+<h3 id="compiler와-template을-고정해서-프로젝트를-만든다"><a class="heading-anchor" href="#compiler와-template을-고정해서-프로젝트를-만든다">Compiler와 template을 고정해서 프로젝트를 만든다</a></h3>
+<p>다음은 위 host 전제가 준비된 Linux의 Bash에서 실행할 명령이다. <code>cargo-binstall</code>은 이미 빌드된 배포물을 설치하고, <code>cargo-generate</code>는 template에서 새 프로젝트를 만든다. 두 보조 도구의 실제 설치 버전도 뒤의 설치 목록에 남긴다. NPU compiler의 공개 <code>main.rs</code>는 설치 안내를 출력하는 stub이므로, 이 compiler를 <code>cargo install --git ...</code>로 바꿔 설치한다고 같은 배포물이 만들어지지는 않는다. <a href="https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/cargo-furiosa-opt/src/main.rs">공개 compiler 진입점</a></p>
+<div class="codebox"><div class="codebar"><span>bash</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-bash"># tee로 로그를 남길 때 설치 명령의 실패를 놓치지 않도록 한다.
+set -o pipefail
+# 공식 compiler가 요구하는 nightly를 준비한다.
 rustup toolchain install nightly-2026-05-01
-# 사전 빌드된 compiler 배포물을 설치하는 도구를 설치한다.
 cargo +nightly-2026-05-01 install cargo-binstall
-cargo +nightly-2026-05-01 binstall cargo-furiosa-opt
-# 작은 완전한 프로젝트를 생성한다. 아래 kernel 조각만으로는 실행 파일이 아니다.
+# @0.10.0은 compiler 배포 버전이다. 버전을 생략해 최신 배포를 선택하지 않는다.
+cargo +nightly-2026-05-01 binstall cargo-furiosa-opt@0.10.0 2&gt;&amp;1 | tee opt-compiler-install.log
 cargo install cargo-generate
-cargo generate furiosa-ai/furiosa-opt base-template
+# branch 이름 대신 전체 commit을 지정하고, 그 안의 base-template을 사용한다.
+cargo generate --git https://github.com/furiosa-ai/furiosa-opt \
+  --revision 3d43bc9d20f324af60e3006c3f1541938d7f5097 \
+  --name opt-constant-add base-template
+cd opt-constant-add
+# 설치 로그도 생성한 프로젝트와 함께 보관한다.
+cp ../opt-compiler-install.log .
 </code></pre></div>
-<p>생성한 프로젝트 디렉터리에서 실행한다. template을 기본 branch에서 가져온 경우 이 핸드북 commit 이후 바뀔 수 있으므로, 생성된 소스·의존성을 앞의 기준과 비교한다.</p>
-<div class="codebox"><div class="codebar"><span>bash</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-bash"># CPU 의미 비교
-cargo test --release --bin constant_add
+<p><code>@버전</code>과 <code>--revision</code>은 각각 설치기와 생성기의 옵션이다. 실제 설치에서는 compiler archive의 이름 <code>cargo-furiosa-opt-v0.10.0-x86_64-unknown-linux-gnu.tgz</code>와 설치한 package 버전을 로그에서 대조한다. 공식 release에 이 배포물이 존재한다는 것은 확인했지만, 이 집필 환경에서 설치를 실행한 기록은 아니다. <a href="https://github.com/furiosa-ai/furiosa-opt/releases/tag/v0.10.0">공식 v0.10.0 배포</a> · <a href="https://github.com/cargo-bins/cargo-binstall/blob/17717041b8b8d177fd061e56dc8c40abe41120f2/crates/bin/src/args.rs#L55-L76">Binstall 버전 선택</a> · <a href="https://github.com/cargo-generate/cargo-generate/blob/165d2fe0b0d3f4872058a091b2a6201f2bc2e23e/src/args.rs#L237-L278">Generate의 revision·name 옵션</a></p>
+<h3 id="허용-범위와-실제-선택된-라이브러리를-구분한다"><a class="heading-anchor" href="#허용-범위와-실제-선택된-라이브러리를-구분한다">허용 범위와 실제 선택된 라이브러리를 구분한다</a></h3>
+<p><code>Cargo.toml</code>의 <code>&quot;0.10&quot;</code>은 <code>0.10.0</code> 한 개를 뜻하지 않고 <code>0.10.x</code> 범위를 허용한다. 새 프로젝트의 <code>[dependencies]</code>에서 <strong>기존 std 한 줄만</strong> 다음과 같이 바꿔 이 실습의 직접 의존성을 고정한다. 아래는 파일 전체가 아니다. <a href="https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html">Cargo 버전 범위·정확한 버전 표기</a></p>
+<div class="codebox"><div class="codebar"><span>toml</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-toml"># 생성된 Cargo.toml의 [dependencies] 안에서 기존 std 줄을 교체한다.
+furiosa-opt-std = &quot;=0.10.0&quot;
+</code></pre></div>
+<p>std가 사용하는 다른 라이브러리까지 선택한 결과는 <strong><code>Cargo.lock</code>에</strong> 남는다. 새로운 프로젝트에서 한 번 만들고 이후에는 함께 보관한다. 이미 실험한 프로젝트의 lockfile을 다시 만들면 선택 버전이 바뀔 수 있다. 공식 저장소 루트의 <code>Cargo.lock</code>은 그 저장소 전체 workspace용이므로 생성 프로젝트의 lockfile 대신 복사하지 않는다. <a href="https://doc.rust-lang.org/cargo/commands/cargo-generate-lockfile.html">Lockfile 생성·갱신 의미</a></p>
+<div class="codebox"><div class="codebar"><span>bash</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-bash"># 생성한 새 프로젝트에서만 실행한다. 아직 NPU를 열거나 kernel을 실행하지 않는다.
+cargo generate-lockfile
+# 실제 선택된 라이브러리 정보를 JSON으로 저장한다. --locked는 lockfile 변경을 거절한다.
+cargo metadata --locked --format-version 1 &gt; cargo-metadata.json
+# 설치된 명령 도구 목록과 현재 Rust를 기록한다.
+cargo install --list &gt; installed-tools.txt
+rustup show active-toolchain &gt; active-toolchain.txt
+rustc -Vv &gt; rustc-version.txt
+# PATH에 같은 이름이 여럿 있으면, 설치 로그와 먼저 선택되는 경로를 대조한다.
+type -a cargo-furiosa-opt furiosa-opt-driver &gt; compiler-paths.txt
+</code></pre></div>
+<p><code>installed-tools.txt</code>에서는 <code>cargo-furiosa-opt v0.10.0</code> package와 두 실행 파일 이름을 찾는다. 이 목록은 설치 기록이므로, <code>compiler-paths.txt</code>가 다른 경로의 오래된 바이너리를 먼저 가리키면 같은 환경이라고 판단하지 않는다. 기본 Binstall 설치는 Cargo의 설치 기록을 갱신한다. 직접 복사하거나 별도 설치 경로를 썼다면 그 설치 출처·버전을 추가로 남겨야 한다. <a href="https://doc.rust-lang.org/cargo/commands/cargo-install.html#option-cargo-install---list">Cargo 설치 목록</a> · <a href="https://github.com/cargo-bins/cargo-binstall/blob/17717041b8b8d177fd061e56dc8c40abe41120f2/crates/binstalk-manifests/src/crates_manifests.rs#L145-L168">Binstall의 설치 기록 갱신</a></p>
+<p>라이브러리는 명령 도구 목록이 아니라 다음처럼 <code>cargo-metadata.json</code>에서 읽는다. 이 코드는 표준 Python으로 기존 JSON만 읽는다.</p>
+<div class="codebox"><div class="codebar"><span>python</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-python">import json
+from pathlib import Path
 
-# NPU용 커널 컴파일
+metadata = json.loads(Path(&quot;cargo-metadata.json&quot;).read_text())
+# std의 직접 버전과 image/runtime 계약에 가까운 의존성을 나란히 관찰한다.
+names = {&quot;furiosa-opt-std&quot;, &quot;furiosa-opt-abi&quot;, &quot;furiosa-opt-rt&quot;}
+for package in metadata[&quot;packages&quot;]:
+    if package[&quot;name&quot;] in names:
+        # source는 받은 곳의 식별자다. 이를 compiler 버전이라고 해석하지 않는다.
+        print(package[&quot;name&quot;], package[&quot;version&quot;], package[&quot;source&quot;])
+</code></pre></div>
+<p>앞에서 고정한 std는 <code>0.10.0</code>이어야 한다. 기준 저장소의 lockfile에는 std·ABI·runtime이 각각 <code>0.10.0</code>으로 기록되어 있으므로 나란히 비교할 수 있다. 생성 프로젝트에서 다른 의존성이 선택되면 그 정확한 버전·source를 보관하고 변경 내용을 확인한다. <strong>세 숫자의 일치는 관측 결과이지, compiler 호환성이나 NPU 정답의 증명이 아니다.</strong> <code>Cargo.toml</code>·실제 <code>Cargo.lock</code>·template 원본 commit·설치 로그를 함께 보관해야 다음 실험자가 같은 입력 조건으로 돌아올 수 있다. <a href="https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/Cargo.lock">기준 workspace lockfile</a> · <a href="https://doc.rust-lang.org/cargo/commands/cargo-metadata.html">Metadata의 name·version·source 계약</a></p>
+<p>진행 여부도 이 관측값으로 정한다. 설치한 배포물과 PATH의 실행 파일을 연결하지 못하거나 지정 nightly·std·lockfile을 확인하지 못했다면 <strong>NPU 컴파일·실행 전에 해당 설치 항목부터 해결</strong>한다. ABI·runtime이 기준과 다른 버전으로 선택됐다면 그 변경의 호환 근거를 먼저 확인하고 다른 조합이라는 사실을 기록한다. 기준을 확인한 뒤 아래 CPU 비교 → NPU 컴파일 → NPU 정답 비교로 진행하며, 실제 성공은 각 단계의 결과로 판단한다.</p>
+<h3 id="같은-기록으로-cpu-비교와-npu-검증을-순서대로-한다"><a class="heading-anchor" href="#같은-기록으로-cpu-비교와-npu-검증을-순서대로-한다">같은 기록으로 CPU 비교와 NPU 검증을 순서대로 한다</a></h3>
+<p>생성한 프로젝트 디렉터리에서 실행한다. CPU 비교는 수치 의미, NPU 컴파일은 실제 mapping·compiler 계약, NPU test는 장치 실행 결과를 각각 확인한다.</p>
+<div class="codebox"><div class="codebar"><span>bash</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-bash"># 재현에 사용할 lockfile을 기록한다. 이것은 설치·실행 성공 판정이 아니다.
+sha256sum Cargo.lock &gt; cargo-lock.sha256
+# CPU에서 모든 출력 값을 비교한다. --locked는 의존성 변경을 허용하지 않는다.
+cargo test --locked --release --bin constant_add
+
+# NPU용 kernel 컴파일. 이 직접 compile 명령의 공식 문법에 임의 옵션을 더하지 않는다.
 cargo furiosa-opt compile constant_add_kernel
+# 직접 compile 이후에도 같은 의존성 기록인지 확인한다.
+sha256sum --check cargo-lock.sha256
 
-# 실제 NPU에서 값 비교
-cargo furiosa-opt test --release --bin constant_add
+# 실제 NPU에서 값 비교. test/run의 Cargo 인수는 wrapper가 그대로 전달한다.
+cargo furiosa-opt test --locked --release --bin constant_add
 
-# 실행 프로그램
-cargo furiosa-opt run --release --bin constant_add
+# 실행 프로그램. 값 전체의 검증은 바로 위 test가 맡는다.
+cargo furiosa-opt run --locked --release --bin constant_add
 </code></pre></div>
 <p>대상 binary와 test는 template의 <code>src/constant_add.rs</code>에 있다. CPU reference(비교 기준)는 input의 각 원소에 1을 더한 값이다. 공식 test는 NPU 결과를 CPU로 가져온 뒤 모든 원소를 비교한다. 일반 <code>run</code>은 커널 실행 메시지를 출력하므로 값 검증에는 위 <code>test</code>가 필요하다. 이 test는 <code>wrapping_add(1)</code>을 사용한다. i32의 최대값을 넘어가면 32비트 범위 안에서 순환하는 정수 의미를 맞추려는 것이다. 크기가 무제한인 일반 Python 정수의 <code>+1</code>과 모든 입력에서 같다고 보면 안 된다. 이 원고 작성 환경에서는 Rust 컴파일·NPU 실행을 새로 수행하지 않았다. <a href="https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/base-template/src/constant_add.rs">공식 constant_add host/test</a></p>
 <h2 id="7-제출과-완료를-분리해-호스트-작업을-겹친다"><a class="heading-anchor" href="#7-제출과-완료를-분리해-호스트-작업을-겹친다">7. 제출과 완료를 분리해 호스트 작업을 겹친다</a></h2>
@@ -405,7 +532,7 @@ furiosa-schedule-viewer --host 127.0.0.1 --port 9254
 </div><p>이 수치는 <strong>Furiosa 문서의 특정 예제 결과</strong>다. FuryNo5 모델의 새 측정치가 아니며, 15,086 cycles를 사용자 환경의 밀리초로 바로 변환하지 않는다. TRF(Tensor Register File) double buffering도 두 절반이 bank를 공유하므로 의존성과 경쟁이 남는다. <a href="https://developer.furiosa.ai/furiosa-opt/book/scheduling/tuning.html">공식 tuning 사례</a></p>
 <h3 id="b-gather-scatter의-인덱스-단위를-맞추기"><a class="heading-anchor" href="#b-gather-scatter의-인덱스-단위를-맞추기">B. Gather·scatter의 인덱스 단위를 맞추기</a></h3>
 <p><strong>Gather</strong>는 인덱스로 지정한 여러 위치에서 값을 모아 읽는 작업, <strong>scatter</strong>는 지정한 여러 위치로 값을 흩어 쓰는 작업이다. 예를 들어 embedding 표에서 토큰 ID 3의 특징 행을 읽을 때, 숫자 3이 행 번호인지 바이트 위치인지부터 구분해야 한다.</p>
-<p>embedding 같은 lookup에서는 <code>행 번호</code>와 <code>바이트 offset</code>을 섞으면 값이나 주소가 틀린다. 공개 DMA API는 <code>by_byte_offsets</code>와 <code>by_positions</code>를 구분한다. 후자는 SPM(Scratchpad Memory)의 위치 인덱스를 받는다. BF16 행의 길이가 128이면 한 행은 256 bytes이므로 행 3의 시작은 768 bytes다. 이 계산은 단순 예시이며 실제 tensor mapping·정렬 조건까지 충족해야 한다. <a href="https://developer.furiosa.ai/furiosa-opt/book/moving-tensors/dma-engine.html#gather-and-scatter">Gather·Scatter 계약</a></p>
+<p>embedding 같은 lookup에서는 <code>행 번호</code>와 <code>바이트 offset</code>을 섞으면 값이나 주소가 틀린다. 공개 DMA API는 <code>by_byte_offsets</code>와 <code>by_positions</code>를 구분한다. BF16 행의 길이가 128이면 한 행은 256 bytes이므로 행 3의 시작은 768 bytes다. 이 계산은 단순 예시이며 실제 tensor mapping·정렬 조건까지 충족해야 한다. <a href="https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/moving-tensors/dma-engine.md#gather-and-scatter">Gather·Scatter의 고정 계약</a></p>
 <p>FuryNo5의 int32 입력 검사, embedding contraction과 projection 연결을 읽을 때도 <strong>ID의 의미·단위·범위</strong>부터 확인한다. 잘못된 인덱스를 CPU에서 검사하는 것은 장치의 embedding 계산을 CPU로 옮기는 것이 아니다.</p>
 <div class="codebox"><div class="codebar"><span>python</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-python"># 연속 행 우선 배열이라고 가정한 주소 계산 예다. 실제 DMA 호출 코드는 아니다.
 row_id = 3
@@ -434,7 +561,38 @@ assert byte_offset == 768                   # 기준 주소로부터 768 bytes �
 <td>바이트 단위 offset: <code>384×2</code></td>
 </tr>
 </tbody></table>
-</div><p>바이트 offset을 받는 곳에 3을 넣으면 세 번째 행을 뜻하지 않는다. 반대로 <code>by_positions</code>를 임의의 행 번호 API로 생각하면 안 된다. 해당 경로는 SPM(Scratchpad Memory)에 놓은 위치 인덱스와 그 배치 계약을 따른다.</p>
+</div><p>두 API가 가리키는 값을 실제 배열 관계로 연결해 보자. 표의 shape가 <code>[I,P]</code>라면 I는 조회할 행의 축, P는 선택한 행에서 함께 읽을 특징값의 축이다. 인덱스 목록은 <code>[D]</code>이며 D는 <strong>요청한 조회 목록의 길이</strong>다. <code>position[d]</code>는 그 목록의 d번째 조회가 선택한 I축 좌표다. 따라서 결과는 <code>[D,P]</code>이고 <code>result[d,p] = table[position[d],p]</code>가 된다.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th align="right">목록의 위치 d</th>
+<th align="right"><code>position[d]</code></th>
+<th>실제로 읽는 대상</th>
+<th align="right">BF16·P=128일 때 byte offset</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="right">0</td>
+<td align="right">3</td>
+<td><code>table[3,0:128]</code></td>
+<td align="right">768</td>
+</tr>
+<tr>
+<td align="right">1</td>
+<td align="right">1</td>
+<td><code>table[1,0:128]</code></td>
+<td align="right">256</td>
+</tr>
+</tbody></table>
+</div><p><code>by_positions</code>의 index tensor가 SPM(Scratchpad Memory)에 있다는 것은 <strong>숫자 3·1을 저장한 목록의 위치</strong>다. 조회 대상인 <code>table</code>은 여전히 HBM(High Bandwidth Memory)에 있다. 반면 <code>by_byte_offsets</code>는 HBM에 저장한 index tensor의 값으로 768·256을 받는다. offset의 기준은 해당 table 또는 view의 시작 주소이며, 그 값은 I축 byte stride의 정수배여야 한다. 즉 position과 byte offset은 같은 조회를 다른 단위와 다른 index 저장 위치로 표현한다. <a href="https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-std/src/tensor/memory/dma/gather.rs#L209-L334">인덱스 단위·형식의 공개 구현</a></p>
+<p>SPM 경로에는 추가 배치 계약이 있다. 이 버전에서 인덱스 목록은 각 사용 cluster의 PE 0에 모여 있어야 하며 <code>IdxPe=m![1 # 4]</code>로 표현한다. <code>Domain</code>은 index가 <strong>정의된 좌표들</strong>이다. index tensor의 cluster mapping에 이름 있는 축 CL이 있으면 cluster마다 다른 목록이므로 <code>Domain=m![CL,D]</code>; 이름 있는 cluster 축 없이 한 목록을 사용하면 <code>Domain=m![D]</code>다. PE 번호 자체는 Domain에 넣지 않는다. Domain은 인덱스 숫자가 선택하는 I축과도 다르다. <a href="https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/moving-tensors/dma-engine.md#a-gathers-domain-from-an-spm-index">SPM domain과 PE 배치 계약</a></p>
+<p>다음은 공식 <code>gather_spm</code>에서 <strong>설명 주석을 추가한 짧은 발췌</strong>다. 주변 선언과 index를 DM에서 SPM으로 옮기는 단계는 생략했으므로 독립 실행 예제가 아니다. 원본은 I=612, D=512, P=128, CL=2이며 <code>index_spm</code>의 타입은 <code>SpmTensor&lt;i32, m![1], m![CL], m![1 # 4], m![D]&gt;</code>다.</p>
+<div class="codebox"><div class="codebar"><span>rust</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-rust">table
+    .gather::&lt;m![I], m![P]&gt;()             // index 숫자는 I축 위치를 고르고, P 특징을 함께 읽는다.
+    .by_positions::&lt;m![CL, D]&gt;(&amp;index_spm) // cluster마다 D개인 SPM 목록의 좌표를 선언한다.
+    .to_dm(&amp;mut device.tdma)             // 선택된 값들을 목적 DM 배치로 이동한다.
+</code></pre></div>
+<p>이렇게 I·P·Domain·index의 메모리 배치를 정했을 때 position 3이 “행 3”이 된다. 숫자 3만으로 임의 tensor의 행을 알아내는 API는 아니다. Scatter는 같은 인덱스 관계를 반대로 사용해 <code>destination[position[d],p] = updates[d,p]</code>로 기록한다. <a href="https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/moving-tensors/dma-engine.md#gather-and-scatter">공식 gather·scatter 예제</a></p>
 <h3 id="c-앞-출력과-뒤-입력의-배치를-맞추기"><a class="heading-anchor" href="#c-앞-출력과-뒤-입력의-배치를-맞추기">C. 앞 출력과 뒤 입력의 배치를 맞추기</a></h3>
 <p>두 커널이 서로 다른 layout을 기대하면 중간 변환이 필요할 수 있다. vISA에서 입력·출력 mapping을 직접 비교해, 앞 커널의 commit 배치를 다음 커널의 fetch가 원하는 배치에 맞추는 실험을 할 수 있다. 다만 view의 이름만 바꿔 값을 잘못 해석하는 것을 최적화라고 부르면 안 된다. DMA로 새 값 배치를 만드는 경우와 실제 이동 없는 reshape의 성립 조건을 구분한다. <a href="https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/moving-tensors/index.md">Moving Tensors</a></p>
 <p>1절의 행 우선 버퍼 <code>[0,1,2,10,11,12]</code>와 열 우선 버퍼 <code>[0,10,1,11,2,12]</code>를 떠올리면 된다. 앞 커널이 다음 커널의 요구 순서로 결과를 직접 기록할 수 있다면 별도 변환을 줄일 후보가 된다. 반면 출력 이름이나 축 annotation만 바꾸고 원소 위치를 유지하면 다른 행렬을 읽는 오류가 된다. 출력 배치 변경이 앞 커널을 더 느리게 하는지도 전체 시간에 포함한다.</p>
@@ -610,6 +768,22 @@ assert byte_offset == 768                   # 기준 주소로부터 768 bytes �
 <td>compiler·CPU/NPU·dump CLI</td>
 </tr>
 <tr>
+<td><a href="https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/quick-start/setup-and-tooling.md">고정 설치 전제</a> · <a href="https://github.com/furiosa-ai/furiosa-opt/releases/tag/v0.10.0">v0.10.0 배포</a></td>
+<td>host·Rust ABI 전제, compiler 배포의 선택</td>
+</tr>
+<tr>
+<td><a href="https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/cargo-furiosa-opt/Cargo.toml">Compiler manifest</a> · <a href="https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/base-template/Cargo.toml.liquid">Template manifest</a></td>
+<td>compiler 버전·배포 asset 규칙과 std 허용 범위의 구분</td>
+</tr>
+<tr>
+<td><a href="https://github.com/cargo-bins/cargo-binstall/blob/17717041b8b8d177fd061e56dc8c40abe41120f2/crates/bin/src/args.rs">Binstall 인수</a> · <a href="https://github.com/cargo-generate/cargo-generate/blob/165d2fe0b0d3f4872058a091b2a6201f2bc2e23e/src/args.rs">Generate 인수</a></td>
+<td>설치 버전·template revision 고정</td>
+</tr>
+<tr>
+<td><a href="https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html">Cargo 버전 요구</a> · <a href="https://doc.rust-lang.org/cargo/commands/cargo-metadata.html">Cargo metadata</a></td>
+<td>허용 범위와 실제 선택된 package·version·source의 구분</td>
+</tr>
+<tr>
 <td><a href="https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/base-template/src/constant_add.rs">template host/test</a></td>
 <td>실행·CPU reference 비교</td>
 </tr>
@@ -685,5 +859,13 @@ assert byte_offset == 768                   # 기준 주소로부터 768 bytes �
 <td><a href="https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/scheduling/schedule.md">Schedule</a></td>
 <td>context·자원 경쟁·메모리 의존성</td>
 </tr>
+<tr>
+<td><a href="https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/moving-tensors/dma-engine.md#gather-and-scatter">DMA Gather·Scatter</a></td>
+<td>position·byte offset·Domain·index 저장 배치</td>
+</tr>
+<tr>
+<td><a href="https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-std/src/tensor/memory/dma/gather.rs">Gather 구현</a></td>
+<td>HBM·SPM 인덱스 타입과 단위·배치 검사</td>
+</tr>
 </tbody></table>
-</div></article><nav class="next-prev" aria-label="이전과 다음 장"><a href="../chapter/07-optimization.html"><small>← 이전 장</small><b>최적화의 축과 우선순위</b></a><a href="../chapter/09-torch-aten.html"><small>다음 장 →</small><b>PyTorch와 ATen 디스패처</b></a></nav><footer class="footer">FuryNo5 개발 핸드북 · 비공식 자료<br>공식 문서와 소스의 권리는 각 프로젝트에 있습니다. 코드 인용은 출처와 함께 표시합니다.<br><a href="../review.html">검토 기록과 남은 질문</a> · <a href="../sources.html">출처와 버전</a> · <a href="../glossary.html">용어 사전</a></footer></main></div><aside class="right-toc" aria-label="이 장의 목차"><h2>이 장에서 다루는 내용</h2><a class="" href="#1-같은-행렬을-두-저장-순서로-표현한다">1. 같은 행렬을 두 저장 순서로 표현한다</a><a class="" href="#2-논리-축과-물리-자원의-이름을-구분한다">2. 논리 축과 물리 자원의 이름을 구분한다</a><a class="" href="#3-2-048개-정수를-256개-slice에-나누어-놓는다">3. 2,048개 정수를 256개 slice에 나누어 놓는다</a><a class="minor" href="#는-0을-채우라는-명령이-아니다"># 는 0을 채우라는 명령이 아니다</a><a class="" href="#4-저장된-값이-계산-경로로-흘러가는-과정">4. 저장된 값이 계산 경로로 흘러가는 과정</a><a class="minor" href="#time과-packet은-무엇을-세는가">Time과 Packet은 무엇을 세는가</a><a class="" href="#5-tcl과-visa가-컴파일러에-전달하는-정보">5. TCL과 vISA가 컴파일러에 전달하는 정보</a><a class="minor" href="#visa에서-컴파일된-실행물까지">vISA에서 컴파일된 실행물까지</a><a class="" href="#6-공식-template로-컴파일-실행-정답-비교">6. 공식 template로 컴파일·실행·정답 비교</a><a class="" href="#7-제출과-완료를-분리해-호스트-작업을-겹친다">7. 제출과 완료를 분리해 호스트 작업을 겹친다</a><a class="" href="#8-스케줄에서-데이터-대기와-자원-대기를-구분한다">8. 스케줄에서 데이터 대기와 자원 대기를 구분한다</a><a class="" href="#9-작은-구간부터-실험하는-네-가지-사례">9. 작은 구간부터 실험하는 네 가지 사례</a><a class="minor" href="#a-다음-가중치-준비와-현재-계산을-겹치기">A. 다음 가중치 준비와 현재 계산을 겹치기</a><a class="minor" href="#b-gather-scatter의-인덱스-단위를-맞추기">B. Gather·scatter의 인덱스 단위를 맞추기</a><a class="minor" href="#c-앞-출력과-뒤-입력의-배치를-맞추기">C. 앞 출력과 뒤 입력의 배치를 맞추기</a><a class="minor" href="#d-tcl의-느린-영역을-visa로-재현하기">D. TCL의 느린 영역을 vISA로 재현하기</a><a class="" href="#10-더-아래로-읽기-컴파일-이미지와-런타임-적재">10. 더 아래로 읽기: 컴파일 이미지와 런타임 적재</a><a class="minor" href="#코드-바이트와-실행-이미지의-차이">코드 바이트와 실행 이미지의 차이</a><a class="minor" href="#파일이-준비된-뒤-runtime이-추가하는-것">파일이 준비된 뒤 runtime이 추가하는 것</a><a class="minor" href="#relocation이라는-단어를-정확하게-사용하기">Relocation이라는 단어를 정확하게 사용하기</a><a class="minor" href="#이미지-형식과-장치-프로토콜도-버전-계약이다">이미지 형식과 장치 프로토콜도 버전 계약이다</a><a class="" href="#11-sdk와-opt-경로를-연결하려면-확인할-것">11. SDK와 opt 경로를 연결하려면 확인할 것</a><a class="" href="#출처">출처</a></aside><dialog class="search-dialog" aria-label="문서 검색"><div class="search-head"><input type="search" aria-label="검색어" placeholder="DMA, EDF, 폴백, 버킷…" autocomplete="off"><button class="close-search" type="button">닫기</button></div><div class="search-status" role="status">용어나 함수 이름을 입력하세요.</div><div class="search-results"></div></dialog></body></html>
+</div></article><nav class="next-prev" aria-label="이전과 다음 장"><a href="../chapter/07-optimization.html"><small>← 이전 장</small><b>최적화의 축과 우선순위</b></a><a href="../chapter/09-torch-aten.html"><small>다음 장 →</small><b>PyTorch와 ATen 디스패처</b></a></nav><footer class="footer">FuryNo5 개발 핸드북 · 비공식 자료<br>공식 문서와 소스의 권리는 각 프로젝트에 있습니다. 코드 인용은 출처와 함께 표시합니다.<br><a href="../reader-review.html">3학년 독자 재검토</a> · <a href="../review.html">검토 기록과 남은 질문</a> · <a href="../sources.html">출처와 버전</a> · <a href="../glossary.html">용어 사전</a></footer></main></div><aside class="right-toc" aria-label="이 장의 목차"><h2>이 장에서 다루는 내용</h2><a class="" href="#1-같은-행렬을-두-저장-순서로-표현한다">1. 같은 행렬을 두 저장 순서로 표현한다</a><a class="" href="#2-논리-축과-물리-자원의-이름을-구분한다">2. 논리 축과 물리 자원의 이름을 구분한다</a><a class="" href="#3-2-048개-정수를-256개-slice에-나누어-놓는다">3. 2,048개 정수를 256개 slice에 나누어 놓는다</a><a class="minor" href="#는-0을-채우라는-명령이-아니다"># 는 0을 채우라는 명령이 아니다</a><a class="" href="#4-저장된-값이-계산-경로로-흘러가는-과정">4. 저장된 값이 계산 경로로 흘러가는 과정</a><a class="minor" href="#time과-packet은-무엇을-세는가">Time과 Packet은 무엇을 세는가</a><a class="minor" href="#한-slice에-16개가-있고-한-번에-8개씩-보낸다면">한 slice에 16개가 있고 한 번에 8개씩 보낸다면</a><a class="" href="#5-tcl과-visa가-컴파일러에-전달하는-정보">5. TCL과 vISA가 컴파일러에 전달하는 정보</a><a class="minor" href="#visa에서-컴파일된-실행물까지">vISA에서 컴파일된 실행물까지</a><a class="" href="#6-공식-template로-컴파일-실행-정답-비교">6. 공식 template로 컴파일·실행·정답 비교</a><a class="minor" href="#먼저-네-가지-버전을-각각-확인한다">먼저 네 가지 버전을 각각 확인한다</a><a class="minor" href="#compiler와-template을-고정해서-프로젝트를-만든다">Compiler와 template을 고정해서 프로젝트를 만든다</a><a class="minor" href="#허용-범위와-실제-선택된-라이브러리를-구분한다">허용 범위와 실제 선택된 라이브러리를 구분한다</a><a class="minor" href="#같은-기록으로-cpu-비교와-npu-검증을-순서대로-한다">같은 기록으로 CPU 비교와 NPU 검증을 순서대로 한다</a><a class="" href="#7-제출과-완료를-분리해-호스트-작업을-겹친다">7. 제출과 완료를 분리해 호스트 작업을 겹친다</a><a class="" href="#8-스케줄에서-데이터-대기와-자원-대기를-구분한다">8. 스케줄에서 데이터 대기와 자원 대기를 구분한다</a><a class="" href="#9-작은-구간부터-실험하는-네-가지-사례">9. 작은 구간부터 실험하는 네 가지 사례</a><a class="minor" href="#a-다음-가중치-준비와-현재-계산을-겹치기">A. 다음 가중치 준비와 현재 계산을 겹치기</a><a class="minor" href="#b-gather-scatter의-인덱스-단위를-맞추기">B. Gather·scatter의 인덱스 단위를 맞추기</a><a class="minor" href="#c-앞-출력과-뒤-입력의-배치를-맞추기">C. 앞 출력과 뒤 입력의 배치를 맞추기</a><a class="minor" href="#d-tcl의-느린-영역을-visa로-재현하기">D. TCL의 느린 영역을 vISA로 재현하기</a><a class="" href="#10-더-아래로-읽기-컴파일-이미지와-런타임-적재">10. 더 아래로 읽기: 컴파일 이미지와 런타임 적재</a><a class="minor" href="#코드-바이트와-실행-이미지의-차이">코드 바이트와 실행 이미지의 차이</a><a class="minor" href="#파일이-준비된-뒤-runtime이-추가하는-것">파일이 준비된 뒤 runtime이 추가하는 것</a><a class="minor" href="#relocation이라는-단어를-정확하게-사용하기">Relocation이라는 단어를 정확하게 사용하기</a><a class="minor" href="#이미지-형식과-장치-프로토콜도-버전-계약이다">이미지 형식과 장치 프로토콜도 버전 계약이다</a><a class="" href="#11-sdk와-opt-경로를-연결하려면-확인할-것">11. SDK와 opt 경로를 연결하려면 확인할 것</a><a class="" href="#출처">출처</a></aside><dialog class="search-dialog" aria-label="문서 검색"><div class="search-head"><input type="search" aria-label="검색어" placeholder="DMA, EDF, 폴백, 버킷…" autocomplete="off"><button class="close-search" type="button">닫기</button></div><div class="search-status" role="status">용어나 함수 이름을 입력하세요.</div><div class="search-results"></div></dialog></body></html>

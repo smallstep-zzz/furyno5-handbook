@@ -228,12 +228,24 @@ FuryNo5의 작은 BF16 영역 생성기는 원래 연산마다 있던 반올림 
 
 실수 수학에서 `256+1+1`은 258이다. 그러나 BF16은 모든 정수를 이 구간에서 구분하지 못하므로 연산마다 저장 형식으로 반올림하는 경우와 마지막에 한 번 반올림하는 경우가 달라질 수 있다.
 
+왜 하필 256에서 차이가 나는지 수를 놓고 보자. BF16은 가수의 소수 부분에 7비트를 사용한다. 따라서 `[256,512)` 구간의 인접한 표현 가능 값은 2씩 떨어져 있어 `256, 258, 260, …`은 저장할 수 있지만 257은 그대로 저장할 수 없다. PyTorch의 기본 CPU BF16 변환은 **가까운 값으로 반올림하되 정확히 중간이면 보존할 가수의 마지막 비트가 0인 쪽을 고르는 규칙(round to nearest, ties to even)을** 사용한다. 256과 258을 같은 지수로 쓰면 각각 `128×2`, `129×2`이므로 257은 가수 정수 128인 256 쪽으로 반올림된다. 여기서 even은 256·258이라는 십진 정수의 짝수 여부가 아니라 **보존되는 가수 비트**를 가리킨다. [PyTorch BF16 정의와 기본 변환](https://github.com/pytorch/pytorch/blob/449b1768410104d3ed79d3bcfe4ba1d65c7f22c0/torch/headeronly/util/BFloat16.h#L1-L139)
+
+| 계산 순서 | 반올림 전 값 | 이번 저장 형식 | 저장 뒤 값 |
+|---|---:|---|---:|
+| BF16로 첫 `256+1` | 257 | BF16 | 256 |
+| 방금 저장한 값에 다시 `+1` | 257 | BF16 | 256 |
+| FP32로 첫 `256+1` | 257 | FP32 | 257 |
+| FP32 값에 다시 `+1` | 258 | FP32 | 258 |
+| 마지막에만 BF16로 변환 | 258 | BF16 | 258 |
+
+FP32(Floating Point 32-bit)는 이 작은 정수들을 모두 구분할 수 있다. 아래 코드는 위 두 경로를 CPU tensor로 비교한다. 이 예의 BF16 반올림 규칙을 모든 NPU 명령의 내부 누산 방식으로 일반화하지 않는다.
+
 ```python
 import torch
 
-x = torch.tensor([256.0], dtype=torch.bfloat16)
-stepwise = (x + 1.0) + 1.0                 # BF16 결과를 각 연산 경계에서 저장한다.
-one_round = (x.float() + 1.0 + 1.0).bfloat16() # FP32로 두 번 더한 뒤 마지막에 변환한다.
+x = torch.tensor([256.0], dtype=torch.bfloat16) # 입력 shape (1,), 정확히 표현 가능한 256
+stepwise = (x + 1.0) + 1.0                 # 257→256을 두 번 겪는다. shape (1,) 유지.
+one_round = (x.float() + 1.0 + 1.0).bfloat16() # FP32의 257→258을 보존하고 마지막에만 변환한다.
 assert stepwise.item() == 256.0
 assert one_round.item() == 258.0
 ```
@@ -243,7 +255,28 @@ assert one_round.item() == 258.0
 
 ## 6. 보존된 실측: 작은 영역의 개선을 전체로 다시 확인한다
 
-FuryNo5 저장소의 **2026-11-08** 실험은 BF16 hidden 128, intermediate 256의 작은 gated MLP(Multi-Layer Perceptron)를 사용했다. 선택한 영역의 평균은 76.43→72.59 µs로 약 5.01% 줄었다. 하지만 이를 두 block짜리 작은 합성 모델에 넣은 최종 비교는 다음과 같았다.
+FuryNo5 저장소의 **2026-11-08** 실험은 BF16 hidden 128, intermediate 256의 작은 gated MLP(Multi-Layer Perceptron)를 사용했다. 먼저 무엇을 계산하고 무엇을 바꾼 비교인지 확인하자. **Hidden 128**은 입력과 출력의 특징값이 128개라는 뜻이고, **intermediate 256**은 계산 도중 특징을 256개로 펼친다는 뜻이다. 입력 shape `[1,128]`에서 앞의 1은 한 행, 즉 이번 실험의 입력 샘플 수다.
+
+이 gated MLP는 같은 입력을 두 가중치로 변환해 `g`와 `u`를 만들고, `g`를 비선형 함수로 바꾼 값과 `u`를 **같은 좌표끼리 곱한다**. 마지막 행렬곱이 다시 128개 특징으로 줄인다. SiLU(Sigmoid Linear Unit)는 원소 z를 `z/(1+exp(-z))`로 바꾸는 함수다. 아래 식의 `*`는 원소별 곱이며 `@`인 행렬곱과 다르다.
+
+| 단계 | 계산 의미 | shape 변화 |
+|---|---|---|
+| gate 쪽 변환 | `g = x @ Wg.T` | `(1,128) @ (128,256) → (1,256)` |
+| 다른 내용 변환 | `u = x @ Wu.T` | `(1,128) @ (128,256) → (1,256)` |
+| 비선형 gate와 원소별 곱 | `p = SiLU(g) * u` | `(1,256) → (1,256)` |
+| 출력 변환 | `y = p @ Wd.T` | `(1,256) @ (256,128) → (1,128)` |
+
+예를 들어 어느 좌표의 `g=0`이면 SiLU 결과도 0이어서 그 좌표의 `u` 기여는 0이 된다. 실제 실험은 이런 계산 사이의 BF16 반올림도 계약으로 검사했다. `.T`는 행·열 좌표를 바꾸는 전치다. 가중치를 PyTorch Linear의 `[출력 특징, 입력 특징]` 순서로 저장했으므로 식에 전치가 들어간다. [실험의 계산·반올림 기준](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/research/l2_rules.py#L56-L69)
+
+| 비교 대상 | 같은 계산을 다르게 구성한 부분 | 한 모델 block의 프로그램 수 |
+|---|---|---:|
+| baseline | `g`와 `u`를 별도 Linear로 표현하고 전체 gated MLP를 한 프로그램으로 준비 | 1 |
+| packed 선택안 | `Wg`와 `Wu`를 미리 이어 `(512,128)`로 준비. 하나의 Linear가 `(1,512)`를 만들고 앞·뒤 256개를 `g`·`u`로 사용 | 1 |
+| 3-program 분할 대조군 | `g,u` 생성 / SiLU와 원소별 곱 / 마지막 Linear를 각각 호출하는 세 프로그램으로 분리 | 3 |
+
+Packed는 원소 수를 버리는 압축이 아니라 **같은 두 계산의 가중치를 함께 배치하는 방식**이다. 프로그램 수가 1이어도 내부 계산 표현은 다를 수 있으며, 프로그램 하나를 물리 명령 하나라고 해석하지 않는다. 코드의 `runtime_args()`가 정적 weight packing을, `stages()`가 위 세 구성을 정한다. [후보의 인수와 단계 구성](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/research/l2_rules.py#L72-L184)
+
+선택한 gated MLP 영역 하나의 평균은 76.43→72.59 µs로 약 5.01% 줄었다. 다음 비교는 **그 영역을 두 번 연결한 완전한 작은 모델**이다. `첫 block(x) → 둘째 block(첫 출력)`이며 두 block이 같은 가중치를 공유한다. 여기서 block은 모델 구조의 반복 단위다. 완전한 사전학습 언어 모델을 뜻하지 않는다. [두 block을 연결하는 실제 시험](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tests/validate_selected_runtime.py)
 
 | 두 block 합성 모델 | 평균 완료 시간 | 반복 호출 수 |
 |---|---:|---:|
@@ -251,7 +284,9 @@ FuryNo5 저장소의 **2026-11-08** 실험은 BF16 hidden 128, intermediate 256�
 | packed 선택안 | 164.99 µs | 7,200 |
 | 3-program 분할 대조군 | 296.76 µs | 4,020 |
 
-각 항목은 30개 측정 block이다. 이 시간은 resident 입력을 사용하고 Python dispatch와 stream 완료를 포함하며, compile·load·정적 packing·H2D·profiling·D2H를 제외했다. 전체 개선은 **4.18%로** 보고서의 5% 배포 기준에 못 미쳐 baseline을 유지했다. 이 표는 이번 집필에서 새로 측정한 결과가 아니다. 보존된 raw block JSON을 재집계해 수치를 확인했다. [실험 설명](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/RUNTIME_SELECTION.md) · [원시 측정 block](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/validation/runtime-selection-20261108/repeated_blocks.json) · [영역 선택 기록](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/validation/runtime-selection-20261108/decision.json)
+각 항목은 **30개 측정 구간(measurement block)이다**. 이 block은 위의 모델 block과 다른 말이다. 한 측정 구간 동안 두-block 모델 전체를 여러 번 호출하고, 총 경과시간을 완료한 모델 호출 수로 나누어 한 호출의 평균을 계산했다. baseline의 6,390회는 `30구간×구간당 213회`이며, 모델이 30층 또는 6,390층이라는 뜻이 아니다. 비교 순서를 구간마다 회전시켰고, 초기 pilot으로 구간당 반복 수를 골랐기 때문에 세 후보의 총 호출 수가 다르다.
+
+이 시간은 resident 입력을 사용하고 Python dispatch와 stream 완료를 포함하며, compile·load·정적 packing·H2D·profiling·D2H를 제외했다. 전체 개선은 **4.18%로** 보고서의 5% 배포 기준에 못 미쳐 baseline을 유지했다. 이 표는 이번 집필에서 새로 측정한 결과가 아니다. 보존된 raw block JSON을 재집계해 수치를 확인했다. [실험 설명](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/RUNTIME_SELECTION.md) · [원시 측정 block](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/validation/runtime-selection-20261108/repeated_blocks.json) · [영역 선택 기록](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/validation/runtime-selection-20261108/decision.json)
 
 교훈은 “분할은 항상 나쁘다”가 아니다. 이 조건에서는 해당 분할이 느렸고, 지역적 최적화의 이득도 전체 기준에는 부족했다. 다른 shape·메모리 한계·입출력 API에서는 다시 비교해야 한다.
 
@@ -333,3 +368,6 @@ FuryNo5 `official_tools.evaluate`는 결과에 `source_kind="compiler_estimate"`
 | [보존된 runtime 실험](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/RUNTIME_SELECTION.md) | 작은 모델의 전체 성능 판정 |
 | [FuryNo5 semantic tuning](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/SEMANTIC_TUNING.md) | 후보 생성·실측 선택·서빙 분리 |
 | [2026.5 beta release note](https://developer.furiosa.ai/v2026.5.0b4/en/whatsnew/release-2026.5.0b0.html) | evaluate-tcl 버전 범위 |
+| [PyTorch BF16 구현](https://github.com/pytorch/pytorch/blob/449b1768410104d3ed79d3bcfe4ba1d65c7f22c0/torch/headeronly/util/BFloat16.h) | 표현 비트 수·기본 round-to-nearest-even 변환 |
+| [gated MLP 후보 정의](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/research/l2_rules.py) | 수식·중간 반올림·packed와 분할의 차이 |
+| [전체 작은 모델 검증 코드](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tests/validate_selected_runtime.py) | 가중치 공유 두 block과 30개 측정 구간의 구분 |

@@ -1,6 +1,6 @@
 <!doctype html>
-<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="장치 내부 융합과 모델 병렬, 데이터 병렬, 서버 라우팅을 구분합니다."><meta name="theme-color" content="#fbfaf7"><title>여러 NPU로 확장하기 · FuryNo5 개발 핸드북</title><link rel="icon" href="../assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="../assets/site.css?v=5454d41416bc"><script defer src="../assets/site.js?v=aeae33420bbb"></script></head>
-<body data-root="../" data-chapter="15-multi-npu" data-search-version="e58e3b38bb8f"><a class="skip" href="#content">본문으로 이동</a><header class="topbar"><button class="menu-toggle" type="button" aria-label="전체 목차 열기" aria-controls="sidebar" aria-expanded="false">☰</button><a class="brand" href="../index.html"><span class="brand-mark">Nº5</span>FuryNo5<small>DEVELOPER HANDBOOK</small></a><div class="top-actions"><a class="top-link" href="../sources.html">출처와 버전</a><button class="search-open" type="button" aria-label="핸드북 전체 검색"><span>전체 문서 검색</span><kbd>⌘ K</kbd></button></div></header><div class="progress" aria-hidden="true"></div><div class="mobile-shade"></div><aside class="sidebar" id="sidebar" aria-label="전체 목차"><nav><div class="nav-caption">시작하기</div><a class="nav-link"  href="../index.html"><span class="num">00</span><span>전체 지도와 읽는 방법</span></a><div class="nav-caption">I. 디바이스를 이해하기</div><a class="nav-link"  href="../chapter/01-hardware.html"><span class="num">01</span><span>RNGD · TCP · PE</span></a><a class="nav-link"  href="../chapter/02-memory-dma.html"><span class="num">02</span><span>메모리 · DMA · 배치</span></a><a class="nav-link"  href="../chapter/03-driver-runtime.html"><span class="num">03</span><span>드라이버와 공식 런타임</span></a><div class="nav-caption">II. 프로그램을 만들고 실행하기</div><a class="nav-link"  href="../chapter/04-tcl-edf.html"><span class="num">04</span><span>TCL 작성 · 컴파일 · 실행</span></a><a class="nav-link"  href="../chapter/05-graphs-fallback.html"><span class="num">05</span><span>실행그래프 · 오류 · 폴백</span></a><a class="nav-link"  href="../chapter/06-buckets-shapes.html"><span class="num">06</span><span>Shape · 버킷 · 컴파일 비용</span></a><a class="nav-link"  href="../chapter/07-optimization.html"><span class="num">07</span><span>최적화의 축과 우선순위</span></a><a class="nav-link"  href="../chapter/08-eisa-visa.html"><span class="num">08</span><span>eISA · vISA · furiosa-opt</span></a><div class="nav-caption">III. FuryNo5를 해부하기</div><a class="nav-link"  href="../chapter/09-torch-aten.html"><span class="num">09</span><span>PyTorch · ATen · 등록</span></a><a class="nav-link"  href="../chapter/10-furyno5-architecture.html"><span class="num">10</span><span>FuryNo5 구조와 지원 범위</span></a><a class="nav-link"  href="../chapter/11-furyno5-compiler.html"><span class="num">11</span><span>FuryNo5 컴파일과 캐시</span></a><div class="nav-caption">IV. 모델 포팅과 서빙</div><a class="nav-link"  href="../chapter/12-fxbx.html"><span class="num">12</span><span>fxbX 포맷과 실행계획</span></a><a class="nav-link"  href="../chapter/13-porting-fha.html"><span class="num">13</span><span>포팅 · FHA · FuryAwesome</span></a><a class="nav-link"  href="../chapter/14-serving-vllm.html"><span class="num">14</span><span>vLLM · 서빙 브리지</span></a><a class="nav-link active" aria-current="page" href="../chapter/15-multi-npu.html"><span class="num">15</span><span>PE · 여러 카드 · 여러 서버</span></a><div class="nav-caption">V. 검증과 다음 개발</div><a class="nav-link"  href="../chapter/16-furyboost.html"><span class="num">16</span><span>FuryBoost 실측과 남은 과제</span></a><a class="nav-link"  href="../chapter/17-debugging.html"><span class="num">17</span><span>측정 · 추적 · 실패 재현</span></a><div class="nav-caption">VI. 생태계 비교와 최적화 연구</div><a class="nav-link"  href="../chapter/18-npu-ecosystems.html"><span class="num">18</span><span>다른 NPU의 지원 방식</span></a><a class="nav-link"  href="../chapter/19-model-optimization.html"><span class="num">19</span><span>모델 사전 최적화 · 연구</span></a><div class="nav-caption">참고와 검증</div><a class="nav-link"  href="../glossary.html"><span class="num">·</span><span>약어와 용어 사전</span></a><a class="nav-link"  href="../sources.html"><span class="num">·</span><span>출처 · 버전 · 접근 범위</span></a><a class="nav-link"  href="../review.html"><span class="num">·</span><span>검토 기록과 미해결 질문</span></a></nav><div class="side-foot">비공식 개발 핸드북 · 2026.11.19<br>공식 SDK와 프로젝트 구현을 구분합니다.<br><a href="https://github.com/smallstep-zzz/furyno5-handbook">원고와 변경 이력 ↗</a></div></aside><div class="shell"><main class="page" id="content"><div class="eyebrow">IV. 모델 포팅과 서빙 / CHAPTER 15</div><h1>여러 NPU로 확장하기</h1><p class="dek">장치 내부 융합과 모델 병렬, 데이터 병렬, 서버 라우팅을 구분합니다.</p><div class="page-meta"><span>검토 2026.11.19</span><span>SDK 2026.4 계열 / 버전별 표기</span><span class="readtime">약 14분</span><span><a href="https://github.com/smallstep-zzz/furyno5-handbook/blob/main/content/15-multi-npu.md">원고</a></span></div><details class="mobile-toc"><summary>이 장의 목차</summary><div><a class="" href="#1-같은-숫자-8이라도-의미가-다르다">1. 같은 숫자 8이라도 의미가 다르다</a><a class="" href="#2-요청-행렬-층을-각각-나누어-본다">2. 요청·행렬·층을 각각 나누어 본다</a><a class="minor" href="#dp-같은-실행기를-복제하고-요청을-나눈다">DP: 같은 실행기를 복제하고 요청을 나눈다</a><a class="minor" href="#tp-같은-계산을-나누면-결과를-모으는-단계가-필요하다">TP: 같은 계산을 나누면 결과를 모으는 단계가 필요하다</a><a class="minor" href="#pp-생산-라인처럼-서로-다른-요청이-다른-층에-머문다">PP: 생산 라인처럼 서로 다른 요청이 다른 층에 머문다</a><a class="" href="#3-현재-구현-상태를-분리한다">3. 현재 구현 상태를 분리한다</a><a class="" href="#4-먼저-요청-단위-분산을-검토한다">4. 먼저 요청 단위 분산을 검토한다</a><a class="" href="#5-cache가-있는-서버를-고르는-방법">5. cache가 있는 서버를 고르는 방법</a><a class="" href="#6-kv를-옮길지-다시-계산할지">6. KV를 옮길지 다시 계산할지</a><a class="" href="#7-공식-경로의-설정-예와-fxbx-개발-과제">7. 공식 경로의 설정 예와 fxbX 개발 과제</a><a class="" href="#8-무엇을-측정해야-확장이-성공한-것인가">8. 무엇을 측정해야 확장이 성공한 것인가</a><a class="" href="#출처">출처</a></div></details><noscript><p class="noscript">본문과 그림은 JavaScript 없이 읽을 수 있습니다. 검색과 조절 실험에는 JavaScript가 필요합니다.</p></noscript><article class="article"><p>웹 서버의 worker를 두 개로 늘릴 때 먼저 확인하는 것은 작업이 독립적인지, 공유 상태가 있는지, 메모리가 두 배 필요한지다. NPU(Neural Processing Unit)를 늘릴 때도 같은 질문에서 시작한다. <strong>서로 다른 요청을 나누는 방법, 한 행렬 계산을 나누는 방법, 모델의 층을 나누는 방법은 비용과 필요한 구현이 다르다.</strong> 이 장은 작은 계산과 시간표로 그 차이를 먼저 확인한다. FuryNo5·fxbX의 현재 커스텀 실행 계획은 한 장치의 fusion 8·Single 계약을 검사한다. 여러 카드를 꽂았다는 이유로 그 계획이 자동 분산되지는 않는다. 공식 Furiosa-LLM의 병렬성, 최신 opt-vLLM의 병렬성, 우리 프로젝트의 구현 상태도 서로 구분한다. <a href="https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py#L132-L162">fxbX device 계약</a> · <a href="https://developer.furiosa.ai/v2026.4.0/en/furiosa_llm/model-parallelism.html">공식 병렬성</a></p>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="장치 내부 융합과 모델 병렬, 데이터 병렬, 서버 라우팅을 구분합니다."><meta name="theme-color" content="#fbfaf7"><title>여러 NPU로 확장하기 · FuryNo5 개발 핸드북</title><link rel="icon" href="../assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="../assets/site.css?v=cb5aa5a870ba"><script defer src="../assets/site.js?v=aeae33420bbb"></script></head>
+<body data-root="../" data-chapter="15-multi-npu" data-search-version="5328e86ff6da"><a class="skip" href="#content">본문으로 이동</a><header class="topbar"><button class="menu-toggle" type="button" aria-label="전체 목차 열기" aria-controls="sidebar" aria-expanded="false">☰</button><a class="brand" href="../index.html"><span class="brand-mark">Nº5</span>FuryNo5<small>DEVELOPER HANDBOOK</small></a><div class="top-actions"><a class="top-link" href="../sources.html">출처와 버전</a><button class="search-open" type="button" aria-label="핸드북 전체 검색"><span>전체 문서 검색</span><kbd>⌘ K</kbd></button></div></header><div class="progress" aria-hidden="true"></div><div class="mobile-shade"></div><aside class="sidebar" id="sidebar" aria-label="전체 목차"><nav><div class="nav-caption">시작하기</div><a class="nav-link"  href="../index.html"><span class="num">00</span><span>전체 지도와 읽는 방법</span></a><div class="nav-caption">I. 디바이스를 이해하기</div><a class="nav-link"  href="../chapter/01-hardware.html"><span class="num">01</span><span>RNGD · TCP · PE</span></a><a class="nav-link"  href="../chapter/02-memory-dma.html"><span class="num">02</span><span>메모리 · DMA · 배치</span></a><a class="nav-link"  href="../chapter/03-driver-runtime.html"><span class="num">03</span><span>드라이버와 공식 런타임</span></a><div class="nav-caption">II. 프로그램을 만들고 실행하기</div><a class="nav-link"  href="../chapter/04-tcl-edf.html"><span class="num">04</span><span>TCL 작성 · 컴파일 · 실행</span></a><a class="nav-link"  href="../chapter/05-graphs-fallback.html"><span class="num">05</span><span>실행그래프 · 오류 · 폴백</span></a><a class="nav-link"  href="../chapter/06-buckets-shapes.html"><span class="num">06</span><span>Shape · 버킷 · 컴파일 비용</span></a><a class="nav-link"  href="../chapter/07-optimization.html"><span class="num">07</span><span>최적화의 축과 우선순위</span></a><a class="nav-link"  href="../chapter/08-eisa-visa.html"><span class="num">08</span><span>eISA · vISA · furiosa-opt</span></a><div class="nav-caption">III. FuryNo5를 해부하기</div><a class="nav-link"  href="../chapter/09-torch-aten.html"><span class="num">09</span><span>PyTorch · ATen · 등록</span></a><a class="nav-link"  href="../chapter/10-furyno5-architecture.html"><span class="num">10</span><span>FuryNo5 구조와 지원 범위</span></a><a class="nav-link"  href="../chapter/11-furyno5-compiler.html"><span class="num">11</span><span>FuryNo5 컴파일과 캐시</span></a><div class="nav-caption">IV. 모델 포팅과 서빙</div><a class="nav-link"  href="../chapter/12-fxbx.html"><span class="num">12</span><span>fxbX 포맷과 실행계획</span></a><a class="nav-link"  href="../chapter/13-porting-fha.html"><span class="num">13</span><span>포팅 · FHA · FuryAwesome</span></a><a class="nav-link"  href="../chapter/14-serving-vllm.html"><span class="num">14</span><span>vLLM · 서빙 브리지</span></a><a class="nav-link active" aria-current="page" href="../chapter/15-multi-npu.html"><span class="num">15</span><span>PE · 여러 카드 · 여러 서버</span></a><div class="nav-caption">V. 검증과 다음 개발</div><a class="nav-link"  href="../chapter/16-furyboost.html"><span class="num">16</span><span>FuryBoost 실측과 남은 과제</span></a><a class="nav-link"  href="../chapter/17-debugging.html"><span class="num">17</span><span>측정 · 추적 · 실패 재현</span></a><div class="nav-caption">VI. 생태계 비교와 최적화 연구</div><a class="nav-link"  href="../chapter/18-npu-ecosystems.html"><span class="num">18</span><span>다른 NPU의 지원 방식</span></a><a class="nav-link"  href="../chapter/19-model-optimization.html"><span class="num">19</span><span>모델 사전 최적화 · 연구</span></a><div class="nav-caption">참고와 검증</div><a class="nav-link"  href="../glossary.html"><span class="num">·</span><span>약어와 용어 사전</span></a><a class="nav-link"  href="../sources.html"><span class="num">·</span><span>출처 · 버전 · 접근 범위</span></a><a class="nav-link"  href="../review.html"><span class="num">·</span><span>검토 기록과 미해결 질문</span></a><a class="nav-link"  href="../reader-review.html"><span class="num">·</span><span>3학년 독자 검토와 수정 기록</span></a></nav><div class="side-foot">비공식 개발 핸드북 · 2026.11.20<br>공식 SDK와 프로젝트 구현을 구분합니다.<br><a href="https://github.com/smallstep-zzz/furyno5-handbook">원고와 변경 이력 ↗</a></div></aside><div class="shell"><main class="page" id="content"><div class="eyebrow">IV. 모델 포팅과 서빙 / CHAPTER 15</div><h1>여러 NPU로 확장하기</h1><p class="dek">장치 내부 융합과 모델 병렬, 데이터 병렬, 서버 라우팅을 구분합니다.</p><div class="page-meta"><span>독자 검토 2026.11.20</span><span>SDK 2026.4 계열 / 버전별 표기</span><span class="readtime">약 18분</span><span><a href="https://github.com/smallstep-zzz/furyno5-handbook/blob/main/content/15-multi-npu.md">원고</a></span></div><details class="mobile-toc"><summary>이 장의 목차</summary><div><a class="" href="#1-같은-숫자-8이라도-의미가-다르다">1. 같은 숫자 8이라도 의미가 다르다</a><a class="" href="#2-요청-행렬-층을-각각-나누어-본다">2. 요청·행렬·층을 각각 나누어 본다</a><a class="minor" href="#dp-같은-실행기를-복제하고-요청을-나눈다">DP: 같은 실행기를 복제하고 요청을 나눈다</a><a class="minor" href="#tp-같은-계산을-나누면-결과를-모으는-단계가-필요하다">TP: 같은 계산을 나누면 결과를 모으는 단계가 필요하다</a><a class="minor" href="#pp-생산-라인처럼-서로-다른-요청이-다른-층에-머문다">PP: 생산 라인처럼 서로 다른 요청이 다른 층에 머문다</a><a class="" href="#3-현재-구현-상태를-분리한다">3. 현재 구현 상태를 분리한다</a><a class="" href="#4-먼저-요청-단위-분산을-검토한다">4. 먼저 요청 단위 분산을 검토한다</a><a class="" href="#5-cache가-있는-서버를-고르는-방법">5. cache가 있는 서버를 고르는 방법</a><a class="minor" href="#처음-고르는-복제본과-매번-고르는-실행-요청은-다르다">처음 고르는 복제본과 매번 고르는 실행 요청은 다르다</a><a class="" href="#6-kv를-옮길지-다시-계산할지">6. KV를 옮길지 다시 계산할지</a><a class="" href="#7-공식-경로의-설정-예와-fxbx-개발-과제">7. 공식 경로의 설정 예와 fxbX 개발 과제</a><a class="" href="#8-무엇을-측정해야-확장이-성공한-것인가">8. 무엇을 측정해야 확장이 성공한 것인가</a><a class="" href="#출처">출처</a></div></details><noscript><p class="noscript">본문과 그림은 JavaScript 없이 읽을 수 있습니다. 검색과 조절 실험에는 JavaScript가 필요합니다.</p></noscript><article class="article"><p>웹 서버의 worker를 두 개로 늘릴 때 먼저 확인하는 것은 작업이 독립적인지, 공유 상태가 있는지, 메모리가 두 배 필요한지다. NPU(Neural Processing Unit)를 늘릴 때도 같은 질문에서 시작한다. <strong>서로 다른 요청을 나누는 방법, 한 행렬 계산을 나누는 방법, 모델의 층을 나누는 방법은 비용과 필요한 구현이 다르다.</strong> 이 장은 작은 계산과 시간표로 그 차이를 먼저 확인한다. FuryNo5·fxbX의 현재 커스텀 실행 계획은 한 장치의 fusion 8·Single 계약을 검사한다. 여러 카드를 꽂았다는 이유로 그 계획이 자동 분산되지는 않는다. 공식 Furiosa-LLM의 병렬성, 최신 opt-vLLM의 병렬성, 우리 프로젝트의 구현 상태도 서로 구분한다. <a href="https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py#L132-L162">fxbX device 계약</a> · <a href="https://developer.furiosa.ai/v2026.4.0/en/furiosa_llm/model-parallelism.html">공식 병렬성</a></p>
 <h2 id="1-같은-숫자-8이라도-의미가-다르다"><a class="heading-anchor" href="#1-같은-숫자-8이라도-의미가-다르다">1. 같은 숫자 8이라도 의미가 다르다</a></h2>
 <p>먼저 자원 단위를 정리하자. <strong>호스트(host)는</strong> 여기서 OS(Operating System)와 CPU(Central Processing Unit), 주 메모리를 가진 서버다. <strong>카드(card)는</strong> 그 서버에 장착한 RNGD 장치이며, <strong>PE(Processing Element)는</strong> 카드 안에서 계산을 담당하는 처리 단위다. 한 RNGD 카드의 PE는 8개다. 카드의 <strong>HBM(High Bandwidth Memory)은</strong> 계산에 사용할 가중치·입출력·중간값을 담는 장치 메모리다. 두 서버의 메모리는 같은 주소 공간이 아니므로 원격 자료를 사용하려면 통신이 필요하다. <a href="https://developer.furiosa.ai/v2026.4.0/en/furiosa_llm/model-parallelism.html">공식 자원 단위</a></p>
 <p><strong>PE binding(PE 자원 연결)은</strong> 어느 실행기나 작업에 어느 PE 집합을 사용할 수 있게 연결할지 정하는 자원 배치 문제다. OS의 CPU affinity가 실행할 코어 집합을 지정하는 것과 비교할 수 있지만, NPU 연산을 여러 PE로 나누는 방법까지 CPU thread처럼 자동 결정된다는 뜻은 아니다. <strong>Fusion 8</strong>은 이 실행 규격에서 PE 8개를 묶어 사용하는 설정이다. fxbX의 현재 소비자는 <code>fusion=8</code>과 <code>mesh=single</code>이라는 장치 배치 계약을 검사한다. <code>Single</code>은 SDK(Software Development Kit)의 해당 배치 설정 이름이며, “모델 복제본 8개”나 “서버 여러 대에 자동 분산”이라는 의미가 아니다. <a href="https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py#L132-L162">현재 설정 검사</a></p>
@@ -107,6 +107,45 @@
 </tbody></table>
 </div><p>계산을 반으로 나눴더라도 마지막 합은 남는다. <strong>Reduction(축약)은</strong> 여러 값을 합·최댓값 같은 규칙으로 하나의 결과로 모으는 연산이다. 여러 참여자가 결과를 합치고 모두 같은 결과를 받으면 <strong>all-reduce</strong>, 각자가 가진 서로 다른 조각을 모두에게 모아 주면 <strong>all-gather</strong>라고 부른다. 이런 여러 장치 사이의 공동 통신 연산이 <strong>collective</strong>다.</p>
 <p>다른 분할도 가능하다. W의 열을 나누면 장치 0은 최종 출력 <code>[7]</code>, 장치 1은 <code>[10]</code>을 만든다. 뒤 연산이 전체 벡터를 요구하면 두 조각을 <strong>concat(concatenation, 같은 축으로 이어 붙이기)해</strong> <code>[7,10]</code>으로 모아야 한다. <code>[7]+[10]</code>을 원소별로 더해 <code>[17]</code>을 만드는 것과 다르다. 입력 축 분할은 부분 <strong>합</strong>을, 출력 축 분할은 서로 다른 출력 <strong>조각</strong>을 만들기 때문에 결합 방법도 다르다. 실제 모델은 이런 분할·모으기의 위치를 조절한다. <strong>Activation(활성값)은</strong> 층이 계산해 다음 층으로 넘기는 중간 tensor이고, TP는 가중치와 activation을 어떻게 나눌지도 정해야 한다. 작은 입력에서는 절약한 계산보다 통신·완료 대기의 비중이 커질 수 있다. <a href="https://developer.furiosa.ai/v2026.4.0/en/furiosa_llm/model-parallelism.html">공식 TP 개념과 구성</a></p>
+<h4 id="부분합-뒤에-어떤-연산이-오는지-확인한다"><a class="heading-anchor" href="#부분합-뒤에-어떤-연산이-오는지-확인한다">부분합 뒤에 어떤 연산이 오는지 확인한다</a></h4>
+<p>“나중에 합치면 된다”는 판단은 다음 연산의 성질에 달려 있다. 두 장치가 <strong>같은 출력 원소의 부분합</strong> <code>-2</code>와 <code>3</code>을 만들었다고 하자. 뒤 연산이 ReLU(Rectified Linear Unit), 즉 <code>max(0,x)</code>로 음수는 0으로 바꾸고 양수는 유지하는 함수라면 다음 두 순서는 다르다.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>순서</th>
+<th>계산</th>
+<th align="right">결과</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>먼저 부분합을 합치고 ReLU</td>
+<td><code>max(0, -2+3)</code></td>
+<td align="right">1</td>
+</tr>
+<tr>
+<td>각 장치에서 ReLU 후 합치기</td>
+<td><code>max(0,-2)+max(0,3)</code></td>
+<td align="right">3</td>
+</tr>
+</tbody></table>
+</div><p>음수 부분합 <code>-2</code>는 전체 출력에서 <code>3</code>을 상쇄하는 데 필요하다. 먼저 0으로 없애면 상쇄할 정보가 사라진다. ReLU처럼 입력에 따라 규칙이 달라져 일반적으로 <code>f(a+b)=f(a)+f(b)</code>가 성립하지 않는 연산을 <strong>비선형 연산</strong>이라고 부른다. 이 예에서는 합치는 완료 경계가 ReLU보다 앞에 있어야 같은 모델을 유지한다.</p>
+<p><a href="../examples/tp_reduction_demo.py">tp_reduction_demo.py</a>는 숫자와 순서만 확인하는 순수 Python 예다. 분산 통신이나 RNGD를 실행하는 코드는 아니다.</p>
+<div class="codebox"><div class="codebar"><span>python</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-python">def relu(value):
+    return max(0, value)  # 음수만 0으로 바꾸는 원소별 함수
+
+partial_0, partial_1 = -2, 3  # 서로 다른 출력이 아니라 같은 원소에 더할 두 부분
+correct = relu(partial_0 + partial_1)  # 먼저 완성한 출력 1에 ReLU 적용
+wrong = relu(partial_0) + relu(partial_1)  # 음수 부분을 일찍 버려 결과가 3이 됨
+assert (correct, wrong) == (1, 3)
+print(correct, wrong)
+
+# 반대로 두 값이 이미 완성된 서로 다른 출력 원소라면 원소별 처리 뒤 연결 가능
+separate_outputs = [-2, 3]
+processed_slices = [relu(separate_outputs[0]), relu(separate_outputs[1])]
+assert processed_slices == [0, 3]  # 전체 벡터 [-2,3]에 원소별 ReLU한 것과 같다.
+print(processed_slices)
+</code></pre></div>
+<p>아래 두 줄은 모양이 모두 길이 2이지만 의미가 다르다. <code>[-2,3]</code>이 <strong>같은 원소를 위한 두 부분합</strong>이면 합친 <code>[1]</code>이 실제 출력이고, <strong>서로 다른 두 출력 조각</strong>이면 연결한 <code>[-2,3]</code>이 실제 출력이다. 후자는 ReLU처럼 원소별로 독립인 함수를 각 조각에서 수행할 수 있다. 그러나 다음 함수가 전체 벡터의 합·평균 등에 의존하면 다시 전체 정보가 필요할 수 있다. 그래서 TP 설계는 모든 층에 같은 all-reduce를 붙이는 규칙이 아니라, 분할 축·부분 결과의 의미·다음 함수의 의존성을 함께 보존하는 작업이다.</p>
 <h3 id="pp-생산-라인처럼-서로-다른-요청이-다른-층에-머문다"><a class="heading-anchor" href="#pp-생산-라인처럼-서로-다른-요청이-다른-층에-머문다">PP: 생산 라인처럼 서로 다른 요청이 다른 층에 머문다</a></h3>
 <p>모델의 앞 층을 stage 1, 뒤 층을 stage 2에 놓자. <strong>Stage(단계)는</strong> 한 장치 또는 장치 그룹이 맡는 연속된 층 구간이다. 각 단계에 10 ms가 걸리고 전송 비용은 무시하는 교육용 예에서 요청 A·B·C의 진행은 다음과 같다.</p>
 <div class="table-wrap"><table>
@@ -241,7 +280,7 @@
 </tr>
 </tbody></table>
 </div><p><strong>Prefix(공통 앞부분)는</strong> 여러 요청이 공유하는 입력 토큰의 앞 구간이다. 그 구간의 KV가 있다면 <strong>prefill(입력 문맥 계산)</strong> 일부를 다시 하지 않아도 된다. 반대로 <strong>decode(새 토큰 생성)</strong> 시간은 생성할 길이에 좌우된다. 이 예에서는 바쁘지만 cache가 있는 A가 가장 빨리 끝난다. A의 큐가 100 ms로 늘면 B가 더 낫다. cache 적중률 하나만 최대화할 수 없는 이유다.</p>
-<p>우리 cluster의 비용 모델을 만든다면 다음처럼 명시할 수 있다. 아래 함수는 <strong>설계용 의사코드</strong>이며 실제 fxbX API가 아니다. 각 시간은 운영 중 측정한 예측값이다.</p>
+<p>우리 cluster에서 <strong>새 요청을 처음 배정하는</strong> 비용 모델을 만든다면 다음처럼 명시할 수 있다. 아래 함수는 <strong>설계용 의사코드</strong>이며 실제 fxbX API가 아니다. 각 시간은 운영 중 측정한 예측값이다.</p>
 <div class="codebox"><div class="codebar"><span>python</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-python">def estimated_finish_ms(worker, request):
     return (
         worker.queue_wait_ms(request)  # 이미 대기·실행 중인 요청 때문에 기다릴 시간
@@ -252,6 +291,7 @@
     )
 
 def choose_worker(workers, request):
+    # 아직 실행 상태를 갖지 않은 새 요청을 배정할 때 호출하는 설계용 함수다.
     # 메모리뿐 아니라 모델·상태·실행 규격이 맞는 후보만 남긴다.
     eligible = [w for w in workers if w.can_admit(request)]
     if not eligible:
@@ -260,6 +300,52 @@ def choose_worker(workers, request):
 </code></pre></div>
 <p>위 함수의 입력은 worker별 상태와 요청이고 출력은 예상 완료 시간이 가장 작은 worker다. 메서드 이름들은 우리가 구현해야 할 예측기의 자리이지 제공되는 fxbX 함수가 아니다. 생성 길이와 대기시간의 예측이 틀릴 수 있으므로 실제 완료시간으로 오차도 기록해야 한다.</p>
 <p><code>can_admit</code>는 단순 여유 메모리 검사만이 아니다. SDK·package hash·tokenizer·KV dtype·bucket 계약이 맞는지, 요청 상태가 그 장치에 묶여 있는지, 다른 작업의 잠금이 있는지도 검사한다. cache key에는 token prefix뿐 아니라 model revision과 실행 의미에 영향을 주는 설정이 들어가야 다른 모델의 KV를 재사용하지 않는다.</p>
+<h3 id="처음-고르는-복제본과-매번-고르는-실행-요청은-다르다"><a class="heading-anchor" href="#처음-고르는-복제본과-매번-고르는-실행-요청은-다르다">처음 고르는 복제본과 매번 고르는 실행 요청은 다르다</a></h3>
+<p>위 <code>choose_worker</code>는 이 설계에서 요청을 처음 받아 <strong>모델 복제본을 정할 때</strong> 사용한다. 14장의 continuous batching scheduler는 이미 그 복제본에 배정된 요청들 중 이번 계산에 참여할 요청·토큰을 고른다. 두 선택은 처리하는 큐와 상태의 범위가 다르다.</p>
+<p>설명용 요청 R의 입력이 세 토큰이고 A에 배정됐다고 하자. 다음 표의 길이는 실제로 모델에 넣어 계산한 KV 위치 수이며, 아직 입력으로 다시 넣지 않은 마지막 출력 토큰은 포함하지 않는다.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>시점</th>
+<th>결정 담당</th>
+<th>요청 R의 상태</th>
+<th>A/B 사이에서 다시 배정하는가?</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>접수</td>
+<td>신규 요청 router</td>
+<td>아직 R의 KV 없음. 후보 A·B 비교</td>
+<td>여기서 A 선택</td>
+</tr>
+<tr>
+<td>prefill 완료</td>
+<td>A 내부 scheduler·engine</td>
+<td>A에 입력 3위치의 KV, 첫 출력 토큰 선택</td>
+<td>아니오</td>
+</tr>
+<tr>
+<td>첫 decode</td>
+<td>A 내부 scheduler·engine</td>
+<td>선택한 토큰 처리 뒤 A의 KV 길이 4</td>
+<td>아니오. B가 지금 한가해져도 A 상태가 필요</td>
+</tr>
+<tr>
+<td>다음 decode</td>
+<td>A 내부 scheduler·engine</td>
+<td>같은 요청의 다음 위치로 계속 갱신</td>
+<td>아니오</td>
+</tr>
+<tr>
+<td>종료</td>
+<td>A의 요청 관리자</td>
+<td>R의 소유 상태 회수. 공유 cache의 별도 수명은 정책에 따름</td>
+<td>다음 새 요청은 다시 후보 비교 가능</td>
+</tr>
+</tbody></table>
+</div><p>B가 같은 <strong>공통 prefix</strong>의 KV를 보유한다는 사실과, B가 R이 방금 생성한 토큰까지 포함한 <strong>최신 요청 상태</strong>를 보유한다는 사실도 다르다. 위 사례에서 B에 입력의 세 위치만 있다면 길이 4로 진행한 A의 상태를 대신할 수 없다. 위치 3의 KV와 현재 입력 토큰, 다음에 쓸 위치가 함께 맞아야 한다.</p>
+<p>정말 진행 중 요청을 A에서 B로 옮기려면 <strong>migration(실행 중 상태의 이주)를</strong> 별도 동작으로 구현해야 한다. A의 진행 중 쓰기 완료를 확인하고, 요청의 KV·논리 길이·위치·생성 설정을 정해진 형식으로 내보내고, B에서 호환되는 메모리 배치로 복원한 뒤, 어느 쪽만 다음 토큰을 실행할지 소유권을 넘겨야 한다. 그 과정 없이 매 토큰마다 <code>min(...)</code>을 다시 호출하면 상태가 없는 장치나 오래된 상태를 가진 장치에 계산을 보낼 수 있다.</p>
+<p>이 표는 신규 배정과 요청 내부 스케줄링을 구별하는 설계 예다. 공식 DP router 문서에서 확인한 것은 cache locality와 부하를 고려하는 배정이며, 그 라우팅 자체가 KV 이동을 수행하지 않는다는 범위다. <strong>fxbX에 이런 다중 장치 요청 이주가 이미 구현됐다고 주장하지 않는다.</strong> 다음 절의 복사 손익 계산은 별도 이주·cache 복원 기능을 검토할 때 필요한 비용 계산이다. <a href="https://developer.furiosa.ai/v2026.4.0/en/furiosa_llm/data-parallel-routing.html">공식 router의 범위</a></p>
 <h2 id="6-kv를-옮길지-다시-계산할지"><a class="heading-anchor" href="#6-kv를-옮길지-다시-계산할지">6. KV를 옮길지 다시 계산할지</a></h2>
 <p>KV를 다른 카드나 서버에 복사하면 prefill을 줄일 수 있지만, <strong>serialization(전송할 바이트 표현으로 직렬화)</strong>·전송·재배치 비용이 든다. 일반적인 손익 조건은 다음과 같다.</p>
 <p><strong>복원 총시간 &lt; 같은 prefix를 재계산하는 시간</strong></p>
@@ -351,4 +437,4 @@ furiosa-llm serve furiosa-ai/Qwen3-4B-FP8 \
 <td><a href="https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/docs/AUTOMATED_PORTING.md">AUTOMATED_PORTING.md</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span> — 접근 권한 필요</td>
 </tr>
 </tbody></table>
-</div></article><nav class="next-prev" aria-label="이전과 다음 장"><a href="../chapter/14-serving-vllm.html"><small>← 이전 장</small><b>vLLM 서빙과 연결 과제</b></a><a href="../chapter/16-furyboost.html"><small>다음 장 →</small><b>FuryBoost 실험 회고</b></a></nav><footer class="footer">FuryNo5 개발 핸드북 · 비공식 자료<br>공식 문서와 소스의 권리는 각 프로젝트에 있습니다. 코드 인용은 출처와 함께 표시합니다.<br><a href="../review.html">검토 기록과 남은 질문</a> · <a href="../sources.html">출처와 버전</a> · <a href="../glossary.html">용어 사전</a></footer></main></div><aside class="right-toc" aria-label="이 장의 목차"><h2>이 장에서 다루는 내용</h2><a class="" href="#1-같은-숫자-8이라도-의미가-다르다">1. 같은 숫자 8이라도 의미가 다르다</a><a class="" href="#2-요청-행렬-층을-각각-나누어-본다">2. 요청·행렬·층을 각각 나누어 본다</a><a class="minor" href="#dp-같은-실행기를-복제하고-요청을-나눈다">DP: 같은 실행기를 복제하고 요청을 나눈다</a><a class="minor" href="#tp-같은-계산을-나누면-결과를-모으는-단계가-필요하다">TP: 같은 계산을 나누면 결과를 모으는 단계가 필요하다</a><a class="minor" href="#pp-생산-라인처럼-서로-다른-요청이-다른-층에-머문다">PP: 생산 라인처럼 서로 다른 요청이 다른 층에 머문다</a><a class="" href="#3-현재-구현-상태를-분리한다">3. 현재 구현 상태를 분리한다</a><a class="" href="#4-먼저-요청-단위-분산을-검토한다">4. 먼저 요청 단위 분산을 검토한다</a><a class="" href="#5-cache가-있는-서버를-고르는-방법">5. cache가 있는 서버를 고르는 방법</a><a class="" href="#6-kv를-옮길지-다시-계산할지">6. KV를 옮길지 다시 계산할지</a><a class="" href="#7-공식-경로의-설정-예와-fxbx-개발-과제">7. 공식 경로의 설정 예와 fxbX 개발 과제</a><a class="" href="#8-무엇을-측정해야-확장이-성공한-것인가">8. 무엇을 측정해야 확장이 성공한 것인가</a><a class="" href="#출처">출처</a></aside><dialog class="search-dialog" aria-label="문서 검색"><div class="search-head"><input type="search" aria-label="검색어" placeholder="DMA, EDF, 폴백, 버킷…" autocomplete="off"><button class="close-search" type="button">닫기</button></div><div class="search-status" role="status">용어나 함수 이름을 입력하세요.</div><div class="search-results"></div></dialog></body></html>
+</div></article><nav class="next-prev" aria-label="이전과 다음 장"><a href="../chapter/14-serving-vllm.html"><small>← 이전 장</small><b>vLLM 서빙과 연결 과제</b></a><a href="../chapter/16-furyboost.html"><small>다음 장 →</small><b>FuryBoost 실험 회고</b></a></nav><footer class="footer">FuryNo5 개발 핸드북 · 비공식 자료<br>공식 문서와 소스의 권리는 각 프로젝트에 있습니다. 코드 인용은 출처와 함께 표시합니다.<br><a href="../reader-review.html">3학년 독자 재검토</a> · <a href="../review.html">검토 기록과 남은 질문</a> · <a href="../sources.html">출처와 버전</a> · <a href="../glossary.html">용어 사전</a></footer></main></div><aside class="right-toc" aria-label="이 장의 목차"><h2>이 장에서 다루는 내용</h2><a class="" href="#1-같은-숫자-8이라도-의미가-다르다">1. 같은 숫자 8이라도 의미가 다르다</a><a class="" href="#2-요청-행렬-층을-각각-나누어-본다">2. 요청·행렬·층을 각각 나누어 본다</a><a class="minor" href="#dp-같은-실행기를-복제하고-요청을-나눈다">DP: 같은 실행기를 복제하고 요청을 나눈다</a><a class="minor" href="#tp-같은-계산을-나누면-결과를-모으는-단계가-필요하다">TP: 같은 계산을 나누면 결과를 모으는 단계가 필요하다</a><a class="minor" href="#pp-생산-라인처럼-서로-다른-요청이-다른-층에-머문다">PP: 생산 라인처럼 서로 다른 요청이 다른 층에 머문다</a><a class="" href="#3-현재-구현-상태를-분리한다">3. 현재 구현 상태를 분리한다</a><a class="" href="#4-먼저-요청-단위-분산을-검토한다">4. 먼저 요청 단위 분산을 검토한다</a><a class="" href="#5-cache가-있는-서버를-고르는-방법">5. cache가 있는 서버를 고르는 방법</a><a class="minor" href="#처음-고르는-복제본과-매번-고르는-실행-요청은-다르다">처음 고르는 복제본과 매번 고르는 실행 요청은 다르다</a><a class="" href="#6-kv를-옮길지-다시-계산할지">6. KV를 옮길지 다시 계산할지</a><a class="" href="#7-공식-경로의-설정-예와-fxbx-개발-과제">7. 공식 경로의 설정 예와 fxbX 개발 과제</a><a class="" href="#8-무엇을-측정해야-확장이-성공한-것인가">8. 무엇을 측정해야 확장이 성공한 것인가</a><a class="" href="#출처">출처</a></aside><dialog class="search-dialog" aria-label="문서 검색"><div class="search-head"><input type="search" aria-label="검색어" placeholder="DMA, EDF, 폴백, 버킷…" autocomplete="off"><button class="close-search" type="button">닫기</button></div><div class="search-status" role="status">용어나 함수 이름을 입력하세요.</div><div class="search-results"></div></dialog></body></html>

@@ -134,6 +134,75 @@ flowchart TB
 
 ## 7. 검사와 실행 예
 
+### 처음 받은 파일의 내부 표식부터 읽는다
+
+아직 형식을 모르는 `model.fxbx`에는 곧바로 실행 세션을 열지 않는다. 먼저 ZIP 안의 `manifest.json`을 읽는다. `format="FXB_EX"`, `schema_version=1`이면 초기 포맷이다. `format_version=2`인 native 컨테이너라면 `fxbex.provenance.json`의 `producer`와 계획 필드를 더 본다. `execution_plan.schema`가 `tclmachine.execution-plan.v1` 또는 `.v2`일 때 이 장의 다중 EDF reader를 선택한다. [초기 포맷 표식](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/package.py#L45-L59) · [native 표식과 producer 문서](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/native_fxb.py#L7-L35)
+
+[identify_fxb.py](../examples/identify_fxb.py)는 이 분기를 관찰하는 완성된 표준 Python 예제다. `python identify_fxb.py model.fxbx`로 실행한다. Torch와 SDK를 import하지 않으며, 패키지 내용을 디스크에 풀거나 NPU를 열지 않는다. **표식을 읽어 검사기를 고르는 코드이지, 내부 해시·ABI·장치 실행까지 승인하는 검사기는 아니다.**
+
+```python
+import argparse
+import json
+import zipfile
+
+def read_object(archive, name, limit):
+    info = archive.getinfo(name)  # 없으면 여기에서 중단; 임의로 형식을 추측하지 않는다.
+    if info.file_size > limit:
+        raise ValueError(f"JSON size limit exceeded: {name}")
+    value = json.loads(archive.read(name))
+    if not isinstance(value, dict):
+        raise ValueError(f"Expected JSON object: {name}")
+    return value
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("package")  # 처음 받은 .fxb/.fxbx/.fxbex 파일 경로
+    path = parser.parse_args().package
+    with zipfile.ZipFile(path) as archive:
+        names = archive.namelist()
+        if len(names) != len(set(names)):
+            raise ValueError("Duplicate archive members")
+        print("members:", names[:12], "count=", len(names))
+        manifest = read_object(archive, "manifest.json", 4 * 1024**2)
+        print("manifest markers:", {key: manifest.get(key) for key in
+                                    ("format", "schema_version", "format_version")})
+
+        if (manifest.get("format") == "FXB_EX"
+                and type(manifest.get("schema_version")) is int
+                and manifest["schema_version"] == 1):
+            print("reader: 초기 FXB_EX용 fxbx inspect / validate --integrity-only")
+            return
+        if manifest.get("format_version") != 2:
+            print("reader: 이 예제에서 판별하지 않는 형식; 생산자 계약을 확인하세요.")
+            return
+        if "fxbex.provenance.json" not in names:
+            print("native v2 표식만 확인: 커스텀 실행계획이나 공식 모델 지원은 아직 모릅니다.")
+            return
+
+        # 고정 소비자와 같은 상한: 계획 64 MiB + 그 밖의 producer 정보 4 MiB.
+        producer = read_object(archive, "fxbex.provenance.json", 68 * 1024**2)
+        plan = producer.get("execution_plan")
+        graph = producer.get("graph_plan")
+        if producer.get("producer") != "fxbex":
+            print("reader: 알 수 없는 producer")
+        elif isinstance(plan, dict) and plan.get("schema") in (
+            "tclmachine.execution-plan.v1", "tclmachine.execution-plan.v2",
+        ):
+            print("plan schema:", plan["schema"])
+            print("reader: fxbex.execution_fxb.read_execution_plan(path)")
+        elif isinstance(graph, dict) and graph.get("schema") == "fxbex.graph-plan.v1":
+            print("reader: fxbex.graph_fxb.read_graph_plan(path); 이전 단일 EDF graph 경로")
+        else:
+            print("reader: 지원하는 커스텀 계획 표식을 찾지 못했습니다.")
+
+if __name__ == "__main__":
+    main()
+```
+
+`fxbex.graph-plan.v1`은 native 컨테이너를 쓰던 단일 EDF 경로의 별도 표식이다. 초기 `FXB_EX`와 같지도, 다중 EDF `execution_plan`과 같지도 않다. 위 분기에서 native v2만 보였다는 이유로 “공식 Furiosa-LLM이 이 모델을 실행할 수 있다”고 판단하면 안 된다. `GraphFXB.__new__`도 이름이나 architecture 문자열 대신 producer 안의 `execution_plan` 존재로 새 소비자를 고르며, 실제 유효성은 이후 reader가 엄격히 검사한다. [실제 라우팅](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/graph_fxb.py#L134-L152) · [이전 단일 EDF graph reader](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/graph_fxb.py#L98-L124)
+
+### 판별한 형식에 맞는 검사기를 호출한다
+
 아래 네 명령은 **초기 `FXB_EX` 형식**의 `model.fxbx`를 이미 가지고 있을 때 쓰는 CLI(Command-Line Interface) 예다. `doctor`는 환경, `inspect`는 패키지 설명, `validate --integrity-only`는 파일의 무결성, `describe`는 입력·출력 계약을 조사한다. 새 execution-plan 형식에 같은 검사기가 적용된다고 가정하지 않는다.
 
 ```bash
@@ -156,6 +225,10 @@ print(list(plan["entries"]))            # forward 등 호출할 수 있는 실�
 print("kernels:", len(plan["kernels"])) # 고유 kernel 계약 수; 실행 step 수와는 다를 수 있다.
 ```
 
+이 reader는 `.plan/execution-plan.json`을 직접 읽는 범용 JSON loader가 아니다. **완성된 패키지 경로**를 받아 내부 manifest·실행계획·EDF 파일의 연결과 해시를 검사한 후 계획 dictionary를 반환한다. 05장의 값 ID 추적 예제는 이 반환값의 `entries["forward"]["steps"]`를 관찰한다. [패키지 reader의 실제 입출력](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py#L260-L304)
+
+### CPU 입력이 NPU 계산을 거쳐 다시 돌아오는 경계
+
 실제 실행에는 패키지 밖의 weight 값과 이번 입력이 필요하다. 다음 예제는 13장의 생산 스크립트가 만든 **같은 작업 디렉터리의** `tiny.fxbx`, `tiny-state.pt`, `tiny-cases.pt`를 사용한다. 새 모델을 임의 초기화하지 않고 파일에 저장한 동일 weight와 검증 입력을 읽는다. `weights_only=True`는 tensor와 기본 자료형 중심으로 체크포인트를 읽는 옵션이다.
 
 ```python
@@ -167,13 +240,28 @@ weights = torch.load("tiny-state.pt", map_location="cpu", weights_only=True)
 cases = torch.load("tiny-cases.pt", map_location="cpu", weights_only=True)
 x = cases["inputs"][0]           # 첫 비교 입력: BF16 [4,8]
 expected = cases["expected"][0]  # 같은 가중치로 계산해 저장한 CPU 출력 [4,8]
-with GraphFXB("tiny.fxbx", weights=weights) as runtime:  # 가중치와 계획을 연결·적재한다.
-    actual, = runtime.predict((x,))  # 입력 하나를 담은 tuple → 출력 하나 [4,8]
+with GraphFXB("tiny.fxbx", weights=weights) as runtime:  # with 진입 때 EDF·가중치를 적재한다.
+    actual, = runtime.predict((x,))  # CPU 입력 업로드→NPU 실행→기본 CPU 출력 [4,8]·완료 대기
 # 절대 오차 atol과 상대 오차 rtol을 적용한다. 일반 모델의 품질 기준은 별도로 정한다.
 torch.testing.assert_close(actual, expected, atol=0.02, rtol=0.02)
 ```
 
 `weights`는 이름에서 tensor로 가는 dictionary다. `predict((x,))`의 tuple은 입력 한 개라는 뜻이고, `actual, = ...`는 출력 한 개를 꺼낸다. `with` 블록은 실행 세션의 수명을 묶는다. 출력이 맞으면 이 표본의 수치 비교를 통과한 것이며, NPU가 계산했다는 독립 증거는 task trace로 확인한다. 허용오차는 이 작은 BF16 예제를 위한 값이고 다른 모델의 품질 기준은 별도로 정해야 한다. [가중치·입출력 계약](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/docs/CHECKPOINT_WEIGHTS.md)
+
+04장의 직접 SDK `Runnable` 예에서는 호출자가 `.to("furiosa:0")`와 `.cpu()`를 썼다. 이 패키지 API에서는 `ExecutionFXB`가 같은 경계를 감싼다. 따라서 CPU tensor를 `predict`에 넘겼다는 사실만으로 CPU Dispatcher가 모델 전체를 실행한다고 해석하지 않는다. `predict`는 하나의 Python 관리 함수이고, 그 안에서 장치 tensor를 만든 다음 준비된 NPU 프로그램을 호출한다.
+
+| 시점 | 소비자가 하는 일 | 이 Tiny 예제의 값 위치 |
+|---|---|---|
+| `GraphFXB(...)` 생성 | 패키지 계획·계약을 읽고 호출 순서를 준비 | 사용자 `x`와 외부 weight는 아직 CPU |
+| `with` 진입 | EDF 역직렬화·SDK/ABI 검사, CPU 폴백 끄기, NPU Runnable 생성, weight 업로드·완료 확인 | weight가 `furiosa:0`에 상주 |
+| 매 `predict((x,))` 시작 | 입력 개수·shape·dtype·stride 검사 후 `_upload`, 즉 `x.to(self.device)` | BF16 `[4,8]` 입력을 NPU에서 사용할 수 있음 |
+| 계획 실행 | 준비된 sequence 또는 step의 NPU Runnable 호출 | 중간값은 NPU tensor이며 후속 step에 직접 연결 |
+| 기본 반환 `output_device="cpu"` | 출력마다 `.cpu()`, 현재 stream `synchronize()`, 상태 갱신 후 tuple 반환 | `actual`은 CPU BF16 `[4,8]`; 호출은 완료를 기다림 |
+| `with` 종료 | 세션의 장치 객체·상태를 정리 | 반환된 CPU 결과는 별도로 비교 가능 |
+
+이 설명은 다중 EDF `ExecutionFXB` 경로와 기본 반환 설정에 해당한다. 이 고정 버전은 `furiosa:0`만 검증 대상으로 허용한다. `output_device="furiosa"`를 명시하면 NPU tensor tuple을 받으며, 그 경로도 반환 전에 동기화한다. 무조건 비동기 제출 API로 간주해서는 안 된다. [생성·적재 경계](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py#L311-L421) · [전송·실행·반환 경계](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py#L521-L648)
+
+그러므로 `predict` 앞뒤의 벽시계 시간에는 호출 잠금 대기, 입력 검사·업로드, 제출과 NPU 계산, 기본 출력의 CPU 복사와 완료 대기가 포함된다. `with` 진입을 측정 밖에 두면 weight의 첫 업로드와 EDF 적재 비용은 제외된다. 소비자의 `last_timing["request_s"]`는 잠금 대기를 제외한 완료된 요청 시간이며, 별도 `queue_wait_s`에 대기를 기록한다. 어느 쪽도 장치 계산 task만의 시간과 같지 않다. 이 문서 수정에서는 위 NPU 실행과 시간을 새로 측정하지 않았다.
 
 대형 checkpoint에서 CPU에 모델 전체를 만드는 부담을 줄이려면 execution-plan 경로의 `SafeTensorWeights`를 사용할 수 있다. 이 loader는 weight 파일의 이름·shape·dtype를 담은 header부터 확인하고 필요한 tensor 단위로 읽으므로, Python 모델 전체를 복구하는 작업과 분리할 수 있다. 반면 legacy single-EDF 경로에서는 지원하지 않는다고 명시적으로 거절한다. `names`를 사용할 경우 plan target과 checkpoint tensor 이름을 정확히 대응시켜야 한다. [가중치 계약과 예제](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/docs/CHECKPOINT_WEIGHTS.md)
 

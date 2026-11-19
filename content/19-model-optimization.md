@@ -6,7 +6,7 @@ DB의 질의 계획에서 연산 하나를 지웠어도 전체 질의가 빨라�
 
 공식 Furiosa Compiler도 그래프 최적화, 연산 결합, 메모리 할당, 스케줄링, 층 사이 데이터 이동을 이미 최적화한다. 따라서 외부 도구에서 연산 하나를 지웠다는 사실만으로 공식 경로보다 빠르다고 말할 수 없다. 공식 compiler가 같은 변환을 수행했는지, 외부 변환이 유용한 패턴을 오히려 깨뜨렸는지부터 비교해야 한다. [공식 compiler의 책임](https://developer.furiosa.ai/v2026.4.1/en/overview/software_stack.html)
 
-> **조사·검증 기준** · 공개 자료와 아래 고정 commit을 2026-11-19에 확인했다. 예제의 API(Application Programming Interface)는 문서·소스와 대조했지만, 집필 환경에 PyTorch와 Furiosa SDK(Software Development Kit), RNGD가 없어 예제를 실행하지 않았다. 이 장에는 새 NPU 성능 측정값이 없다. 표의 RNGD 적용 순서는 FuryNo5의 연구 제안이며 공식 지원표가 아니다.
+> **조사·검증 기준** · 소스·문헌 기준일은 2026-11-19, 독자 재검토일은 2026-11-20(한국 시간)이다. 예제의 API(Application Programming Interface)는 문서·소스와 대조했다. PyTorch·ONNX 같은 별도 도구나 Furiosa SDK(Software Development Kit)·RNGD 환경이 필요한 변환·장치 예제는 이번 편집에서 실행하지 않았다. 새로 추가한 순수 Python의 scale 후보 비교와 attention 계산·누적 예제는 CPU에서 실행해 수치를 검산했다. 이 장에는 새 NPU 성능 측정값이 없다. 표의 RNGD 적용 순서는 FuryNo5의 연구 제안이며 공식 지원표가 아니다.
 
 ## 1. 같은 계산을 빠르게 하는 연구와 모델을 줄이는 연구
 
@@ -125,6 +125,45 @@ print(restored)  # [-1.0, -0.25, 0.25, 0.75]
 ```
 
 **Calibration(보정)은** 실제 사용을 대표하는 입력으로 값의 범위를 관찰하고 scale·clipping 범위를 정하는 과정이다. 작은 값만 든 보정 데이터로 정한 scale에 실제 서비스의 큰 값이 들어오면 clipping이 늘 수 있다. weight에만 scale을 둘지 activation에도 둘지, tensor 전체에 하나를 둘지 출력 채널별·몇 개 원소의 group별로 둘지도 정해야 한다. 이 단위가 **granularity(적용 단위)다**. producer와 실행 커널이 같은 단위를 해석해야 한다.
+
+#### 보정 데이터로 scale 후보를 비교한다
+
+“대표 입력을 관찰한다”는 말에서 실제 선택까지 한 단계를 더 진행하자. 위 네 값이 보정 입력을 모델에 넣었을 때 **어떤 activation 배열에서 관측한 네 원소**라고 가정한다. 여기서는 같은 3-bit 범위·zero point 0을 유지하면서 scale 0.25와 0.5만 비교한다.
+
+판정 기준을 **MSE(Mean Squared Error, 평균 제곱 오차)로** 정하자. 각 원소에서 `복원값−원래값`을 구하고 제곱한 뒤, 네 오차를 더해 4로 나눈다. 제곱은 양수·음수 오차가 상쇄되지 않게 한다. 이 단순 기준은 배열 복원 오차를 재는 것이며 최종 모델 품질을 직접 재는 지표는 아니다.
+
+| scale 후보 | 정수 코드 | 복원값 | 반올림 후 clamp로 잘린 원소 수 | 제곱 오차의 합 | MSE |
+|---|---|---|---:|---:|---:|
+| 0.25 | `[-4,-1,1,3]` | `[-1,-0.25,0.25,0.75]` | 1 | 0.0375 | 0.009375 |
+| 0.5 | `[-2,0,1,2]` | `[-1,0,0.5,1]` | 0 | 0.1000 | 0.025000 |
+
+scale 0.25의 오차는 `[-0.1,-0.05,-0.05,-0.15]`이고, 제곱한 합은 `0.01+0.0025+0.0025+0.0225=0.0375`다. scale 0.5는 clipping이 없지만 간격이 거칠어져 `-0.2`를 0으로, `0.3`을 0.5로 복원한다. **clipping 수만 줄이는 것과 전체 복원 오차를 줄이는 것은 같지 않다.** 이 네 값과 두 후보, 이 MSE 기준에서는 0.25를 고른다.
+
+[calibration_scale_demo.py](../examples/calibration_scale_demo.py)는 관측값으로 후보를 비교하는 순수 Python이다. 반올림이 정확히 중간에 놓인 경우의 규칙도 실제 backend와 맞춰야 한다. 아래 데이터에는 그런 중간값이 없으며 Python의 `round`를 사용한다.
+
+```python
+from math import isclose
+
+observed = [-0.9, -0.2, 0.3, 0.9]  # 설명용 calibration activation, shape [4]
+qmin, qmax = -4, 3  # 두 후보에서 같은 표현 범위를 사용
+results = []
+for scale in (0.25, 0.5):
+    rounded = [round(x / scale) for x in observed]  # zero point=0
+    codes = [min(qmax, max(qmin, q)) for q in rounded]  # 끝값으로 제한
+    restored = [scale * q for q in codes]  # 같은 실수 단위로 되돌림
+    clipped = sum(q != original_q for q, original_q in zip(codes, rounded))
+    mse = sum((got - ref) ** 2 for got, ref in zip(restored, observed)) / len(observed)
+    results.append((scale, mse))
+    print(scale, clipped, round(mse, 6))
+best_scale, _ = min(results, key=lambda item: item[1])  # 두 후보 중 작은 MSE 선택
+assert best_scale == 0.25
+assert isclose(results[0][1], 0.009375)
+assert isclose(results[1][1], 0.025)
+# 0.25 1 0.009375
+# 0.5 0 0.025
+```
+
+실제 calibration은 더 많은 대표 입력·층·채널을 다루고, min/max·percentile·오차 최소화 등 선택한 방법의 기준을 사용한다. 이 예는 그중 **후보 scale을 관측값에서 평가한다는 연결**만 보여 준다. 작은 보정 MSE가 전체 모델 정확도 보존을 보장하지도, 두 후보 중 최선이 모든 scale 중 최선임을 뜻하지도 않는다. 예를 들어 실제 입력에서 3.0이 새로 나타나면 scale 0.25에서는 최대 0.75로 복원되어 오차가 2.25가 된다. 따라서 대표 입력을 고른 이유를 남기고, 보정에 쓰지 않은 평가 입력으로 최종 품질을 확인한다. producer가 정한 scale·적용 단위를 NPU 커널이 같은 방식으로 해석할 수 있는지도 별도 계약이다. [보정과 backend를 구분하는 NNCF](https://github.com/openvinotoolkit/nncf/blob/0d605e5da7eb735aff96a14a3a771d84d90f88f8/README.md) · [TorchAO 실행 계약](https://github.com/pytorch/ao/blob/a791dcb26432500f99d40271c81ee8e2753cf99a/docs/source/workflows/inference.md)
 
 **PTQ(Post-Training Quantization)는** 학습이 끝난 모델에 적용하는 양자화이고, 대표 입력을 사용한 보정이 필요한지는 선택한 방법에 따라 다르다. **QAT(Quantization-Aware Training)는** 학습 중에도 양자화 오차의 영향을 고려해 가중치를 조정하는 방법이다. **Packing(압축 배치)은** 작은 코드를 실제 비트·메모리 순서에 맞춰 담는 작업이다. 4-bit 코드는 이론상 한 바이트에 두 개 담을 수 있지만 scale·정렬·부가정보도 필요하다. 곱한 결과를 더해 가는 **누산(accumulation)의** 자료형은 저장 형식과 별도일 수 있다. 이 모든 조건을 맞춰야 파일 크기 감소가 실행에서도 유효하다. [양자화의 backend 계약](https://github.com/pytorch/ao/blob/a791dcb26432500f99d40271c81ee8e2753cf99a/docs/source/workflows/inference.md) · [보정과 양자화 경계](https://github.com/openvinotoolkit/nncf/blob/0d605e5da7eb735aff96a14a3a771d84d90f88f8/README.md)
 
@@ -352,9 +391,27 @@ flowchart TB
 
 ### attention의 중간 행렬을 줄이되 계산 의미는 유지한다
 
-Attention은 현재 **Q(Query, 질의 벡터)와** 앞선 위치들의 **K(Key, 비교용 벡터)를** 비교하고, 비교 점수에 따라 **V(Value, 내용 벡터)들을** 섞는다. 보통 쓰는 식은 `softmax(QKᵀ / sqrt(d) + mask)V`다. `Kᵀ`는 K의 행·열을 바꾸고, d는 비교 벡터 길이이며, `sqrt(d)`로 점수 크기를 조정한다. **Mask**는 볼 수 없는 위치를 제외한다. **Softmax**는 각 점수에 지수함수 exp를 적용한 뒤 그 합으로 나누어, 양수이면서 합이 1인 가중치를 만든다.
+Attention은 현재 **Q(Query, 질의 벡터)와** 앞선 위치들의 **K(Key, 비교용 벡터)를** 비교하고, 비교 점수에 따라 **V(Value, 내용 벡터)들을** 섞는다. 보통 쓰는 식은 `softmax(QKᵀ / sqrt(d) + mask)V`다. `Kᵀ`는 K의 행·열을 바꾸고, d는 비교 벡터 길이이며, `sqrt(d)`로 점수 크기를 조정한다. `sqrt`는 제곱근으로, `sqrt(4)=2`다. **Mask**는 볼 수 없는 위치를 제외한다. **Softmax**는 각 점수에 지수함수 exp를 적용한 뒤 그 합으로 나누어, 양수이면서 합이 1인 가중치를 만든다.
 
-가장 작은 예로 벡터 길이 d=1, 질의 `Q=[1]`, 두 위치의 `K=[1,0]`, `V=[10,20]`을 생각하자. mask는 없고 출력 하나를 계산한다.
+#### 행은 토큰 위치, 열은 벡터 성분이다
+
+먼저 batch와 head 축을 생략한 **한 head의 2차원 계산**만 보자. 질의 위치 수를 Lq, 참고할 key 위치 수를 Lk라고 하면 Q의 shape는 `[Lq,d]`, K는 `[Lk,d]`다. V는 각 key 위치의 내용이므로 행 수 Lk가 같고, 내용 벡터 길이 dv를 써서 `[Lk,dv]`로 표시한다.
+
+행렬곱 `[a,b] @ [b,c]`는 맞닿는 축 b를 곱해 더하고 `[a,c]`를 남긴다. 그래서 `Q @ K.T`는 `[Lq,d] @ [d,Lk] → [Lq,Lk]`다. 한 행은 **한 질의가 모든 key 위치에 매긴 점수**다. Softmax는 이 예에서 각 행의 **key 위치 축**을 따라 적용하므로 각 질의마다 가중치 합이 1이 된다. 그 뒤 `[Lq,Lk] @ [Lk,dv]`를 계산해 `[Lq,dv]`의 내용을 얻는다.
+
+가장 작은 수치 예로 `Lq=1, Lk=2, d=dv=1`을 쓰자. Q·K·V를 2차원 배열로 적어야 어느 축이 위치인지 잃지 않는다. mask는 없고 `sqrt(1)=1`이어서 점수 배율은 그대로다.
+
+| 배열 | 값 | shape와 축의 뜻 |
+|---|---|---|
+| Q | `[[1]]` | `[1,1]`: 질의 1위치 × 비교 성분 1개 |
+| K | `[[1],[0]]` | `[2,1]`: key 2위치 × 비교 성분 1개 |
+| K.T | `[[1,0]]` | `[1,2]`: 비교 성분 1개 × key 2위치 |
+| V | `[[10],[20]]` | `[2,1]`: key 2위치 × 내용 성분 1개 |
+| 점수 `Q @ K.T` | `[[1,0]]` | `[1,2]`: 질의 1위치 × key 2위치 |
+| 가중치 | 약 `[[0.7311,0.2689]]` | `[1,2]`: 이 한 행의 합이 1 |
+| 결과 `가중치 @ V` | 약 `[[12.6894]]` | `[1,1]`: 질의 1위치 × 내용 성분 1개 |
+
+계산을 숫자 순서로 풀면 다음과 같다.
 
 | 단계 | 계산 | 결과 |
 |---|---|---|
@@ -365,7 +422,13 @@ Attention은 현재 **Q(Query, 질의 벡터)와** 앞선 위치들의 **K(Key, 
 
 이 식을 `Q(KᵀV)`로 바꾸면 `1×(1×10+0×20)=10`이 된다. softmax를 삭제했기 때문에 다른 함수다. 단순한 선형 행렬곱은 결합 순서를 바꿀 수 있어도 이 attention 전체에 같은 법칙을 적용할 수 없다. mask, 어느 축에서 softmax하는지, 학습 시 일부 값을 무작위로 끄는 dropout이 있는지, 반올림 위치까지 확인해야 한다.
 
-입력 길이가 L이면 모든 질의와 모든 키의 점수를 담은 배열은 대략 L×L 크기다. 이를 통째로 저장하는 대신 조각별로 읽으면서 같은 정규화 결과를 누적할 수 있다. **FlashAttention**은 이런 메모리 이동을 줄이는 attention 계산의 사례다. 아래는 한 행에서 사용하는 누적 통계의 원리를 위의 두 점수로 보여 준 것이다.
+입력 전체에 대한 self-attention에서 `Lq=Lk=L`이면 모든 질의와 key의 점수 배열은 `L×L`이다. 반면 한 토큰을 decode하는 이 예 같은 상황에서는 `Lq=1`이므로 그 호출의 점수 행은 `1×Lk`다. “항상 한 decode 호출이 L×L 배열을 만든다”고 해석하지 않는다. 많은 질의의 점수를 통째로 저장하는 대신 조각별로 읽으면서 정규화 결과를 누적할 수 있다. **FlashAttention**은 이런 메모리 이동을 줄이는 attention 계산의 사례다. [IO 관점의 attention 재구성](https://arxiv.org/abs/2205.14135)
+
+#### 큰 점수가 뒤늦게 오면 앞서 더한 값을 새 기준으로 바꾼다
+
+점수마다 exp를 직접 계산하면 큰 점수에서 값이 너무 커질 수 있다. 모든 점수에서 같은 m을 빼면 각 지수값에 공통 배율 `exp(−m)`이 곱해진다. 분자와 분모에서 그 배율이 지워지므로 최종 가중 평균은 같다. 이를 이용해 지금까지의 최대 점수를 m으로 유지하고, `exp(점수−m)`의 합 l, 그 가중치를 곱한 내용의 합 o를 저장한다. 마지막에 `o/l`로 나눈다.
+
+위의 점수 1·내용 10을 먼저, 점수 0·내용 20을 다음에 읽으면 다음과 같다.
 
 | 처리한 조각 | 현재 최대 점수 m | `exp(점수−m)`의 합 l | 같은 가중치를 곱한 V의 합 o |
 |---|---:|---:|---:|
@@ -373,7 +436,74 @@ Attention은 현재 **Q(Query, 질의 벡터)와** 앞선 위치들의 **K(Key, 
 | 점수 0, 내용 20 추가 | 1 | `1+exp(−1)≈1.3679` | `10+exp(−1)×20≈17.3576` |
 | 최종 결과 | — | — | `o/l≈12.6894` |
 
-모든 점수에서 같은 최대값을 빼면 지수함수가 지나치게 커지는 것을 줄이면서 최종 비율은 유지한다. 뒤 조각에서 더 큰 최대값이 나타나면 기존 l·o도 새 최대값 기준으로 재조정한다. 이렇게 **최댓값·합·가중합이라는 작은 상태를 유지하는 것**이 핵심이며 softmax를 생략하지 않는다. 실제 구현은 많은 행·타일·mask와 자료형을 다룬다. 이 원리를 이해하는 것과 GPU(Graphics Processing Unit)용 구현을 RNGD에 그대로 적용하는 것은 다르다. RNGD의 메모리·연산 계약에 맞춘 별도 커널과 수치 검증이 필요하다. [FlashAttention 논문](https://arxiv.org/abs/2205.14135)
+이 순서에서는 최대값이 바뀌지 않았다. **반대로 작은 점수 0이 먼저 오고 큰 점수 1이 나중에 오면** 첫 누적값의 기준을 고쳐야 한다.
+
+| 단계 | 최대 점수 기준 | l | o |
+|---|---|---:|---:|
+| 점수 0·내용 20만 처리 | m=0 | 1 | 20 |
+| 새 점수 1 발견, 기존 누적값을 m=1 기준으로 환산 | `exp(0−1)≈0.3679`를 기존 l·o에 곱함 | 0.3679 | 7.3576 |
+| 새 점수 1·내용 10의 기여 추가 | 새 가중치 `exp(1−1)=1` | `0.3679+1=1.3679` | `7.3576+10=17.3576` |
+| 최종 결과 | m=1 | — | `o/l≈12.6894` |
+
+재조정 배율은 외워야 할 별도 규칙이 아니다. 이전 점수 s에 대해 `exp(s−새m)=exp(s−옛m)×exp(옛m−새m)`이므로, 이전에 모아 둔 **합 전체**에 `exp(옛m−새m)`를 곱하면 모든 항이 새 기준으로 바뀐다. 위 예에서 이 단계를 생략하고 `l=1+1, o=20+10`으로 합치면 결과는 15가 되어 틀린다. 현재 최대값·합·가중합이라는 작은 상태로 정확한 정규화 의미를 유지하는 것이 핵심이다.
+
+#### CPU에서 shape와 두 처리 순서를 확인한다
+
+[attention_contract_demo.py](../examples/attention_contract_demo.py)는 앞의 한 질의·한 내용 성분 예를 실행하는 완전한 순수 Python이다. 첫 부분은 2차원 행렬의 축을 유지하고, 뒤 부분은 같은 한 행을 조각별로 읽어 결과를 비교한다. 실제 FlashAttention이나 RNGD 커널 구현이 아니며 mask·여러 head·반올림 계약을 모두 구현하지 않는다.
+
+```python
+from math import exp, isclose, sqrt
+
+def transpose(matrix):
+    return [list(column) for column in zip(*matrix)]  # [행,열] → [열,행]
+
+def matmul(left, right):
+    assert len(left[0]) == len(right)  # 곱하며 더할 축의 길이가 같아야 한다.
+    columns = transpose(right)
+    return [
+        [sum(a * b for a, b in zip(row, column)) for column in columns]
+        for row in left
+    ]
+
+def softmax_row(scores):
+    maximum = max(scores)
+    positive = [exp(score - maximum) for score in scores]  # 모든 항에 같은 기준 사용
+    total = sum(positive)
+    return [value / total for value in positive]  # key 축 전체의 가중치 합을 1로 만듦
+
+q = [[1.0]]  # [Lq=1,d=1]
+k = [[1.0], [0.0]]  # [Lk=2,d=1]
+v = [[10.0], [20.0]]  # [Lk=2,dv=1]
+raw_scores = matmul(q, transpose(k))  # [1,1] @ [1,2] → [1,2]
+scores = [[value / sqrt(len(q[0])) for value in row] for row in raw_scores]
+weights = [softmax_row(row) for row in scores]  # 질의마다 key 축으로 정규화
+full_output = matmul(weights, v)[0][0]  # [1,2] @ [2,1] → [1,1]의 한 값
+
+def online_one_row(score_values):
+    maximum, total, weighted = float("-inf"), 0.0, 0.0
+    for score, value in score_values:
+        new_maximum = max(maximum, score)
+        old_scale = 0.0 if total == 0.0 else exp(maximum - new_maximum)
+        new_weight = exp(score - new_maximum)
+        total = total * old_scale + new_weight  # 이전 분모를 새 최대값 기준으로 환산
+        weighted = weighted * old_scale + new_weight * value  # 분자에도 같은 배율
+        maximum = new_maximum
+    if total == 0.0:
+        raise ValueError("이 예제에는 최소 한 key가 필요합니다.")
+    return weighted / total
+
+pairs = list(zip(scores[0], [row[0] for row in v]))
+forward = online_one_row(pairs)  # 점수 1 다음 0: 최대값 유지
+reversed_order = online_one_row(list(reversed(pairs)))  # 점수 0 다음 1: 최대값 변경
+assert isclose(full_output, forward, rel_tol=1e-12)
+assert isclose(full_output, reversed_order, rel_tol=1e-12)
+assert isclose(sum(weights[0]), 1.0, rel_tol=1e-12)
+print(scores, [round(x, 6) for x in weights[0]])  # [[1.0,0.0]], [0.731059,0.268941]
+print(*(round(x, 6) for x in (full_output, forward, reversed_order)))
+# 12.689414 12.689414 12.689414
+```
+
+실수 연산의 수학적 의미가 같아도 유한 정밀도에서는 누적 순서에 따라 작은 차이가 생길 수 있어 위 코드는 허용오차로 비교한다. 실제 구현은 많은 행·타일·mask와 자료형을 다룬다. 이 원리를 이해하는 것과 GPU(Graphics Processing Unit)용 구현을 RNGD에 그대로 적용하는 것은 다르다. RNGD의 메모리·연산 계약에 맞춘 별도 커널과 수치 검증이 필요하다. [FlashAttention 논문](https://arxiv.org/abs/2205.14135)
 
 ## 9. workload마다 다른 연구 가설을 세운다
 

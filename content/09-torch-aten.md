@@ -167,6 +167,26 @@ flowchart TB
 
 그래프가 있으면 compiler는 `h`를 만드는 연산과 사용하는 연산을 함께 검토할 수 있다. 여러 node를 한 실행 단위로 묶는 **fusion(연산 결합)**, 반대로 지원되는 작은 연산으로 나누는 decomposition을 선택할 수 있다. `torch.export`의 결과인 **ExportedProgram**은 graph와 입력·출력 서명, parameter 연결, 제약을 함께 보존하는 객체다. Python 모델 자체도, 이미 만들어진 NPU 바이너리도 아니다. [export의 역할](https://docs.pytorch.org/docs/stable/user_guide/torch_compiler/export.html)
 
+### 대표 입력의 숫자도 그래프에 고정되는가
+
+일반적인 tensor 입력의 **원소 값은 실행 때 다시 공급**한다. 예를 들어 `forward(x)`가 `x * 2 + 1`이면 캡처할 때 사용한 `x`가 모두 0이더라도, 얻은 프로그램에 같은 계약의 1을 넣으면 3을 계산해야 한다. 저장하는 것은 `x → 곱하기 2 → 더하기 1`의 관계다. 반면 이 식의 Python 상수 `2`, `1`과 정적으로 선택한 계산 경로는 그래프 표현의 일부가 된다. 같은 shape라고 임의의 Python 코드까지 항상 안전하게 재사용할 수 있다는 뜻은 아니다. [고정 버전 export의 입력·제약 설명](https://github.com/pytorch/pytorch/blob/449b1768410104d3ed79d3bcfe4ba1d65c7f22c0/torch/export/__init__.py#L175-L203)
+
+| `forward`에 있는 표현 | 캡처 때 결정할 수 있는 것 | 다른 호출에 적용할 때 확인할 것 |
+|---|---|---|
+| `return x * 2 + 1` | 연산 순서, 상수 2·1, 입력의 shape·dtype | 원소 값이 달라져도 같은 입력 계약이면 같은 식을 계산한다. |
+| `if x.shape[0] == 4: return x + 1` / `else: return x - 1` | 기본 정적 캡처에서 대표 입력의 첫 축이 4라는 조건과 그 경로 | 첫 축 8의 입력을 같은 정적 프로그램에 넣지 않는다. 동적 shape는 별도로 선언하고 제약을 만족해야 한다. |
+| `if x.sum() > 0: return x + 1` / `else: return x - 1` | 분기 조건이 매 호출의 원소 값에 달려 있어 shape만으로 선택할 수 없다. | 이 Python `if`가 그대로 export된다고 가정하지 않는다. 지원되는 제어 흐름 표현으로 모델을 바꾸거나 분기 경계를 밖에 두고 별도 검토한다. |
+
+마지막 경우의 문제는 합계를 계산할 수 없다는 것이 아니라, **아직 들어오지 않은 값에 따라 Python 실행 경로가 바뀐다는 것**이다. `strict=False`는 캡처 방법의 옵션이며 이 문제를 자동 해결하는 보증이 아니다. 실제 실패 여부와 메시지는 코드·버전에 따라 확인한다. PyTorch의 동적 shape를 선언할 수 있다는 사실도 FuryNo5의 현재 정적 커널이 임의 크기를 받는다는 의미로 이어지지 않는다. [strict 옵션의 계약](https://github.com/pytorch/pytorch/blob/449b1768410104d3ed79d3bcfe4ba1d65c7f22c0/torch/export/__init__.py#L236-L244) · [FuryNo5 정적 입력 검사](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/aten.py)
+
+| 시점 | 이 예제에서 보유하는 정보 | 아직 계산하지 않은 것 |
+|---|---|---|
+| 캡처 | `x[4,8]`, parameter 연결, `h → a → y` 계산 관계 | 미래 호출의 다른 `x`에 대한 결과 |
+| FuryNo5 컴파일 | 정적 shape·dtype·stride와 연산 의미로 만든 EDF | 그 EDF에 다음 호출의 입력을 넣은 결과 |
+| 실행 | 이번 `x`의 실제 원소 값과 연결된 가중치 | 실행이 끝나야 `y`를 얻는다. |
+
+13장의 `x_second = x + 0.25` 검사는 이 구분을 확인한다. 입력 계약은 유지하면서 숫자를 바꾸어, 첫 대표 입력의 답을 재사용하는 오류가 없는지 검사하는 것이다.
+
 `torch.compile`의 custom backend는 graph와 example input을 받아 실행 callable을 반환한다. callable은 Python에서 함수처럼 호출할 수 있는 객체다. AOTAutograd(Ahead-of-Time Autograd)를 사용하는 경로는 더 작은 함수형 ATen 집합을 backend 경계로 사용할 수 있다. 이처럼 **graph backend**는 여러 연산으로 구성된 함수 전체를 받아 최적화한다. 반면 **Dispatcher backend**에 대한 `torch.library` 등록은 특정 연산과 dispatch key의 구현을 연결한다. 둘은 함께 쓸 수 있지만, “torch.compile backend 등록 = 모든 ATen의 NPU 구현 등록”은 아니다. [Custom Backends](https://docs.pytorch.org/docs/main/user_guide/torch_compiler/torch.compiler_custom_backends.html)
 
 FuryNo5도 두 경로를 구분한다. `optimize`는 제한된 연산을 준비한 후 복사한 FX graph를 custom op로 바꾼다. `export_model`은 더 넓은 의미 규칙과 실행 계획 생성기를 사용해 파일을 생산한다. 두 함수의 지원 범위가 같다고 추정하지 않는다. [aten_runtime.py](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/aten_runtime.py) · [execution_plan.py](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/execution_plan.py)
@@ -224,25 +244,61 @@ FuryNo5 안에는 Core 집합에 특화된 동일 목적의 진입점도 있다.
 python -m tplmachine.research.core_aten snapshot --out core-baseline.json
 ```
 
-실제 모델이 사용하는 목록은 전체 ATen 수와 별도로 뽑는다. 작은 모델에서 다음 코드를 적용하면 graph target을 직접 볼 수 있다.
+실제 모델이 사용하는 목록은 전체 ATen 수와 별도로 뽑는다. 다음 완성 예제를 [inspect_tiny_fx.py](../examples/inspect_tiny_fx.py)로 저장하면 **입력 자리의 역할과 연산 사이의 연결**을 함께 읽을 수 있다. PyTorch가 필요하며 NPU를 사용하지 않는다. 이 집필 환경에서는 PyTorch 실행을 하지 않았으므로, 아래의 설명 표를 이 스크립트의 실제 출력 로그로 취급하지 않는다.
 
 ```python
 import torch
 
-model = torch.nn.Sequential(
-    torch.nn.Linear(8, 12),  # 입력 [4,8] → 행별 행렬곱·bias 덧셈 → [4,12]
-    torch.nn.ReLU(),        # 원소별 max(value, 0); [4,12] 유지
-    torch.nn.Linear(12, 8), # [4,12] → [4,8]
-).eval().requires_grad_(False)  # 추론 모드와 parameter의 미분 불필요를 각각 지정한다.
-x = torch.randn(4, 8)  # CPU FP32 대표 입력; 이 예에서는 BF16으로 변환하지 않는다.
-ep = torch.export.export(model, (x,), strict=False)  # 입력 하나의 tuple로 그래프를 얻는다.
-for node in ep.graph.nodes:
-    value = node.meta.get("val")  # 실제 NPU 결과가 아니라 캡처 중 추적한 값 정보다.
-    shape = tuple(value.shape) if isinstance(value, torch.Tensor) else None
-    print(node.op, node.name, node.target, shape)  # node 종류·이름·호출 대상·추적 shape
+def main():
+    model = torch.nn.Sequential(
+        torch.nn.Linear(8, 12),  # 입력 [4,8] → [4,12]
+        torch.nn.ReLU(),        # 음수만 0으로 바꾸며 [4,12] 유지
+        torch.nn.Linear(12, 8), # [4,12] → [4,8]
+    ).eval().requires_grad_(False)
+    x = torch.randn(4, 8)  # CPU FP32 대표 입력; BF16 장치 컴파일 예제와 구분한다.
+    ep = torch.export.export(model, (x,), strict=False)
+
+    for spec in ep.graph_signature.input_specs:
+        # arg.name은 그래프의 입력 자리, target은 연결할 parameter 이름이다.
+        # USER_INPUT의 target은 보통 None이며, PARAMETER는 '0.weight' 등이다.
+        name = getattr(spec.arg, "name", repr(spec.arg))
+        print("INPUT", name, spec.kind.name, "target=", spec.target)
+
+    for node in ep.graph.nodes:
+        value = node.meta.get("val")  # 계산 결과가 아니라 캡처 중 추적한 tensor 정보
+        shape = tuple(value.shape) if isinstance(value, torch.Tensor) else None
+        print("NODE", node.op, node.name, node.target, "shape=", shape)
+        print("  args=", node.args, "kwargs=", node.kwargs)  # 선행 node 참조와 상수
+
+    x_second = x + 0.25  # shape [4,8]은 그대로 두고 입력의 숫자만 바꾼다.
+    with torch.no_grad():
+        actual = ep.module()(x_second)  # parameter를 다시 연결한 CPU 실행 module
+        expected = model(x_second)     # 같은 가중치의 원본 Python 모델
+    torch.testing.assert_close(actual, expected)
+    print("changed-input CPU comparison passed")  # 위 비교가 실제 통과한 경우에만 출력
+
+if __name__ == "__main__":
+    main()
 ```
 
-`placeholder`는 외부에서 값을 받아야 하는 자리, `call_function`은 연산 호출, `output`은 반환할 값을 나타낸다. `node.target`은 호출할 연산이고 `node.meta["val"]`은 분석 중 얻은 tensor 정보이지 이미 NPU로 계산한 출력이 아니다. parameter가 별도 placeholder로 보일 수 있으므로 입력 node 수가 사용자의 인수 개수와 같다고 가정하지 않는다.
+`placeholder`는 외부에서 값을 받아야 하는 자리, `call_function`은 연산 호출, `output`은 반환할 값을 나타낸다. `node.target`은 호출할 연산이고, `node.args`와 `node.kwargs`에 다른 node가 들어 있으면 **그 node가 만든 값을 인수로 사용**한다. 일반 Python의 함수 인수 목록과 같은 순서로 읽으면 된다. `node.meta["val"]`은 분석 중 얻은 tensor 정보이지 이미 NPU로 계산한 출력이 아니다.
+
+다음은 실제 로그가 아니라 **node 이름을 `x`, `w0`, `h` 등으로 줄인 교육용 재구성**이다. 먼저 `INPUT` 줄로 placeholder의 출처를 찾고, 다음으로 `NODE`의 `args`를 따라간다. 입력 순서와 자동 이름은 설치 버전에서 위 코드로 확인한다.
+
+| 짧게 부른 입력 자리 | `input_specs`의 kind | `target`이 가리키는 것 | 호출자가 직접 넘기는가 |
+|---|---|---|---|
+| `w0`, `b0` | `PARAMETER` | `0.weight`, `0.bias` | `ep.module()`이 모델 상태에 연결한다. |
+| `w2`, `b2` | `PARAMETER` | `2.weight`, `2.bias` | 위와 같다. |
+| `x` | `USER_INPUT` | 모델 parameter가 아니므로 `None` | `ep.module()(x_second)`의 인수다. |
+
+| 만드는 값 | node 종류·호출 대상 | 순서 있는 인수 참조 | 이 줄을 읽은 뜻 |
+|---|---|---|---|
+| `h` | `call_function`, `aten.linear.default` | `(x, w0, b0)` | 사용자 입력과 첫 weight·bias로 `[4,12]`를 만든다. |
+| `a` | `call_function`, `aten.relu.default` | `(h,)` | 바로 위의 결과를 받아 음수만 0으로 바꾼다. |
+| `y` | `call_function`, `aten.linear.default` | `(a, w2, b2)` | ReLU 결과와 둘째 weight·bias로 `[4,8]`를 만든다. |
+| 함수 출력 | `output` | `((y,),)` | 그래프의 출력 tensor가 `y`임을 기록한다. |
+
+따라서 사용자 입력이 하나여도 이 예제의 parameter 네 개가 입력 자리로 분리되면 placeholder는 다섯 개다. `ep.graph`는 이 다섯 입력의 관계를 드러내고, `ep.module()`은 parameter를 다시 묶어 사용자 입력 하나로 호출할 수 있게 한다. 실제 그래프에 decomposition이 적용되었다면 `linear` 대신 더 작은 연산들이 보일 수 있으므로, 그때도 `target`과 인수 참조로 같은 의존 관계를 따라간다. [그래프 입력 서명과 parameter 분리 계약](https://github.com/pytorch/pytorch/blob/449b1768410104d3ed79d3bcfe4ba1d65c7f22c0/torch/export/graph_signature.py#L165-L180)
 
 모델 수, 관측 node 수, 지원 overload 수, 검증한 shape/dtype 수를 각각 기록하면 과장된 “지원율”을 피할 수 있다. 다음 장은 이 호출 경계를 FuryNo5 코드의 실제 파일에 연결한다.
 
@@ -254,6 +310,7 @@ for node in ep.graph.nodes:
 
 | 자료 | 이 장에서 확인한 내용 |
 |---|---|
+| [export 입력·제약](https://github.com/pytorch/pytorch/blob/449b1768410104d3ed79d3bcfe4ba1d65c7f22c0/torch/export/__init__.py), [그래프 입력 서명](https://github.com/pytorch/pytorch/blob/449b1768410104d3ed79d3bcfe4ba1d65c7f22c0/torch/export/graph_signature.py) | 대표 입력의 값·shape 구분, parameter와 사용자 입력 자리 |
 | [reshape 2.10](https://docs.pytorch.org/docs/2.10/generated/torch.reshape.html), [transpose 2.10](https://docs.pytorch.org/docs/2.10/generated/torch.transpose.html), [Linear 2.10](https://docs.pytorch.org/docs/2.10/generated/torch.nn.Linear.html) | 원소 재해석·축 교환·행렬곱과 bias 계약 |
 | [ATen C++ 설명](https://docs.pytorch.org/cppdocs/api/aten/index.html) | 정식 명칭과 텐서 라이브러리 역할 |
 | [2018년 PyTorch 회고](https://pytorch.org/blog/a-year-in/) | ATen 내부 재설계 역사 |

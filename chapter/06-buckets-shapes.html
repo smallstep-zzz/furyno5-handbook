@@ -1,6 +1,6 @@
 <!doctype html>
-<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="어떤 입력 조건을 미리 준비하고 실행 중 무엇을 선택할지 설계합니다."><meta name="theme-color" content="#fbfaf7"><title>Shape와 버킷 설계 · FuryNo5 개발 핸드북</title><link rel="icon" href="../assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="../assets/site.css?v=5454d41416bc"><script defer src="../assets/site.js?v=aeae33420bbb"></script></head>
-<body data-root="../" data-chapter="06-buckets-shapes" data-search-version="e58e3b38bb8f"><a class="skip" href="#content">본문으로 이동</a><header class="topbar"><button class="menu-toggle" type="button" aria-label="전체 목차 열기" aria-controls="sidebar" aria-expanded="false">☰</button><a class="brand" href="../index.html"><span class="brand-mark">Nº5</span>FuryNo5<small>DEVELOPER HANDBOOK</small></a><div class="top-actions"><a class="top-link" href="../sources.html">출처와 버전</a><button class="search-open" type="button" aria-label="핸드북 전체 검색"><span>전체 문서 검색</span><kbd>⌘ K</kbd></button></div></header><div class="progress" aria-hidden="true"></div><div class="mobile-shade"></div><aside class="sidebar" id="sidebar" aria-label="전체 목차"><nav><div class="nav-caption">시작하기</div><a class="nav-link"  href="../index.html"><span class="num">00</span><span>전체 지도와 읽는 방법</span></a><div class="nav-caption">I. 디바이스를 이해하기</div><a class="nav-link"  href="../chapter/01-hardware.html"><span class="num">01</span><span>RNGD · TCP · PE</span></a><a class="nav-link"  href="../chapter/02-memory-dma.html"><span class="num">02</span><span>메모리 · DMA · 배치</span></a><a class="nav-link"  href="../chapter/03-driver-runtime.html"><span class="num">03</span><span>드라이버와 공식 런타임</span></a><div class="nav-caption">II. 프로그램을 만들고 실행하기</div><a class="nav-link"  href="../chapter/04-tcl-edf.html"><span class="num">04</span><span>TCL 작성 · 컴파일 · 실행</span></a><a class="nav-link"  href="../chapter/05-graphs-fallback.html"><span class="num">05</span><span>실행그래프 · 오류 · 폴백</span></a><a class="nav-link active" aria-current="page" href="../chapter/06-buckets-shapes.html"><span class="num">06</span><span>Shape · 버킷 · 컴파일 비용</span></a><a class="nav-link"  href="../chapter/07-optimization.html"><span class="num">07</span><span>최적화의 축과 우선순위</span></a><a class="nav-link"  href="../chapter/08-eisa-visa.html"><span class="num">08</span><span>eISA · vISA · furiosa-opt</span></a><div class="nav-caption">III. FuryNo5를 해부하기</div><a class="nav-link"  href="../chapter/09-torch-aten.html"><span class="num">09</span><span>PyTorch · ATen · 등록</span></a><a class="nav-link"  href="../chapter/10-furyno5-architecture.html"><span class="num">10</span><span>FuryNo5 구조와 지원 범위</span></a><a class="nav-link"  href="../chapter/11-furyno5-compiler.html"><span class="num">11</span><span>FuryNo5 컴파일과 캐시</span></a><div class="nav-caption">IV. 모델 포팅과 서빙</div><a class="nav-link"  href="../chapter/12-fxbx.html"><span class="num">12</span><span>fxbX 포맷과 실행계획</span></a><a class="nav-link"  href="../chapter/13-porting-fha.html"><span class="num">13</span><span>포팅 · FHA · FuryAwesome</span></a><a class="nav-link"  href="../chapter/14-serving-vllm.html"><span class="num">14</span><span>vLLM · 서빙 브리지</span></a><a class="nav-link"  href="../chapter/15-multi-npu.html"><span class="num">15</span><span>PE · 여러 카드 · 여러 서버</span></a><div class="nav-caption">V. 검증과 다음 개발</div><a class="nav-link"  href="../chapter/16-furyboost.html"><span class="num">16</span><span>FuryBoost 실측과 남은 과제</span></a><a class="nav-link"  href="../chapter/17-debugging.html"><span class="num">17</span><span>측정 · 추적 · 실패 재현</span></a><div class="nav-caption">VI. 생태계 비교와 최적화 연구</div><a class="nav-link"  href="../chapter/18-npu-ecosystems.html"><span class="num">18</span><span>다른 NPU의 지원 방식</span></a><a class="nav-link"  href="../chapter/19-model-optimization.html"><span class="num">19</span><span>모델 사전 최적화 · 연구</span></a><div class="nav-caption">참고와 검증</div><a class="nav-link"  href="../glossary.html"><span class="num">·</span><span>약어와 용어 사전</span></a><a class="nav-link"  href="../sources.html"><span class="num">·</span><span>출처 · 버전 · 접근 범위</span></a><a class="nav-link"  href="../review.html"><span class="num">·</span><span>검토 기록과 미해결 질문</span></a></nav><div class="side-foot">비공식 개발 핸드북 · 2026.11.19<br>공식 SDK와 프로젝트 구현을 구분합니다.<br><a href="https://github.com/smallstep-zzz/furyno5-handbook">원고와 변경 이력 ↗</a></div></aside><div class="shell"><main class="page" id="content"><div class="eyebrow">II. 프로그램을 만들고 실행하기 / CHAPTER 06</div><h1>Shape와 버킷 설계</h1><p class="dek">어떤 입력 조건을 미리 준비하고 실행 중 무엇을 선택할지 설계합니다.</p><div class="page-meta"><span>검토 2026.11.19</span><span>SDK 2026.4 계열 / 버전별 표기</span><span class="readtime">약 12분</span><span><a href="https://github.com/smallstep-zzz/furyno5-handbook/blob/main/content/06-buckets-shapes.md">원고</a></span></div><details class="mobile-toc"><summary>이 장의 목차</summary><div><a class="" href="#1-길이-하나만-다른-요청부터-처리해-본다">1. 길이 하나만 다른 요청부터 처리해 본다</a><a class="" href="#2-0을-채우기만-하면-결과가-보존되는가">2. 0을 채우기만 하면 결과가 보존되는가</a><a class="" href="#3-shape는-길이-하나보다-많은-정보를-갖는다">3. shape는 길이 하나보다 많은 정보를 갖는다</a><a class="" href="#4-prefill과-decode를-값의-변화로-구분한다">4. Prefill과 decode를 값의 변화로 구분한다</a><a class="minor" href="#prefix-cache가-있으면-전체-길이와-새-계산-길이가-달라진다">Prefix cache가 있으면 전체 길이와 새 계산 길이가 달라진다</a><a class="" href="#5-패딩-비용을-수로-비교한다">5. 패딩 비용을 수로 비교한다</a><a class="" href="#6-버킷을-촘촘하게-준비할-때의-비용">6. 버킷을 촘촘하게 준비할 때의 비용</a><a class="" href="#7-빌드-때-만드는-조건과-실행-때-선택하는-조건">7. 빌드 때 만드는 조건과 실행 때 선택하는 조건</a><a class="" href="#8-실행-중에는-요청을-어떻게-묶는지가-중요하다">8. 실행 중에는 요청을 어떻게 묶는지가 중요하다</a><a class="" href="#9-furyno5가-재사용-전에-확인할-실행계약">9. FuryNo5가 재사용 전에 확인할 실행계약</a><a class="" href="#10-비교-실험에-남길-값">10. 비교 실험에 남길 값</a><a class="" href="#출처">출처</a></div></details><noscript><p class="noscript">본문과 그림은 JavaScript 없이 읽을 수 있습니다. 검색과 조절 실험에는 JavaScript가 필요합니다.</p></noscript><article class="article"><p>길이 8의 C 배열을 처리하도록 준비한 함수를 생각해 보자. 이번 입력은 길이 5이고 다음 입력은 길이 11이다. 함수가 임의 길이를 받을 수 없다면, 입력을 담을 공간과 처리 범위를 어떻게 맞출지 정해야 한다. NPU(Neural Processing Unit)에서도 어떤 형상으로 컴파일된 프로그램을 재사용할 것인지가 중요한 문제가 된다.</p>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="어떤 입력 조건을 미리 준비하고 실행 중 무엇을 선택할지 설계합니다."><meta name="theme-color" content="#fbfaf7"><title>Shape와 버킷 설계 · FuryNo5 개발 핸드북</title><link rel="icon" href="../assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="../assets/site.css?v=cb5aa5a870ba"><script defer src="../assets/site.js?v=aeae33420bbb"></script></head>
+<body data-root="../" data-chapter="06-buckets-shapes" data-search-version="5328e86ff6da"><a class="skip" href="#content">본문으로 이동</a><header class="topbar"><button class="menu-toggle" type="button" aria-label="전체 목차 열기" aria-controls="sidebar" aria-expanded="false">☰</button><a class="brand" href="../index.html"><span class="brand-mark">Nº5</span>FuryNo5<small>DEVELOPER HANDBOOK</small></a><div class="top-actions"><a class="top-link" href="../sources.html">출처와 버전</a><button class="search-open" type="button" aria-label="핸드북 전체 검색"><span>전체 문서 검색</span><kbd>⌘ K</kbd></button></div></header><div class="progress" aria-hidden="true"></div><div class="mobile-shade"></div><aside class="sidebar" id="sidebar" aria-label="전체 목차"><nav><div class="nav-caption">시작하기</div><a class="nav-link"  href="../index.html"><span class="num">00</span><span>전체 지도와 읽는 방법</span></a><div class="nav-caption">I. 디바이스를 이해하기</div><a class="nav-link"  href="../chapter/01-hardware.html"><span class="num">01</span><span>RNGD · TCP · PE</span></a><a class="nav-link"  href="../chapter/02-memory-dma.html"><span class="num">02</span><span>메모리 · DMA · 배치</span></a><a class="nav-link"  href="../chapter/03-driver-runtime.html"><span class="num">03</span><span>드라이버와 공식 런타임</span></a><div class="nav-caption">II. 프로그램을 만들고 실행하기</div><a class="nav-link"  href="../chapter/04-tcl-edf.html"><span class="num">04</span><span>TCL 작성 · 컴파일 · 실행</span></a><a class="nav-link"  href="../chapter/05-graphs-fallback.html"><span class="num">05</span><span>실행그래프 · 오류 · 폴백</span></a><a class="nav-link active" aria-current="page" href="../chapter/06-buckets-shapes.html"><span class="num">06</span><span>Shape · 버킷 · 컴파일 비용</span></a><a class="nav-link"  href="../chapter/07-optimization.html"><span class="num">07</span><span>최적화의 축과 우선순위</span></a><a class="nav-link"  href="../chapter/08-eisa-visa.html"><span class="num">08</span><span>eISA · vISA · furiosa-opt</span></a><div class="nav-caption">III. FuryNo5를 해부하기</div><a class="nav-link"  href="../chapter/09-torch-aten.html"><span class="num">09</span><span>PyTorch · ATen · 등록</span></a><a class="nav-link"  href="../chapter/10-furyno5-architecture.html"><span class="num">10</span><span>FuryNo5 구조와 지원 범위</span></a><a class="nav-link"  href="../chapter/11-furyno5-compiler.html"><span class="num">11</span><span>FuryNo5 컴파일과 캐시</span></a><div class="nav-caption">IV. 모델 포팅과 서빙</div><a class="nav-link"  href="../chapter/12-fxbx.html"><span class="num">12</span><span>fxbX 포맷과 실행계획</span></a><a class="nav-link"  href="../chapter/13-porting-fha.html"><span class="num">13</span><span>포팅 · FHA · FuryAwesome</span></a><a class="nav-link"  href="../chapter/14-serving-vllm.html"><span class="num">14</span><span>vLLM · 서빙 브리지</span></a><a class="nav-link"  href="../chapter/15-multi-npu.html"><span class="num">15</span><span>PE · 여러 카드 · 여러 서버</span></a><div class="nav-caption">V. 검증과 다음 개발</div><a class="nav-link"  href="../chapter/16-furyboost.html"><span class="num">16</span><span>FuryBoost 실측과 남은 과제</span></a><a class="nav-link"  href="../chapter/17-debugging.html"><span class="num">17</span><span>측정 · 추적 · 실패 재현</span></a><div class="nav-caption">VI. 생태계 비교와 최적화 연구</div><a class="nav-link"  href="../chapter/18-npu-ecosystems.html"><span class="num">18</span><span>다른 NPU의 지원 방식</span></a><a class="nav-link"  href="../chapter/19-model-optimization.html"><span class="num">19</span><span>모델 사전 최적화 · 연구</span></a><div class="nav-caption">참고와 검증</div><a class="nav-link"  href="../glossary.html"><span class="num">·</span><span>약어와 용어 사전</span></a><a class="nav-link"  href="../sources.html"><span class="num">·</span><span>출처 · 버전 · 접근 범위</span></a><a class="nav-link"  href="../review.html"><span class="num">·</span><span>검토 기록과 미해결 질문</span></a><a class="nav-link"  href="../reader-review.html"><span class="num">·</span><span>3학년 독자 검토와 수정 기록</span></a></nav><div class="side-foot">비공식 개발 핸드북 · 2026.11.20<br>공식 SDK와 프로젝트 구현을 구분합니다.<br><a href="https://github.com/smallstep-zzz/furyno5-handbook">원고와 변경 이력 ↗</a></div></aside><div class="shell"><main class="page" id="content"><div class="eyebrow">II. 프로그램을 만들고 실행하기 / CHAPTER 06</div><h1>Shape와 버킷 설계</h1><p class="dek">어떤 입력 조건을 미리 준비하고 실행 중 무엇을 선택할지 설계합니다.</p><div class="page-meta"><span>독자 검토 2026.11.20</span><span>SDK 2026.4 계열 / 버전별 표기</span><span class="readtime">약 15분</span><span><a href="https://github.com/smallstep-zzz/furyno5-handbook/blob/main/content/06-buckets-shapes.md">원고</a></span></div><details class="mobile-toc"><summary>이 장의 목차</summary><div><a class="" href="#1-길이-하나만-다른-요청부터-처리해-본다">1. 길이 하나만 다른 요청부터 처리해 본다</a><a class="" href="#2-0을-채우기만-하면-결과가-보존되는가">2. 0을 채우기만 하면 결과가 보존되는가</a><a class="" href="#3-shape는-길이-하나보다-많은-정보를-갖는다">3. shape는 길이 하나보다 많은 정보를 갖는다</a><a class="" href="#4-prefill과-decode를-값의-변화로-구분한다">4. Prefill과 decode를 값의 변화로 구분한다</a><a class="minor" href="#key와-value는-무엇을-재사용하는가">Key와 value는 무엇을 재사용하는가</a><a class="minor" href="#prefix-cache가-있으면-전체-길이와-새-계산-길이가-달라진다">Prefix cache가 있으면 전체 길이와 새 계산 길이가 달라진다</a><a class="" href="#5-패딩-비용을-수로-비교한다">5. 패딩 비용을 수로 비교한다</a><a class="" href="#6-버킷을-촘촘하게-준비할-때의-비용">6. 버킷을 촘촘하게 준비할 때의 비용</a><a class="" href="#7-빌드-때-만드는-조건과-실행-때-선택하는-조건">7. 빌드 때 만드는 조건과 실행 때 선택하는 조건</a><a class="" href="#8-실행-중에는-요청을-어떻게-묶는지가-중요하다">8. 실행 중에는 요청을 어떻게 묶는지가 중요하다</a><a class="" href="#9-furyno5가-재사용-전에-확인할-실행계약">9. FuryNo5가 재사용 전에 확인할 실행계약</a><a class="" href="#10-비교-실험에-남길-값">10. 비교 실험에 남길 값</a><a class="" href="#출처">출처</a></div></details><noscript><p class="noscript">본문과 그림은 JavaScript 없이 읽을 수 있습니다. 검색과 조절 실험에는 JavaScript가 필요합니다.</p></noscript><article class="article"><p>길이 8의 C 배열을 처리하도록 준비한 함수를 생각해 보자. 이번 입력은 길이 5이고 다음 입력은 길이 11이다. 함수가 임의 길이를 받을 수 없다면, 입력을 담을 공간과 처리 범위를 어떻게 맞출지 정해야 한다. NPU(Neural Processing Unit)에서도 어떤 형상으로 컴파일된 프로그램을 재사용할 것인지가 중요한 문제가 된다.</p>
 <p><strong>버킷(bucket)은</strong> 자주 등장하는 입력 조건을 몇 가지 준비된 실행 조건으로 묶는 방법이다. 예를 들어 길이 8·16의 실행물을 준비하고, 길이 5는 8 버킷에, 길이 11은 16 버킷에 배정한다. 버킷은 소프트웨어의 선택 단위다. PE(Processing Element) 안에 ‘버킷’이라는 하드웨어 저장소가 있는 것은 아니다. 공식 FXB(Furiosa Executable Bundle)도 준비된 커널과 입출력 시그니처를 제공하며, 런타임은 실제 요청에 맞는 조건을 사용한다. <a href="https://developer.furiosa.ai/v2026.4.0/en/furiosa_llm/fxb.html">공식 FXB 문서</a></p>
 <h2 id="1-길이-하나만-다른-요청부터-처리해-본다"><a class="heading-anchor" href="#1-길이-하나만-다른-요청부터-처리해-본다">1. 길이 하나만 다른 요청부터 처리해 본다</a></h2>
 <p>다음은 <strong>버킷 선택 원리를 보여주는 순수 Python 코드</strong>다. 실제 Furiosa 스케줄러를 복제한 구현이 아니며 NPU를 사용하지 않는다. 준비한 길이 중 입력을 담을 수 있는 가장 작은 길이를 고른다.</p>
@@ -26,6 +26,7 @@ print(choose_length_bucket(120, [128, 256, 512, 1024]))
 <div class="table-wrap"><table>
 <thead>
 <tr>
+<th>준비된 후보 집합</th>
 <th align="right">실제 입력 길이</th>
 <th align="right">선택한 버킷</th>
 <th align="right">추가 위치 수</th>
@@ -33,31 +34,36 @@ print(choose_length_bucket(120, [128, 256, 512, 1024]))
 </tr>
 </thead>
 <tbody><tr>
+<td><code>[8,16]</code></td>
 <td align="right">5</td>
 <td align="right">8</td>
 <td align="right">3</td>
 <td>유효 입력은 앞의 5개다.</td>
 </tr>
 <tr>
+<td><code>[8,16]</code></td>
 <td align="right">11</td>
 <td align="right">16</td>
 <td align="right">5</td>
 <td>유효 입력은 앞의 11개다.</td>
 </tr>
 <tr>
+<td><code>[8,16]</code></td>
 <td align="right">17</td>
 <td align="right">없음</td>
 <td align="right">—</td>
-<td>재빌드·다른 경로·요청 거절 중 명시된 정책이 필요하다.</td>
+<td>최대 후보 16을 넘으므로 명시된 초과 정책이 필요하다.</td>
 </tr>
 <tr>
+<td><code>[128,256,512,1024]</code></td>
 <td align="right">120</td>
 <td align="right">128</td>
 <td align="right">8</td>
 <td>128개 모두 원래 입력이라고 해석하면 안 된다.</td>
 </tr>
 </tbody></table>
-</div><p><strong>패딩(padding)은</strong> 남는 위치를 채워 준비된 형상을 만드는 일이다. <strong>마스크(mask)는</strong> 어느 위치가 실제 입력인지 계산에 알려주는 정보다. 버킷 선택, 패딩, 마스크 준비는 함께 검토해야 한다.</p>
+</div><p>선택은 <strong>입력 길이와 준비된 후보 집합의 관계</strong>다. 17이 본질적으로 지원 불가능한 길이는 아니다. 후보가 <code>[128,256,512,1024]</code>였다면 위 선택 함수는 128을 골랐을 것이다. 어떤 후보를 준비했는지 빼고 선택 결과만 비교하면 안 된다.</p>
+<p><strong>패딩(padding)은</strong> 남는 위치를 채워 준비된 형상을 만드는 일이다. <strong>마스크(mask)는</strong> 어느 위치가 실제 입력인지 계산에 알려주는 정보다. 버킷 선택, 패딩, 마스크 준비는 함께 검토해야 한다.</p>
 <h2 id="2-0을-채우기만-하면-결과가-보존되는가"><a class="heading-anchor" href="#2-0을-채우기만-하면-결과가-보존되는가">2. 0을 채우기만 하면 결과가 보존되는가</a></h2>
 <p>값 <code>[1,3,5]</code>의 평균은 <code>(1+3+5)/3 = 3</code>이다. 길이 4에 맞춰 0을 더하고 네 값의 평균을 구하면 <code>2.25</code>가 된다. 0이 덧셈 결과를 바꾸지 않아도 <strong>분모가 달라져 계산 의미가 바뀐 것</strong>이다.</p>
 <div class="codebox"><div class="codebar"><span>python</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-python">values = [1.0, 3.0, 5.0]                 # 실제 입력 3개
@@ -110,6 +116,65 @@ assert masked_mean == 3.0                # 원래 계산의 분모와 유효 값
     E --&gt; O[&quot;유효 결과와 다음 상태&quot;]</pre></details></figure><h2 id="4-prefill과-decode를-값의-변화로-구분한다"><a class="heading-anchor" href="#4-prefill과-decode를-값의-변화로-구분한다">4. Prefill과 decode를 값의 변화로 구분한다</a></h2>
 <p>LLM(Large Language Model, 대규모 언어 모델)의 입력 문장이 토큰 <code>[A,B,C]</code>라고 하자. 여기의 A·B·C는 토큰을 구분하는 기호이며 실제 구현에서는 정수 ID다.</p>
 <p><strong>Prefill</strong>은 새 입력 토큰들을 처리하여 이후 생성에 필요한 상태를 준비하는 단계다. <strong>Decode</strong>는 이미 계산한 문맥을 재사용하면서 다음 토큰을 생성하는 단계다. <strong>KV(Key–Value) cache</strong>는 attention 계산에서 다시 참조할 이전 토큰의 key·value 벡터를 저장한다.</p>
+<h3 id="key와-value는-무엇을-재사용하는가"><a class="heading-anchor" href="#key와-value는-무엇을-재사용하는가">Key와 value는 무엇을 재사용하는가</a></h3>
+<p>Attention의 현재 <strong>query(Q, 질의 벡터)는</strong> 과거 각 위치의 <strong>key(K, 비교용 벡터)와</strong> 내적하여 점수를 만든다. 내적은 같은 좌표의 숫자를 곱한 뒤 모두 더하는 계산이다. 점수들을 합이 1인 비중으로 바꾸고, 그 비중으로 각 위치의 <strong>value(V, 전달할 내용 벡터)를</strong> 가중합한다. K와 V는 토큰 ID 자체가 아니라 모델이 토큰의 특징에서 계산한 값이다.</p>
+<p>차원 하나짜리 query <code>[1]</code>, 이전 두 위치의 key <code>[0]</code>·<code>[1]</code>, value <code>[10]</code>·<code>[30]</code>을 사용해 보자. 실제 attention의 기본 계산을 작게 만든 예이며, 여러 attention head·모델 층·마스크는 생략했다. 차원 수가 1이므로 점수를 나누는 <code>sqrt(차원 수)</code>도 1이다. <strong>Softmax</strong>는 점수 s마다 <code>exp(s)</code>를 구한 후 그 총합으로 나누는 함수다. <code>exp(0)=1</code>, <code>exp(1)≈2.718</code>이므로 음수일 수도 있는 점수를 양수의 비중으로 바꾼다. <a href="https://docs.pytorch.org/docs/2.10/generated/torch.nn.functional.scaled_dot_product_attention.html">PyTorch의 attention 수식·마스크 정의</a></p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>처리 위치</th>
+<th align="right">저장한 key</th>
+<th align="right">저장한 value</th>
+<th align="right">현재 query와 내적</th>
+<th align="right">softmax 비중</th>
+<th align="right">출력에 보태는 값</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>이전 위치 A</td>
+<td align="right">0</td>
+<td align="right">10</td>
+<td align="right"><code>1×0=0</code></td>
+<td align="right">약 0.269</td>
+<td align="right">약 2.689</td>
+</tr>
+<tr>
+<td>이전 위치 B</td>
+<td align="right">1</td>
+<td align="right">30</td>
+<td align="right"><code>1×1=1</code></td>
+<td align="right">약 0.731</td>
+<td align="right">약 21.932</td>
+</tr>
+<tr>
+<td>합계</td>
+<td align="right">—</td>
+<td align="right">—</td>
+<td align="right">—</td>
+<td align="right">1</td>
+<td align="right">약 24.621</td>
+</tr>
+</tbody></table>
+</div><p>다음은 NPU API가 아닌 일반 Python 검산이다. <code>query</code>만 0으로 바꾸면 같은 K·V를 읽어 점수 <code>[0,0]</code>, 비중 <code>[0.5,0.5]</code>, 출력 20을 얻는다. <strong>재사용하는 것은 과거 K·V이고, 새로운 query의 점수·가중합 계산은 다시 수행한다.</strong></p>
+<div class="codebox"><div class="codebar"><span>python</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-python">import math
+
+keys = [0.0, 1.0]                       # 과거 두 위치의 길이 1짜리 key를 스칼라로 표기
+values = [10.0, 30.0]                   # 같은 두 위치에 대응하는 value
+
+def attend_one_dimension(query):
+    scores = [query * key for key in keys]  # 새 query와 저장된 K를 비교한다.
+    # 큰 지수의 넘침을 줄이도록 최대 점수를 뺀다. softmax 비중은 변하지 않는다.
+    exponentials = [math.exp(s - max(scores)) for s in scores]
+    weights = [v / sum(exponentials) for v in exponentials]
+    output = sum(w * v for w, v in zip(weights, values))  # 비중으로 V를 가중합한다.
+    return scores, weights, output
+
+scores, weights, output = attend_one_dimension(1.0)
+assert scores == [0.0, 1.0]
+assert math.isclose(output, 24.621171572600097)
+assert attend_one_dimension(0.0)[2] == 20.0  # K·V를 재사용해도 새 query의 결과는 달라진다.
+</code></pre></div>
+<p>실제 decode는 각 층에서 새 토큰의 K·V도 만들고 기존 cache에 추가한다. 따라서 아래 표의 “A, B, C에 대한 값”은 그 세 위치에서 유도한 K·V를 뜻한다. cache가 있다고 문맥 읽기가 사라지지는 않으며, 문맥이 길수록 읽고 비교할 과거 위치도 늘어난다.</p>
 <div class="table-wrap"><table>
 <thead>
 <tr>
@@ -299,5 +364,9 @@ fxb inspect ./qwen3-8b.fxb
 <td><a href="https://developer.furiosa.ai/v2026.4.0/en/furiosa_llm/prefix-caching.html">Prefix Caching</a></td>
 <td>유효 prefix 상태 재사용</td>
 </tr>
+<tr>
+<td><a href="https://docs.pytorch.org/docs/2.10/generated/torch.nn.functional.scaled_dot_product_attention.html">PyTorch 2.10 Attention</a></td>
+<td>Q·K 점수, softmax 비중, V 가중합과 마스크</td>
+</tr>
 </tbody></table>
-</div></article><nav class="next-prev" aria-label="이전과 다음 장"><a href="../chapter/05-graphs-fallback.html"><small>← 이전 장</small><b>실행그래프와 실패 경계</b></a><a href="../chapter/07-optimization.html"><small>다음 장 →</small><b>최적화의 축과 우선순위</b></a></nav><footer class="footer">FuryNo5 개발 핸드북 · 비공식 자료<br>공식 문서와 소스의 권리는 각 프로젝트에 있습니다. 코드 인용은 출처와 함께 표시합니다.<br><a href="../review.html">검토 기록과 남은 질문</a> · <a href="../sources.html">출처와 버전</a> · <a href="../glossary.html">용어 사전</a></footer></main></div><aside class="right-toc" aria-label="이 장의 목차"><h2>이 장에서 다루는 내용</h2><a class="" href="#1-길이-하나만-다른-요청부터-처리해-본다">1. 길이 하나만 다른 요청부터 처리해 본다</a><a class="" href="#2-0을-채우기만-하면-결과가-보존되는가">2. 0을 채우기만 하면 결과가 보존되는가</a><a class="" href="#3-shape는-길이-하나보다-많은-정보를-갖는다">3. shape는 길이 하나보다 많은 정보를 갖는다</a><a class="" href="#4-prefill과-decode를-값의-변화로-구분한다">4. Prefill과 decode를 값의 변화로 구분한다</a><a class="minor" href="#prefix-cache가-있으면-전체-길이와-새-계산-길이가-달라진다">Prefix cache가 있으면 전체 길이와 새 계산 길이가 달라진다</a><a class="" href="#5-패딩-비용을-수로-비교한다">5. 패딩 비용을 수로 비교한다</a><a class="" href="#6-버킷을-촘촘하게-준비할-때의-비용">6. 버킷을 촘촘하게 준비할 때의 비용</a><a class="" href="#7-빌드-때-만드는-조건과-실행-때-선택하는-조건">7. 빌드 때 만드는 조건과 실행 때 선택하는 조건</a><a class="" href="#8-실행-중에는-요청을-어떻게-묶는지가-중요하다">8. 실행 중에는 요청을 어떻게 묶는지가 중요하다</a><a class="" href="#9-furyno5가-재사용-전에-확인할-실행계약">9. FuryNo5가 재사용 전에 확인할 실행계약</a><a class="" href="#10-비교-실험에-남길-값">10. 비교 실험에 남길 값</a><a class="" href="#출처">출처</a></aside><dialog class="search-dialog" aria-label="문서 검색"><div class="search-head"><input type="search" aria-label="검색어" placeholder="DMA, EDF, 폴백, 버킷…" autocomplete="off"><button class="close-search" type="button">닫기</button></div><div class="search-status" role="status">용어나 함수 이름을 입력하세요.</div><div class="search-results"></div></dialog></body></html>
+</div></article><nav class="next-prev" aria-label="이전과 다음 장"><a href="../chapter/05-graphs-fallback.html"><small>← 이전 장</small><b>실행그래프와 실패 경계</b></a><a href="../chapter/07-optimization.html"><small>다음 장 →</small><b>최적화의 축과 우선순위</b></a></nav><footer class="footer">FuryNo5 개발 핸드북 · 비공식 자료<br>공식 문서와 소스의 권리는 각 프로젝트에 있습니다. 코드 인용은 출처와 함께 표시합니다.<br><a href="../reader-review.html">3학년 독자 재검토</a> · <a href="../review.html">검토 기록과 남은 질문</a> · <a href="../sources.html">출처와 버전</a> · <a href="../glossary.html">용어 사전</a></footer></main></div><aside class="right-toc" aria-label="이 장의 목차"><h2>이 장에서 다루는 내용</h2><a class="" href="#1-길이-하나만-다른-요청부터-처리해-본다">1. 길이 하나만 다른 요청부터 처리해 본다</a><a class="" href="#2-0을-채우기만-하면-결과가-보존되는가">2. 0을 채우기만 하면 결과가 보존되는가</a><a class="" href="#3-shape는-길이-하나보다-많은-정보를-갖는다">3. shape는 길이 하나보다 많은 정보를 갖는다</a><a class="" href="#4-prefill과-decode를-값의-변화로-구분한다">4. Prefill과 decode를 값의 변화로 구분한다</a><a class="minor" href="#key와-value는-무엇을-재사용하는가">Key와 value는 무엇을 재사용하는가</a><a class="minor" href="#prefix-cache가-있으면-전체-길이와-새-계산-길이가-달라진다">Prefix cache가 있으면 전체 길이와 새 계산 길이가 달라진다</a><a class="" href="#5-패딩-비용을-수로-비교한다">5. 패딩 비용을 수로 비교한다</a><a class="" href="#6-버킷을-촘촘하게-준비할-때의-비용">6. 버킷을 촘촘하게 준비할 때의 비용</a><a class="" href="#7-빌드-때-만드는-조건과-실행-때-선택하는-조건">7. 빌드 때 만드는 조건과 실행 때 선택하는 조건</a><a class="" href="#8-실행-중에는-요청을-어떻게-묶는지가-중요하다">8. 실행 중에는 요청을 어떻게 묶는지가 중요하다</a><a class="" href="#9-furyno5가-재사용-전에-확인할-실행계약">9. FuryNo5가 재사용 전에 확인할 실행계약</a><a class="" href="#10-비교-실험에-남길-값">10. 비교 실험에 남길 값</a><a class="" href="#출처">출처</a></aside><dialog class="search-dialog" aria-label="문서 검색"><div class="search-head"><input type="search" aria-label="검색어" placeholder="DMA, EDF, 폴백, 버킷…" autocomplete="off"><button class="close-search" type="button">닫기</button></div><div class="search-status" role="status">용어나 함수 이름을 입력하세요.</div><div class="search-results"></div></dialog></body></html>

@@ -29,12 +29,14 @@ assert choose_length_bucket(5, [8, 16]) == {"actual": 5, "bucket": 8, "padding":
 print(choose_length_bucket(120, [128, 256, 512, 1024]))
 ```
 
-| 실제 입력 길이 | 선택한 버킷 | 추가 위치 수 | 결과 처리에서 기억할 것 |
-|---:|---:|---:|---|
-| 5 | 8 | 3 | 유효 입력은 앞의 5개다. |
-| 11 | 16 | 5 | 유효 입력은 앞의 11개다. |
-| 17 | 없음 | — | 재빌드·다른 경로·요청 거절 중 명시된 정책이 필요하다. |
-| 120 | 128 | 8 | 128개 모두 원래 입력이라고 해석하면 안 된다. |
+| 준비된 후보 집합 | 실제 입력 길이 | 선택한 버킷 | 추가 위치 수 | 결과 처리에서 기억할 것 |
+|---|---:|---:|---:|---|
+| `[8,16]` | 5 | 8 | 3 | 유효 입력은 앞의 5개다. |
+| `[8,16]` | 11 | 16 | 5 | 유효 입력은 앞의 11개다. |
+| `[8,16]` | 17 | 없음 | — | 최대 후보 16을 넘으므로 명시된 초과 정책이 필요하다. |
+| `[128,256,512,1024]` | 120 | 128 | 8 | 128개 모두 원래 입력이라고 해석하면 안 된다. |
+
+선택은 **입력 길이와 준비된 후보 집합의 관계**다. 17이 본질적으로 지원 불가능한 길이는 아니다. 후보가 `[128,256,512,1024]`였다면 위 선택 함수는 128을 골랐을 것이다. 어떤 후보를 준비했는지 빼고 선택 결과만 비교하면 안 된다.
 
 **패딩(padding)은** 남는 위치를 채워 준비된 형상을 만드는 일이다. **마스크(mask)는** 어느 위치가 실제 입력인지 계산에 알려주는 정보다. 버킷 선택, 패딩, 마스크 준비는 함께 검토해야 한다.
 
@@ -89,6 +91,42 @@ flowchart TB
 LLM(Large Language Model, 대규모 언어 모델)의 입력 문장이 토큰 `[A,B,C]`라고 하자. 여기의 A·B·C는 토큰을 구분하는 기호이며 실제 구현에서는 정수 ID다.
 
 **Prefill**은 새 입력 토큰들을 처리하여 이후 생성에 필요한 상태를 준비하는 단계다. **Decode**는 이미 계산한 문맥을 재사용하면서 다음 토큰을 생성하는 단계다. **KV(Key–Value) cache**는 attention 계산에서 다시 참조할 이전 토큰의 key·value 벡터를 저장한다.
+
+### Key와 value는 무엇을 재사용하는가
+
+Attention의 현재 **query(Q, 질의 벡터)는** 과거 각 위치의 **key(K, 비교용 벡터)와** 내적하여 점수를 만든다. 내적은 같은 좌표의 숫자를 곱한 뒤 모두 더하는 계산이다. 점수들을 합이 1인 비중으로 바꾸고, 그 비중으로 각 위치의 **value(V, 전달할 내용 벡터)를** 가중합한다. K와 V는 토큰 ID 자체가 아니라 모델이 토큰의 특징에서 계산한 값이다.
+
+차원 하나짜리 query `[1]`, 이전 두 위치의 key `[0]`·`[1]`, value `[10]`·`[30]`을 사용해 보자. 실제 attention의 기본 계산을 작게 만든 예이며, 여러 attention head·모델 층·마스크는 생략했다. 차원 수가 1이므로 점수를 나누는 `sqrt(차원 수)`도 1이다. **Softmax**는 점수 s마다 `exp(s)`를 구한 후 그 총합으로 나누는 함수다. `exp(0)=1`, `exp(1)≈2.718`이므로 음수일 수도 있는 점수를 양수의 비중으로 바꾼다. [PyTorch의 attention 수식·마스크 정의](https://docs.pytorch.org/docs/2.10/generated/torch.nn.functional.scaled_dot_product_attention.html)
+
+| 처리 위치 | 저장한 key | 저장한 value | 현재 query와 내적 | softmax 비중 | 출력에 보태는 값 |
+|---|---:|---:|---:|---:|---:|
+| 이전 위치 A | 0 | 10 | `1×0=0` | 약 0.269 | 약 2.689 |
+| 이전 위치 B | 1 | 30 | `1×1=1` | 약 0.731 | 약 21.932 |
+| 합계 | — | — | — | 1 | 약 24.621 |
+
+다음은 NPU API가 아닌 일반 Python 검산이다. `query`만 0으로 바꾸면 같은 K·V를 읽어 점수 `[0,0]`, 비중 `[0.5,0.5]`, 출력 20을 얻는다. **재사용하는 것은 과거 K·V이고, 새로운 query의 점수·가중합 계산은 다시 수행한다.**
+
+```python
+import math
+
+keys = [0.0, 1.0]                       # 과거 두 위치의 길이 1짜리 key를 스칼라로 표기
+values = [10.0, 30.0]                   # 같은 두 위치에 대응하는 value
+
+def attend_one_dimension(query):
+    scores = [query * key for key in keys]  # 새 query와 저장된 K를 비교한다.
+    # 큰 지수의 넘침을 줄이도록 최대 점수를 뺀다. softmax 비중은 변하지 않는다.
+    exponentials = [math.exp(s - max(scores)) for s in scores]
+    weights = [v / sum(exponentials) for v in exponentials]
+    output = sum(w * v for w, v in zip(weights, values))  # 비중으로 V를 가중합한다.
+    return scores, weights, output
+
+scores, weights, output = attend_one_dimension(1.0)
+assert scores == [0.0, 1.0]
+assert math.isclose(output, 24.621171572600097)
+assert attend_one_dimension(0.0)[2] == 20.0  # K·V를 재사용해도 새 query의 결과는 달라진다.
+```
+
+실제 decode는 각 층에서 새 토큰의 K·V도 만들고 기존 cache에 추가한다. 따라서 아래 표의 “A, B, C에 대한 값”은 그 세 위치에서 유도한 K·V를 뜻한다. cache가 있다고 문맥 읽기가 사라지지는 않으며, 문맥이 길수록 읽고 비교할 과거 위치도 늘어난다.
 
 | 실행 단계 | 이번에 새로 계산할 입력 | 시작할 때 재사용할 KV | 이번 계산이 참조하는 문맥 | 완료 뒤 KV |
 |---|---|---|---|---|
@@ -202,3 +240,4 @@ p50은 측정값의 가운데 수준, p95는 95%의 요청이 그 이하에서 �
 | [Performance Optimization](https://developer.furiosa.ai/v2026.4.0/en/furiosa_llm/performance-optimization.html) | 길이 한도·profile-guided batching |
 | [Overlap Scheduling](https://developer.furiosa.ai/v2026.4.0/en/furiosa_llm/overlap-scheduling.html) | 호스트 준비와 장치 실행의 겹침 |
 | [Prefix Caching](https://developer.furiosa.ai/v2026.4.0/en/furiosa_llm/prefix-caching.html) | 유효 prefix 상태 재사용 |
+| [PyTorch 2.10 Attention](https://docs.pytorch.org/docs/2.10/generated/torch.nn.functional.scaled_dot_product_attention.html) | Q·K 점수, softmax 비중, V 가중합과 마스크 |

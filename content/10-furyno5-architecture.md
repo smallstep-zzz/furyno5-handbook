@@ -53,11 +53,21 @@ TCL(Tensor Contraction Language)은 텐서 계산을 compiler에 설명하는 �
 | `tclmachine.export_model` | 모델 그래프를 파일로 생산 | 다중 EDF·tensor 연결·상태 계약 |
 | `tclmachine.export_program` | `forward` 등 이름 붙은 실행 입구(entry) 여러 개를 묶음 | 공유 불변 가중치와 명시적 상태 |
 | `tclmachine.build_verified_model` | 파일 생성 뒤 독립 소비자 검증까지 요구 | 변경 입력·CPU 기준·공식 trace·새 프로세스 replay |
-| `tclmachine.load_plan` | 측정 후 선택을 확정한 계획을 읽음 | 확정 기록만 사용하고 실행 중 새 후보를 탐색하지 않음 |
-| `tclmachine.plan_regions` | 실행 전 비용 근거로 영역 조합 탐색 | 계산한 후보 제안이며 NPU 성공 증거는 아님 |
+| `tclmachine.load_plan` | 측정 선택 경로의 결정·준비 기록·환경을 연결 | `SelectedRuntime` 호출 객체; `.fxbx` reader가 아님 |
+| `tclmachine.plan_regions` | 분석용 graph dictionary와 비용표로 영역 조합 탐색 | 후보 제안 dictionary; 실행 가능한 패키지가 아님 |
 | `tclmachine.prepare_model_direct` | 공개 SDK 컴파일 경로를 직접 활용 | 별도 직접/분할 실행 경로 |
 
 사용자가 결정할 첫 질문은 **지금 프로세스 안에서 호출할 객체가 필요한가, 다른 프로세스로 옮길 파일이 필요한가**다. 전자는 `optimize`, 후자는 `export_model`을 살펴본다. 각각 다른 구현 경로이므로 `export_model`이 더 많은 의미 계열을 처리한다고 해서 `optimize`의 등록 범위가 자동으로 늘지는 않는다. 어떤 경로를 고쳤는지를 PR(Pull Request)과 문서에 반드시 적는다.
+
+여기서 `plan`이라는 이름이 두 계통에 쓰이므로 파일을 먼저 구분한다. 05장과 11장의 실행계획은 **tensor를 어느 EDF에 전달할지** 기록한다. 반면 `load_plan`의 결정 기록은 **이미 측정한 후보 중 무엇을 선택했는지** 기록한다. 이름이 비슷해도 함수의 인수와 실행 파일 형식이 다르다.
+
+| 생산자와 소속 경로 | 다음 API에 넘기는 실제 자료 | 얻는 것과 사용 범위 |
+|---|---|---|
+| `plan_regions(graph, cost_book)` — 오프라인 분석 | 분석용 graph dictionary, 비용·후보 정보를 담은 dictionary | 비용 기반 제안. 바로 `load_plan`에 주는 확정 결정이 아니다. |
+| 측정 선택 모듈 `select_measured_plan` — 측정 후 선택 | `load_plan(decision, prepared, environment)`의 세 dictionary 또는 각각의 JSON 경로. `decision.schema`는 `tplmachine.measured-plan-selection.v1`이어야 한다. | `SelectedRuntime`. 준비 기록이 지정한 serialized Runnable과 인수 계약을 사용한다. |
+| `export_model` — 다중 EDF 생산 | `tiny.fxbx`; 생산 중 따로 남는 `tiny.fxbx.plan/execution-plan.json`은 같은 계획의 조사 자료 | `read_execution_plan("tiny.fxbx")`는 계획 dictionary, `GraphFXB("tiny.fxbx", weights=...)`는 실행 소비자 객체를 만든다. |
+
+예를 들어 앞의 MLP를 `export_model`로 만들었다면 12장의 `GraphFXB` 경로를 고른다. 그 패키지나 옆의 `execution-plan.json`을 `load_plan`의 첫 인수로 바꾸어 넣지 않는다. 반대로 측정 선택 경로는 준비 기록의 `runtime_input_specs`와 artifact 해시를 확인하며, 필요하면 이미 포장된 가중치까지 그 인수 계약대로 제공해야 한다. 이런 변환을 `load_plan`이 원본 모델에서 자동 추론하지는 않는다. [공개 함수의 세 입력·schema 검사](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tclmachine/__init__.py#L33-L51) · [측정 선택 실행기의 입력·loader](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/research/selected_runtime.py#L79-L145) · [분석용 영역 계획기](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/region_planner.py#L212-L227)
 
 ## 첫 단계: 후보 생성은 실행이 아니다
 
@@ -102,6 +112,58 @@ library.impl(name, meta, 'Meta')  # 계산 없이 출력 shape·dtype만 설명�
 그다음 `optimize`가 복사한 graph에서 해당 node의 target, 즉 호출 대상을 새 op로 바꾼다. 예컨대 원래 `aten.mm(a,b)`를 가리키던 node가 이 입력 계약으로 준비한 `tclmachine` 연산을 가리키게 된다. 원래 Python의 모든 `torch.mm` 호출을 바꾸는 작업은 아니다. 준비 시 컴파일 결과와 입력 조건을 저장하지만, `PreparedGraph.__call__`은 준비된 module만 호출한다. 같은 계약은 준비 중 cache(이미 준비한 결과를 다시 쓰는 저장소)로 공유하며, close하면 소유한 등록을 해제한다. [등록과 rewrite 구현](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/aten_runtime.py#L104-L119) · [준비 과정](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/aten_runtime.py#L210-L276)
 
 이 방식은 “일반적인 Torch의 모든 함수를 호출하기만 하면 FuryNo5가 자동 개입한다”와 다르다. 사용자가 지원 범위의 그래프에 `optimize`를 명시적으로 적용해야 한다.
+
+### Product를 준비하고 한 번 실행하기
+
+앞의 `Product`를 실제 callable로 만드는 완성 예제는 [run_prepared_product.py](../examples/run_prepared_product.py)다. 호환 SDK(Software Development Kit), FuryNo5와 NPU가 필요하다. **고정 소스의 호출 계약을 대조한 예제이며, 이번 문서 수정에서 이 shape의 EDF 컴파일이나 NPU 수치 검증을 실행하지 않았다.** 사전 규칙을 통과하는 입력이라는 사실과 설치된 compiler의 성공은 별도다.
+
+```python
+import torch
+import furiosa.torch as ft  # furiosa 장치 backend와 완료 대기 API를 제공한다.
+from tclmachine import optimize
+
+class Product(torch.nn.Module):
+    def forward(self, a, b):
+        return torch.mm(a, b)  # [2,3] @ [3,2] → [2,2]
+
+def main():
+    model = Product().eval().requires_grad_(False)
+    a = torch.tensor([[1, -2, 3], [-4, 5, -6]], dtype=torch.bfloat16)
+    b = torch.tensor([[1, 0], [0, 1], [1, 1]], dtype=torch.bfloat16)
+    with torch.no_grad():
+        expected = model(a, b)  # CPU 기준값: [[4,1],[-10,-1]], shape [2,2]
+
+    prepared = optimize(
+        model,
+        example_inputs=(a, b),  # CPU 대표 입력으로 shape·dtype·stride와 graph를 준비한다.
+        target="furiosa:0",     # 실제 호출 입력도 이 장치에 있어야 한다.
+        fallback="error",       # 이 facade가 허용하는 정책; CPU 모델 재실행 옵션이 아니다.
+    )
+    try:
+        a_device = a.to("furiosa:0")  # 이번 호출의 실제 원소 값을 장치로 복사한다.
+        b_device = b.to("furiosa:0")
+        with torch.no_grad():
+            output_device = prepared(a_device, b_device)  # Product의 반환형대로 tensor 하나
+            actual = output_device.cpu()                # 비교할 CPU tensor [2,2]로 받는다.
+        ft.current_stream(torch.device("furiosa:0")).synchronize()  # 완료를 확인한 뒤 해제
+        torch.testing.assert_close(actual, expected, atol=0.02, rtol=0.02)
+        print(actual)  # 위 비교를 실제 통과한 결과만 출력한다.
+    finally:
+        prepared.close()  # 소유한 custom-op 등록을 해제한다. 이후 prepared 호출은 오류다.
+
+if __name__ == "__main__":
+    main()
+```
+
+| 코드의 값·호출 | 장치와 역할 | 이 시점의 상태 |
+|---|---|---|
+| `(a, b)` | CPU BF16 대표 입력, contiguous `[2,3]`·`[3,2]` | 준비에 사용할 계약과 원본 CPU 기준값 |
+| `optimize(...)` 반환 | `PreparedGraph` Python 객체 | 지원 그래프의 커널 컴파일·등록 완료. 사용자 입력의 NPU 추론 결과는 아직 없음 |
+| `prepared(a_device, b_device)` | `furiosa:0`의 같은 shape·dtype·stride 인수 | 이미 준비한 커널을 호출하고 NPU tensor `[2,2]` 반환 |
+| `.cpu()`와 `synchronize()` | 결과를 CPU로 받고 장치 완료 확인 | CPU 기준과 숫자를 비교할 수 있음 |
+| `prepared.close()` | Python 등록과 실행 객체의 수명 종료 | 같은 객체로 다시 호출할 수 없음 |
+
+여기서는 `prepared`가 `Product.forward`의 반환 구조를 유지하므로 tensor 하나를 받는다. 12장의 `GraphFXB.predict()`는 별도 패키지 API로 항상 출력 tuple을 돌려주는 경로이므로 `actual, = ...`를 사용한다. `example_inputs`를 넘겼다고 같은 CPU tensor로 `prepared(a, b)`를 실행할 수 있는 것은 아니다. 준비된 PrivateUse1 구현은 지정 장치의 인수를 검사하며, 공개 `optimize`는 CPU reference를 등록하지 않는다. 또한 `prepared.report`는 준비 영수증이므로 호출 후 자동으로 NPU 검증 보고서로 변하지 않는다. [facade 인수](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tclmachine/__init__.py#L19-L24) · [입력·장치 검사](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/aten_runtime.py#L76-L100) · [수명과 반환 보고서](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/aten_runtime.py#L181-L283)
 
 ## 세 번째 단계: 전체 파일을 생산하는 경로
 
@@ -217,6 +279,7 @@ flowchart TB
 
 | 자료 | 확인 범위 |
 |---|---|
+| [공개 facade](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tclmachine/__init__.py), [측정 선택 실행기](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/research/selected_runtime.py), [영역 분석기](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/region_planner.py) | optimize의 공개 인수, 서로 다른 plan의 생산·소비 계약 |
 | [PyTorch Linear 2.10](https://docs.pytorch.org/docs/2.10/generated/torch.nn.Linear.html) | 가중치 shape·전치·행렬곱·bias의 의미 |
 | [README](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/README.md) | 목표·분석 코어·미구현 경계 |
 | [ATen 후보 규칙](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/aten.py) | 정적 BF16 수축 admission |

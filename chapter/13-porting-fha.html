@@ -1,6 +1,6 @@
 <!doctype html>
-<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="FuryAwesome의 발견·공유, FuryNo5의 컴파일, fxbX의 실행을 FHA의 포팅 절차로 연결합니다."><meta name="theme-color" content="#fbfaf7"><title>모델 포팅과 FHA·FuryAwesome · FuryNo5 개발 핸드북</title><link rel="icon" href="../assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="../assets/site.css?v=5454d41416bc"><script defer src="../assets/site.js?v=aeae33420bbb"></script></head>
-<body data-root="../" data-chapter="13-porting-fha" data-search-version="e58e3b38bb8f"><a class="skip" href="#content">본문으로 이동</a><header class="topbar"><button class="menu-toggle" type="button" aria-label="전체 목차 열기" aria-controls="sidebar" aria-expanded="false">☰</button><a class="brand" href="../index.html"><span class="brand-mark">Nº5</span>FuryNo5<small>DEVELOPER HANDBOOK</small></a><div class="top-actions"><a class="top-link" href="../sources.html">출처와 버전</a><button class="search-open" type="button" aria-label="핸드북 전체 검색"><span>전체 문서 검색</span><kbd>⌘ K</kbd></button></div></header><div class="progress" aria-hidden="true"></div><div class="mobile-shade"></div><aside class="sidebar" id="sidebar" aria-label="전체 목차"><nav><div class="nav-caption">시작하기</div><a class="nav-link"  href="../index.html"><span class="num">00</span><span>전체 지도와 읽는 방법</span></a><div class="nav-caption">I. 디바이스를 이해하기</div><a class="nav-link"  href="../chapter/01-hardware.html"><span class="num">01</span><span>RNGD · TCP · PE</span></a><a class="nav-link"  href="../chapter/02-memory-dma.html"><span class="num">02</span><span>메모리 · DMA · 배치</span></a><a class="nav-link"  href="../chapter/03-driver-runtime.html"><span class="num">03</span><span>드라이버와 공식 런타임</span></a><div class="nav-caption">II. 프로그램을 만들고 실행하기</div><a class="nav-link"  href="../chapter/04-tcl-edf.html"><span class="num">04</span><span>TCL 작성 · 컴파일 · 실행</span></a><a class="nav-link"  href="../chapter/05-graphs-fallback.html"><span class="num">05</span><span>실행그래프 · 오류 · 폴백</span></a><a class="nav-link"  href="../chapter/06-buckets-shapes.html"><span class="num">06</span><span>Shape · 버킷 · 컴파일 비용</span></a><a class="nav-link"  href="../chapter/07-optimization.html"><span class="num">07</span><span>최적화의 축과 우선순위</span></a><a class="nav-link"  href="../chapter/08-eisa-visa.html"><span class="num">08</span><span>eISA · vISA · furiosa-opt</span></a><div class="nav-caption">III. FuryNo5를 해부하기</div><a class="nav-link"  href="../chapter/09-torch-aten.html"><span class="num">09</span><span>PyTorch · ATen · 등록</span></a><a class="nav-link"  href="../chapter/10-furyno5-architecture.html"><span class="num">10</span><span>FuryNo5 구조와 지원 범위</span></a><a class="nav-link"  href="../chapter/11-furyno5-compiler.html"><span class="num">11</span><span>FuryNo5 컴파일과 캐시</span></a><div class="nav-caption">IV. 모델 포팅과 서빙</div><a class="nav-link"  href="../chapter/12-fxbx.html"><span class="num">12</span><span>fxbX 포맷과 실행계획</span></a><a class="nav-link active" aria-current="page" href="../chapter/13-porting-fha.html"><span class="num">13</span><span>포팅 · FHA · FuryAwesome</span></a><a class="nav-link"  href="../chapter/14-serving-vllm.html"><span class="num">14</span><span>vLLM · 서빙 브리지</span></a><a class="nav-link"  href="../chapter/15-multi-npu.html"><span class="num">15</span><span>PE · 여러 카드 · 여러 서버</span></a><div class="nav-caption">V. 검증과 다음 개발</div><a class="nav-link"  href="../chapter/16-furyboost.html"><span class="num">16</span><span>FuryBoost 실측과 남은 과제</span></a><a class="nav-link"  href="../chapter/17-debugging.html"><span class="num">17</span><span>측정 · 추적 · 실패 재현</span></a><div class="nav-caption">VI. 생태계 비교와 최적화 연구</div><a class="nav-link"  href="../chapter/18-npu-ecosystems.html"><span class="num">18</span><span>다른 NPU의 지원 방식</span></a><a class="nav-link"  href="../chapter/19-model-optimization.html"><span class="num">19</span><span>모델 사전 최적화 · 연구</span></a><div class="nav-caption">참고와 검증</div><a class="nav-link"  href="../glossary.html"><span class="num">·</span><span>약어와 용어 사전</span></a><a class="nav-link"  href="../sources.html"><span class="num">·</span><span>출처 · 버전 · 접근 범위</span></a><a class="nav-link"  href="../review.html"><span class="num">·</span><span>검토 기록과 미해결 질문</span></a></nav><div class="side-foot">비공식 개발 핸드북 · 2026.11.19<br>공식 SDK와 프로젝트 구현을 구분합니다.<br><a href="https://github.com/smallstep-zzz/furyno5-handbook">원고와 변경 이력 ↗</a></div></aside><div class="shell"><main class="page" id="content"><div class="eyebrow">IV. 모델 포팅과 서빙 / CHAPTER 13</div><h1>모델 포팅과 FHA·FuryAwesome</h1><p class="dek">FuryAwesome의 발견·공유, FuryNo5의 컴파일, fxbX의 실행을 FHA의 포팅 절차로 연결합니다.</p><div class="page-meta"><span>검토 2026.11.19</span><span>SDK 2026.4 계열 / 버전별 표기</span><span class="readtime">약 32분</span><span><a href="https://github.com/smallstep-zzz/furyno5-handbook/blob/main/content/13-porting-fha.md">원고</a></span></div><details class="mobile-toc"><summary>이 장의 목차</summary><div><a class="" href="#1-네-도구가-맡는-책임">1. 네 도구가 맡는 책임</a><a class="" href="#2-furyawesome에서-모델을-찾고-fha로-요청을-정리한다">2. FuryAwesome에서 모델을 찾고 FHA로 요청을 정리한다</a><a class="" href="#3-포팅의-입력은-모델-이름보다-넓다">3. 포팅의 입력은 모델 이름보다 넓다</a><a class="minor" href="#작은-모델이-실제로-계산하는-것">작은 모델이 실제로 계산하는 것</a><a class="minor" href="#크기뿐-아니라-자료형과-저장-순서도-계약이다">크기뿐 아니라 자료형과 저장 순서도 계약이다</a><a class="" href="#4-준비-서로-맞는-소스를-설치한다">4. 준비: 서로 맞는 소스를 설치한다</a><a class="" href="#5-작은-모델을-생성하고-새-프로세스에서-실행한다">5. 작은 모델을 생성하고 새 프로세스에서 실행한다</a><a class="minor" href="#5-1-생산자-모델-가중치-대표-입력을-고정한다">5.1 생산자: 모델·가중치·대표 입력을 고정한다</a><a class="minor" href="#5-2-소비자-가중치와-패키지를-다시-연결한다">5.2 소비자: 가중치와 패키지를 다시 연결한다</a><a class="minor" href="#저장된-체크포인트-파일에서-시작하기">저장된 체크포인트 파일에서 시작하기</a><a class="" href="#6-fha를-경유해-같은-역할을-호출한다">6. FHA를 경유해 같은 역할을 호출한다</a><a class="" href="#7-실제-모델로-확장할-때는-경계를-찾는다">7. 실제 모델로 확장할 때는 경계를 찾는다</a><a class="" href="#8-fha가-자동화하는-것과-사람-llm이-판단할-것">8. FHA가 자동화하는 것과 사람·LLM이 판단할 것</a><a class="minor" href="#포팅-skill은-코드-경로를-고르는-절차다">포팅 skill은 코드 경로를 고르는 절차다</a><a class="" href="#9-완료의-정의를-보고서에-남긴다">9. 완료의 정의를 보고서에 남긴다</a><a class="" href="#10-검증한-결과를-hf와-furyawesome에-공유한다">10. 검증한 결과를 HF와 FuryAwesome에 공유한다</a><a class="minor" href="#구현된-연결과-현재-게시기의-범위">구현된 연결과 현재 게시기의 범위</a><a class="minor" href="#기존-standalone-패키지의-실제-게시-명령">기존 standalone 패키지의 실제 게시 명령</a><a class="minor" href="#실행-계획-패키지의-카탈로그-등록">실행 계획 패키지의 카탈로그 등록</a><a class="minor" href="#게시-영수증은-npu-검증-결과와-별개다">게시 영수증은 NPU 검증 결과와 별개다</a><a class="" href="#출처">출처</a></div></details><noscript><p class="noscript">본문과 그림은 JavaScript 없이 읽을 수 있습니다. 검색과 조절 실험에는 JavaScript가 필요합니다.</p></noscript><article class="article"><p>Python에서 모델을 실행할 때는 모델 클래스, 가중치, 입력 tensor가 같은 프로세스에 있다. NPU(Neural Processing Unit)로 옮겨 다른 프로세스에서 실행하려면 이 정보를 분리해서 전달해야 한다. <strong>포팅(porting)은</strong> 파일 확장자를 바꾸는 작업이 아니라, 원래 계산의 의미를 보존하면서 대상 장치가 받아들이는 연산·입출력·실행 순서로 바꾸고 검증하는 작업이다.</p>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="FuryAwesome의 발견·공유, FuryNo5의 컴파일, fxbX의 실행을 FHA의 포팅 절차로 연결합니다."><meta name="theme-color" content="#fbfaf7"><title>모델 포팅과 FHA·FuryAwesome · FuryNo5 개발 핸드북</title><link rel="icon" href="../assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="../assets/site.css?v=cb5aa5a870ba"><script defer src="../assets/site.js?v=aeae33420bbb"></script></head>
+<body data-root="../" data-chapter="13-porting-fha" data-search-version="5328e86ff6da"><a class="skip" href="#content">본문으로 이동</a><header class="topbar"><button class="menu-toggle" type="button" aria-label="전체 목차 열기" aria-controls="sidebar" aria-expanded="false">☰</button><a class="brand" href="../index.html"><span class="brand-mark">Nº5</span>FuryNo5<small>DEVELOPER HANDBOOK</small></a><div class="top-actions"><a class="top-link" href="../sources.html">출처와 버전</a><button class="search-open" type="button" aria-label="핸드북 전체 검색"><span>전체 문서 검색</span><kbd>⌘ K</kbd></button></div></header><div class="progress" aria-hidden="true"></div><div class="mobile-shade"></div><aside class="sidebar" id="sidebar" aria-label="전체 목차"><nav><div class="nav-caption">시작하기</div><a class="nav-link"  href="../index.html"><span class="num">00</span><span>전체 지도와 읽는 방법</span></a><div class="nav-caption">I. 디바이스를 이해하기</div><a class="nav-link"  href="../chapter/01-hardware.html"><span class="num">01</span><span>RNGD · TCP · PE</span></a><a class="nav-link"  href="../chapter/02-memory-dma.html"><span class="num">02</span><span>메모리 · DMA · 배치</span></a><a class="nav-link"  href="../chapter/03-driver-runtime.html"><span class="num">03</span><span>드라이버와 공식 런타임</span></a><div class="nav-caption">II. 프로그램을 만들고 실행하기</div><a class="nav-link"  href="../chapter/04-tcl-edf.html"><span class="num">04</span><span>TCL 작성 · 컴파일 · 실행</span></a><a class="nav-link"  href="../chapter/05-graphs-fallback.html"><span class="num">05</span><span>실행그래프 · 오류 · 폴백</span></a><a class="nav-link"  href="../chapter/06-buckets-shapes.html"><span class="num">06</span><span>Shape · 버킷 · 컴파일 비용</span></a><a class="nav-link"  href="../chapter/07-optimization.html"><span class="num">07</span><span>최적화의 축과 우선순위</span></a><a class="nav-link"  href="../chapter/08-eisa-visa.html"><span class="num">08</span><span>eISA · vISA · furiosa-opt</span></a><div class="nav-caption">III. FuryNo5를 해부하기</div><a class="nav-link"  href="../chapter/09-torch-aten.html"><span class="num">09</span><span>PyTorch · ATen · 등록</span></a><a class="nav-link"  href="../chapter/10-furyno5-architecture.html"><span class="num">10</span><span>FuryNo5 구조와 지원 범위</span></a><a class="nav-link"  href="../chapter/11-furyno5-compiler.html"><span class="num">11</span><span>FuryNo5 컴파일과 캐시</span></a><div class="nav-caption">IV. 모델 포팅과 서빙</div><a class="nav-link"  href="../chapter/12-fxbx.html"><span class="num">12</span><span>fxbX 포맷과 실행계획</span></a><a class="nav-link active" aria-current="page" href="../chapter/13-porting-fha.html"><span class="num">13</span><span>포팅 · FHA · FuryAwesome</span></a><a class="nav-link"  href="../chapter/14-serving-vllm.html"><span class="num">14</span><span>vLLM · 서빙 브리지</span></a><a class="nav-link"  href="../chapter/15-multi-npu.html"><span class="num">15</span><span>PE · 여러 카드 · 여러 서버</span></a><div class="nav-caption">V. 검증과 다음 개발</div><a class="nav-link"  href="../chapter/16-furyboost.html"><span class="num">16</span><span>FuryBoost 실측과 남은 과제</span></a><a class="nav-link"  href="../chapter/17-debugging.html"><span class="num">17</span><span>측정 · 추적 · 실패 재현</span></a><div class="nav-caption">VI. 생태계 비교와 최적화 연구</div><a class="nav-link"  href="../chapter/18-npu-ecosystems.html"><span class="num">18</span><span>다른 NPU의 지원 방식</span></a><a class="nav-link"  href="../chapter/19-model-optimization.html"><span class="num">19</span><span>모델 사전 최적화 · 연구</span></a><div class="nav-caption">참고와 검증</div><a class="nav-link"  href="../glossary.html"><span class="num">·</span><span>약어와 용어 사전</span></a><a class="nav-link"  href="../sources.html"><span class="num">·</span><span>출처 · 버전 · 접근 범위</span></a><a class="nav-link"  href="../review.html"><span class="num">·</span><span>검토 기록과 미해결 질문</span></a><a class="nav-link"  href="../reader-review.html"><span class="num">·</span><span>3학년 독자 검토와 수정 기록</span></a></nav><div class="side-foot">비공식 개발 핸드북 · 2026.11.20<br>공식 SDK와 프로젝트 구현을 구분합니다.<br><a href="https://github.com/smallstep-zzz/furyno5-handbook">원고와 변경 이력 ↗</a></div></aside><div class="shell"><main class="page" id="content"><div class="eyebrow">IV. 모델 포팅과 서빙 / CHAPTER 13</div><h1>모델 포팅과 FHA·FuryAwesome</h1><p class="dek">FuryAwesome의 발견·공유, FuryNo5의 컴파일, fxbX의 실행을 FHA의 포팅 절차로 연결합니다.</p><div class="page-meta"><span>독자 검토 2026.11.20</span><span>SDK 2026.4 계열 / 버전별 표기</span><span class="readtime">약 41분</span><span><a href="https://github.com/smallstep-zzz/furyno5-handbook/blob/main/content/13-porting-fha.md">원고</a></span></div><details class="mobile-toc"><summary>이 장의 목차</summary><div><a class="" href="#1-네-도구가-맡는-책임">1. 네 도구가 맡는 책임</a><a class="" href="#2-furyawesome에서-모델을-찾고-fha로-요청을-정리한다">2. FuryAwesome에서 모델을 찾고 FHA로 요청을 정리한다</a><a class="" href="#3-포팅의-입력은-모델-이름보다-넓다">3. 포팅의 입력은 모델 이름보다 넓다</a><a class="minor" href="#작은-모델이-실제로-계산하는-것">작은 모델이 실제로 계산하는 것</a><a class="minor" href="#크기뿐-아니라-자료형과-저장-순서도-계약이다">크기뿐 아니라 자료형과 저장 순서도 계약이다</a><a class="" href="#4-준비-서로-맞는-소스를-설치한다">4. 준비: 서로 맞는 소스를 설치한다</a><a class="" href="#5-작은-모델을-생성하고-새-프로세스에서-실행한다">5. 작은 모델을 생성하고 새 프로세스에서 실행한다</a><a class="minor" href="#5-1-생산자-모델-가중치-대표-입력을-고정한다">5.1 생산자: 모델·가중치·대표 입력을 고정한다</a><a class="minor" href="#5-2-소비자-가중치와-패키지를-다시-연결한다">5.2 소비자: 가중치와 패키지를 다시 연결한다</a><a class="minor" href="#저장된-체크포인트-파일에서-시작하기">저장된 체크포인트 파일에서 시작하기</a><a class="" href="#6-fha를-경유해-같은-역할을-호출한다">6. FHA를 경유해 같은 역할을 호출한다</a><a class="minor" href="#실제-모델이-keyword-입력과-사전-출력을-쓸-때">실제 모델이 keyword 입력과 사전 출력을 쓸 때</a><a class="" href="#7-실제-모델로-확장할-때는-경계를-찾는다">7. 실제 모델로 확장할 때는 경계를 찾는다</a><a class="" href="#8-fha가-자동화하는-것과-사람-llm이-판단할-것">8. FHA가 자동화하는 것과 사람·LLM이 판단할 것</a><a class="minor" href="#포팅-skill은-코드-경로를-고르는-절차다">포팅 skill은 코드 경로를 고르는 절차다</a><a class="" href="#9-완료의-정의를-보고서에-남긴다">9. 완료의 정의를 보고서에 남긴다</a><a class="" href="#10-검증한-결과를-hf와-furyawesome에-공유한다">10. 검증한 결과를 HF와 FuryAwesome에 공유한다</a><a class="minor" href="#구현된-연결과-현재-게시기의-범위">구현된 연결과 현재 게시기의 범위</a><a class="minor" href="#기존-standalone-패키지의-실제-게시-명령">기존 standalone 패키지의 실제 게시 명령</a><a class="minor" href="#실행-계획-패키지의-카탈로그-등록">실행 계획 패키지의 카탈로그 등록</a><a class="minor" href="#게시-영수증은-npu-검증-결과와-별개다">게시 영수증은 NPU 검증 결과와 별개다</a><a class="" href="#출처">출처</a></div></details><noscript><p class="noscript">본문과 그림은 JavaScript 없이 읽을 수 있습니다. 검색과 조절 실험에는 JavaScript가 필요합니다.</p></noscript><article class="article"><p>Python에서 모델을 실행할 때는 모델 클래스, 가중치, 입력 tensor가 같은 프로세스에 있다. NPU(Neural Processing Unit)로 옮겨 다른 프로세스에서 실행하려면 이 정보를 분리해서 전달해야 한다. <strong>포팅(porting)은</strong> 파일 확장자를 바꾸는 작업이 아니라, 원래 계산의 의미를 보존하면서 대상 장치가 받아들이는 연산·입출력·실행 순서로 바꾸고 검증하는 작업이다.</p>
 <p>이 장의 목표는 작은 <code>Linear → ReLU → Linear</code> 모델로 세 질문에 답하는 것이다. “어떤 가중치와 입력으로 컴파일했는가?”, “다른 프로세스가 무엇을 읽어 실행하는가?”, “원래 모델과 같은 계산을 했다는 근거가 무엇인가?” 처음에는 아래 파일의 역할을 구분하면 된다.</p>
 <div class="table-wrap"><table>
 <thead>
@@ -320,6 +320,92 @@ report = build_model(
 print(report[&quot;status&quot;])  # 실행 결과 tensor가 아니라 생산 상태를 확인한다.
 </code></pre></div>
 <p>이 함수의 분기를 이해해야 한다. 문자열이나 경로를 넘기면 공식 architecture-aware builder에 위임한다. 실제 Torch module과 <code>example_inputs</code>를 넘기면 FuryNo5의 커스텀 graph 경로를 사용한다. 따라서 <strong>미지원 HF 모델 ID를 CLI에 넣었다고 자동으로 모든 미지원 연산을 구현해 주는 것은 아니다.</strong> <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/fxb_export/model_export.py#L31-L118">생산자 분기</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
+<h3 id="실제-모델이-keyword-입력과-사전-출력을-쓸-때"><a class="heading-anchor" href="#실제-모델이-keyword-입력과-사전-출력을-쓸-때">실제 모델이 keyword 입력과 사전 출력을 쓸 때</a></h3>
+<p>원래 호출이 <code>original_model(features=x, mask=m)</code>이고 <code>{&quot;logits&quot;: ..., &quot;masked_features&quot;: ...}</code>를 반환한다고 하자. 이 Python 인터페이스의 이름과 사전 구조를 그대로 장치 인수 순서로 가정하면 안 된다. FuryNo5의 <code>bind_exported</code>는 <strong>위치 인수로 주는 평평한 tensor tuple과 일치하는 입력 구조</strong>를 요구한다. 그래서 먼저 작은 wrapper, 즉 원본 모델을 보관하고 호출 형태만 바꾸는 <code>nn.Module</code>을 만든다. 어떤 출력을 남길지도 여기서 명시한다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/edf_export.py#L54-L104">입력 구조·tensor 바인딩 검사</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
+<p>다음 완성 예제를 <a href="../examples/porting/tensor_adapter.py">tensor_adapter.py</a>로 저장한다. <strong>목적은 CPU에서 호출 계약이 보존되는지 확인하는 것</strong>이다. Hugging Face의 모든 반환형을 자동 처리하는 도구도, 이 예제 전체의 NPU 지원을 검증한 기록도 아니다. 실제 프로젝트에서는 <code>OriginalModel</code> 생성 자리를 이미 올바르게 로드한 자신의 모델 객체로 바꾼다.</p>
+<div class="codebox"><div class="codebar"><span>python</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-python">import torch
+
+class OriginalModel(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.projection = torch.nn.Linear(8, 3, bias=False)  # weight [3,8]
+
+    def forward(self, *, features, mask):
+        # * 뒤의 인수는 keyword로 받는다. 두 입력 모두 BF16 [2,8]이다.
+        masked = features * mask  # 같은 위치끼리 곱함; mask=0인 위치의 값을 0으로 만든다.
+        logits = self.projection(masked)  # [2,8] → [2,3]
+        return {&quot;logits&quot;: logits, &quot;masked_features&quot;: masked}  # 원래 Python 반환 구조
+
+class TensorAdapter(torch.nn.Module):
+    def __init__(self, original):
+        super().__init__()
+        self.original = original  # 원본 module을 등록된 자식으로 보관한다.
+
+    def forward(self, features, mask):
+        result = self.original(features=features, mask=mask)  # 원본 keyword 호출 복원
+        return result[&quot;logits&quot;]  # 장치 계약에는 [2,3] tensor 하나만 내보내기로 선택한다.
+
+def representative_component():
+    original = OriginalModel().bfloat16().eval().requires_grad_(False)
+    adapter = TensorAdapter(original).eval().requires_grad_(False)
+    features = torch.ones(2, 8, dtype=torch.bfloat16)
+    mask = torch.tensor(
+        [[1, 1, 1, 1, 0, 0, 0, 0], [1, 0, 1, 0, 1, 0, 1, 0]],
+        dtype=torch.bfloat16,
+    )  # features와 같은 [2,8]; broadcasting을 요구하지 않는 작은 계약
+    return adapter, (features, mask), {}  # 위치 인수 순서를 고정하고 kwargs는 비운다.
+
+def main():
+    adapter, args, kwargs = representative_component()
+    features, mask = args
+    with torch.no_grad():
+        expected = adapter.original(features=features, mask=mask)[&quot;logits&quot;]
+        actual = adapter(*args, **kwargs)  # 원본과 동일 weight·입력으로 wrapper를 비교한다.
+    torch.testing.assert_close(actual, expected)
+    print(&quot;output shape:&quot;, tuple(actual.shape))  # (2,3), dict에서 선택한 logits만 남는다.
+    print(&quot;original weights:&quot;, list(adapter.original.state_dict()))
+    print(&quot;adapter weights:&quot;, list(adapter.state_dict()))
+
+if __name__ == &quot;__main__&quot;:
+    main()
+</code></pre></div>
+<p>이 예에서 원본의 가중치 이름은 <code>projection.weight</code>, wrapper의 이름은 <code>original.projection.weight</code>가 된다. 새 가중치를 만드는 것이 아니라 자식 module의 경로가 붙는 것이다. <strong>어느 module을 export했는지와 어느 module의 <code>state_dict()</code>를 제공하는지를 맞춘다.</strong> wrapper를 export했는데 원본의 이름 사전을 그대로 소비자에 주면 같은 tensor 값이어도 target 이름 연결이 어긋난다. 실제 출력의 가중치 이름은 위 두 <code>print</code>로 확인한다. <a href="https://github.com/pytorch/pytorch/blob/449b1768410104d3ed79d3bcfe4ba1d65c7f22c0/torch/nn/modules/module.py#L2264-L2271">자식 module 경로를 붙이는 state_dict 구현</a></p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>단계</th>
+<th>이 예제의 코드·자료</th>
+<th>전달되는 의미</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>원래 모델</td>
+<td><code>adapter.original(features=features, mask=mask)</code></td>
+<td>이름 있는 인수 두 개, 사전 출력 두 항목</td>
+</tr>
+<tr>
+<td>wrapper 호출</td>
+<td><code>adapter(features, mask)</code></td>
+<td>순서 있는 tensor 두 개, <code>logits[2,3]</code> tensor 하나</td>
+</tr>
+<tr>
+<td>생산자 인수</td>
+<td><code>export_model(adapter, args, &quot;adapted.fxbx&quot;, ...)</code> 또는 FHA <code>build_model(..., example_inputs=args)</code></td>
+<td>0번 입력은 features, 1번은 mask인 정적 계약</td>
+</tr>
+<tr>
+<td>가중치 보관</td>
+<td><code>adapter.state_dict()</code></td>
+<td><code>original.projection.weight</code>라는 계획 target에 맞는 이름</td>
+</tr>
+<tr>
+<td>패키지 실행</td>
+<td><code>with GraphFXB(..., weights=해당_가중치) as runtime</code> 안에서 <code>runtime.predict(args)</code></td>
+<td>실행계획 출력 tuple의 첫 tensor가 <code>logits</code>; 사전으로 자동 복원하지 않음</td>
+</tr>
+</tbody></table>
+</div><p>생산자를 시험하려면 <code>from tclmachine import export_model</code>을 추가한 뒤 위 <code>main()</code> 안에서 <code>export_model(adapter, args, &quot;adapted-preflight.fxbx&quot;, preflight_only=True)</code>를 먼저 호출하고 11장의 진단을 확인한다. 이는 실제 패키지 생산을 생략하는 사전검사이며, 호출 형태를 고쳤다고 연산·dtype 지원까지 통과하는 것은 아니다. 최종 생산·소비자 검증은 앞의 Tiny와 같은 절차로 수행한다. 이번 문서 수정에서는 이 PyTorch CPU 예제와 NPU 경로를 실행하지 않았다.</p>
+<p>뒤의 FHA factory가 <code>(module, args, kwargs)</code>를 받는다고 해서 이 변환을 자동 수행하는 것도 아니다. <code>compiler_engine.feature_probe.extract</code>는 factory 결과를 <code>torch.export.export(model.eval(), args, kwargs)</code>에 전달해 <strong>특징 조사용 그래프</strong>를 얻는다. 반면 패키지 생산자의 binder는 위의 위치 인수 tensor 계약을 별도로 검사한다. 같은 wrapper를 양쪽에 쓰려면 <code>tensor_adapter:representative_component</code>를 factory로 지정하면 된다. 그러면 특징 조사와 생산에서 같은 입력 순서를 사용할 수 있지만, 특징별 synthetic probe의 통과도 전체 모델 통과와는 구분해야 한다. <a href="https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/compiler_engine/feature_probe.py#L29-L60">factory의 실제 호출</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span> · <a href="https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/tools/port_model.py#L22-L58">캠페인에서 특징 조사와 통합 실행의 분리</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
 <div class="codebox"><div class="codebar"><span>bash</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-bash"># ./hf-assets는 공식 builder가 architecture를 지원하는 모델의 설정·가중치 경로다.
 # -o는 새 출력 파일, --concurrency는 생산 작업의 동시성 옵션이다.
 python -m forge_fxbex.native build-model ./hf-assets \
@@ -487,7 +573,90 @@ python -m forge_fxbex publish ./verified-model.fxbex \
 <p>현재 코드에서 OpenFury Hub는 기본적으로 FuryAwesome을 읽는 뷰어로 취급한다. 오래된 Hub API(Application Programming Interface) 등록은 <code>OPENFURY_LEGACY_HUB_API=1</code>로 명시한 경우에만 사용하는 호환 경로다. 같은 commit의 <code>docs/PUBLISHING.md</code>에는 이전 Hub API 흐름도 남아 있으므로, 이 장의 기본 공유 경로는 실제 코드에 맞춰 <strong>HF 파일 배포 + FuryAwesome 메타데이터</strong>로 설명한다. <a href="https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/forge_fxbex/publish.py#L214-L218">현재 기본 동작</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
 <h3 id="실행-계획-패키지의-카탈로그-등록"><a class="heading-anchor" href="#실행-계획-패키지의-카탈로그-등록">실행 계획 패키지의 카탈로그 등록</a></h3>
 <p>새 실행 계획 <code>.fxbx</code>를 공유하려면 패키지, 원본 가중치 연결, 대표 입력·출력, 실행 예제와 검증 범위를 해당 패키지에 맞춰 준비해야 한다. 검토 후 HF에 배포한 <strong>고정 commit URL과 정확한 파일 SHA-256</strong>을 공개 메타데이터로 만들면 FuryAwesome 카탈로그에 등록할 수 있다. 이 작업은 앞의 legacy 게시기를 통과한 것으로 간주하지 않는다. 현재 카탈로그의 MiniLM 항목도 <code>adapter=execution_plan</code>, <code>weights_mode=external</code>를 명시한다. <a href="https://github.com/smallstep-zzz/furyawesome/blob/c668ecbceac2bedd04c6e539c1a5509a404a464d/model-catalog/embedding.json">실제 등록 메타데이터</a></p>
-<p>다음 명령은 <strong>FuryAwesome checkout</strong>에서 수행하는 로컬 목록 변경이다. <code>reviewed-publication.json</code>은 위 계약으로 준비한 검토 완료 메타데이터이며, 바이너리 파일이 아니다.</p>
+<p><code>reviewed-publication.json</code>은 바이너리가 아니라 <strong>카탈로그 등록 함수 <code>record(payload)</code>가 받을 한 항목</strong>이다. 이 함수는 최상위에 <code>schema_version</code>, <code>model</code>, <code>release</code>만 허용하고, 아래 model·release 필드도 빠짐없이 정확히 요구한다. model·release의 값은 모두 문자열이다. 다음은 이미 공개된 MiniLM 카탈로그 항목에서 <code>entry</code> 내부를 읽은 JSON 예시다. <strong>이 식별자·버전·해시는 기존 MiniLM 배포의 기록이며, Tiny나 자신의 모델에 복사해 새 게시를 요청하는 값이 아니다.</strong> 이번 수정에서는 해당 원격 바이너리를 다시 실행하거나 해시를 재측정하지 않았다. <a href="https://github.com/smallstep-zzz/furyawesome/blob/c668ecbceac2bedd04c6e539c1a5509a404a464d/scripts/catalog_store.py#L36-L64">검사 함수의 허용 필드</a> · <a href="https://github.com/smallstep-zzz/furyawesome/blob/c668ecbceac2bedd04c6e539c1a5509a404a464d/model-catalog/embedding.json">이 예시의 원본 항목</a></p>
+<div class="codebox"><div class="codebar"><span>json</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-json">{
+  &quot;schema_version&quot;: 1,
+  &quot;model&quot;: {
+    &quot;name&quot;: &quot;all-MiniLM-L6-v2&quot;,
+    &quot;short_description&quot;: &quot;최대 16토큰 문장 임베딩 인코더&quot;,
+    &quot;readme&quot;: &quot;최대 16토큰 문장 임베딩 인코더. 별도 가중치와 동봉 Python 예제로 재실행할 수 있습니다. [사용법](https://huggingface.co/softandsweet/sentence-transformers-all-minilm-l6-v2-rngd-fxbx/blob/2720858d12c28d73aedb6b78e9a23b2518b81d43/USAGE.md)&quot;,
+    &quot;category&quot;: &quot;Other&quot;,
+    &quot;source_repo&quot;: &quot;sentence-transformers/all-MiniLM-L6-v2&quot;,
+    &quot;source_revision&quot;: &quot;1110a243fdf4706b3f48f1d95db1a4f5529b4d41&quot;,
+    &quot;source_license&quot;: &quot;Apache-2.0&quot;,
+    &quot;package_license&quot;: &quot;Apache-2.0&quot;,
+    &quot;cover_url&quot;: &quot;&quot;
+  },
+  &quot;release&quot;: {
+    &quot;version&quot;: &quot;2026.4.0-embed16-fxbx1&quot;,
+    &quot;target&quot;: &quot;Furiosa RNGD&quot;,
+    &quot;precision&quot;: &quot;BF16&quot;,
+    &quot;sdk_version&quot;: &quot;2026.4.0&quot;,
+    &quot;runtime_version&quot;: &quot;0.8.3&quot;,
+    &quot;adapter&quot;: &quot;execution_plan&quot;,
+    &quot;weights_mode&quot;: &quot;external&quot;,
+    &quot;artifact_url&quot;: &quot;https://huggingface.co/softandsweet/sentence-transformers-all-minilm-l6-v2-rngd-fxbx/resolve/ab271a57c4b195b8a2820254f0c08bc6840a35a5/all-MiniLM-L6-v2.fxbx&quot;,
+    &quot;author_sha256&quot;: &quot;d060ad42ac0ef293ee3e67608b087c16ecc06a4098c1ecba7289d3ed56040824&quot;
+  }
+}
+</code></pre></div>
+<p>JSON에 없는 별도 검증 필드를 임의로 추가하면 strict allowlist에 걸린다. 필요한 검증 범위·입력 조건·weight 연결은 <code>model.readme</code>의 설명과 그 안에서 가리키는 고정 버전 사용 문서·보고서에 싣는다. 원본 <code>model-catalog/embedding.json</code>은 항목 목록이며 각 행이 <code>entry</code>와 <code>published_on</code>을 감싼다. <code>add</code> 입력에는 <strong>그 바깥 목록이나 게시 날짜가 아니라 위의 publication 객체 한 개</strong>를 제공한다.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>필드</th>
+<th>자기 모델에서는 어디에서 값을 얻는가</th>
+<th>검사와 해석의 경계</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>schema_version</code></td>
+<td>카탈로그 publication 형식의 숫자 1</td>
+<td>패키지의 <code>execution-plan.v1/v2</code>와 별개다.</td>
+</tr>
+<tr>
+<td><code>model.name</code>, <code>short_description</code>, <code>readme</code></td>
+<td>실제 모델명, 용도, 고정 사용법·검증 기록</td>
+<td>지원한 shape와 실행·미실행 범위를 한국어로 적는다.</td>
+</tr>
+<tr>
+<td><code>model.category</code>, <code>cover_url</code></td>
+<td>표시용 분류·이미지 URL; 예시는 <code>Other</code>와 빈 문자열</td>
+<td>저장 분류는 <code>add --category embedding</code> 같은 별도 선택으로 결정할 수 있다.</td>
+</tr>
+<tr>
+<td><code>model.source_repo</code>, <code>source_revision</code></td>
+<td>원본 모델 저장소와 실제 사용한 40자리 commit</td>
+<td>게시할 HF artifact 저장소의 commit과 혼동하지 않는다.</td>
+</tr>
+<tr>
+<td><code>model.source_license</code>, <code>package_license</code></td>
+<td>원본 모델과 배포 패키지에 적용되는 라이선스</td>
+<td>둘 다 확인하며 다른 예제의 라이선스를 그대로 쓰지 않는다.</td>
+</tr>
+<tr>
+<td><code>release.version</code>, <code>target</code>, <code>precision</code></td>
+<td>자기 산출물의 릴리스 이름, 목표 장치, 실제 정밀도</td>
+<td>여기의 문자열을 바꾼다고 바이너리나 품질이 바뀌지 않는다.</td>
+</tr>
+<tr>
+<td><code>release.sdk_version</code>, <code>runtime_version</code></td>
+<td>생산·검증에 사용한 실제 환경</td>
+<td>위 MiniLM 값은 새 설치의 권장 버전 안내가 아니다.</td>
+</tr>
+<tr>
+<td><code>release.adapter</code>, <code>weights_mode</code></td>
+<td>이 경로라면 <code>execution_plan</code>, <code>external</code></td>
+<td>실행계획 소비자와 외부 weight가 필요함을 표시한다.</td>
+</tr>
+<tr>
+<td><code>release.artifact_url</code>, <code>author_sha256</code></td>
+<td>HF의 40자리 고정 revision을 포함한 resolve URL, 최종 <code>.fxbx</code> bytes의 SHA-256</td>
+<td><code>record</code>는 형식만 검사한다. 실제 다운로드 bytes와 해시 대조·NPU 검증은 별도로 한다.</td>
+</tr>
+</tbody></table>
+</div><p>Tiny의 세 파일을 이 계약에 대응시키면 <code>tiny.fxbx</code>의 고정 URL·해시는 <code>release.artifact_url</code>·<code>author_sha256</code>에 들어간다. <code>tiny-state.pt</code>와 <code>tiny-cases.pt</code>에는 각각 전용 필드가 없다. 함께 배포한 고정 <code>USAGE.md</code>에서 두 파일의 경로·해시, <code>verify_tiny.py</code> 실행 방법, <code>weights=...</code>의 target 이름을 설명하고 그 문서를 <code>model.readme</code>에서 연결한다. 외부 원본 checkpoint를 그대로 쓰는 실제 모델이라면 그 revision과 tensor 이름 연결도 사용 문서에 명시한다. 이 메타데이터로 weight나 테스트 파일이 자동 포함되지는 않는다.</p>
+<p>앞의 legacy <code>publish --prepare</code> 초안에는 <code>hf_namespace</code>, <code>model</code>, <code>release</code>, <code>license_review</code>, <code>license_files</code>가 들어간다. 반면 위 publication은 <code>schema_version</code>, <code>model</code>, <code>release</code>만 받으며, <code>release</code>에 고정 <code>artifact_url</code>·<code>author_sha256</code>이 추가된다. 그래서 prepare 초안을 그대로 <code>catalog_store.py add</code>에 넘기지 않는다. <a href="https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/forge_fxbex/publish.py#L61-L78">두 JSON 사이의 실제 생성 단계</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span> · <a href="https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/forge_fxbex/publish.py#L263-L264">게시 후 publication 조립</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span> 새 execution-plan 바이너리를 legacy 게시기가 검증해 주는 방법도 아니다. 파일 bytes·가중치·사용법·검증 범위를 검토한 뒤 <strong>자기 항목의 값으로 작성한</strong> <code>reviewed-publication.json</code>을 다음 로컬 명령에 넘긴다. 다음은 FuryAwesome checkout에서 실행할 문서 예이며 이번 문서 작업에서 실행하거나 원격 게시하지 않았다.</p>
 <div class="codebox"><div class="codebar"><span>bash</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-bash"># 검토한 메타데이터를 embedding 분류에 추가하고 파생 목록 파일을 함께 갱신한다.
 python scripts/catalog_store.py add ../reviewed-publication.json --category embedding
 python scripts/catalog_store.py check  # 분류 원본과 파생 목록의 일관성을 확인한다.
@@ -510,6 +679,10 @@ git diff -- README.md model-catalog catalog.json models place-catalog.json  # �
 </tr>
 </thead>
 <tbody><tr>
+<td>factory와 wrapper 이름 계약</td>
+<td><a href="https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/compiler_engine/feature_probe.py">feature_probe.py</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span>, <a href="https://github.com/pytorch/pytorch/blob/449b1768410104d3ed79d3bcfe4ba1d65c7f22c0/torch/nn/modules/module.py#L2264-L2271">PyTorch state_dict 재귀</a></td>
+</tr>
+<tr>
 <td>FuryAwesome 소개와 모델별 실행</td>
 <td><a href="https://github.com/smallstep-zzz/furyawesome/blob/c668ecbceac2bedd04c6e539c1a5509a404a464d/README.md">README</a>, <a href="https://github.com/smallstep-zzz/furyawesome/blob/c668ecbceac2bedd04c6e539c1a5509a404a464d/usage/all-minilm-l6-v2.md">MiniLM</a>, <a href="https://github.com/smallstep-zzz/furyawesome/blob/c668ecbceac2bedd04c6e539c1a5509a404a464d/usage/depth-anything-v2-small-hf.md">Depth Anything</a></td>
 </tr>
@@ -563,4 +736,4 @@ git diff -- README.md model-catalog catalog.json models place-catalog.json  # �
 </tr>
 </tbody></table>
 </div><p>FuryNo5와 FHA 링크는 비공개 저장소 접근 권한이 필요하다. 코드 스니펫은 이 장에 필요한 부분만 제시했으며 SDK 자체를 재배포하지 않는다.</p>
-</article><nav class="next-prev" aria-label="이전과 다음 장"><a href="../chapter/12-fxbx.html"><small>← 이전 장</small><b>fxbX의 포맷과 실행기</b></a><a href="../chapter/14-serving-vllm.html"><small>다음 장 →</small><b>vLLM 서빙과 연결 과제</b></a></nav><footer class="footer">FuryNo5 개발 핸드북 · 비공식 자료<br>공식 문서와 소스의 권리는 각 프로젝트에 있습니다. 코드 인용은 출처와 함께 표시합니다.<br><a href="../review.html">검토 기록과 남은 질문</a> · <a href="../sources.html">출처와 버전</a> · <a href="../glossary.html">용어 사전</a></footer></main></div><aside class="right-toc" aria-label="이 장의 목차"><h2>이 장에서 다루는 내용</h2><a class="" href="#1-네-도구가-맡는-책임">1. 네 도구가 맡는 책임</a><a class="" href="#2-furyawesome에서-모델을-찾고-fha로-요청을-정리한다">2. FuryAwesome에서 모델을 찾고 FHA로 요청을 정리한다</a><a class="" href="#3-포팅의-입력은-모델-이름보다-넓다">3. 포팅의 입력은 모델 이름보다 넓다</a><a class="minor" href="#작은-모델이-실제로-계산하는-것">작은 모델이 실제로 계산하는 것</a><a class="minor" href="#크기뿐-아니라-자료형과-저장-순서도-계약이다">크기뿐 아니라 자료형과 저장 순서도 계약이다</a><a class="" href="#4-준비-서로-맞는-소스를-설치한다">4. 준비: 서로 맞는 소스를 설치한다</a><a class="" href="#5-작은-모델을-생성하고-새-프로세스에서-실행한다">5. 작은 모델을 생성하고 새 프로세스에서 실행한다</a><a class="minor" href="#5-1-생산자-모델-가중치-대표-입력을-고정한다">5.1 생산자: 모델·가중치·대표 입력을 고정한다</a><a class="minor" href="#5-2-소비자-가중치와-패키지를-다시-연결한다">5.2 소비자: 가중치와 패키지를 다시 연결한다</a><a class="minor" href="#저장된-체크포인트-파일에서-시작하기">저장된 체크포인트 파일에서 시작하기</a><a class="" href="#6-fha를-경유해-같은-역할을-호출한다">6. FHA를 경유해 같은 역할을 호출한다</a><a class="" href="#7-실제-모델로-확장할-때는-경계를-찾는다">7. 실제 모델로 확장할 때는 경계를 찾는다</a><a class="" href="#8-fha가-자동화하는-것과-사람-llm이-판단할-것">8. FHA가 자동화하는 것과 사람·LLM이 판단할 것</a><a class="minor" href="#포팅-skill은-코드-경로를-고르는-절차다">포팅 skill은 코드 경로를 고르는 절차다</a><a class="" href="#9-완료의-정의를-보고서에-남긴다">9. 완료의 정의를 보고서에 남긴다</a><a class="" href="#10-검증한-결과를-hf와-furyawesome에-공유한다">10. 검증한 결과를 HF와 FuryAwesome에 공유한다</a><a class="minor" href="#구현된-연결과-현재-게시기의-범위">구현된 연결과 현재 게시기의 범위</a><a class="minor" href="#기존-standalone-패키지의-실제-게시-명령">기존 standalone 패키지의 실제 게시 명령</a><a class="minor" href="#실행-계획-패키지의-카탈로그-등록">실행 계획 패키지의 카탈로그 등록</a><a class="minor" href="#게시-영수증은-npu-검증-결과와-별개다">게시 영수증은 NPU 검증 결과와 별개다</a><a class="" href="#출처">출처</a></aside><dialog class="search-dialog" aria-label="문서 검색"><div class="search-head"><input type="search" aria-label="검색어" placeholder="DMA, EDF, 폴백, 버킷…" autocomplete="off"><button class="close-search" type="button">닫기</button></div><div class="search-status" role="status">용어나 함수 이름을 입력하세요.</div><div class="search-results"></div></dialog></body></html>
+</article><nav class="next-prev" aria-label="이전과 다음 장"><a href="../chapter/12-fxbx.html"><small>← 이전 장</small><b>fxbX의 포맷과 실행기</b></a><a href="../chapter/14-serving-vllm.html"><small>다음 장 →</small><b>vLLM 서빙과 연결 과제</b></a></nav><footer class="footer">FuryNo5 개발 핸드북 · 비공식 자료<br>공식 문서와 소스의 권리는 각 프로젝트에 있습니다. 코드 인용은 출처와 함께 표시합니다.<br><a href="../reader-review.html">3학년 독자 재검토</a> · <a href="../review.html">검토 기록과 남은 질문</a> · <a href="../sources.html">출처와 버전</a> · <a href="../glossary.html">용어 사전</a></footer></main></div><aside class="right-toc" aria-label="이 장의 목차"><h2>이 장에서 다루는 내용</h2><a class="" href="#1-네-도구가-맡는-책임">1. 네 도구가 맡는 책임</a><a class="" href="#2-furyawesome에서-모델을-찾고-fha로-요청을-정리한다">2. FuryAwesome에서 모델을 찾고 FHA로 요청을 정리한다</a><a class="" href="#3-포팅의-입력은-모델-이름보다-넓다">3. 포팅의 입력은 모델 이름보다 넓다</a><a class="minor" href="#작은-모델이-실제로-계산하는-것">작은 모델이 실제로 계산하는 것</a><a class="minor" href="#크기뿐-아니라-자료형과-저장-순서도-계약이다">크기뿐 아니라 자료형과 저장 순서도 계약이다</a><a class="" href="#4-준비-서로-맞는-소스를-설치한다">4. 준비: 서로 맞는 소스를 설치한다</a><a class="" href="#5-작은-모델을-생성하고-새-프로세스에서-실행한다">5. 작은 모델을 생성하고 새 프로세스에서 실행한다</a><a class="minor" href="#5-1-생산자-모델-가중치-대표-입력을-고정한다">5.1 생산자: 모델·가중치·대표 입력을 고정한다</a><a class="minor" href="#5-2-소비자-가중치와-패키지를-다시-연결한다">5.2 소비자: 가중치와 패키지를 다시 연결한다</a><a class="minor" href="#저장된-체크포인트-파일에서-시작하기">저장된 체크포인트 파일에서 시작하기</a><a class="" href="#6-fha를-경유해-같은-역할을-호출한다">6. FHA를 경유해 같은 역할을 호출한다</a><a class="minor" href="#실제-모델이-keyword-입력과-사전-출력을-쓸-때">실제 모델이 keyword 입력과 사전 출력을 쓸 때</a><a class="" href="#7-실제-모델로-확장할-때는-경계를-찾는다">7. 실제 모델로 확장할 때는 경계를 찾는다</a><a class="" href="#8-fha가-자동화하는-것과-사람-llm이-판단할-것">8. FHA가 자동화하는 것과 사람·LLM이 판단할 것</a><a class="minor" href="#포팅-skill은-코드-경로를-고르는-절차다">포팅 skill은 코드 경로를 고르는 절차다</a><a class="" href="#9-완료의-정의를-보고서에-남긴다">9. 완료의 정의를 보고서에 남긴다</a><a class="" href="#10-검증한-결과를-hf와-furyawesome에-공유한다">10. 검증한 결과를 HF와 FuryAwesome에 공유한다</a><a class="minor" href="#구현된-연결과-현재-게시기의-범위">구현된 연결과 현재 게시기의 범위</a><a class="minor" href="#기존-standalone-패키지의-실제-게시-명령">기존 standalone 패키지의 실제 게시 명령</a><a class="minor" href="#실행-계획-패키지의-카탈로그-등록">실행 계획 패키지의 카탈로그 등록</a><a class="minor" href="#게시-영수증은-npu-검증-결과와-별개다">게시 영수증은 NPU 검증 결과와 별개다</a><a class="" href="#출처">출처</a></aside><dialog class="search-dialog" aria-label="문서 검색"><div class="search-head"><input type="search" aria-label="검색어" placeholder="DMA, EDF, 폴백, 버킷…" autocomplete="off"><button class="close-search" type="button">닫기</button></div><div class="search-status" role="status">용어나 함수 이름을 입력하세요.</div><div class="search-results"></div></dialog></body></html>

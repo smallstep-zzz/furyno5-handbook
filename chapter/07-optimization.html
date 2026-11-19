@@ -1,6 +1,6 @@
 <!doctype html>
-<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="정확도, 전송, 배치, 융합, 정밀도, 동시성을 근거에 따라 조정합니다."><meta name="theme-color" content="#fbfaf7"><title>최적화의 축과 우선순위 · FuryNo5 개발 핸드북</title><link rel="icon" href="../assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="../assets/site.css?v=5454d41416bc"><script defer src="../assets/site.js?v=aeae33420bbb"></script></head>
-<body data-root="../" data-chapter="07-optimization" data-search-version="e58e3b38bb8f"><a class="skip" href="#content">본문으로 이동</a><header class="topbar"><button class="menu-toggle" type="button" aria-label="전체 목차 열기" aria-controls="sidebar" aria-expanded="false">☰</button><a class="brand" href="../index.html"><span class="brand-mark">Nº5</span>FuryNo5<small>DEVELOPER HANDBOOK</small></a><div class="top-actions"><a class="top-link" href="../sources.html">출처와 버전</a><button class="search-open" type="button" aria-label="핸드북 전체 검색"><span>전체 문서 검색</span><kbd>⌘ K</kbd></button></div></header><div class="progress" aria-hidden="true"></div><div class="mobile-shade"></div><aside class="sidebar" id="sidebar" aria-label="전체 목차"><nav><div class="nav-caption">시작하기</div><a class="nav-link"  href="../index.html"><span class="num">00</span><span>전체 지도와 읽는 방법</span></a><div class="nav-caption">I. 디바이스를 이해하기</div><a class="nav-link"  href="../chapter/01-hardware.html"><span class="num">01</span><span>RNGD · TCP · PE</span></a><a class="nav-link"  href="../chapter/02-memory-dma.html"><span class="num">02</span><span>메모리 · DMA · 배치</span></a><a class="nav-link"  href="../chapter/03-driver-runtime.html"><span class="num">03</span><span>드라이버와 공식 런타임</span></a><div class="nav-caption">II. 프로그램을 만들고 실행하기</div><a class="nav-link"  href="../chapter/04-tcl-edf.html"><span class="num">04</span><span>TCL 작성 · 컴파일 · 실행</span></a><a class="nav-link"  href="../chapter/05-graphs-fallback.html"><span class="num">05</span><span>실행그래프 · 오류 · 폴백</span></a><a class="nav-link"  href="../chapter/06-buckets-shapes.html"><span class="num">06</span><span>Shape · 버킷 · 컴파일 비용</span></a><a class="nav-link active" aria-current="page" href="../chapter/07-optimization.html"><span class="num">07</span><span>최적화의 축과 우선순위</span></a><a class="nav-link"  href="../chapter/08-eisa-visa.html"><span class="num">08</span><span>eISA · vISA · furiosa-opt</span></a><div class="nav-caption">III. FuryNo5를 해부하기</div><a class="nav-link"  href="../chapter/09-torch-aten.html"><span class="num">09</span><span>PyTorch · ATen · 등록</span></a><a class="nav-link"  href="../chapter/10-furyno5-architecture.html"><span class="num">10</span><span>FuryNo5 구조와 지원 범위</span></a><a class="nav-link"  href="../chapter/11-furyno5-compiler.html"><span class="num">11</span><span>FuryNo5 컴파일과 캐시</span></a><div class="nav-caption">IV. 모델 포팅과 서빙</div><a class="nav-link"  href="../chapter/12-fxbx.html"><span class="num">12</span><span>fxbX 포맷과 실행계획</span></a><a class="nav-link"  href="../chapter/13-porting-fha.html"><span class="num">13</span><span>포팅 · FHA · FuryAwesome</span></a><a class="nav-link"  href="../chapter/14-serving-vllm.html"><span class="num">14</span><span>vLLM · 서빙 브리지</span></a><a class="nav-link"  href="../chapter/15-multi-npu.html"><span class="num">15</span><span>PE · 여러 카드 · 여러 서버</span></a><div class="nav-caption">V. 검증과 다음 개발</div><a class="nav-link"  href="../chapter/16-furyboost.html"><span class="num">16</span><span>FuryBoost 실측과 남은 과제</span></a><a class="nav-link"  href="../chapter/17-debugging.html"><span class="num">17</span><span>측정 · 추적 · 실패 재현</span></a><div class="nav-caption">VI. 생태계 비교와 최적화 연구</div><a class="nav-link"  href="../chapter/18-npu-ecosystems.html"><span class="num">18</span><span>다른 NPU의 지원 방식</span></a><a class="nav-link"  href="../chapter/19-model-optimization.html"><span class="num">19</span><span>모델 사전 최적화 · 연구</span></a><div class="nav-caption">참고와 검증</div><a class="nav-link"  href="../glossary.html"><span class="num">·</span><span>약어와 용어 사전</span></a><a class="nav-link"  href="../sources.html"><span class="num">·</span><span>출처 · 버전 · 접근 범위</span></a><a class="nav-link"  href="../review.html"><span class="num">·</span><span>검토 기록과 미해결 질문</span></a></nav><div class="side-foot">비공식 개발 핸드북 · 2026.11.19<br>공식 SDK와 프로젝트 구현을 구분합니다.<br><a href="https://github.com/smallstep-zzz/furyno5-handbook">원고와 변경 이력 ↗</a></div></aside><div class="shell"><main class="page" id="content"><div class="eyebrow">II. 프로그램을 만들고 실행하기 / CHAPTER 07</div><h1>최적화의 축과 우선순위</h1><p class="dek">정확도, 전송, 배치, 융합, 정밀도, 동시성을 근거에 따라 조정합니다.</p><div class="page-meta"><span>검토 2026.11.19</span><span>SDK 2026.4 계열 / 버전별 표기</span><span class="readtime">약 18분</span><span><a href="https://github.com/smallstep-zzz/furyno5-handbook/blob/main/content/07-optimization.md">원고</a></span></div><details class="mobile-toc"><summary>이 장의 목차</summary><div><a class="" href="#1-첫-호출과-반복-호출의-시간을-분리한다">1. 첫 호출과 반복 호출의 시간을 분리한다</a><a class="minor" href="#겹친-작업의-시간을-더하면-안-된다">겹친 작업의 시간을 더하면 안 된다</a><a class="" href="#2-실제-측정-코드-완료된-cpu-출력을-기준으로-잰다">2. 실제 측정 코드: 완료된 CPU 출력을 기준으로 잰다</a><a class="" href="#3-첫-비교-요청마다-적재하는가-같은-객체를-재사용하는가">3. 첫 비교: 요청마다 적재하는가, 같은 객체를 재사용하는가</a><a class="" href="#4-저장-배치-수식이-같아도-읽는-위치가-달라진다">4. 저장 배치: 수식이 같아도 읽는 위치가 달라진다</a><a class="minor" href="#계산량과-읽을-데이터량을-함께-센다">계산량과 읽을 데이터량을 함께 센다</a><a class="" href="#5-연산-결합-어떤-경계를-줄였는지-말한다">5. 연산 결합: 어떤 경계를 줄였는지 말한다</a><a class="minor" href="#중간-반올림을-없애면-값도-바뀔-수-있다">중간 반올림을 없애면 값도 바뀔 수 있다</a><a class="" href="#6-보존된-실측-작은-영역의-개선을-전체로-다시-확인한다">6. 보존된 실측: 작은 영역의 개선을 전체로 다시 확인한다</a><a class="" href="#7-최적화-요인을-한-표에서-비교한다">7. 최적화 요인을 한 표에서 비교한다</a><a class="" href="#8-furyno5가-제안하는-우선순위">8. FuryNo5가 제안하는 우선순위</a><a class="" href="#9-컴파일-비용도-반복-실행-비용과-비교한다">9. 컴파일 비용도 반복 실행 비용과 비교한다</a><a class="" href="#10-컴파일러-추정과-장치-실측을-구분한다">10. 컴파일러 추정과 장치 실측을 구분한다</a><a class="" href="#11-다음-실험-하나를-고르는-질문">11. 다음 실험 하나를 고르는 질문</a><a class="" href="#모델-구조를-바꾸는-최적화로-확장하기">모델 구조를 바꾸는 최적화로 확장하기</a><a class="" href="#출처">출처</a></div></details><noscript><p class="noscript">본문과 그림은 JavaScript 없이 읽을 수 있습니다. 검색과 조절 실험에는 JavaScript가 필요합니다.</p></noscript><article class="article"><p>CPU(Central Processing Unit) 함수의 앞뒤에 타이머를 놓으면 경과 시간을 잴 수 있다. 그러나 NPU(Neural Processing Unit) 호출은 <strong>일을 제출한 뒤 CPU로 먼저 돌아올 수 있다.</strong> 이때 함수가 돌아온 시간만 재면 장치 계산이 끝나기 전까지의 일부 시간만 측정하게 된다. 또한 첫 호출에는 컴파일·파일 읽기·가중치 적재가 포함될 수 있어 반복 호출과 같은 조건이 아니다.</p>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="정확도, 전송, 배치, 융합, 정밀도, 동시성을 근거에 따라 조정합니다."><meta name="theme-color" content="#fbfaf7"><title>최적화의 축과 우선순위 · FuryNo5 개발 핸드북</title><link rel="icon" href="../assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="../assets/site.css?v=cb5aa5a870ba"><script defer src="../assets/site.js?v=aeae33420bbb"></script></head>
+<body data-root="../" data-chapter="07-optimization" data-search-version="5328e86ff6da"><a class="skip" href="#content">본문으로 이동</a><header class="topbar"><button class="menu-toggle" type="button" aria-label="전체 목차 열기" aria-controls="sidebar" aria-expanded="false">☰</button><a class="brand" href="../index.html"><span class="brand-mark">Nº5</span>FuryNo5<small>DEVELOPER HANDBOOK</small></a><div class="top-actions"><a class="top-link" href="../sources.html">출처와 버전</a><button class="search-open" type="button" aria-label="핸드북 전체 검색"><span>전체 문서 검색</span><kbd>⌘ K</kbd></button></div></header><div class="progress" aria-hidden="true"></div><div class="mobile-shade"></div><aside class="sidebar" id="sidebar" aria-label="전체 목차"><nav><div class="nav-caption">시작하기</div><a class="nav-link"  href="../index.html"><span class="num">00</span><span>전체 지도와 읽는 방법</span></a><div class="nav-caption">I. 디바이스를 이해하기</div><a class="nav-link"  href="../chapter/01-hardware.html"><span class="num">01</span><span>RNGD · TCP · PE</span></a><a class="nav-link"  href="../chapter/02-memory-dma.html"><span class="num">02</span><span>메모리 · DMA · 배치</span></a><a class="nav-link"  href="../chapter/03-driver-runtime.html"><span class="num">03</span><span>드라이버와 공식 런타임</span></a><div class="nav-caption">II. 프로그램을 만들고 실행하기</div><a class="nav-link"  href="../chapter/04-tcl-edf.html"><span class="num">04</span><span>TCL 작성 · 컴파일 · 실행</span></a><a class="nav-link"  href="../chapter/05-graphs-fallback.html"><span class="num">05</span><span>실행그래프 · 오류 · 폴백</span></a><a class="nav-link"  href="../chapter/06-buckets-shapes.html"><span class="num">06</span><span>Shape · 버킷 · 컴파일 비용</span></a><a class="nav-link active" aria-current="page" href="../chapter/07-optimization.html"><span class="num">07</span><span>최적화의 축과 우선순위</span></a><a class="nav-link"  href="../chapter/08-eisa-visa.html"><span class="num">08</span><span>eISA · vISA · furiosa-opt</span></a><div class="nav-caption">III. FuryNo5를 해부하기</div><a class="nav-link"  href="../chapter/09-torch-aten.html"><span class="num">09</span><span>PyTorch · ATen · 등록</span></a><a class="nav-link"  href="../chapter/10-furyno5-architecture.html"><span class="num">10</span><span>FuryNo5 구조와 지원 범위</span></a><a class="nav-link"  href="../chapter/11-furyno5-compiler.html"><span class="num">11</span><span>FuryNo5 컴파일과 캐시</span></a><div class="nav-caption">IV. 모델 포팅과 서빙</div><a class="nav-link"  href="../chapter/12-fxbx.html"><span class="num">12</span><span>fxbX 포맷과 실행계획</span></a><a class="nav-link"  href="../chapter/13-porting-fha.html"><span class="num">13</span><span>포팅 · FHA · FuryAwesome</span></a><a class="nav-link"  href="../chapter/14-serving-vllm.html"><span class="num">14</span><span>vLLM · 서빙 브리지</span></a><a class="nav-link"  href="../chapter/15-multi-npu.html"><span class="num">15</span><span>PE · 여러 카드 · 여러 서버</span></a><div class="nav-caption">V. 검증과 다음 개발</div><a class="nav-link"  href="../chapter/16-furyboost.html"><span class="num">16</span><span>FuryBoost 실측과 남은 과제</span></a><a class="nav-link"  href="../chapter/17-debugging.html"><span class="num">17</span><span>측정 · 추적 · 실패 재현</span></a><div class="nav-caption">VI. 생태계 비교와 최적화 연구</div><a class="nav-link"  href="../chapter/18-npu-ecosystems.html"><span class="num">18</span><span>다른 NPU의 지원 방식</span></a><a class="nav-link"  href="../chapter/19-model-optimization.html"><span class="num">19</span><span>모델 사전 최적화 · 연구</span></a><div class="nav-caption">참고와 검증</div><a class="nav-link"  href="../glossary.html"><span class="num">·</span><span>약어와 용어 사전</span></a><a class="nav-link"  href="../sources.html"><span class="num">·</span><span>출처 · 버전 · 접근 범위</span></a><a class="nav-link"  href="../review.html"><span class="num">·</span><span>검토 기록과 미해결 질문</span></a><a class="nav-link"  href="../reader-review.html"><span class="num">·</span><span>3학년 독자 검토와 수정 기록</span></a></nav><div class="side-foot">비공식 개발 핸드북 · 2026.11.20<br>공식 SDK와 프로젝트 구현을 구분합니다.<br><a href="https://github.com/smallstep-zzz/furyno5-handbook">원고와 변경 이력 ↗</a></div></aside><div class="shell"><main class="page" id="content"><div class="eyebrow">II. 프로그램을 만들고 실행하기 / CHAPTER 07</div><h1>최적화의 축과 우선순위</h1><p class="dek">정확도, 전송, 배치, 융합, 정밀도, 동시성을 근거에 따라 조정합니다.</p><div class="page-meta"><span>독자 검토 2026.11.20</span><span>SDK 2026.4 계열 / 버전별 표기</span><span class="readtime">약 21분</span><span><a href="https://github.com/smallstep-zzz/furyno5-handbook/blob/main/content/07-optimization.md">원고</a></span></div><details class="mobile-toc"><summary>이 장의 목차</summary><div><a class="" href="#1-첫-호출과-반복-호출의-시간을-분리한다">1. 첫 호출과 반복 호출의 시간을 분리한다</a><a class="minor" href="#겹친-작업의-시간을-더하면-안-된다">겹친 작업의 시간을 더하면 안 된다</a><a class="" href="#2-실제-측정-코드-완료된-cpu-출력을-기준으로-잰다">2. 실제 측정 코드: 완료된 CPU 출력을 기준으로 잰다</a><a class="" href="#3-첫-비교-요청마다-적재하는가-같은-객체를-재사용하는가">3. 첫 비교: 요청마다 적재하는가, 같은 객체를 재사용하는가</a><a class="" href="#4-저장-배치-수식이-같아도-읽는-위치가-달라진다">4. 저장 배치: 수식이 같아도 읽는 위치가 달라진다</a><a class="minor" href="#계산량과-읽을-데이터량을-함께-센다">계산량과 읽을 데이터량을 함께 센다</a><a class="" href="#5-연산-결합-어떤-경계를-줄였는지-말한다">5. 연산 결합: 어떤 경계를 줄였는지 말한다</a><a class="minor" href="#중간-반올림을-없애면-값도-바뀔-수-있다">중간 반올림을 없애면 값도 바뀔 수 있다</a><a class="" href="#6-보존된-실측-작은-영역의-개선을-전체로-다시-확인한다">6. 보존된 실측: 작은 영역의 개선을 전체로 다시 확인한다</a><a class="" href="#7-최적화-요인을-한-표에서-비교한다">7. 최적화 요인을 한 표에서 비교한다</a><a class="" href="#8-furyno5가-제안하는-우선순위">8. FuryNo5가 제안하는 우선순위</a><a class="" href="#9-컴파일-비용도-반복-실행-비용과-비교한다">9. 컴파일 비용도 반복 실행 비용과 비교한다</a><a class="" href="#10-컴파일러-추정과-장치-실측을-구분한다">10. 컴파일러 추정과 장치 실측을 구분한다</a><a class="" href="#11-다음-실험-하나를-고르는-질문">11. 다음 실험 하나를 고르는 질문</a><a class="" href="#모델-구조를-바꾸는-최적화로-확장하기">모델 구조를 바꾸는 최적화로 확장하기</a><a class="" href="#출처">출처</a></div></details><noscript><p class="noscript">본문과 그림은 JavaScript 없이 읽을 수 있습니다. 검색과 조절 실험에는 JavaScript가 필요합니다.</p></noscript><article class="article"><p>CPU(Central Processing Unit) 함수의 앞뒤에 타이머를 놓으면 경과 시간을 잴 수 있다. 그러나 NPU(Neural Processing Unit) 호출은 <strong>일을 제출한 뒤 CPU로 먼저 돌아올 수 있다.</strong> 이때 함수가 돌아온 시간만 재면 장치 계산이 끝나기 전까지의 일부 시간만 측정하게 된다. 또한 첫 호출에는 컴파일·파일 읽기·가중치 적재가 포함될 수 있어 반복 호출과 같은 조건이 아니다.</p>
 <p>따라서 첫 최적화 작업은 코드 변경보다 <strong>어디서부터 어디까지 재는지 정하는 일</strong>이다. 여기서는 한 요청의 시간을 나누고, 실제 fxbX 호출을 계측한 다음, 데이터 이동·저장 배치·연산 결합을 비교하는 순서로 진행한다.</p>
 <blockquote>
 <p><strong>FuryNo5의 해석</strong> · 이 장의 작업 순서는 공식 필수 규격이 아니다. 반복 요청의 지연시간, 처리량, 시작 시간, 메모리, 컴파일 시간 중 무엇이 목표인지에 따라 바꿀 수 있다. 계산 예의 가상 시간과 저장소에 보존된 NPU 실측은 명확히 구분한다.</p>
@@ -280,17 +280,116 @@ assert packed.tolist() == transposed.tolist()  # 논리 값은 같고 저장 배
     F --&gt; G</pre></details></figure><p>FuryNo5의 작은 BF16 영역 생성기는 원래 연산마다 있던 반올림 경계를 남긴다. 중간 write 경계를 없애면 단순한 수학적 결합도 원본과 다른 수치를 만들 수 있기 때문이다. 영역 admission 상한과 compiler ABI 검사를 통과한 경우에만 결합 후보를 사용하고, 거절되면 개별 NPU 경로를 유지한다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/tcl_region.py">tcl_region.py</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span> · <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/NATIVE_REGION_VALIDATION.md">영역 검증</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
 <h3 id="중간-반올림을-없애면-값도-바뀔-수-있다"><a class="heading-anchor" href="#중간-반올림을-없애면-값도-바뀔-수-있다">중간 반올림을 없애면 값도 바뀔 수 있다</a></h3>
 <p>실수 수학에서 <code>256+1+1</code>은 258이다. 그러나 BF16은 모든 정수를 이 구간에서 구분하지 못하므로 연산마다 저장 형식으로 반올림하는 경우와 마지막에 한 번 반올림하는 경우가 달라질 수 있다.</p>
+<p>왜 하필 256에서 차이가 나는지 수를 놓고 보자. BF16은 가수의 소수 부분에 7비트를 사용한다. 따라서 <code>[256,512)</code> 구간의 인접한 표현 가능 값은 2씩 떨어져 있어 <code>256, 258, 260, …</code>은 저장할 수 있지만 257은 그대로 저장할 수 없다. PyTorch의 기본 CPU BF16 변환은 <strong>가까운 값으로 반올림하되 정확히 중간이면 보존할 가수의 마지막 비트가 0인 쪽을 고르는 규칙(round to nearest, ties to even)을</strong> 사용한다. 256과 258을 같은 지수로 쓰면 각각 <code>128×2</code>, <code>129×2</code>이므로 257은 가수 정수 128인 256 쪽으로 반올림된다. 여기서 even은 256·258이라는 십진 정수의 짝수 여부가 아니라 <strong>보존되는 가수 비트</strong>를 가리킨다. <a href="https://github.com/pytorch/pytorch/blob/449b1768410104d3ed79d3bcfe4ba1d65c7f22c0/torch/headeronly/util/BFloat16.h#L1-L139">PyTorch BF16 정의와 기본 변환</a></p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>계산 순서</th>
+<th align="right">반올림 전 값</th>
+<th>이번 저장 형식</th>
+<th align="right">저장 뒤 값</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>BF16로 첫 <code>256+1</code></td>
+<td align="right">257</td>
+<td>BF16</td>
+<td align="right">256</td>
+</tr>
+<tr>
+<td>방금 저장한 값에 다시 <code>+1</code></td>
+<td align="right">257</td>
+<td>BF16</td>
+<td align="right">256</td>
+</tr>
+<tr>
+<td>FP32로 첫 <code>256+1</code></td>
+<td align="right">257</td>
+<td>FP32</td>
+<td align="right">257</td>
+</tr>
+<tr>
+<td>FP32 값에 다시 <code>+1</code></td>
+<td align="right">258</td>
+<td>FP32</td>
+<td align="right">258</td>
+</tr>
+<tr>
+<td>마지막에만 BF16로 변환</td>
+<td align="right">258</td>
+<td>BF16</td>
+<td align="right">258</td>
+</tr>
+</tbody></table>
+</div><p>FP32(Floating Point 32-bit)는 이 작은 정수들을 모두 구분할 수 있다. 아래 코드는 위 두 경로를 CPU tensor로 비교한다. 이 예의 BF16 반올림 규칙을 모든 NPU 명령의 내부 누산 방식으로 일반화하지 않는다.</p>
 <div class="codebox"><div class="codebar"><span>python</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-python">import torch
 
-x = torch.tensor([256.0], dtype=torch.bfloat16)
-stepwise = (x + 1.0) + 1.0                 # BF16 결과를 각 연산 경계에서 저장한다.
-one_round = (x.float() + 1.0 + 1.0).bfloat16() # FP32로 두 번 더한 뒤 마지막에 변환한다.
+x = torch.tensor([256.0], dtype=torch.bfloat16) # 입력 shape (1,), 정확히 표현 가능한 256
+stepwise = (x + 1.0) + 1.0                 # 257→256을 두 번 겪는다. shape (1,) 유지.
+one_round = (x.float() + 1.0 + 1.0).bfloat16() # FP32의 257→258을 보존하고 마지막에만 변환한다.
 assert stepwise.item() == 256.0
 assert one_round.item() == 258.0
 </code></pre></div>
 <p>이 CPU 예는 모든 결합 커널이 틀린다는 뜻이 아니라, <strong>원본이 요구하는 반올림 경계를 보존할지 결정해야 한다</strong>는 뜻이다. FuryNo5의 작은 BF16 영역 생성기가 그 경계를 남기는 이유도 여기에 있다. 큰 결합 영역은 동시에 살아 있는 중간값, 즉 working set을 늘릴 수 있어 메모리와 컴파일 시간도 같이 확인한다.</p>
 <h2 id="6-보존된-실측-작은-영역의-개선을-전체로-다시-확인한다"><a class="heading-anchor" href="#6-보존된-실측-작은-영역의-개선을-전체로-다시-확인한다">6. 보존된 실측: 작은 영역의 개선을 전체로 다시 확인한다</a></h2>
-<p>FuryNo5 저장소의 <strong>2026-11-08</strong> 실험은 BF16 hidden 128, intermediate 256의 작은 gated MLP(Multi-Layer Perceptron)를 사용했다. 선택한 영역의 평균은 76.43→72.59 µs로 약 5.01% 줄었다. 하지만 이를 두 block짜리 작은 합성 모델에 넣은 최종 비교는 다음과 같았다.</p>
+<p>FuryNo5 저장소의 <strong>2026-11-08</strong> 실험은 BF16 hidden 128, intermediate 256의 작은 gated MLP(Multi-Layer Perceptron)를 사용했다. 먼저 무엇을 계산하고 무엇을 바꾼 비교인지 확인하자. <strong>Hidden 128</strong>은 입력과 출력의 특징값이 128개라는 뜻이고, <strong>intermediate 256</strong>은 계산 도중 특징을 256개로 펼친다는 뜻이다. 입력 shape <code>[1,128]</code>에서 앞의 1은 한 행, 즉 이번 실험의 입력 샘플 수다.</p>
+<p>이 gated MLP는 같은 입력을 두 가중치로 변환해 <code>g</code>와 <code>u</code>를 만들고, <code>g</code>를 비선형 함수로 바꾼 값과 <code>u</code>를 <strong>같은 좌표끼리 곱한다</strong>. 마지막 행렬곱이 다시 128개 특징으로 줄인다. SiLU(Sigmoid Linear Unit)는 원소 z를 <code>z/(1+exp(-z))</code>로 바꾸는 함수다. 아래 식의 <code>*</code>는 원소별 곱이며 <code>@</code>인 행렬곱과 다르다.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>단계</th>
+<th>계산 의미</th>
+<th>shape 변화</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>gate 쪽 변환</td>
+<td><code>g = x @ Wg.T</code></td>
+<td><code>(1,128) @ (128,256) → (1,256)</code></td>
+</tr>
+<tr>
+<td>다른 내용 변환</td>
+<td><code>u = x @ Wu.T</code></td>
+<td><code>(1,128) @ (128,256) → (1,256)</code></td>
+</tr>
+<tr>
+<td>비선형 gate와 원소별 곱</td>
+<td><code>p = SiLU(g) * u</code></td>
+<td><code>(1,256) → (1,256)</code></td>
+</tr>
+<tr>
+<td>출력 변환</td>
+<td><code>y = p @ Wd.T</code></td>
+<td><code>(1,256) @ (256,128) → (1,128)</code></td>
+</tr>
+</tbody></table>
+</div><p>예를 들어 어느 좌표의 <code>g=0</code>이면 SiLU 결과도 0이어서 그 좌표의 <code>u</code> 기여는 0이 된다. 실제 실험은 이런 계산 사이의 BF16 반올림도 계약으로 검사했다. <code>.T</code>는 행·열 좌표를 바꾸는 전치다. 가중치를 PyTorch Linear의 <code>[출력 특징, 입력 특징]</code> 순서로 저장했으므로 식에 전치가 들어간다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/research/l2_rules.py#L56-L69">실험의 계산·반올림 기준</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>비교 대상</th>
+<th>같은 계산을 다르게 구성한 부분</th>
+<th align="right">한 모델 block의 프로그램 수</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>baseline</td>
+<td><code>g</code>와 <code>u</code>를 별도 Linear로 표현하고 전체 gated MLP를 한 프로그램으로 준비</td>
+<td align="right">1</td>
+</tr>
+<tr>
+<td>packed 선택안</td>
+<td><code>Wg</code>와 <code>Wu</code>를 미리 이어 <code>(512,128)</code>로 준비. 하나의 Linear가 <code>(1,512)</code>를 만들고 앞·뒤 256개를 <code>g</code>·<code>u</code>로 사용</td>
+<td align="right">1</td>
+</tr>
+<tr>
+<td>3-program 분할 대조군</td>
+<td><code>g,u</code> 생성 / SiLU와 원소별 곱 / 마지막 Linear를 각각 호출하는 세 프로그램으로 분리</td>
+<td align="right">3</td>
+</tr>
+</tbody></table>
+</div><p>Packed는 원소 수를 버리는 압축이 아니라 <strong>같은 두 계산의 가중치를 함께 배치하는 방식</strong>이다. 프로그램 수가 1이어도 내부 계산 표현은 다를 수 있으며, 프로그램 하나를 물리 명령 하나라고 해석하지 않는다. 코드의 <code>runtime_args()</code>가 정적 weight packing을, <code>stages()</code>가 위 세 구성을 정한다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/research/l2_rules.py#L72-L184">후보의 인수와 단계 구성</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
+<p>선택한 gated MLP 영역 하나의 평균은 76.43→72.59 µs로 약 5.01% 줄었다. 다음 비교는 <strong>그 영역을 두 번 연결한 완전한 작은 모델</strong>이다. <code>첫 block(x) → 둘째 block(첫 출력)</code>이며 두 block이 같은 가중치를 공유한다. 여기서 block은 모델 구조의 반복 단위다. 완전한 사전학습 언어 모델을 뜻하지 않는다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tests/validate_selected_runtime.py">두 block을 연결하는 실제 시험</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
 <div class="table-wrap"><table>
 <thead>
 <tr>
@@ -315,7 +414,8 @@ assert one_round.item() == 258.0
 <td align="right">4,020</td>
 </tr>
 </tbody></table>
-</div><p>각 항목은 30개 측정 block이다. 이 시간은 resident 입력을 사용하고 Python dispatch와 stream 완료를 포함하며, compile·load·정적 packing·H2D·profiling·D2H를 제외했다. 전체 개선은 <strong>4.18%로</strong> 보고서의 5% 배포 기준에 못 미쳐 baseline을 유지했다. 이 표는 이번 집필에서 새로 측정한 결과가 아니다. 보존된 raw block JSON을 재집계해 수치를 확인했다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/RUNTIME_SELECTION.md">실험 설명</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span> · <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/validation/runtime-selection-20261108/repeated_blocks.json">원시 측정 block</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span> · <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/validation/runtime-selection-20261108/decision.json">영역 선택 기록</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
+</div><p>각 항목은 <strong>30개 측정 구간(measurement block)이다</strong>. 이 block은 위의 모델 block과 다른 말이다. 한 측정 구간 동안 두-block 모델 전체를 여러 번 호출하고, 총 경과시간을 완료한 모델 호출 수로 나누어 한 호출의 평균을 계산했다. baseline의 6,390회는 <code>30구간×구간당 213회</code>이며, 모델이 30층 또는 6,390층이라는 뜻이 아니다. 비교 순서를 구간마다 회전시켰고, 초기 pilot으로 구간당 반복 수를 골랐기 때문에 세 후보의 총 호출 수가 다르다.</p>
+<p>이 시간은 resident 입력을 사용하고 Python dispatch와 stream 완료를 포함하며, compile·load·정적 packing·H2D·profiling·D2H를 제외했다. 전체 개선은 <strong>4.18%로</strong> 보고서의 5% 배포 기준에 못 미쳐 baseline을 유지했다. 이 표는 이번 집필에서 새로 측정한 결과가 아니다. 보존된 raw block JSON을 재집계해 수치를 확인했다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/RUNTIME_SELECTION.md">실험 설명</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span> · <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/validation/runtime-selection-20261108/repeated_blocks.json">원시 측정 block</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span> · <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/validation/runtime-selection-20261108/decision.json">영역 선택 기록</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
 <p>교훈은 “분할은 항상 나쁘다”가 아니다. 이 조건에서는 해당 분할이 느렸고, 지역적 최적화의 이득도 전체 기준에는 부족했다. 다른 shape·메모리 한계·입출력 API에서는 다시 비교해야 한다.</p>
 <h2 id="7-최적화-요인을-한-표에서-비교한다"><a class="heading-anchor" href="#7-최적화-요인을-한-표에서-비교한다">7. 최적화 요인을 한 표에서 비교한다</a></h2>
 <p>첫째는 <strong>tensor axis</strong>다. <code>[B,M,K]</code>의 배치 축 B, 행 축 M, 수축 축 K처럼 계산 의미를 설명한다. 둘째는 <strong>성능을 바꾸는 요인</strong>이다. 전송, 배치, fusion, 병렬성, cache 등이 이에 해당한다. 물리 mapping은 논리 축을 장치의 계산·저장 자원과 처리 순서에 배치한다. 입력 형상만으로 유효한 배치나 좋은 성능이 자동 보장되는 것은 아니다. 어떤 순서로 읽고 어디에서 합산하는지가 비용을 바꾼다. <a href="https://developer.furiosa.ai/furiosa-opt/book/mapping-tensors/index.html">공식 mapping 설명</a></p>
@@ -456,5 +556,17 @@ assert one_round.item() == 258.0
 <td><a href="https://developer.furiosa.ai/v2026.5.0b4/en/whatsnew/release-2026.5.0b0.html">2026.5 beta release note</a></td>
 <td>evaluate-tcl 버전 범위</td>
 </tr>
+<tr>
+<td><a href="https://github.com/pytorch/pytorch/blob/449b1768410104d3ed79d3bcfe4ba1d65c7f22c0/torch/headeronly/util/BFloat16.h">PyTorch BF16 구현</a></td>
+<td>표현 비트 수·기본 round-to-nearest-even 변환</td>
+</tr>
+<tr>
+<td><a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/research/l2_rules.py">gated MLP 후보 정의</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></td>
+<td>수식·중간 반올림·packed와 분할의 차이</td>
+</tr>
+<tr>
+<td><a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tests/validate_selected_runtime.py">전체 작은 모델 검증 코드</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></td>
+<td>가중치 공유 두 block과 30개 측정 구간의 구분</td>
+</tr>
 </tbody></table>
-</div></article><nav class="next-prev" aria-label="이전과 다음 장"><a href="../chapter/06-buckets-shapes.html"><small>← 이전 장</small><b>Shape와 버킷 설계</b></a><a href="../chapter/08-eisa-visa.html"><small>다음 장 →</small><b>eISA 질문에서 vISA 실습으로</b></a></nav><footer class="footer">FuryNo5 개발 핸드북 · 비공식 자료<br>공식 문서와 소스의 권리는 각 프로젝트에 있습니다. 코드 인용은 출처와 함께 표시합니다.<br><a href="../review.html">검토 기록과 남은 질문</a> · <a href="../sources.html">출처와 버전</a> · <a href="../glossary.html">용어 사전</a></footer></main></div><aside class="right-toc" aria-label="이 장의 목차"><h2>이 장에서 다루는 내용</h2><a class="" href="#1-첫-호출과-반복-호출의-시간을-분리한다">1. 첫 호출과 반복 호출의 시간을 분리한다</a><a class="minor" href="#겹친-작업의-시간을-더하면-안-된다">겹친 작업의 시간을 더하면 안 된다</a><a class="" href="#2-실제-측정-코드-완료된-cpu-출력을-기준으로-잰다">2. 실제 측정 코드: 완료된 CPU 출력을 기준으로 잰다</a><a class="" href="#3-첫-비교-요청마다-적재하는가-같은-객체를-재사용하는가">3. 첫 비교: 요청마다 적재하는가, 같은 객체를 재사용하는가</a><a class="" href="#4-저장-배치-수식이-같아도-읽는-위치가-달라진다">4. 저장 배치: 수식이 같아도 읽는 위치가 달라진다</a><a class="minor" href="#계산량과-읽을-데이터량을-함께-센다">계산량과 읽을 데이터량을 함께 센다</a><a class="" href="#5-연산-결합-어떤-경계를-줄였는지-말한다">5. 연산 결합: 어떤 경계를 줄였는지 말한다</a><a class="minor" href="#중간-반올림을-없애면-값도-바뀔-수-있다">중간 반올림을 없애면 값도 바뀔 수 있다</a><a class="" href="#6-보존된-실측-작은-영역의-개선을-전체로-다시-확인한다">6. 보존된 실측: 작은 영역의 개선을 전체로 다시 확인한다</a><a class="" href="#7-최적화-요인을-한-표에서-비교한다">7. 최적화 요인을 한 표에서 비교한다</a><a class="" href="#8-furyno5가-제안하는-우선순위">8. FuryNo5가 제안하는 우선순위</a><a class="" href="#9-컴파일-비용도-반복-실행-비용과-비교한다">9. 컴파일 비용도 반복 실행 비용과 비교한다</a><a class="" href="#10-컴파일러-추정과-장치-실측을-구분한다">10. 컴파일러 추정과 장치 실측을 구분한다</a><a class="" href="#11-다음-실험-하나를-고르는-질문">11. 다음 실험 하나를 고르는 질문</a><a class="" href="#모델-구조를-바꾸는-최적화로-확장하기">모델 구조를 바꾸는 최적화로 확장하기</a><a class="" href="#출처">출처</a></aside><dialog class="search-dialog" aria-label="문서 검색"><div class="search-head"><input type="search" aria-label="검색어" placeholder="DMA, EDF, 폴백, 버킷…" autocomplete="off"><button class="close-search" type="button">닫기</button></div><div class="search-status" role="status">용어나 함수 이름을 입력하세요.</div><div class="search-results"></div></dialog></body></html>
+</div></article><nav class="next-prev" aria-label="이전과 다음 장"><a href="../chapter/06-buckets-shapes.html"><small>← 이전 장</small><b>Shape와 버킷 설계</b></a><a href="../chapter/08-eisa-visa.html"><small>다음 장 →</small><b>eISA 질문에서 vISA 실습으로</b></a></nav><footer class="footer">FuryNo5 개발 핸드북 · 비공식 자료<br>공식 문서와 소스의 권리는 각 프로젝트에 있습니다. 코드 인용은 출처와 함께 표시합니다.<br><a href="../reader-review.html">3학년 독자 재검토</a> · <a href="../review.html">검토 기록과 남은 질문</a> · <a href="../sources.html">출처와 버전</a> · <a href="../glossary.html">용어 사전</a></footer></main></div><aside class="right-toc" aria-label="이 장의 목차"><h2>이 장에서 다루는 내용</h2><a class="" href="#1-첫-호출과-반복-호출의-시간을-분리한다">1. 첫 호출과 반복 호출의 시간을 분리한다</a><a class="minor" href="#겹친-작업의-시간을-더하면-안-된다">겹친 작업의 시간을 더하면 안 된다</a><a class="" href="#2-실제-측정-코드-완료된-cpu-출력을-기준으로-잰다">2. 실제 측정 코드: 완료된 CPU 출력을 기준으로 잰다</a><a class="" href="#3-첫-비교-요청마다-적재하는가-같은-객체를-재사용하는가">3. 첫 비교: 요청마다 적재하는가, 같은 객체를 재사용하는가</a><a class="" href="#4-저장-배치-수식이-같아도-읽는-위치가-달라진다">4. 저장 배치: 수식이 같아도 읽는 위치가 달라진다</a><a class="minor" href="#계산량과-읽을-데이터량을-함께-센다">계산량과 읽을 데이터량을 함께 센다</a><a class="" href="#5-연산-결합-어떤-경계를-줄였는지-말한다">5. 연산 결합: 어떤 경계를 줄였는지 말한다</a><a class="minor" href="#중간-반올림을-없애면-값도-바뀔-수-있다">중간 반올림을 없애면 값도 바뀔 수 있다</a><a class="" href="#6-보존된-실측-작은-영역의-개선을-전체로-다시-확인한다">6. 보존된 실측: 작은 영역의 개선을 전체로 다시 확인한다</a><a class="" href="#7-최적화-요인을-한-표에서-비교한다">7. 최적화 요인을 한 표에서 비교한다</a><a class="" href="#8-furyno5가-제안하는-우선순위">8. FuryNo5가 제안하는 우선순위</a><a class="" href="#9-컴파일-비용도-반복-실행-비용과-비교한다">9. 컴파일 비용도 반복 실행 비용과 비교한다</a><a class="" href="#10-컴파일러-추정과-장치-실측을-구분한다">10. 컴파일러 추정과 장치 실측을 구분한다</a><a class="" href="#11-다음-실험-하나를-고르는-질문">11. 다음 실험 하나를 고르는 질문</a><a class="" href="#모델-구조를-바꾸는-최적화로-확장하기">모델 구조를 바꾸는 최적화로 확장하기</a><a class="" href="#출처">출처</a></aside><dialog class="search-dialog" aria-label="문서 검색"><div class="search-head"><input type="search" aria-label="검색어" placeholder="DMA, EDF, 폴백, 버킷…" autocomplete="off"><button class="close-search" type="button">닫기</button></div><div class="search-status" role="status">용어나 함수 이름을 입력하세요.</div><div class="search-results"></div></dialog></body></html>

@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="NetsPresso와 공개 도구, 의미 보존 변환과 모델 압축을 RNGD의 실측 기준으로 평가합니다."><meta name="theme-color" content="#fbfaf7"><title>모델과 실행 방식을 함께 최적화하기 · FuryNo5 개발 핸드북</title><link rel="icon" href="../assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="../assets/site.css?v=5454d41416bc"><script defer src="../assets/site.js?v=aeae33420bbb"></script></head>
-<body data-root="../" data-chapter="19-model-optimization" data-search-version="e58e3b38bb8f"><a class="skip" href="#content">본문으로 이동</a><header class="topbar"><button class="menu-toggle" type="button" aria-label="전체 목차 열기" aria-controls="sidebar" aria-expanded="false">☰</button><a class="brand" href="../index.html"><span class="brand-mark">Nº5</span>FuryNo5<small>DEVELOPER HANDBOOK</small></a><div class="top-actions"><a class="top-link" href="../sources.html">출처와 버전</a><button class="search-open" type="button" aria-label="핸드북 전체 검색"><span>전체 문서 검색</span><kbd>⌘ K</kbd></button></div></header><div class="progress" aria-hidden="true"></div><div class="mobile-shade"></div><aside class="sidebar" id="sidebar" aria-label="전체 목차"><nav><div class="nav-caption">시작하기</div><a class="nav-link"  href="../index.html"><span class="num">00</span><span>전체 지도와 읽는 방법</span></a><div class="nav-caption">I. 디바이스를 이해하기</div><a class="nav-link"  href="../chapter/01-hardware.html"><span class="num">01</span><span>RNGD · TCP · PE</span></a><a class="nav-link"  href="../chapter/02-memory-dma.html"><span class="num">02</span><span>메모리 · DMA · 배치</span></a><a class="nav-link"  href="../chapter/03-driver-runtime.html"><span class="num">03</span><span>드라이버와 공식 런타임</span></a><div class="nav-caption">II. 프로그램을 만들고 실행하기</div><a class="nav-link"  href="../chapter/04-tcl-edf.html"><span class="num">04</span><span>TCL 작성 · 컴파일 · 실행</span></a><a class="nav-link"  href="../chapter/05-graphs-fallback.html"><span class="num">05</span><span>실행그래프 · 오류 · 폴백</span></a><a class="nav-link"  href="../chapter/06-buckets-shapes.html"><span class="num">06</span><span>Shape · 버킷 · 컴파일 비용</span></a><a class="nav-link"  href="../chapter/07-optimization.html"><span class="num">07</span><span>최적화의 축과 우선순위</span></a><a class="nav-link"  href="../chapter/08-eisa-visa.html"><span class="num">08</span><span>eISA · vISA · furiosa-opt</span></a><div class="nav-caption">III. FuryNo5를 해부하기</div><a class="nav-link"  href="../chapter/09-torch-aten.html"><span class="num">09</span><span>PyTorch · ATen · 등록</span></a><a class="nav-link"  href="../chapter/10-furyno5-architecture.html"><span class="num">10</span><span>FuryNo5 구조와 지원 범위</span></a><a class="nav-link"  href="../chapter/11-furyno5-compiler.html"><span class="num">11</span><span>FuryNo5 컴파일과 캐시</span></a><div class="nav-caption">IV. 모델 포팅과 서빙</div><a class="nav-link"  href="../chapter/12-fxbx.html"><span class="num">12</span><span>fxbX 포맷과 실행계획</span></a><a class="nav-link"  href="../chapter/13-porting-fha.html"><span class="num">13</span><span>포팅 · FHA · FuryAwesome</span></a><a class="nav-link"  href="../chapter/14-serving-vllm.html"><span class="num">14</span><span>vLLM · 서빙 브리지</span></a><a class="nav-link"  href="../chapter/15-multi-npu.html"><span class="num">15</span><span>PE · 여러 카드 · 여러 서버</span></a><div class="nav-caption">V. 검증과 다음 개발</div><a class="nav-link"  href="../chapter/16-furyboost.html"><span class="num">16</span><span>FuryBoost 실측과 남은 과제</span></a><a class="nav-link"  href="../chapter/17-debugging.html"><span class="num">17</span><span>측정 · 추적 · 실패 재현</span></a><div class="nav-caption">VI. 생태계 비교와 최적화 연구</div><a class="nav-link"  href="../chapter/18-npu-ecosystems.html"><span class="num">18</span><span>다른 NPU의 지원 방식</span></a><a class="nav-link active" aria-current="page" href="../chapter/19-model-optimization.html"><span class="num">19</span><span>모델 사전 최적화 · 연구</span></a><div class="nav-caption">참고와 검증</div><a class="nav-link"  href="../glossary.html"><span class="num">·</span><span>약어와 용어 사전</span></a><a class="nav-link"  href="../sources.html"><span class="num">·</span><span>출처 · 버전 · 접근 범위</span></a><a class="nav-link"  href="../review.html"><span class="num">·</span><span>검토 기록과 미해결 질문</span></a></nav><div class="side-foot">비공식 개발 핸드북 · 2026.11.19<br>공식 SDK와 프로젝트 구현을 구분합니다.<br><a href="https://github.com/smallstep-zzz/furyno5-handbook">원고와 변경 이력 ↗</a></div></aside><div class="shell"><main class="page" id="content"><div class="eyebrow">VI. 생태계 비교와 최적화 연구 / CHAPTER 19</div><h1>모델과 실행 방식을 함께 최적화하기</h1><p class="dek">NetsPresso와 공개 도구, 의미 보존 변환과 모델 압축을 RNGD의 실측 기준으로 평가합니다.</p><div class="page-meta"><span>검토 2026.11.19</span><span>SDK 2026.4 계열 / 버전별 표기</span><span class="readtime">약 37분</span><span><a href="https://github.com/smallstep-zzz/furyno5-handbook/blob/main/content/19-model-optimization.md">원고</a></span></div><details class="mobile-toc"><summary>이 장의 목차</summary><div><a class="" href="#1-같은-계산을-빠르게-하는-연구와-모델을-줄이는-연구">1. 같은 계산을 빠르게 하는 연구와 모델을 줄이는 연구</a><a class="minor" href="#계산량을-절반으로-줄여도-시간이-절반이-되지-않는-예">계산량을 절반으로 줄여도 시간이 절반이 되지 않는 예</a><a class="" href="#2-먼저-공식-기준선을-재현-가능하게-만든다">2. 먼저 공식 기준선을 재현 가능하게 만든다</a><a class="minor" href="#비교표의-입력-규격을-먼저-읽는다">비교표의 입력 규격을 먼저 읽는다</a><a class="" href="#3-netspresso는-무엇이-공개되어-있는가">3. NetsPresso는 무엇이 공개되어 있는가</a><a class="" href="#4-양자화의-수치-계약을-이해한-뒤-도구를-고른다">4. 양자화의 수치 계약을 이해한 뒤 도구를 고른다</a><a class="minor" href="#숫자를-작게-저장한다는-뜻">숫자를 작게 저장한다는 뜻</a><a class="minor" href="#변환-산출물이-어느-실행기에서-쓰이는가">변환 산출물이 어느 실행기에서 쓰이는가</a><a class="" href="#5-작은-실습-추론용-conv-bn-folding">5. 작은 실습: 추론용 Conv–BN folding</a><a class="" href="#6-onnx-단순화는-별도-후보로-보관한다">6. ONNX 단순화는 별도 후보로 보관한다</a><a class="" href="#7-구조를-줄일-때는-하드웨어가-좋아하는-크기도-다시-찾는다">7. 구조를 줄일 때는 하드웨어가 좋아하는 크기도 다시 찾는다</a><a class="minor" href="#중간-채널-하나를-지우면-다음-층도-바뀐다">중간 채널 하나를 지우면 다음 층도 바뀐다</a><a class="minor" href="#논리-차원이-작아져도-실제-작업-묶음은-그대로일-수-있다">논리 차원이 작아져도 실제 작업 묶음은 그대로일 수 있다</a><a class="" href="#8-고수준-의미를-보존하는-것도-최적화다">8. 고수준 의미를 보존하는 것도 최적화다</a><a class="minor" href="#attention의-중간-행렬을-줄이되-계산-의미는-유지한다">attention의 중간 행렬을 줄이되 계산 의미는 유지한다</a><a class="" href="#9-workload마다-다른-연구-가설을-세운다">9. workload마다 다른 연구 가설을 세운다</a><a class="minor" href="#공식-compiler가-좋아도-남는-입력-실행-경계의-선택">공식 compiler가 좋아도 남는 입력·실행 경계의 선택</a><a class="" href="#10-furyno5에서-제안하는-연구-순서">10. FuryNo5에서 제안하는 연구 순서</a><a class="" href="#출처">출처</a></div></details><noscript><p class="noscript">본문과 그림은 JavaScript 없이 읽을 수 있습니다. 검색과 조절 실험에는 JavaScript가 필요합니다.</p></noscript><article class="article"><p>DB의 질의 계획에서 연산 하나를 지웠어도 전체 질의가 빨라지는지는 디스크 읽기와 다른 연산의 비용을 함께 봐야 한다. 모델 최적화도 같다. 계산할 숫자를 줄이는 방법, 같은 계산의 표현을 바꾸는 방법, 호출 사이의 메모리 이동을 줄이는 방법은 서로 다른 효과를 낸다.</p>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="NetsPresso와 공개 도구, 의미 보존 변환과 모델 압축을 RNGD의 실측 기준으로 평가합니다."><meta name="theme-color" content="#fbfaf7"><title>모델과 실행 방식을 함께 최적화하기 · FuryNo5 개발 핸드북</title><link rel="icon" href="../assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="../assets/site.css?v=cb5aa5a870ba"><script defer src="../assets/site.js?v=aeae33420bbb"></script></head>
+<body data-root="../" data-chapter="19-model-optimization" data-search-version="5328e86ff6da"><a class="skip" href="#content">본문으로 이동</a><header class="topbar"><button class="menu-toggle" type="button" aria-label="전체 목차 열기" aria-controls="sidebar" aria-expanded="false">☰</button><a class="brand" href="../index.html"><span class="brand-mark">Nº5</span>FuryNo5<small>DEVELOPER HANDBOOK</small></a><div class="top-actions"><a class="top-link" href="../sources.html">출처와 버전</a><button class="search-open" type="button" aria-label="핸드북 전체 검색"><span>전체 문서 검색</span><kbd>⌘ K</kbd></button></div></header><div class="progress" aria-hidden="true"></div><div class="mobile-shade"></div><aside class="sidebar" id="sidebar" aria-label="전체 목차"><nav><div class="nav-caption">시작하기</div><a class="nav-link"  href="../index.html"><span class="num">00</span><span>전체 지도와 읽는 방법</span></a><div class="nav-caption">I. 디바이스를 이해하기</div><a class="nav-link"  href="../chapter/01-hardware.html"><span class="num">01</span><span>RNGD · TCP · PE</span></a><a class="nav-link"  href="../chapter/02-memory-dma.html"><span class="num">02</span><span>메모리 · DMA · 배치</span></a><a class="nav-link"  href="../chapter/03-driver-runtime.html"><span class="num">03</span><span>드라이버와 공식 런타임</span></a><div class="nav-caption">II. 프로그램을 만들고 실행하기</div><a class="nav-link"  href="../chapter/04-tcl-edf.html"><span class="num">04</span><span>TCL 작성 · 컴파일 · 실행</span></a><a class="nav-link"  href="../chapter/05-graphs-fallback.html"><span class="num">05</span><span>실행그래프 · 오류 · 폴백</span></a><a class="nav-link"  href="../chapter/06-buckets-shapes.html"><span class="num">06</span><span>Shape · 버킷 · 컴파일 비용</span></a><a class="nav-link"  href="../chapter/07-optimization.html"><span class="num">07</span><span>최적화의 축과 우선순위</span></a><a class="nav-link"  href="../chapter/08-eisa-visa.html"><span class="num">08</span><span>eISA · vISA · furiosa-opt</span></a><div class="nav-caption">III. FuryNo5를 해부하기</div><a class="nav-link"  href="../chapter/09-torch-aten.html"><span class="num">09</span><span>PyTorch · ATen · 등록</span></a><a class="nav-link"  href="../chapter/10-furyno5-architecture.html"><span class="num">10</span><span>FuryNo5 구조와 지원 범위</span></a><a class="nav-link"  href="../chapter/11-furyno5-compiler.html"><span class="num">11</span><span>FuryNo5 컴파일과 캐시</span></a><div class="nav-caption">IV. 모델 포팅과 서빙</div><a class="nav-link"  href="../chapter/12-fxbx.html"><span class="num">12</span><span>fxbX 포맷과 실행계획</span></a><a class="nav-link"  href="../chapter/13-porting-fha.html"><span class="num">13</span><span>포팅 · FHA · FuryAwesome</span></a><a class="nav-link"  href="../chapter/14-serving-vllm.html"><span class="num">14</span><span>vLLM · 서빙 브리지</span></a><a class="nav-link"  href="../chapter/15-multi-npu.html"><span class="num">15</span><span>PE · 여러 카드 · 여러 서버</span></a><div class="nav-caption">V. 검증과 다음 개발</div><a class="nav-link"  href="../chapter/16-furyboost.html"><span class="num">16</span><span>FuryBoost 실측과 남은 과제</span></a><a class="nav-link"  href="../chapter/17-debugging.html"><span class="num">17</span><span>측정 · 추적 · 실패 재현</span></a><div class="nav-caption">VI. 생태계 비교와 최적화 연구</div><a class="nav-link"  href="../chapter/18-npu-ecosystems.html"><span class="num">18</span><span>다른 NPU의 지원 방식</span></a><a class="nav-link active" aria-current="page" href="../chapter/19-model-optimization.html"><span class="num">19</span><span>모델 사전 최적화 · 연구</span></a><div class="nav-caption">참고와 검증</div><a class="nav-link"  href="../glossary.html"><span class="num">·</span><span>약어와 용어 사전</span></a><a class="nav-link"  href="../sources.html"><span class="num">·</span><span>출처 · 버전 · 접근 범위</span></a><a class="nav-link"  href="../review.html"><span class="num">·</span><span>검토 기록과 미해결 질문</span></a><a class="nav-link"  href="../reader-review.html"><span class="num">·</span><span>3학년 독자 검토와 수정 기록</span></a></nav><div class="side-foot">비공식 개발 핸드북 · 2026.11.20<br>공식 SDK와 프로젝트 구현을 구분합니다.<br><a href="https://github.com/smallstep-zzz/furyno5-handbook">원고와 변경 이력 ↗</a></div></aside><div class="shell"><main class="page" id="content"><div class="eyebrow">VI. 생태계 비교와 최적화 연구 / CHAPTER 19</div><h1>모델과 실행 방식을 함께 최적화하기</h1><p class="dek">NetsPresso와 공개 도구, 의미 보존 변환과 모델 압축을 RNGD의 실측 기준으로 평가합니다.</p><div class="page-meta"><span>독자 검토 2026.11.20</span><span>SDK 2026.4 계열 / 버전별 표기</span><span class="readtime">약 45분</span><span><a href="https://github.com/smallstep-zzz/furyno5-handbook/blob/main/content/19-model-optimization.md">원고</a></span></div><details class="mobile-toc"><summary>이 장의 목차</summary><div><a class="" href="#1-같은-계산을-빠르게-하는-연구와-모델을-줄이는-연구">1. 같은 계산을 빠르게 하는 연구와 모델을 줄이는 연구</a><a class="minor" href="#계산량을-절반으로-줄여도-시간이-절반이-되지-않는-예">계산량을 절반으로 줄여도 시간이 절반이 되지 않는 예</a><a class="" href="#2-먼저-공식-기준선을-재현-가능하게-만든다">2. 먼저 공식 기준선을 재현 가능하게 만든다</a><a class="minor" href="#비교표의-입력-규격을-먼저-읽는다">비교표의 입력 규격을 먼저 읽는다</a><a class="" href="#3-netspresso는-무엇이-공개되어-있는가">3. NetsPresso는 무엇이 공개되어 있는가</a><a class="" href="#4-양자화의-수치-계약을-이해한-뒤-도구를-고른다">4. 양자화의 수치 계약을 이해한 뒤 도구를 고른다</a><a class="minor" href="#숫자를-작게-저장한다는-뜻">숫자를 작게 저장한다는 뜻</a><a class="minor" href="#변환-산출물이-어느-실행기에서-쓰이는가">변환 산출물이 어느 실행기에서 쓰이는가</a><a class="" href="#5-작은-실습-추론용-conv-bn-folding">5. 작은 실습: 추론용 Conv–BN folding</a><a class="" href="#6-onnx-단순화는-별도-후보로-보관한다">6. ONNX 단순화는 별도 후보로 보관한다</a><a class="" href="#7-구조를-줄일-때는-하드웨어가-좋아하는-크기도-다시-찾는다">7. 구조를 줄일 때는 하드웨어가 좋아하는 크기도 다시 찾는다</a><a class="minor" href="#중간-채널-하나를-지우면-다음-층도-바뀐다">중간 채널 하나를 지우면 다음 층도 바뀐다</a><a class="minor" href="#논리-차원이-작아져도-실제-작업-묶음은-그대로일-수-있다">논리 차원이 작아져도 실제 작업 묶음은 그대로일 수 있다</a><a class="" href="#8-고수준-의미를-보존하는-것도-최적화다">8. 고수준 의미를 보존하는 것도 최적화다</a><a class="minor" href="#attention의-중간-행렬을-줄이되-계산-의미는-유지한다">attention의 중간 행렬을 줄이되 계산 의미는 유지한다</a><a class="" href="#9-workload마다-다른-연구-가설을-세운다">9. workload마다 다른 연구 가설을 세운다</a><a class="minor" href="#공식-compiler가-좋아도-남는-입력-실행-경계의-선택">공식 compiler가 좋아도 남는 입력·실행 경계의 선택</a><a class="" href="#10-furyno5에서-제안하는-연구-순서">10. FuryNo5에서 제안하는 연구 순서</a><a class="" href="#출처">출처</a></div></details><noscript><p class="noscript">본문과 그림은 JavaScript 없이 읽을 수 있습니다. 검색과 조절 실험에는 JavaScript가 필요합니다.</p></noscript><article class="article"><p>DB의 질의 계획에서 연산 하나를 지웠어도 전체 질의가 빨라지는지는 디스크 읽기와 다른 연산의 비용을 함께 봐야 한다. 모델 최적화도 같다. 계산할 숫자를 줄이는 방법, 같은 계산의 표현을 바꾸는 방법, 호출 사이의 메모리 이동을 줄이는 방법은 서로 다른 효과를 낸다.</p>
 <p><strong>공식 포팅보다 좋은 결과를 얻을 가능성은 있다. 다만 그 가능성을 입증하려면 모델이 계산하는 일, 컴파일러가 보는 표현, 장치에 일을 제출하는 경계를 함께 연구해야 한다.</strong> 이 장은 이미 빠르다고 주장하는 결과 보고서가 아니다. 공개 도구로 변환 후보를 만들고, 같은 품질 조건에서 RNGD(Renegade)의 실제 이득을 판정하는 연구 계획이다. 실행 중 복사·동기화·계측의 기초는 <a href="../chapter/07-optimization.html">7장</a>, 다른 NPU(Neural Processing Unit) 스택의 설계는 <a href="../chapter/18-npu-ecosystems.html">18장</a>에서 이어 읽는다.</p>
 <p>공식 Furiosa Compiler도 그래프 최적화, 연산 결합, 메모리 할당, 스케줄링, 층 사이 데이터 이동을 이미 최적화한다. 따라서 외부 도구에서 연산 하나를 지웠다는 사실만으로 공식 경로보다 빠르다고 말할 수 없다. 공식 compiler가 같은 변환을 수행했는지, 외부 변환이 유용한 패턴을 오히려 깨뜨렸는지부터 비교해야 한다. <a href="https://developer.furiosa.ai/v2026.4.1/en/overview/software_stack.html">공식 compiler의 책임</a></p>
 <blockquote>
-<p><strong>조사·검증 기준</strong> · 공개 자료와 아래 고정 commit을 2026-11-19에 확인했다. 예제의 API(Application Programming Interface)는 문서·소스와 대조했지만, 집필 환경에 PyTorch와 Furiosa SDK(Software Development Kit), RNGD가 없어 예제를 실행하지 않았다. 이 장에는 새 NPU 성능 측정값이 없다. 표의 RNGD 적용 순서는 FuryNo5의 연구 제안이며 공식 지원표가 아니다.</p>
+<p><strong>조사·검증 기준</strong> · 소스·문헌 기준일은 2026-11-19, 독자 재검토일은 2026-11-20(한국 시간)이다. 예제의 API(Application Programming Interface)는 문서·소스와 대조했다. PyTorch·ONNX 같은 별도 도구나 Furiosa SDK(Software Development Kit)·RNGD 환경이 필요한 변환·장치 예제는 이번 편집에서 실행하지 않았다. 새로 추가한 순수 Python의 scale 후보 비교와 attention 계산·누적 예제는 CPU에서 실행해 수치를 검산했다. 이 장에는 새 NPU 성능 측정값이 없다. 표의 RNGD 적용 순서는 FuryNo5의 연구 제안이며 공식 지원표가 아니다.</p>
 </blockquote>
 <h2 id="1-같은-계산을-빠르게-하는-연구와-모델을-줄이는-연구"><a class="heading-anchor" href="#1-같은-계산을-빠르게-하는-연구와-모델을-줄이는-연구">1. 같은 계산을 빠르게 하는 연구와 모델을 줄이는 연구</a></h2>
 <p>두 연구는 합격 기준이 다르다. 첫째는 같은 모델의 계산 의미를 보존하면서 표현을 바꾸는 것이다. 앞 계산의 출력에 적용하는 상수 배율·덧셈을 앞 계산의 계수로 흡수하는 <strong>folding(계수 접기)</strong>, 불필요한 변환 제거, 입력에 따라 바뀌지 않는 부분의 사전 계산이 여기에 속한다. 뒤의 Conv–BN(Convolution–Batch Normalization) 실습에서 숫자로 확인한다. 둘째는 모델 자체를 바꾸는 것이다. <strong>Pruning(가지치기)은</strong> 가중치나 채널·층 일부를 제거하고, <strong>distillation(지식 증류)은</strong> 큰 교사 모델의 출력을 이용해 작은 학생 모델을 학습시키며, <strong>quantization(양자화)은</strong> 숫자를 더 적은 표현값으로 근사한다. 이 경우 원본과 모든 출력이 같아야 한다는 기준을 사용할 수 없고, 사전에 정한 실제 작업의 품질 한도를 만족해야 한다. <a href="https://docs.pytorch.org/docs/2.10/generated/torch.nn.utils.fusion.fuse_conv_bn_eval.html">추론용 folding 조건</a>, <a href="https://openaccess.thecvf.com/content/CVPR2023/html/Fang_DepGraph_Towards_Any_Structural_Pruning_CVPR_2023_paper.html">구조적 pruning</a>, <a href="https://arxiv.org/abs/1503.02531">지식 증류</a></p>
@@ -177,6 +177,60 @@ print(codes)     # [-4, -1, 1, 3]
 print(restored)  # [-1.0, -0.25, 0.25, 0.75]
 </code></pre></div>
 <p><strong>Calibration(보정)은</strong> 실제 사용을 대표하는 입력으로 값의 범위를 관찰하고 scale·clipping 범위를 정하는 과정이다. 작은 값만 든 보정 데이터로 정한 scale에 실제 서비스의 큰 값이 들어오면 clipping이 늘 수 있다. weight에만 scale을 둘지 activation에도 둘지, tensor 전체에 하나를 둘지 출력 채널별·몇 개 원소의 group별로 둘지도 정해야 한다. 이 단위가 <strong>granularity(적용 단위)다</strong>. producer와 실행 커널이 같은 단위를 해석해야 한다.</p>
+<h4 id="보정-데이터로-scale-후보를-비교한다"><a class="heading-anchor" href="#보정-데이터로-scale-후보를-비교한다">보정 데이터로 scale 후보를 비교한다</a></h4>
+<p>“대표 입력을 관찰한다”는 말에서 실제 선택까지 한 단계를 더 진행하자. 위 네 값이 보정 입력을 모델에 넣었을 때 <strong>어떤 activation 배열에서 관측한 네 원소</strong>라고 가정한다. 여기서는 같은 3-bit 범위·zero point 0을 유지하면서 scale 0.25와 0.5만 비교한다.</p>
+<p>판정 기준을 <strong>MSE(Mean Squared Error, 평균 제곱 오차)로</strong> 정하자. 각 원소에서 <code>복원값−원래값</code>을 구하고 제곱한 뒤, 네 오차를 더해 4로 나눈다. 제곱은 양수·음수 오차가 상쇄되지 않게 한다. 이 단순 기준은 배열 복원 오차를 재는 것이며 최종 모델 품질을 직접 재는 지표는 아니다.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>scale 후보</th>
+<th>정수 코드</th>
+<th>복원값</th>
+<th align="right">반올림 후 clamp로 잘린 원소 수</th>
+<th align="right">제곱 오차의 합</th>
+<th align="right">MSE</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0.25</td>
+<td><code>[-4,-1,1,3]</code></td>
+<td><code>[-1,-0.25,0.25,0.75]</code></td>
+<td align="right">1</td>
+<td align="right">0.0375</td>
+<td align="right">0.009375</td>
+</tr>
+<tr>
+<td>0.5</td>
+<td><code>[-2,0,1,2]</code></td>
+<td><code>[-1,0,0.5,1]</code></td>
+<td align="right">0</td>
+<td align="right">0.1000</td>
+<td align="right">0.025000</td>
+</tr>
+</tbody></table>
+</div><p>scale 0.25의 오차는 <code>[-0.1,-0.05,-0.05,-0.15]</code>이고, 제곱한 합은 <code>0.01+0.0025+0.0025+0.0225=0.0375</code>다. scale 0.5는 clipping이 없지만 간격이 거칠어져 <code>-0.2</code>를 0으로, <code>0.3</code>을 0.5로 복원한다. <strong>clipping 수만 줄이는 것과 전체 복원 오차를 줄이는 것은 같지 않다.</strong> 이 네 값과 두 후보, 이 MSE 기준에서는 0.25를 고른다.</p>
+<p><a href="../examples/calibration_scale_demo.py">calibration_scale_demo.py</a>는 관측값으로 후보를 비교하는 순수 Python이다. 반올림이 정확히 중간에 놓인 경우의 규칙도 실제 backend와 맞춰야 한다. 아래 데이터에는 그런 중간값이 없으며 Python의 <code>round</code>를 사용한다.</p>
+<div class="codebox"><div class="codebar"><span>python</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-python">from math import isclose
+
+observed = [-0.9, -0.2, 0.3, 0.9]  # 설명용 calibration activation, shape [4]
+qmin, qmax = -4, 3  # 두 후보에서 같은 표현 범위를 사용
+results = []
+for scale in (0.25, 0.5):
+    rounded = [round(x / scale) for x in observed]  # zero point=0
+    codes = [min(qmax, max(qmin, q)) for q in rounded]  # 끝값으로 제한
+    restored = [scale * q for q in codes]  # 같은 실수 단위로 되돌림
+    clipped = sum(q != original_q for q, original_q in zip(codes, rounded))
+    mse = sum((got - ref) ** 2 for got, ref in zip(restored, observed)) / len(observed)
+    results.append((scale, mse))
+    print(scale, clipped, round(mse, 6))
+best_scale, _ = min(results, key=lambda item: item[1])  # 두 후보 중 작은 MSE 선택
+assert best_scale == 0.25
+assert isclose(results[0][1], 0.009375)
+assert isclose(results[1][1], 0.025)
+# 0.25 1 0.009375
+# 0.5 0 0.025
+</code></pre></div>
+<p>실제 calibration은 더 많은 대표 입력·층·채널을 다루고, min/max·percentile·오차 최소화 등 선택한 방법의 기준을 사용한다. 이 예는 그중 <strong>후보 scale을 관측값에서 평가한다는 연결</strong>만 보여 준다. 작은 보정 MSE가 전체 모델 정확도 보존을 보장하지도, 두 후보 중 최선이 모든 scale 중 최선임을 뜻하지도 않는다. 예를 들어 실제 입력에서 3.0이 새로 나타나면 scale 0.25에서는 최대 0.75로 복원되어 오차가 2.25가 된다. 따라서 대표 입력을 고른 이유를 남기고, 보정에 쓰지 않은 평가 입력으로 최종 품질을 확인한다. producer가 정한 scale·적용 단위를 NPU 커널이 같은 방식으로 해석할 수 있는지도 별도 계약이다. <a href="https://github.com/openvinotoolkit/nncf/blob/0d605e5da7eb735aff96a14a3a771d84d90f88f8/README.md">보정과 backend를 구분하는 NNCF</a> · <a href="https://github.com/pytorch/ao/blob/a791dcb26432500f99d40271c81ee8e2753cf99a/docs/source/workflows/inference.md">TorchAO 실행 계약</a></p>
 <p><strong>PTQ(Post-Training Quantization)는</strong> 학습이 끝난 모델에 적용하는 양자화이고, 대표 입력을 사용한 보정이 필요한지는 선택한 방법에 따라 다르다. <strong>QAT(Quantization-Aware Training)는</strong> 학습 중에도 양자화 오차의 영향을 고려해 가중치를 조정하는 방법이다. <strong>Packing(압축 배치)은</strong> 작은 코드를 실제 비트·메모리 순서에 맞춰 담는 작업이다. 4-bit 코드는 이론상 한 바이트에 두 개 담을 수 있지만 scale·정렬·부가정보도 필요하다. 곱한 결과를 더해 가는 <strong>누산(accumulation)의</strong> 자료형은 저장 형식과 별도일 수 있다. 이 모든 조건을 맞춰야 파일 크기 감소가 실행에서도 유효하다. <a href="https://github.com/pytorch/ao/blob/a791dcb26432500f99d40271c81ee8e2753cf99a/docs/source/workflows/inference.md">양자화의 backend 계약</a> · <a href="https://github.com/openvinotoolkit/nncf/blob/0d605e5da7eb735aff96a14a3a771d84d90f88f8/README.md">보정과 양자화 경계</a></p>
 <p>위의 균일 정수 식을 FP8·FP4 같은 부동소수점 형식의 저장 규칙과 동일시하지 않는다. 실제 형식의 지수·가수·scale·반올림·누산 계약을 확인해야 한다. 아래 도구 표의 양자화 지원도 <strong>어떤 형식을 어느 backend에서 계산하는지</strong>까지 읽는다.</p>
 <h3 id="변환-산출물이-어느-실행기에서-쓰이는가"><a class="heading-anchor" href="#변환-산출물이-어느-실행기에서-쓰이는가">변환 산출물이 어느 실행기에서 쓰이는가</a></h3>
@@ -466,8 +520,56 @@ print(tuple(hidden.shape), tuple(output.shape))  # (1, 3) (1, 2)
     A --&gt; T[&quot;RNGD trace와 전체 시간&quot;]
     T --&gt; R[&quot;shape별 후보 선택&quot;]</pre></details></figure><p>여기서 ABI(Application Binary Interface)는 커널 입출력의 호출 계약이다. FuryNo5 연구에서는 정규화 전의 의미 정보와 검증된 작은 영역을 함께 유지하고, <strong>분해한 후보와 의미를 보존한 후보를 같은 shape에서 비교</strong>할 수 있다. 기존 <code>tcl_region</code>의 지원 범위와 정밀도 경계를 넘어선 결합은 새 구현·검증 과제다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/graph_capture.py">현재 정규화</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span>, <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/tcl_region.py">현재 영역 생성기</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
 <h3 id="attention의-중간-행렬을-줄이되-계산-의미는-유지한다"><a class="heading-anchor" href="#attention의-중간-행렬을-줄이되-계산-의미는-유지한다">attention의 중간 행렬을 줄이되 계산 의미는 유지한다</a></h3>
-<p>Attention은 현재 <strong>Q(Query, 질의 벡터)와</strong> 앞선 위치들의 <strong>K(Key, 비교용 벡터)를</strong> 비교하고, 비교 점수에 따라 <strong>V(Value, 내용 벡터)들을</strong> 섞는다. 보통 쓰는 식은 <code>softmax(QKᵀ / sqrt(d) + mask)V</code>다. <code>Kᵀ</code>는 K의 행·열을 바꾸고, d는 비교 벡터 길이이며, <code>sqrt(d)</code>로 점수 크기를 조정한다. <strong>Mask</strong>는 볼 수 없는 위치를 제외한다. <strong>Softmax</strong>는 각 점수에 지수함수 exp를 적용한 뒤 그 합으로 나누어, 양수이면서 합이 1인 가중치를 만든다.</p>
-<p>가장 작은 예로 벡터 길이 d=1, 질의 <code>Q=[1]</code>, 두 위치의 <code>K=[1,0]</code>, <code>V=[10,20]</code>을 생각하자. mask는 없고 출력 하나를 계산한다.</p>
+<p>Attention은 현재 <strong>Q(Query, 질의 벡터)와</strong> 앞선 위치들의 <strong>K(Key, 비교용 벡터)를</strong> 비교하고, 비교 점수에 따라 <strong>V(Value, 내용 벡터)들을</strong> 섞는다. 보통 쓰는 식은 <code>softmax(QKᵀ / sqrt(d) + mask)V</code>다. <code>Kᵀ</code>는 K의 행·열을 바꾸고, d는 비교 벡터 길이이며, <code>sqrt(d)</code>로 점수 크기를 조정한다. <code>sqrt</code>는 제곱근으로, <code>sqrt(4)=2</code>다. <strong>Mask</strong>는 볼 수 없는 위치를 제외한다. <strong>Softmax</strong>는 각 점수에 지수함수 exp를 적용한 뒤 그 합으로 나누어, 양수이면서 합이 1인 가중치를 만든다.</p>
+<h4 id="행은-토큰-위치-열은-벡터-성분이다"><a class="heading-anchor" href="#행은-토큰-위치-열은-벡터-성분이다">행은 토큰 위치, 열은 벡터 성분이다</a></h4>
+<p>먼저 batch와 head 축을 생략한 <strong>한 head의 2차원 계산</strong>만 보자. 질의 위치 수를 Lq, 참고할 key 위치 수를 Lk라고 하면 Q의 shape는 <code>[Lq,d]</code>, K는 <code>[Lk,d]</code>다. V는 각 key 위치의 내용이므로 행 수 Lk가 같고, 내용 벡터 길이 dv를 써서 <code>[Lk,dv]</code>로 표시한다.</p>
+<p>행렬곱 <code>[a,b] @ [b,c]</code>는 맞닿는 축 b를 곱해 더하고 <code>[a,c]</code>를 남긴다. 그래서 <code>Q @ K.T</code>는 <code>[Lq,d] @ [d,Lk] → [Lq,Lk]</code>다. 한 행은 <strong>한 질의가 모든 key 위치에 매긴 점수</strong>다. Softmax는 이 예에서 각 행의 <strong>key 위치 축</strong>을 따라 적용하므로 각 질의마다 가중치 합이 1이 된다. 그 뒤 <code>[Lq,Lk] @ [Lk,dv]</code>를 계산해 <code>[Lq,dv]</code>의 내용을 얻는다.</p>
+<p>가장 작은 수치 예로 <code>Lq=1, Lk=2, d=dv=1</code>을 쓰자. Q·K·V를 2차원 배열로 적어야 어느 축이 위치인지 잃지 않는다. mask는 없고 <code>sqrt(1)=1</code>이어서 점수 배율은 그대로다.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>배열</th>
+<th>값</th>
+<th>shape와 축의 뜻</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Q</td>
+<td><code>[[1]]</code></td>
+<td><code>[1,1]</code>: 질의 1위치 × 비교 성분 1개</td>
+</tr>
+<tr>
+<td>K</td>
+<td><code>[[1],[0]]</code></td>
+<td><code>[2,1]</code>: key 2위치 × 비교 성분 1개</td>
+</tr>
+<tr>
+<td>K.T</td>
+<td><code>[[1,0]]</code></td>
+<td><code>[1,2]</code>: 비교 성분 1개 × key 2위치</td>
+</tr>
+<tr>
+<td>V</td>
+<td><code>[[10],[20]]</code></td>
+<td><code>[2,1]</code>: key 2위치 × 내용 성분 1개</td>
+</tr>
+<tr>
+<td>점수 <code>Q @ K.T</code></td>
+<td><code>[[1,0]]</code></td>
+<td><code>[1,2]</code>: 질의 1위치 × key 2위치</td>
+</tr>
+<tr>
+<td>가중치</td>
+<td>약 <code>[[0.7311,0.2689]]</code></td>
+<td><code>[1,2]</code>: 이 한 행의 합이 1</td>
+</tr>
+<tr>
+<td>결과 <code>가중치 @ V</code></td>
+<td>약 <code>[[12.6894]]</code></td>
+<td><code>[1,1]</code>: 질의 1위치 × 내용 성분 1개</td>
+</tr>
+</tbody></table>
+</div><p>계산을 숫자 순서로 풀면 다음과 같다.</p>
 <div class="table-wrap"><table>
 <thead>
 <tr>
@@ -498,7 +600,10 @@ print(tuple(hidden.shape), tuple(output.shape))  # (1, 3) (1, 2)
 </tr>
 </tbody></table>
 </div><p>이 식을 <code>Q(KᵀV)</code>로 바꾸면 <code>1×(1×10+0×20)=10</code>이 된다. softmax를 삭제했기 때문에 다른 함수다. 단순한 선형 행렬곱은 결합 순서를 바꿀 수 있어도 이 attention 전체에 같은 법칙을 적용할 수 없다. mask, 어느 축에서 softmax하는지, 학습 시 일부 값을 무작위로 끄는 dropout이 있는지, 반올림 위치까지 확인해야 한다.</p>
-<p>입력 길이가 L이면 모든 질의와 모든 키의 점수를 담은 배열은 대략 L×L 크기다. 이를 통째로 저장하는 대신 조각별로 읽으면서 같은 정규화 결과를 누적할 수 있다. <strong>FlashAttention</strong>은 이런 메모리 이동을 줄이는 attention 계산의 사례다. 아래는 한 행에서 사용하는 누적 통계의 원리를 위의 두 점수로 보여 준 것이다.</p>
+<p>입력 전체에 대한 self-attention에서 <code>Lq=Lk=L</code>이면 모든 질의와 key의 점수 배열은 <code>L×L</code>이다. 반면 한 토큰을 decode하는 이 예 같은 상황에서는 <code>Lq=1</code>이므로 그 호출의 점수 행은 <code>1×Lk</code>다. “항상 한 decode 호출이 L×L 배열을 만든다”고 해석하지 않는다. 많은 질의의 점수를 통째로 저장하는 대신 조각별로 읽으면서 정규화 결과를 누적할 수 있다. <strong>FlashAttention</strong>은 이런 메모리 이동을 줄이는 attention 계산의 사례다. <a href="https://arxiv.org/abs/2205.14135">IO 관점의 attention 재구성</a></p>
+<h4 id="큰-점수가-뒤늦게-오면-앞서-더한-값을-새-기준으로-바꾼다"><a class="heading-anchor" href="#큰-점수가-뒤늦게-오면-앞서-더한-값을-새-기준으로-바꾼다">큰 점수가 뒤늦게 오면 앞서 더한 값을 새 기준으로 바꾼다</a></h4>
+<p>점수마다 exp를 직접 계산하면 큰 점수에서 값이 너무 커질 수 있다. 모든 점수에서 같은 m을 빼면 각 지수값에 공통 배율 <code>exp(−m)</code>이 곱해진다. 분자와 분모에서 그 배율이 지워지므로 최종 가중 평균은 같다. 이를 이용해 지금까지의 최대 점수를 m으로 유지하고, <code>exp(점수−m)</code>의 합 l, 그 가중치를 곱한 내용의 합 o를 저장한다. 마지막에 <code>o/l</code>로 나눈다.</p>
+<p>위의 점수 1·내용 10을 먼저, 점수 0·내용 20을 다음에 읽으면 다음과 같다.</p>
 <div class="table-wrap"><table>
 <thead>
 <tr>
@@ -527,7 +632,95 @@ print(tuple(hidden.shape), tuple(output.shape))  # (1, 3) (1, 2)
 <td align="right"><code>o/l≈12.6894</code></td>
 </tr>
 </tbody></table>
-</div><p>모든 점수에서 같은 최대값을 빼면 지수함수가 지나치게 커지는 것을 줄이면서 최종 비율은 유지한다. 뒤 조각에서 더 큰 최대값이 나타나면 기존 l·o도 새 최대값 기준으로 재조정한다. 이렇게 <strong>최댓값·합·가중합이라는 작은 상태를 유지하는 것</strong>이 핵심이며 softmax를 생략하지 않는다. 실제 구현은 많은 행·타일·mask와 자료형을 다룬다. 이 원리를 이해하는 것과 GPU(Graphics Processing Unit)용 구현을 RNGD에 그대로 적용하는 것은 다르다. RNGD의 메모리·연산 계약에 맞춘 별도 커널과 수치 검증이 필요하다. <a href="https://arxiv.org/abs/2205.14135">FlashAttention 논문</a></p>
+</div><p>이 순서에서는 최대값이 바뀌지 않았다. <strong>반대로 작은 점수 0이 먼저 오고 큰 점수 1이 나중에 오면</strong> 첫 누적값의 기준을 고쳐야 한다.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>단계</th>
+<th>최대 점수 기준</th>
+<th align="right">l</th>
+<th align="right">o</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>점수 0·내용 20만 처리</td>
+<td>m=0</td>
+<td align="right">1</td>
+<td align="right">20</td>
+</tr>
+<tr>
+<td>새 점수 1 발견, 기존 누적값을 m=1 기준으로 환산</td>
+<td><code>exp(0−1)≈0.3679</code>를 기존 l·o에 곱함</td>
+<td align="right">0.3679</td>
+<td align="right">7.3576</td>
+</tr>
+<tr>
+<td>새 점수 1·내용 10의 기여 추가</td>
+<td>새 가중치 <code>exp(1−1)=1</code></td>
+<td align="right"><code>0.3679+1=1.3679</code></td>
+<td align="right"><code>7.3576+10=17.3576</code></td>
+</tr>
+<tr>
+<td>최종 결과</td>
+<td>m=1</td>
+<td align="right">—</td>
+<td align="right"><code>o/l≈12.6894</code></td>
+</tr>
+</tbody></table>
+</div><p>재조정 배율은 외워야 할 별도 규칙이 아니다. 이전 점수 s에 대해 <code>exp(s−새m)=exp(s−옛m)×exp(옛m−새m)</code>이므로, 이전에 모아 둔 <strong>합 전체</strong>에 <code>exp(옛m−새m)</code>를 곱하면 모든 항이 새 기준으로 바뀐다. 위 예에서 이 단계를 생략하고 <code>l=1+1, o=20+10</code>으로 합치면 결과는 15가 되어 틀린다. 현재 최대값·합·가중합이라는 작은 상태로 정확한 정규화 의미를 유지하는 것이 핵심이다.</p>
+<h4 id="cpu에서-shape와-두-처리-순서를-확인한다"><a class="heading-anchor" href="#cpu에서-shape와-두-처리-순서를-확인한다">CPU에서 shape와 두 처리 순서를 확인한다</a></h4>
+<p><a href="../examples/attention_contract_demo.py">attention_contract_demo.py</a>는 앞의 한 질의·한 내용 성분 예를 실행하는 완전한 순수 Python이다. 첫 부분은 2차원 행렬의 축을 유지하고, 뒤 부분은 같은 한 행을 조각별로 읽어 결과를 비교한다. 실제 FlashAttention이나 RNGD 커널 구현이 아니며 mask·여러 head·반올림 계약을 모두 구현하지 않는다.</p>
+<div class="codebox"><div class="codebar"><span>python</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-python">from math import exp, isclose, sqrt
+
+def transpose(matrix):
+    return [list(column) for column in zip(*matrix)]  # [행,열] → [열,행]
+
+def matmul(left, right):
+    assert len(left[0]) == len(right)  # 곱하며 더할 축의 길이가 같아야 한다.
+    columns = transpose(right)
+    return [
+        [sum(a * b for a, b in zip(row, column)) for column in columns]
+        for row in left
+    ]
+
+def softmax_row(scores):
+    maximum = max(scores)
+    positive = [exp(score - maximum) for score in scores]  # 모든 항에 같은 기준 사용
+    total = sum(positive)
+    return [value / total for value in positive]  # key 축 전체의 가중치 합을 1로 만듦
+
+q = [[1.0]]  # [Lq=1,d=1]
+k = [[1.0], [0.0]]  # [Lk=2,d=1]
+v = [[10.0], [20.0]]  # [Lk=2,dv=1]
+raw_scores = matmul(q, transpose(k))  # [1,1] @ [1,2] → [1,2]
+scores = [[value / sqrt(len(q[0])) for value in row] for row in raw_scores]
+weights = [softmax_row(row) for row in scores]  # 질의마다 key 축으로 정규화
+full_output = matmul(weights, v)[0][0]  # [1,2] @ [2,1] → [1,1]의 한 값
+
+def online_one_row(score_values):
+    maximum, total, weighted = float(&quot;-inf&quot;), 0.0, 0.0
+    for score, value in score_values:
+        new_maximum = max(maximum, score)
+        old_scale = 0.0 if total == 0.0 else exp(maximum - new_maximum)
+        new_weight = exp(score - new_maximum)
+        total = total * old_scale + new_weight  # 이전 분모를 새 최대값 기준으로 환산
+        weighted = weighted * old_scale + new_weight * value  # 분자에도 같은 배율
+        maximum = new_maximum
+    if total == 0.0:
+        raise ValueError(&quot;이 예제에는 최소 한 key가 필요합니다.&quot;)
+    return weighted / total
+
+pairs = list(zip(scores[0], [row[0] for row in v]))
+forward = online_one_row(pairs)  # 점수 1 다음 0: 최대값 유지
+reversed_order = online_one_row(list(reversed(pairs)))  # 점수 0 다음 1: 최대값 변경
+assert isclose(full_output, forward, rel_tol=1e-12)
+assert isclose(full_output, reversed_order, rel_tol=1e-12)
+assert isclose(sum(weights[0]), 1.0, rel_tol=1e-12)
+print(scores, [round(x, 6) for x in weights[0]])  # [[1.0,0.0]], [0.731059,0.268941]
+print(*(round(x, 6) for x in (full_output, forward, reversed_order)))
+# 12.689414 12.689414 12.689414
+</code></pre></div>
+<p>실수 연산의 수학적 의미가 같아도 유한 정밀도에서는 누적 순서에 따라 작은 차이가 생길 수 있어 위 코드는 허용오차로 비교한다. 실제 구현은 많은 행·타일·mask와 자료형을 다룬다. 이 원리를 이해하는 것과 GPU(Graphics Processing Unit)용 구현을 RNGD에 그대로 적용하는 것은 다르다. RNGD의 메모리·연산 계약에 맞춘 별도 커널과 수치 검증이 필요하다. <a href="https://arxiv.org/abs/2205.14135">FlashAttention 논문</a></p>
 <h2 id="9-workload마다-다른-연구-가설을-세운다"><a class="heading-anchor" href="#9-workload마다-다른-연구-가설을-세운다">9. workload마다 다른 연구 가설을 세운다</a></h2>
 <p>다음 표는 측정 결과가 아니라 <strong>병목을 확인한 뒤 선택할 실험 후보</strong>다. 앞에서 본 layout은 메모리 순서, fusion은 이어지는 계산의 결합, bucket은 준비한 입력 크기 규격이다. <strong>Device-resident state(장치에 상주하는 상태)는</strong> 호출이 끝나도 장치 메모리에 남겨 다음 호출에서 재사용하는 배열이다. 복사를 줄일 수 있는 대신 동시에 살아 있는 배열, 즉 <strong>live memory</strong>의 합이 커져 다른 요청이 쓸 공간을 줄일 수 있다. 이 비용을 모델 종류별로 확인한다.</p>
 <p>LLM의 <strong>prefill</strong>은 이미 주어진 입력 토큰들을 처리하는 단계이고, <strong>decode</strong>는 앞선 출력으로 다음 토큰을 하나씩 생성하는 단계다. <strong>Encoder</strong>는 입력을 특징 배열로 바꾸는 모델, <strong>embedding</strong>은 검색·비교에 쓸 벡터 표현, <strong>reranker</strong>는 이미 찾은 후보들의 관련도를 다시 점수화하는 모델이다. <strong>Diffusion(확산) 모델</strong>은 잡음 상태를 여러 단계에 걸쳐 바꾸며 결과를 생성한다. 이름이 비슷한 모델끼리도 입력 길이와 반복 횟수가 달라 병목이 달라질 수 있다.</p>
@@ -725,4 +918,4 @@ print(outputs.tolist())  # [[7.0, 10.0], [15.0, 22.0]]
 </tr>
 </tbody></table>
 </div><p>GitHub 링크는 확인한 commit에 고정했다. 개발 branch의 최신 snapshot이 모든 설치 환경에 적합한 배포판이라는 뜻은 아니다. FuryNo5 소스 링크에는 저장소 열람 권한이 필요할 수 있다.</p>
-</article><nav class="next-prev" aria-label="이전과 다음 장"><a href="../chapter/18-npu-ecosystems.html"><small>← 이전 장</small><b>다른 NPU의 PyTorch 지원 방식</b></a><a href="../glossary.html"><small>다음 장 →</small><b>용어 사전</b></a></nav><footer class="footer">FuryNo5 개발 핸드북 · 비공식 자료<br>공식 문서와 소스의 권리는 각 프로젝트에 있습니다. 코드 인용은 출처와 함께 표시합니다.<br><a href="../review.html">검토 기록과 남은 질문</a> · <a href="../sources.html">출처와 버전</a> · <a href="../glossary.html">용어 사전</a></footer></main></div><aside class="right-toc" aria-label="이 장의 목차"><h2>이 장에서 다루는 내용</h2><a class="" href="#1-같은-계산을-빠르게-하는-연구와-모델을-줄이는-연구">1. 같은 계산을 빠르게 하는 연구와 모델을 줄이는 연구</a><a class="minor" href="#계산량을-절반으로-줄여도-시간이-절반이-되지-않는-예">계산량을 절반으로 줄여도 시간이 절반이 되지 않는 예</a><a class="" href="#2-먼저-공식-기준선을-재현-가능하게-만든다">2. 먼저 공식 기준선을 재현 가능하게 만든다</a><a class="minor" href="#비교표의-입력-규격을-먼저-읽는다">비교표의 입력 규격을 먼저 읽는다</a><a class="" href="#3-netspresso는-무엇이-공개되어-있는가">3. NetsPresso는 무엇이 공개되어 있는가</a><a class="" href="#4-양자화의-수치-계약을-이해한-뒤-도구를-고른다">4. 양자화의 수치 계약을 이해한 뒤 도구를 고른다</a><a class="minor" href="#숫자를-작게-저장한다는-뜻">숫자를 작게 저장한다는 뜻</a><a class="minor" href="#변환-산출물이-어느-실행기에서-쓰이는가">변환 산출물이 어느 실행기에서 쓰이는가</a><a class="" href="#5-작은-실습-추론용-conv-bn-folding">5. 작은 실습: 추론용 Conv–BN folding</a><a class="" href="#6-onnx-단순화는-별도-후보로-보관한다">6. ONNX 단순화는 별도 후보로 보관한다</a><a class="" href="#7-구조를-줄일-때는-하드웨어가-좋아하는-크기도-다시-찾는다">7. 구조를 줄일 때는 하드웨어가 좋아하는 크기도 다시 찾는다</a><a class="minor" href="#중간-채널-하나를-지우면-다음-층도-바뀐다">중간 채널 하나를 지우면 다음 층도 바뀐다</a><a class="minor" href="#논리-차원이-작아져도-실제-작업-묶음은-그대로일-수-있다">논리 차원이 작아져도 실제 작업 묶음은 그대로일 수 있다</a><a class="" href="#8-고수준-의미를-보존하는-것도-최적화다">8. 고수준 의미를 보존하는 것도 최적화다</a><a class="minor" href="#attention의-중간-행렬을-줄이되-계산-의미는-유지한다">attention의 중간 행렬을 줄이되 계산 의미는 유지한다</a><a class="" href="#9-workload마다-다른-연구-가설을-세운다">9. workload마다 다른 연구 가설을 세운다</a><a class="minor" href="#공식-compiler가-좋아도-남는-입력-실행-경계의-선택">공식 compiler가 좋아도 남는 입력·실행 경계의 선택</a><a class="" href="#10-furyno5에서-제안하는-연구-순서">10. FuryNo5에서 제안하는 연구 순서</a><a class="" href="#출처">출처</a></aside><dialog class="search-dialog" aria-label="문서 검색"><div class="search-head"><input type="search" aria-label="검색어" placeholder="DMA, EDF, 폴백, 버킷…" autocomplete="off"><button class="close-search" type="button">닫기</button></div><div class="search-status" role="status">용어나 함수 이름을 입력하세요.</div><div class="search-results"></div></dialog></body></html>
+</article><nav class="next-prev" aria-label="이전과 다음 장"><a href="../chapter/18-npu-ecosystems.html"><small>← 이전 장</small><b>다른 NPU의 PyTorch 지원 방식</b></a><a href="../glossary.html"><small>다음 장 →</small><b>용어 사전</b></a></nav><footer class="footer">FuryNo5 개발 핸드북 · 비공식 자료<br>공식 문서와 소스의 권리는 각 프로젝트에 있습니다. 코드 인용은 출처와 함께 표시합니다.<br><a href="../reader-review.html">3학년 독자 재검토</a> · <a href="../review.html">검토 기록과 남은 질문</a> · <a href="../sources.html">출처와 버전</a> · <a href="../glossary.html">용어 사전</a></footer></main></div><aside class="right-toc" aria-label="이 장의 목차"><h2>이 장에서 다루는 내용</h2><a class="" href="#1-같은-계산을-빠르게-하는-연구와-모델을-줄이는-연구">1. 같은 계산을 빠르게 하는 연구와 모델을 줄이는 연구</a><a class="minor" href="#계산량을-절반으로-줄여도-시간이-절반이-되지-않는-예">계산량을 절반으로 줄여도 시간이 절반이 되지 않는 예</a><a class="" href="#2-먼저-공식-기준선을-재현-가능하게-만든다">2. 먼저 공식 기준선을 재현 가능하게 만든다</a><a class="minor" href="#비교표의-입력-규격을-먼저-읽는다">비교표의 입력 규격을 먼저 읽는다</a><a class="" href="#3-netspresso는-무엇이-공개되어-있는가">3. NetsPresso는 무엇이 공개되어 있는가</a><a class="" href="#4-양자화의-수치-계약을-이해한-뒤-도구를-고른다">4. 양자화의 수치 계약을 이해한 뒤 도구를 고른다</a><a class="minor" href="#숫자를-작게-저장한다는-뜻">숫자를 작게 저장한다는 뜻</a><a class="minor" href="#변환-산출물이-어느-실행기에서-쓰이는가">변환 산출물이 어느 실행기에서 쓰이는가</a><a class="" href="#5-작은-실습-추론용-conv-bn-folding">5. 작은 실습: 추론용 Conv–BN folding</a><a class="" href="#6-onnx-단순화는-별도-후보로-보관한다">6. ONNX 단순화는 별도 후보로 보관한다</a><a class="" href="#7-구조를-줄일-때는-하드웨어가-좋아하는-크기도-다시-찾는다">7. 구조를 줄일 때는 하드웨어가 좋아하는 크기도 다시 찾는다</a><a class="minor" href="#중간-채널-하나를-지우면-다음-층도-바뀐다">중간 채널 하나를 지우면 다음 층도 바뀐다</a><a class="minor" href="#논리-차원이-작아져도-실제-작업-묶음은-그대로일-수-있다">논리 차원이 작아져도 실제 작업 묶음은 그대로일 수 있다</a><a class="" href="#8-고수준-의미를-보존하는-것도-최적화다">8. 고수준 의미를 보존하는 것도 최적화다</a><a class="minor" href="#attention의-중간-행렬을-줄이되-계산-의미는-유지한다">attention의 중간 행렬을 줄이되 계산 의미는 유지한다</a><a class="" href="#9-workload마다-다른-연구-가설을-세운다">9. workload마다 다른 연구 가설을 세운다</a><a class="minor" href="#공식-compiler가-좋아도-남는-입력-실행-경계의-선택">공식 compiler가 좋아도 남는 입력·실행 경계의 선택</a><a class="" href="#10-furyno5에서-제안하는-연구-순서">10. FuryNo5에서 제안하는 연구 순서</a><a class="" href="#출처">출처</a></aside><dialog class="search-dialog" aria-label="문서 검색"><div class="search-head"><input type="search" aria-label="검색어" placeholder="DMA, EDF, 폴백, 버킷…" autocomplete="off"><button class="close-search" type="button">닫기</button></div><div class="search-status" role="status">용어나 함수 이름을 입력하세요.</div><div class="search-results"></div></dialog></body></html>

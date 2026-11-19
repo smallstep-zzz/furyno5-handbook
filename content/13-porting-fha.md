@@ -278,6 +278,74 @@ print(report["status"])  # 실행 결과 tensor가 아니라 생산 상태를 �
 
 이 함수의 분기를 이해해야 한다. 문자열이나 경로를 넘기면 공식 architecture-aware builder에 위임한다. 실제 Torch module과 `example_inputs`를 넘기면 FuryNo5의 커스텀 graph 경로를 사용한다. 따라서 **미지원 HF 모델 ID를 CLI에 넣었다고 자동으로 모든 미지원 연산을 구현해 주는 것은 아니다.** [생산자 분기](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/fxb_export/model_export.py#L31-L118)
 
+### 실제 모델이 keyword 입력과 사전 출력을 쓸 때
+
+원래 호출이 `original_model(features=x, mask=m)`이고 `{"logits": ..., "masked_features": ...}`를 반환한다고 하자. 이 Python 인터페이스의 이름과 사전 구조를 그대로 장치 인수 순서로 가정하면 안 된다. FuryNo5의 `bind_exported`는 **위치 인수로 주는 평평한 tensor tuple과 일치하는 입력 구조**를 요구한다. 그래서 먼저 작은 wrapper, 즉 원본 모델을 보관하고 호출 형태만 바꾸는 `nn.Module`을 만든다. 어떤 출력을 남길지도 여기서 명시한다. [입력 구조·tensor 바인딩 검사](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/edf_export.py#L54-L104)
+
+다음 완성 예제를 [tensor_adapter.py](../examples/porting/tensor_adapter.py)로 저장한다. **목적은 CPU에서 호출 계약이 보존되는지 확인하는 것**이다. Hugging Face의 모든 반환형을 자동 처리하는 도구도, 이 예제 전체의 NPU 지원을 검증한 기록도 아니다. 실제 프로젝트에서는 `OriginalModel` 생성 자리를 이미 올바르게 로드한 자신의 모델 객체로 바꾼다.
+
+```python
+import torch
+
+class OriginalModel(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.projection = torch.nn.Linear(8, 3, bias=False)  # weight [3,8]
+
+    def forward(self, *, features, mask):
+        # * 뒤의 인수는 keyword로 받는다. 두 입력 모두 BF16 [2,8]이다.
+        masked = features * mask  # 같은 위치끼리 곱함; mask=0인 위치의 값을 0으로 만든다.
+        logits = self.projection(masked)  # [2,8] → [2,3]
+        return {"logits": logits, "masked_features": masked}  # 원래 Python 반환 구조
+
+class TensorAdapter(torch.nn.Module):
+    def __init__(self, original):
+        super().__init__()
+        self.original = original  # 원본 module을 등록된 자식으로 보관한다.
+
+    def forward(self, features, mask):
+        result = self.original(features=features, mask=mask)  # 원본 keyword 호출 복원
+        return result["logits"]  # 장치 계약에는 [2,3] tensor 하나만 내보내기로 선택한다.
+
+def representative_component():
+    original = OriginalModel().bfloat16().eval().requires_grad_(False)
+    adapter = TensorAdapter(original).eval().requires_grad_(False)
+    features = torch.ones(2, 8, dtype=torch.bfloat16)
+    mask = torch.tensor(
+        [[1, 1, 1, 1, 0, 0, 0, 0], [1, 0, 1, 0, 1, 0, 1, 0]],
+        dtype=torch.bfloat16,
+    )  # features와 같은 [2,8]; broadcasting을 요구하지 않는 작은 계약
+    return adapter, (features, mask), {}  # 위치 인수 순서를 고정하고 kwargs는 비운다.
+
+def main():
+    adapter, args, kwargs = representative_component()
+    features, mask = args
+    with torch.no_grad():
+        expected = adapter.original(features=features, mask=mask)["logits"]
+        actual = adapter(*args, **kwargs)  # 원본과 동일 weight·입력으로 wrapper를 비교한다.
+    torch.testing.assert_close(actual, expected)
+    print("output shape:", tuple(actual.shape))  # (2,3), dict에서 선택한 logits만 남는다.
+    print("original weights:", list(adapter.original.state_dict()))
+    print("adapter weights:", list(adapter.state_dict()))
+
+if __name__ == "__main__":
+    main()
+```
+
+이 예에서 원본의 가중치 이름은 `projection.weight`, wrapper의 이름은 `original.projection.weight`가 된다. 새 가중치를 만드는 것이 아니라 자식 module의 경로가 붙는 것이다. **어느 module을 export했는지와 어느 module의 `state_dict()`를 제공하는지를 맞춘다.** wrapper를 export했는데 원본의 이름 사전을 그대로 소비자에 주면 같은 tensor 값이어도 target 이름 연결이 어긋난다. 실제 출력의 가중치 이름은 위 두 `print`로 확인한다. [자식 module 경로를 붙이는 state_dict 구현](https://github.com/pytorch/pytorch/blob/449b1768410104d3ed79d3bcfe4ba1d65c7f22c0/torch/nn/modules/module.py#L2264-L2271)
+
+| 단계 | 이 예제의 코드·자료 | 전달되는 의미 |
+|---|---|---|
+| 원래 모델 | `adapter.original(features=features, mask=mask)` | 이름 있는 인수 두 개, 사전 출력 두 항목 |
+| wrapper 호출 | `adapter(features, mask)` | 순서 있는 tensor 두 개, `logits[2,3]` tensor 하나 |
+| 생산자 인수 | `export_model(adapter, args, "adapted.fxbx", ...)` 또는 FHA `build_model(..., example_inputs=args)` | 0번 입력은 features, 1번은 mask인 정적 계약 |
+| 가중치 보관 | `adapter.state_dict()` | `original.projection.weight`라는 계획 target에 맞는 이름 |
+| 패키지 실행 | `with GraphFXB(..., weights=해당_가중치) as runtime` 안에서 `runtime.predict(args)` | 실행계획 출력 tuple의 첫 tensor가 `logits`; 사전으로 자동 복원하지 않음 |
+
+생산자를 시험하려면 `from tclmachine import export_model`을 추가한 뒤 위 `main()` 안에서 `export_model(adapter, args, "adapted-preflight.fxbx", preflight_only=True)`를 먼저 호출하고 11장의 진단을 확인한다. 이는 실제 패키지 생산을 생략하는 사전검사이며, 호출 형태를 고쳤다고 연산·dtype 지원까지 통과하는 것은 아니다. 최종 생산·소비자 검증은 앞의 Tiny와 같은 절차로 수행한다. 이번 문서 수정에서는 이 PyTorch CPU 예제와 NPU 경로를 실행하지 않았다.
+
+뒤의 FHA factory가 `(module, args, kwargs)`를 받는다고 해서 이 변환을 자동 수행하는 것도 아니다. `compiler_engine.feature_probe.extract`는 factory 결과를 `torch.export.export(model.eval(), args, kwargs)`에 전달해 **특징 조사용 그래프**를 얻는다. 반면 패키지 생산자의 binder는 위의 위치 인수 tensor 계약을 별도로 검사한다. 같은 wrapper를 양쪽에 쓰려면 `tensor_adapter:representative_component`를 factory로 지정하면 된다. 그러면 특징 조사와 생산에서 같은 입력 순서를 사용할 수 있지만, 특징별 synthetic probe의 통과도 전체 모델 통과와는 구분해야 한다. [factory의 실제 호출](https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/compiler_engine/feature_probe.py#L29-L60) · [캠페인에서 특징 조사와 통합 실행의 분리](https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/tools/port_model.py#L22-L58)
+
 ```bash
 # ./hf-assets는 공식 builder가 architecture를 지원하는 모델의 설정·가중치 경로다.
 # -o는 새 출력 파일, --concurrency는 생산 작업의 동시성 옵션이다.
@@ -408,7 +476,53 @@ python -m forge_fxbex publish ./verified-model.fxbex \
 
 새 실행 계획 `.fxbx`를 공유하려면 패키지, 원본 가중치 연결, 대표 입력·출력, 실행 예제와 검증 범위를 해당 패키지에 맞춰 준비해야 한다. 검토 후 HF에 배포한 **고정 commit URL과 정확한 파일 SHA-256**을 공개 메타데이터로 만들면 FuryAwesome 카탈로그에 등록할 수 있다. 이 작업은 앞의 legacy 게시기를 통과한 것으로 간주하지 않는다. 현재 카탈로그의 MiniLM 항목도 `adapter=execution_plan`, `weights_mode=external`를 명시한다. [실제 등록 메타데이터](https://github.com/smallstep-zzz/furyawesome/blob/c668ecbceac2bedd04c6e539c1a5509a404a464d/model-catalog/embedding.json)
 
-다음 명령은 **FuryAwesome checkout**에서 수행하는 로컬 목록 변경이다. `reviewed-publication.json`은 위 계약으로 준비한 검토 완료 메타데이터이며, 바이너리 파일이 아니다.
+`reviewed-publication.json`은 바이너리가 아니라 **카탈로그 등록 함수 `record(payload)`가 받을 한 항목**이다. 이 함수는 최상위에 `schema_version`, `model`, `release`만 허용하고, 아래 model·release 필드도 빠짐없이 정확히 요구한다. model·release의 값은 모두 문자열이다. 다음은 이미 공개된 MiniLM 카탈로그 항목에서 `entry` 내부를 읽은 JSON 예시다. **이 식별자·버전·해시는 기존 MiniLM 배포의 기록이며, Tiny나 자신의 모델에 복사해 새 게시를 요청하는 값이 아니다.** 이번 수정에서는 해당 원격 바이너리를 다시 실행하거나 해시를 재측정하지 않았다. [검사 함수의 허용 필드](https://github.com/smallstep-zzz/furyawesome/blob/c668ecbceac2bedd04c6e539c1a5509a404a464d/scripts/catalog_store.py#L36-L64) · [이 예시의 원본 항목](https://github.com/smallstep-zzz/furyawesome/blob/c668ecbceac2bedd04c6e539c1a5509a404a464d/model-catalog/embedding.json)
+
+```json
+{
+  "schema_version": 1,
+  "model": {
+    "name": "all-MiniLM-L6-v2",
+    "short_description": "최대 16토큰 문장 임베딩 인코더",
+    "readme": "최대 16토큰 문장 임베딩 인코더. 별도 가중치와 동봉 Python 예제로 재실행할 수 있습니다. [사용법](https://huggingface.co/softandsweet/sentence-transformers-all-minilm-l6-v2-rngd-fxbx/blob/2720858d12c28d73aedb6b78e9a23b2518b81d43/USAGE.md)",
+    "category": "Other",
+    "source_repo": "sentence-transformers/all-MiniLM-L6-v2",
+    "source_revision": "1110a243fdf4706b3f48f1d95db1a4f5529b4d41",
+    "source_license": "Apache-2.0",
+    "package_license": "Apache-2.0",
+    "cover_url": ""
+  },
+  "release": {
+    "version": "2026.4.0-embed16-fxbx1",
+    "target": "Furiosa RNGD",
+    "precision": "BF16",
+    "sdk_version": "2026.4.0",
+    "runtime_version": "0.8.3",
+    "adapter": "execution_plan",
+    "weights_mode": "external",
+    "artifact_url": "https://huggingface.co/softandsweet/sentence-transformers-all-minilm-l6-v2-rngd-fxbx/resolve/ab271a57c4b195b8a2820254f0c08bc6840a35a5/all-MiniLM-L6-v2.fxbx",
+    "author_sha256": "d060ad42ac0ef293ee3e67608b087c16ecc06a4098c1ecba7289d3ed56040824"
+  }
+}
+```
+
+JSON에 없는 별도 검증 필드를 임의로 추가하면 strict allowlist에 걸린다. 필요한 검증 범위·입력 조건·weight 연결은 `model.readme`의 설명과 그 안에서 가리키는 고정 버전 사용 문서·보고서에 싣는다. 원본 `model-catalog/embedding.json`은 항목 목록이며 각 행이 `entry`와 `published_on`을 감싼다. `add` 입력에는 **그 바깥 목록이나 게시 날짜가 아니라 위의 publication 객체 한 개**를 제공한다.
+
+| 필드 | 자기 모델에서는 어디에서 값을 얻는가 | 검사와 해석의 경계 |
+|---|---|---|
+| `schema_version` | 카탈로그 publication 형식의 숫자 1 | 패키지의 `execution-plan.v1/v2`와 별개다. |
+| `model.name`, `short_description`, `readme` | 실제 모델명, 용도, 고정 사용법·검증 기록 | 지원한 shape와 실행·미실행 범위를 한국어로 적는다. |
+| `model.category`, `cover_url` | 표시용 분류·이미지 URL; 예시는 `Other`와 빈 문자열 | 저장 분류는 `add --category embedding` 같은 별도 선택으로 결정할 수 있다. |
+| `model.source_repo`, `source_revision` | 원본 모델 저장소와 실제 사용한 40자리 commit | 게시할 HF artifact 저장소의 commit과 혼동하지 않는다. |
+| `model.source_license`, `package_license` | 원본 모델과 배포 패키지에 적용되는 라이선스 | 둘 다 확인하며 다른 예제의 라이선스를 그대로 쓰지 않는다. |
+| `release.version`, `target`, `precision` | 자기 산출물의 릴리스 이름, 목표 장치, 실제 정밀도 | 여기의 문자열을 바꾼다고 바이너리나 품질이 바뀌지 않는다. |
+| `release.sdk_version`, `runtime_version` | 생산·검증에 사용한 실제 환경 | 위 MiniLM 값은 새 설치의 권장 버전 안내가 아니다. |
+| `release.adapter`, `weights_mode` | 이 경로라면 `execution_plan`, `external` | 실행계획 소비자와 외부 weight가 필요함을 표시한다. |
+| `release.artifact_url`, `author_sha256` | HF의 40자리 고정 revision을 포함한 resolve URL, 최종 `.fxbx` bytes의 SHA-256 | `record`는 형식만 검사한다. 실제 다운로드 bytes와 해시 대조·NPU 검증은 별도로 한다. |
+
+Tiny의 세 파일을 이 계약에 대응시키면 `tiny.fxbx`의 고정 URL·해시는 `release.artifact_url`·`author_sha256`에 들어간다. `tiny-state.pt`와 `tiny-cases.pt`에는 각각 전용 필드가 없다. 함께 배포한 고정 `USAGE.md`에서 두 파일의 경로·해시, `verify_tiny.py` 실행 방법, `weights=...`의 target 이름을 설명하고 그 문서를 `model.readme`에서 연결한다. 외부 원본 checkpoint를 그대로 쓰는 실제 모델이라면 그 revision과 tensor 이름 연결도 사용 문서에 명시한다. 이 메타데이터로 weight나 테스트 파일이 자동 포함되지는 않는다.
+
+앞의 legacy `publish --prepare` 초안에는 `hf_namespace`, `model`, `release`, `license_review`, `license_files`가 들어간다. 반면 위 publication은 `schema_version`, `model`, `release`만 받으며, `release`에 고정 `artifact_url`·`author_sha256`이 추가된다. 그래서 prepare 초안을 그대로 `catalog_store.py add`에 넘기지 않는다. [두 JSON 사이의 실제 생성 단계](https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/forge_fxbex/publish.py#L61-L78) · [게시 후 publication 조립](https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/forge_fxbex/publish.py#L263-L264) 새 execution-plan 바이너리를 legacy 게시기가 검증해 주는 방법도 아니다. 파일 bytes·가중치·사용법·검증 범위를 검토한 뒤 **자기 항목의 값으로 작성한** `reviewed-publication.json`을 다음 로컬 명령에 넘긴다. 다음은 FuryAwesome checkout에서 실행할 문서 예이며 이번 문서 작업에서 실행하거나 원격 게시하지 않았다.
 
 ```bash
 # 검토한 메타데이터를 embedding 분류에 추가하고 파생 목록 파일을 함께 갱신한다.
@@ -436,6 +550,7 @@ git diff -- README.md model-catalog catalog.json models place-catalog.json  # �
 
 | 근거 | 확인 위치 |
 |---|---|
+| factory와 wrapper 이름 계약 | [feature_probe.py](https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/compiler_engine/feature_probe.py), [PyTorch state_dict 재귀](https://github.com/pytorch/pytorch/blob/449b1768410104d3ed79d3bcfe4ba1d65c7f22c0/torch/nn/modules/module.py#L2264-L2271) |
 | FuryAwesome 소개와 모델별 실행 | [README](https://github.com/smallstep-zzz/furyawesome/blob/c668ecbceac2bedd04c6e539c1a5509a404a464d/README.md), [MiniLM](https://github.com/smallstep-zzz/furyawesome/blob/c668ecbceac2bedd04c6e539c1a5509a404a464d/usage/all-minilm-l6-v2.md), [Depth Anything](https://github.com/smallstep-zzz/furyawesome/blob/c668ecbceac2bedd04c6e539c1a5509a404a464d/usage/depth-anything-v2-small-hf.md) |
 | 카탈로그 분류·생성과 웹 읽기 | [catalog_store.py](https://github.com/smallstep-zzz/furyawesome/blob/c668ecbceac2bedd04c6e539c1a5509a404a464d/scripts/catalog_store.py), [catalog.js](https://github.com/smallstep-zzz/furyawesome/blob/c668ecbceac2bedd04c6e539c1a5509a404a464d/site/dist/catalog.js), [기여 안내](https://github.com/smallstep-zzz/furyawesome/blob/c668ecbceac2bedd04c6e539c1a5509a404a464d/CONTRIBUTING.md) |
 | 포팅 요청 수집과 skill 흐름 | [requests.py](https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/forge_fxbex/requests.py), [SKILL.md](https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/skills/rngd-model-porting/SKILL.md) |

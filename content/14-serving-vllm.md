@@ -58,6 +58,49 @@ print(physical_block, slot_in_block)  # 7 1
 
 반면 **bucket(컴파일 규격 묶음)은** “이 실행물은 이 정도 크기의 입력을 처리한다”는 계산 규격이다. 설명용 실행 규격이 토큰 행 1·4·8개라면 유효 행 3개를 처리할 때 4행 규격을 선택하고 1행을 padding(빈 자리 채우기)할 수 있다. 이 수는 위의 KV 블록 번호와 무관하다. **Row packing(행 모으기)은** 여러 요청의 유효 토큰 벡터를 실행 배열의 행에 배치하는 과정이고, **layout(메모리 배치)은** 그 논리적 행·열을 실제 메모리에서 어떤 순서로 저장하는지 뜻한다. 같은 shape라도 저장 순서가 다르면 엔진에 넘기는 주소 계산이 달라진다. [block·row 계약](https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/docs/engine/python.md)
 
+#### 모은 행을 다시 요청으로 돌려놓는다
+
+A의 입력이 두 토큰, B의 입력이 한 토큰이고 4행 bucket을 골랐다고 하자. 값 배열만 이어 붙이면 “세 번째 행이 B의 첫 토큰”이라는 정보를 잃는다. 그래서 **행의 값과 함께 행의 소유자·논리 위치·유효성을 대응시켜야 한다.** 다음은 두 요청의 prefill만 묶는 교육용 배치다. 실제 엔진의 인자 순서나 메모리 ABI(Application Binary Interface)를 제시한 표는 아니다.
+
+| 실행 배열의 행 | 요청 | 요청 안의 토큰 위치 | 유효한 행인가? | 참조할 KV block table | 다음 토큰 선택에 쓸 행인가? |
+|---|---|---:|---|---|---|
+| 0 | A | 0 | 예 | A의 `[2,7]` | 아니오: A에 뒤 토큰이 더 있음 |
+| 1 | A | 1 | 예 | A의 `[2,7]` | 예: A의 마지막 입력 위치 |
+| 2 | B | 0 | 예 | B의 `[4]` | 예: B의 마지막 입력 위치 |
+| 3 | 없음 | 의미 없음 | 아니오: padding | 없음 | 아니오 |
+
+행 2의 요청 내 위치는 2가 아니라 **0**이다. 따라서 B의 첫 KV를 B의 block table로 찾아야 한다. attention도 같은 요청에서 볼 수 있는 위치만 참고해야 하므로 A의 위치들과 B의 위치들을 하나의 긴 문장처럼 섞으면 안 된다. padding 행은 계산 규격을 맞추는 자리이며 유효 출력이나 KV 갱신으로 세지 않는다.
+
+모델이 이 예에서 **각 행의 후보별 logits를 돌려준다**고 가정하자. A에는 행 1, B에는 행 2의 logits를 사용해 다음 토큰을 선택한다. [row_packing_demo.py](../examples/row_packing_demo.py)는 이 마지막 대응만 실행하는 순수 Python 예다. logits는 직접 만든 숫자이며 모델 추론 결과가 아니다.
+
+```python
+# 실행 행 → (요청 ID, 요청 안 위치, 유효 여부)의 교육용 대응표
+rows = [("A", 0, True), ("A", 1, True), ("B", 0, True), (None, 0, False)]
+logits = [
+    [3.0, 1.0, 0.0],  # 행 0: A의 중간 위치이므로 다음 토큰 선택에는 쓰지 않는다.
+    [0.0, 4.0, 1.0],  # 행 1: A의 마지막 입력 위치 → 후보 번호 1
+    [5.0, 1.0, 0.0],  # 행 2: B의 마지막 입력 위치 → 후보 번호 0
+    [99.0, 99.0, 99.0],  # 행 3: 큰 숫자가 있어도 padding이므로 제외한다.
+]
+last_row = {}
+for row_index, (request_id, position, valid) in enumerate(rows):
+    if not valid:
+        continue
+    previous = last_row.get(request_id)
+    # 실행 배열의 마지막 행이 아니라, 요청별 가장 큰 논리 위치를 선택한다.
+    if previous is None or position > rows[previous][1]:
+        last_row[request_id] = row_index
+next_candidate = {
+    request_id: max(range(len(logits[row])), key=lambda j: logits[row][j])
+    for request_id, row in last_row.items()
+}
+assert last_row == {"A": 1, "B": 2}
+assert next_candidate == {"A": 1, "B": 0}
+print(last_row, next_candidate)
+```
+
+입력의 행을 모으는 표와 출력의 행을 되돌리는 표가 같은 요청 ID를 공유한다. 실제 엔진이 마지막 행만 반환하거나 장치에서 곧바로 토큰을 선택하면 반환 형식은 달라지지만, 요청·위치·KV·출력을 연결해야 하는 문제는 남는다. 위 예는 prefill과 decode를 임의로 섞는 기능을 보장하지 않는다. 현 플러그인의 실제 행 구성과 반환 계약은 `generation/sequence.py`와 엔진 Python 문서에 정의되어 있다. [요청 변환 코드](https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/integrations/furiosa-opt-vllm/furiosa_opt_vllm/generation/sequence.py) · [엔진의 rows·block 계약](https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/docs/engine/python.md)
+
 cache 용량도 계산해 볼 수 있다. **Head(헤드)는** attention이 서로 다른 벡터 묶음으로 정보를 비교하는 계산 단위다. 여기서는 K·V 벡터 묶음의 수를 KV head 수라고 부른다. 설명용으로 한 layer의 KV head가 2개, head당 벡터 길이가 4, 원소가 2바이트라면 토큰 하나는 `K와 V 2종 × head 2개 × 원소 4개 × 2바이트 = 32바이트`다. 토큰 3개는 96바이트이며 layer 수와 동시 요청 수가 늘면 그만큼 누적된다. 실제 모델의 head 수·dtype(원소 자료형)를 넣어야 실제 용량이 된다. 그래서 요청이 끝났을 때 cache를 회수하지 못하는 버그는 서버 메모리가 계속 증가하는 원인이 된다.
 
 ```mermaid
@@ -127,26 +170,73 @@ furiosa = "furiosa_opt_vllm:register"
 
 예전 SDK 환경에 이 dependency를 섞기보다 별도 virtual environment에서 사용한다. CPU wheel이라는 이름은 “모델 본체를 CPU에서 실행한다”는 뜻이 아니다. 이 플러그인은 vLLM의 host scheduler/sampling 기반을 사용하고 모델 본체는 Furiosa 엔진으로 보낸다.
 
-공식 설치 문서가 제시한 compiler 설치 진입점은 다음이다. `cargo-binstall`이 준비되어 있어야 한다. 이 명령은 preview 기본 branch의 snapshot을 받으므로, **고정한 모델 저장소의 Cargo revision과 맞는 compiler인지 확인해야 한다.** 나중에 재현할 때 해당 snapshot을 확보하지 못하면 임의 최신 compiler로 성공을 가정하지 않는다.
+### 요구 commit과 설치 버전은 같은 문자열이 아니다
 
-```bash
-cargo binstall --git https://github.com/furiosa-ai/furiosa-opt-preview cargo-furiosa-opt
-```
+공식 설치 문서의 `cargo binstall --git https://github.com/furiosa-ai/furiosa-opt-preview cargo-furiosa-opt`는 preview 기본 branch의 manifest를 읽는다. 문서를 나중에 재현할 때는 그 branch가 이동했을 수 있으므로, 여기서는 **고정 commit에서 읽은 manifest로 배포 바이너리를 고르는 방식**을 쓴다. `cargo-binstall`은 미리 빌드된 Rust 실행 파일을 설치하는 도구이며, 아래 `--manifest-path`는 로컬 `Cargo.toml`의 패키지·다운로드 메타데이터를 읽는 실제 옵션이다. `--git`과 함께 쓰지 않는다. [공식 설치 진입점](https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/docs/getting-started/installation.md) · [binstall 인자 계약](https://github.com/cargo-bins/cargo-binstall/blob/17717041b8b8d177fd061e56dc8c40abe41120f2/crates/bin/src/args.rs) · [manifest 버전 선택](https://github.com/cargo-bins/cargo-binstall/blob/17717041b8b8d177fd061e56dc8c40abe41120f2/crates/binstalk/src/ops/resolve.rs)
 
-모델 저장소와 플러그인을 설치한다.
+이 snapshot에서 대조할 값은 다음과 같다. 아래는 저장소에서 읽은 값이며 이 문서 작성 환경에 compiler를 설치해 관측한 출력이 아니다.
+
+| 식별자 | 고정 소스의 값 | 무엇을 식별하는가? |
+|---|---|---|
+| 모델 저장소 commit | `c982976100d18d7a9641d5a8c22b89cec4544049` | 모델·플러그인 코드 묶음 |
+| 그 저장소가 요구하는 preview commit | `9481ae2db8c465b9c7008dcfa787721982789d3e` | `furiosa-opt-std`와 compiler snapshot의 기준 |
+| 그 preview의 compiler package version | `0.9.0+g3a4b00bb` | 배포 바이너리와 설치 기록에서 대조할 버전 |
+| 그 preview의 Rust toolchain | `nightly-2026-05-01` | compiler가 사용하는 Rust nightly |
+
+즉 `9481ae…`와 `0.9.0+g3a4b00bb`가 문자열로 같아야 하는 것이 아니다. **첫 값의 commit에서 읽은 manifest가 두 번째 버전을 가리키는 연결**을 확인한다. 그 버전의 공개 release도 존재한다. preview의 `cargo-furiosa-opt/src/main.rs`는 설치 방법을 알리고 종료하는 stub이므로, 이 공개 저장소를 일반 `cargo install --git`로 소스 빌드하는 것을 배포 compiler 확보와 혼동하지 않는다. [고정 manifest](https://github.com/furiosa-ai/furiosa-opt-preview/blob/9481ae2db8c465b9c7008dcfa787721982789d3e/cargo-furiosa-opt/Cargo.toml) · [Rust toolchain](https://github.com/furiosa-ai/furiosa-opt-preview/blob/9481ae2db8c465b9c7008dcfa787721982789d3e/rust-toolchain.toml) · [배포 release](https://github.com/furiosa-ai/furiosa-opt-preview/releases/tag/v0.9.0%2Bg3a4b00bb) · [공개 stub](https://github.com/furiosa-ai/furiosa-opt-preview/blob/9481ae2db8c465b9c7008dcfa787721982789d3e/cargo-furiosa-opt/src/main.rs)
+
+### 고정 manifest로 설치한 뒤 실제 호출 경로를 확인한다
+
+앞 표의 OS·cross-toolchain·uv·rustup·cargo-binstall이 준비된 새 작업 디렉터리에서 실행한다. 아래 두 저장소는 이웃 디렉터리에 놓인다.
 
 ```bash
 git clone https://github.com/furiosa-ai/furiosa-opt-models
 cd furiosa-opt-models
 git checkout c982976100d18d7a9641d5a8c22b89cec4544049
-uv venv  # 이 저장소 조합을 위한 독립 Python 환경 생성
+uv venv  # 이 조합을 위한 새 Python 환경을 만든다.
 source .venv/bin/activate
-# Rust 빌드가 사용할 Furiosa compiler 진입점을 지정한다.
-CARGO=cargo-furiosa-opt uv pip install --torch-backend cpu ./integrations/furiosa-opt-vllm
+git clone https://github.com/furiosa-ai/furiosa-opt-preview ../furiosa-opt-preview
+git -C ../furiosa-opt-preview checkout 9481ae2db8c465b9c7008dcfa787721982789d3e
+# 두 checkout의 실제 commit을 위 표와 대조한다.
+git rev-parse HEAD
+git -C ../furiosa-opt-preview rev-parse HEAD
+rustup toolchain install nightly-2026-05-01
+# --force는 기존 설치 기록이 있어도 이 manifest의 바이너리를 다시 설치한다.
+cargo binstall --force \
+  --manifest-path ../furiosa-opt-preview/cargo-furiosa-opt/Cargo.toml \
+  cargo-furiosa-opt
+# cargo-furiosa-opt v0.9.0+g3a4b00bb 항목이 있는지 확인한다.
+cargo install --list
+# 실제 실행되는 바이너리가 방금 설치한 경로인지 확인한다.
+command -v cargo-furiosa-opt
+```
+
+`cargo install --list`는 Cargo 설치 기록의 패키지와 버전을 보여 준다. 반면 `command -v`는 현재 shell의 PATH에서 선택되는 실행 파일을 보여 준다. 기록이 맞아도 PATH 앞쪽의 다른 바이너리를 호출하면 다른 compiler를 쓰게 된다. 수동 복사 등으로 설치 기록이 없는 경우에는 이 목록만으로 버전을 증명할 수 없다. 확인할 수 없는 상태에서는 serving으로 넘어가지 않고 위의 고정 설치 경로부터 정리한다. [Cargo의 설치 목록·설치 위치 계약](https://doc.rust-lang.org/cargo/commands/cargo-install.html)
+
+이후 같은 모델 저장소 루트와 가상환경에서 플러그인을 빌드한다. `--no-cache`는 uv의 이전 wheel cache를 읽지 않도록 하는 옵션이다. 이 절에서는 새 checkout·새 가상환경을 전제로 하며 기존 컴파일 결과의 재사용 여부를 숨기지 않는다.
+
+```bash
+# CARGO는 plugin 빌드가 호출할 compiler 진입점이다. -v로 빌드 과정을 확인한다.
+CARGO=cargo-furiosa-opt uv pip install -v --no-cache --torch-backend cpu \
+  ./integrations/furiosa-opt-vllm
+# import 검사는 장치를 열지 않는다.
 python -c "import furiosa_opt_engine as e; print(e.LoadOptions())"
 ```
 
-마지막 import 검사는 장치를 열거나 모델을 실행하지 않는다. plugin 설치는 engine과 model function을 컴파일하므로 빌드 시간이 든다. compiler mismatch 메시지가 나면 revision을 맞추고 재시도한다. driver mismatch도 실제 사례가 있다. 포럼에서는 opt 0.8.1과 구형 driver 2026.3.1 조합이 장치를 열지 못했고 2026.4.0 driver가 필요하다고 안내했다. 이 과거 사건을 현재 모든 버전의 호환표로 일반화하지 않는다. [공식 설치 흐름](https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/docs/getting-started/installation.md) · [Furiosa 포럼](https://forums.furiosa.ai/t/furioa-opt-support-matrix-driver-version/464)
+[uv cache 옵션](https://docs.astral.sh/uv/reference/cli/) · [plugin 빌드·import 계약](https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/docs/getting-started/installation.md)
+
+### 성공 여부를 세 단계로 나누어 판정한다
+
+| 관측 결과 | 알 수 있는 것 | 다음 행동 |
+|---|---|---|
+| 설치 기록이 위 버전이고 PATH도 해당 설치를 가리킴 | 의도한 compiler 배포본을 선택했는지 1차 대조함 | plugin의 실제 커널 빌드 로그 확인 |
+| 빌드에 `this kernel was expanded by rev …, but the driver is rev …` 발생 | 커널을 전개한 compiler 측 revision과 실행 compiler 측 revision이 다름 | 두 checkout·설치 manifest·PATH를 맞추고 다시 빌드. serving으로 진행하지 않음 |
+| 새 빌드 성공, engine import 성공 | 커널 빌드와 Python 엔진 적재 단계 통과 | 다음 절의 지원 모델로 실제 장치 실행 확인 |
+| 장치를 열 때 RNGD driver 호환 오류 | 호스트 kernel driver·firmware 등 장치 stack의 호환성 문제 | 사용 SDK의 설치 조건과 장치 로그 확인 |
+
+위 오류 문장의 `driver`는 **compiler driver**를 가리킨다. OS가 NPU를 관리하는 RNGD kernel driver의 `2026.4` 같은 버전과 같은 식별자가 아니다. 두 문제를 구별해야 compiler를 다시 설치해도 해결되지 않는 장치 적재 오류를 진단할 수 있다. plugin 설치는 engine과 model function을 컴파일하므로 시간이 걸리며, import 성공만으로 NPU 실행을 증명하지 않는다.
+
+실제 과거 포럼 사례에서는 opt 0.8.1과 구형 RNGD driver 2026.3.1 조합이 장치를 열지 못했고 2026.4.0 driver가 필요하다고 안내했다. 이 사건을 현재 모든 버전의 호환표로 일반화하지 않는다. 이 절의 설치 명령은 공개 manifest·CLI·빌드 계약을 대조한 절차이며, 본 문서 작성 세션에서 SDK 설치나 NPU 실행을 수행한 기록은 아니다. [Furiosa 포럼](https://forums.furiosa.ai/t/furioa-opt-support-matrix-driver-version/464)
 
 ## 5. 먼저 지원 모델로 HTTP 왕복을 확인한다
 
@@ -230,4 +320,7 @@ TTFT(Time To First Token)는 요청 접수부터 첫 토큰까지의 시간이�
 | [parallelism tests](https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/integrations/furiosa-opt-vllm/tests/test_parallelism.py) | 구현된 제한적 병렬성 |
 | [Furiosa driver 포럼](https://forums.furiosa.ai/t/furioa-opt-support-matrix-driver-version/464) | 과거 버전 호환 문제 |
 | [FHA adoption 기록](https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/docs/FURIOSA_OPT_MODELS_ADOPTION_PLAN.md) | 우리 통합 경계 — 접근 권한 필요 |
+| [preview compiler manifest](https://github.com/furiosa-ai/furiosa-opt-preview/blob/9481ae2db8c465b9c7008dcfa787721982789d3e/cargo-furiosa-opt/Cargo.toml), [toolchain](https://github.com/furiosa-ai/furiosa-opt-preview/blob/9481ae2db8c465b9c7008dcfa787721982789d3e/rust-toolchain.toml) | 요구 revision→배포 버전·Rust nightly 대응 |
+| [cargo-binstall args](https://github.com/cargo-bins/cargo-binstall/blob/17717041b8b8d177fd061e56dc8c40abe41120f2/crates/bin/src/args.rs), [버전 선택](https://github.com/cargo-bins/cargo-binstall/blob/17717041b8b8d177fd061e56dc8c40abe41120f2/crates/binstalk/src/ops/resolve.rs) | 로컬 manifest를 사용하는 설치 계약 |
+| [Cargo install](https://doc.rust-lang.org/cargo/commands/cargo-install.html), [uv CLI](https://docs.astral.sh/uv/reference/cli/) | 설치 기록·경로·cache 검증 경계 |
 

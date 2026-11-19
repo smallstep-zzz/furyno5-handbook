@@ -2,7 +2,7 @@
 
 C에서 같은 함수 이름을 호출해도 링크한 구현이나 함수 포인터에 따라 실행 코드가 달라진다. 컴파일러는 여러 문장을 분석해 하나의 더 효율적인 프로그램을 만들 수도 있다. PyTorch를 NPU에 연결하는 방법도 이 두 관점에서 시작하면 이해하기 쉽다. **NPU(Neural Processing Unit)가 PyTorch를 지원한다는 말에는 여러 구현 방식이 들어 있다.** 텐서의 장치 타입을 추가해 연산을 받을 수도 있고, 모델 그래프를 받아 한 덩어리로 컴파일할 수도 있으며, 특정 모델 구조의 가중치·상태·생성 루프를 연결하는 어댑터를 제공할 수도 있다. FuryNo5의 다음 기능을 설계하려면 이 경계를 나누어 비교하는 편이 유용하다.
 
-이 장은 2026-11-19에 확인한 공식 문서와 고정 소스를 비교한다. 각 회사가 제공하는 모든 경로를 열거한 것은 아니며, 아래 예제의 SDK(Software Development Kit)와 장치는 서로 다르다. 이번 문서 작업에서 이들 장비의 성능을 새로 측정하지 않았다. PyTorch의 공통 확장 규약은 [PrivateUse1](https://docs.pytorch.org/tutorials/advanced/privateuseone.html)과 [custom compiler backend](https://docs.pytorch.org/docs/stable/torch.compiler_custom_backends.html), 각 업체의 구현은 절별 출처를 기준으로 한다.
+이 장은 2026-11-19에 확인한 공식 문서와 고정 소스를 비교한다. 각 회사가 제공하는 모든 경로를 열거한 것은 아니며, 아래 예제의 SDK(Software Development Kit)와 장치는 서로 다르다. 이번 문서 작업에서 이들 장비의 성능을 새로 측정하지 않았다. PyTorch의 공통 확장 규약은 [PrivateUse1](https://docs.pytorch.org/tutorials/advanced/privateuseone.html)과 [custom compiler backend](https://docs.pytorch.org/docs/2.15/user_guide/torch_compiler/torch.compiler_custom_backends.html), 각 업체의 구현은 절별 출처를 기준으로 한다.
 
 ## 1. 지원이라는 말을 네 개의 계약으로 나눈다
 
@@ -77,7 +77,7 @@ FuryNo5에 대한 해석은 이렇다. 장치 tensor의 일반 연산 호환성�
 
 ## 3. 방식 B: 그래프를 받아 장치 프로그램으로 컴파일한다
 
-`torch.compile`의 custom backend는 기본적으로 **FX `GraphModule`과 예제 입력을 받아, 같은 호출 계약을 갖는 실행 함수를 반환**한다. 반환 함수가 실제 장치 컴파일러와 런타임을 호출해야 NPU 가속이 생긴다. 다음 코드는 그 경계만 확인하는 CPU(Central Processing Unit) 실습이다. [PyTorch custom backend 규약](https://docs.pytorch.org/docs/stable/torch.compiler_custom_backends.html)
+`torch.compile`의 custom backend는 기본적으로 **FX `GraphModule`과 예제 입력을 받아, 같은 호출 계약을 갖는 실행 함수를 반환**한다. 반환 함수가 실제 장치 컴파일러와 런타임을 호출해야 NPU 가속이 생긴다. 다음 코드는 그 경계만 확인하는 CPU(Central Processing Unit) 실습이다. [PyTorch custom backend 규약](https://docs.pytorch.org/docs/2.15/user_guide/torch_compiler/torch.compiler_custom_backends.html)
 
 
 여기서 `GraphModule`은 “그래프와 그것을 실행하는 Python 함수를 함께 가진 객체”다. backend는 예제 입력을 보고 지원 크기·자료형을 정하며, 변환한 그래프를 실행할 callable을 반환한다. 반환 함수는 **넘겨받은 그래프의 인수·출력 계약**을 지켜야 한다. 원래 모델에 `x` 하나만 있었어도 그래프의 인수에는 가중치·buffer가 별도로 들어올 수 있으므로 원래 Python 함수 시그니처를 추측하면 안 된다.
@@ -114,6 +114,51 @@ print("backend가 받은 그래프 크기:", compile_events)
 `.eval()`은 dropout·정규화처럼 학습/추론 모드가 있는 층을 추론 모드로 놓고, `inference_mode()`는 자동미분 기록을 끈다. `torch.compile` 호출은 실행 준비 객체를 만들며 보통 첫 실제 입력 호출에서 캡처와 backend 작업을 진행한다. 이후 조건이 같으면 준비 결과를 재사용할 수 있다. 새 shape·상태로 가정이 바뀌면 재컴파일이 필요할 수 있다.
 
 코드는 그래프 표현과 backend에 전달된 노드 수를 출력하고, 두 번의 출력 비교가 맞지 않으면 오류를 낸다. 노드 수나 backend 호출 횟수를 모든 PyTorch 버전에서 같은 상수라고 가정하지 않는다. 이 예제로 컴파일 경계의 위치를 볼 수 있지만 성능 개선을 증명한 것은 아니다. 실제 backend는 허용 shape·dtype·stride, 모델 상태, 재컴파일 조건, 실패 시 동작을 함께 정의해야 한다. 다운로드 가능한 같은 실습은 [inspect_fx_backend.py](../examples/inspect_fx_backend.py)에 있다.
+
+### 원래 함수의 인수와 캡처한 함수의 인수를 연결한다
+
+위 `print(graph_module.code)`를 읽을 때는 **사용자가 부르는 함수와 backend가 구현할 함수가 같은 인수 목록인지 먼저 확인**한다. 모델 객체가 멤버로 보관하던 weight·bias가 캡처된 그래프에서는 명시적인 인수로 나타날 수 있다. 모델이 반환한 tensor 한 개가 그래프 내부에서는 한 원소 tuple 같은 컨테이너로 반환될 수도 있다. backend는 전달받은 `GraphModule.forward`의 계약을 그대로 맞추고, 바깥의 컴파일 실행 경로가 사용자 호출과 그 내부 호출을 연결한다.
+
+아래는 숫자 하나를 `x×weight+bias`로 바꾸는 **호출 구조 설명용 예**다. 위 MLP(Multi-Layer Perceptron)의 실제 출력 코드를 관측해 옮긴 것이 아니며, 모든 PyTorch 버전이 같은 인수 순서·tuple 형태를 만든다는 뜻도 아니다.
+
+| 경계 | 설명용 함수 형태 | 이 경계를 호출하는 쪽의 책임 |
+|---|---|---|
+| 사용자 모델 | `model(x) → y` | x만 전달. weight·bias는 모델 상태 |
+| 캡처된 그래프 | `forward(weight,bias,x) → (y,)` | 세 인수를 올바른 순서로 전달하고 한 원소 컨테이너 받기 |
+| backend가 반환한 callable | 위 캡처 그래프와 같은 계약 | 가속 여부와 관계없이 입력 순서·출력 구조 유지 |
+| 사용자에게 돌아갈 결과 | 다시 `y` | 내부 결과를 원래 모델의 반환 구조로 복원 |
+
+tuple의 `(y,)`에서 쉼표는 “원소 하나의 tuple”을 만든다. `(y)`는 괄호로 감싼 y 자체다. backend가 첫 형태를 요구받았는데 y만 반환하면 값이 7로 같아 보여도 호출자가 기대하는 출력 구조는 깨진다. Python의 리스트·tuple도 함수 인터페이스의 일부다.
+
+[captured_call_contract_demo.py](../examples/captured_call_contract_demo.py)는 외부 패키지 없이 이 대응을 실행한다. 여기서 `user_wrapper`는 역할을 보여 주기 위해 직접 쓴 함수이며 PyTorch 내부 구현을 복제한 코드가 아니다.
+
+```python
+weight, bias = 2, 1  # 원래 모델 객체가 보관한다고 가정한 스칼라 상태
+
+def original_model(x):
+    return x * weight + bias  # 사용자 계약: 인수 하나, 숫자 하나 반환
+
+def captured_forward(weight_arg, bias_arg, x_arg):
+    y = x_arg * weight_arg + bias_arg
+    return (y,)  # 이 설명용 캡처 그래프의 계약: 인수 셋, 한 원소 tuple 반환
+
+def example_backend(graph_forward):
+    # 실제 backend 함수의 (GraphModule, example_inputs) API가 아닌 역할 설명용 함수다.
+    return graph_forward  # 실제 backend도 받은 그래프의 호출 계약을 보존해야 한다.
+
+backend_callable = example_backend(captured_forward)
+
+def user_wrapper(x):
+    internal_outputs = backend_callable(weight, bias, x)  # 바깥 상태를 내부 인수로 연결
+    (y,) = internal_outputs  # 내부 반환 구조를 풀어 원래 사용자 출력으로 연결
+    return y
+
+assert captured_forward(2, 1, 3) == (7,)
+assert user_wrapper(3) == original_model(3) == 7
+print(captured_forward(2, 1, 3), user_wrapper(3))  # (7,) 7
+```
+
+실제 실습에서는 위의 이름·순서를 추측해 하드코딩하지 않고, 출력한 `graph_module.code`의 `forward` 인수와 `return`을 읽는다. 앞의 `inspect_backend`가 `graph_module.forward`를 그대로 반환하는 이유도 그 계약을 보존하기 위해서다. NPU용 callable로 바꿀 때는 해당 인수들을 장치 입력·상수·상태로 연결하고, 결과를 **그 그래프가 요구한 구조**로 돌려줘야 한다. 단일 tensor를 반환하는 원래 모델과 내부 그래프의 반환 컨테이너를 무조건 같다고 간주하지 않는다. [PyTorch backend 호출 계약](https://docs.pytorch.org/docs/2.15/user_guide/torch_compiler/torch.compiler_custom_backends.html) · [확인한 소스 본문](https://github.com/pytorch/pytorch/blob/449b1768410104d3ed79d3bcfe4ba1d65c7f22c0/docs/source/user_guide/torch_compiler/torch.compiler_custom_backends.md)
 
 ### Rebellions: 명시적 컴파일과 `torch.compile` 경로
 
@@ -235,7 +280,7 @@ FHA(Furiosa-Hug-Anything)와 비교할 지점도 여기에 있다. 모델을 찾
 | 자료 | 확인한 범위 |
 |---|---|
 | [PyTorch PrivateUse1](https://docs.pytorch.org/tutorials/advanced/privateuseone.html) | 외부 장치 연산·generator·guard·직렬화 통합 |
-| [PyTorch custom backend](https://docs.pytorch.org/docs/stable/torch.compiler_custom_backends.html) | GraphModule·예제 입력·callable 계약 |
+| [PyTorch custom backend](https://docs.pytorch.org/docs/2.15/user_guide/torch_compiler/torch.compiler_custom_backends.html) | GraphModule·예제 입력·callable 계약 |
 | [Ascend 고정 소스](https://github.com/Ascend/pytorch/blob/2373dee2db393489d91d44f5fbefd2d6cef30439/README.md) | TorchNPU의 PrivateUse1과 장치 사용 |
 | [TorchAir-GE](https://www.hiascend.com/document/detail/en/Pytorch/2610/userguide/torchcompile/docs/en/torch_compile/pytorch_torchair_ge_desc.md) | FX→GE 경로와 eager 확인 전제 |
 | [RBLN Quick Start](https://docs.rbln.ai/latest/getting_started/quick_start.html) | 명시적 compile/runtime 및 torch.compile 경로·strict 정책 |

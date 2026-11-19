@@ -23,6 +23,55 @@ FuryBoost는 수치형 입력으로 두 범주를 구별하는 **이진분류** 
 
 정규화 항을 생략한 이 단순 예에서 leaf가 보정할 값 `−G/H`는 각각 1과 3이다. 왜 헤시안으로 나누는지도 이 예에서 확인할 수 있다. 같은 leaf에 속한 두 예측을 모두 δ만큼 바꾸면 gradient 합은 `G+H×δ`가 된다. 왼쪽에서 이를 0으로 만드는 값은 `−2+2×δ=0`, 즉 δ=1이다. 일반 손실에서는 이차 근사와 규제항이 추가될 수 있으므로 이 간단한 식이 모든 boosting 설정의 전체 공식은 아니다. **Gain(분할 이득)은** 이렇게 나눴을 때 손실을 얼마나 더 줄일 수 있을지 평가하는 점수다. 학습기는 여러 특성·경계 후보의 통계를 모아 좋은 후보를 고른다.
 
+#### 후보를 실제로 비교해 분할 이득을 계산한다
+
+지금까지는 후보 `x≤0.5` 하나만 보았다. “좋은 후보를 고른다”는 단계에는 **같은 출발점에서 다른 경계도 평가하는 과정**이 필요하다. 같은 네 행에서 정규화·분할 벌점은 없고, 후보 평가 때의 보정값을 그대로 적용한다고 가정한다. 이 계산에서만 학습률은 1이며 다음 문단의 학습률 0.5와 구분한다.
+
+분할하지 않고 네 행에 같은 값을 주면 최적 보정은 `−G/H=8/4=2`다. 손실은 각 행의 `(예측−정답)²/2`를 더하므로 `(1+1+1+1)/2=2`다. 이제 경계 0.2와 0.5를 시험한다.
+
+| 후보 | 왼쪽·오른쪽 정답 | leaf 보정값 | 보정 뒤 손실 합 | 분할하지 않은 손실 2에서 줄인 양 |
+|---|---|---|---:|---:|
+| 분할 안 함 | `[1,1,3,3]` 한 묶음 | 2 | 2 | 0 |
+| `x≤0.2` | `[1]` / `[1,3,3]` | 1 / `7/3` | `4/3≈1.3333` | `2/3≈0.6667` |
+| `x≤0.5` | `[1,1]` / `[3,3]` | 1 / 3 | 0 | 2 |
+
+0.2 후보의 오른쪽 보정값 `7/3`은 오른쪽 `G=−7,H=3`에서 나온다. 그쪽의 오차는 `4/3,−2/3,−2/3`이고, 제곱한 합의 절반이 `(16/9+4/9+4/9)/2=4/3`이다. 이 조건에서는 0.5의 gain이 가장 크다. **처음의 모두 0인 예측 손실 10과, 분할 없이 최적으로 보정한 손실 2를 혼동하지 않는다.** 위 표의 gain은 후자에서 추가로 줄어든 양이다.
+
+[tree_split_gain_demo.py](../examples/tree_split_gain_demo.py)는 같은 비교를 순수 Python으로 실행한다. 각 후보에서 행을 나누는 부분은 선택 조건이고, `sum` 부분은 통계 집계이며, 마지막 `min`은 후보 선택이다.
+
+```python
+x = [0.1, 0.4, 0.6, 0.9]
+targets = [1.0, 1.0, 3.0, 3.0]
+gradients = [-y for y in targets]  # 현재 예측 0, 제곱 손실이므로 g=0-y
+hessians = [1.0] * len(x)
+
+def leaf_value(indices):
+    g = sum(gradients[i] for i in indices)
+    h = sum(hessians[i] for i in indices)
+    return -g / h  # 이 예의 손실을 최소화하는 같은 leaf의 보정값
+
+def loss(predictions):
+    return sum((p - y) ** 2 / 2 for p, y in zip(predictions, targets))
+
+parent = [leaf_value(range(len(x)))] * len(x)
+parent_loss = loss(parent)  # 분할 없이 한 leaf로 보정한 손실 2
+results = []
+for threshold in (0.2, 0.5):
+    left = [i for i, value in enumerate(x) if value <= threshold]
+    right = [i for i, value in enumerate(x) if value > threshold]
+    # 두 후보 모두 빈 leaf가 없다는 예제 조건 아래 계산한다.
+    lv, rv = leaf_value(left), leaf_value(right)
+    predictions = [lv if value <= threshold else rv for value in x]
+    candidate_loss = loss(predictions)
+    results.append((threshold, candidate_loss))
+    print(threshold, round(candidate_loss, 6), round(parent_loss - candidate_loss, 6))
+assert min(results, key=lambda item: item[1])[0] == 0.5
+# 0.2 1.333333 0.666667
+# 0.5 0.0 2.0
+```
+
+실제 FuryBoost에서는 많은 행·후보의 통계와 gain 계산을 NPU 쪽으로 보내고, 그 결과를 받아 CPU가 최종 후보를 고르는 경계가 있다. 이 toy 계산은 그 경계를 이해하기 위한 것이다. 실제 HIGGS의 이진분류 손실·규제·대칭 트리 제약을 이 회귀 계산으로 대체한 실험은 아니다. [후보 선택과 공통 학습 순서](https://github.com/smallstep-zzz/FuryBoost/blob/62faf49a29cc40230ee3df271b8f91ad8488eb5d/furyboost/training.py)
+
 **Learning rate(학습률)는** 새 트리의 보정값을 현재 예측에 얼마나 반영할지 정하는 배율이다. 이를 0.5로 정해 새 트리 값을 절반만 더하면 예측은 `[0.5,0.5,1.5,1.5]`가 된다. 다음 트리는 이 **갱신된 예측**에서 gradient를 다시 구해야 한다. 이것이 **boosting round(트리를 하나 더하는 반복)** 사이의 순서 의존성이다. 트리 30개를 독립적인 30개 작업으로 동시에 계산할 수 없는 이유다. NPU로 옮기기 좋은 후보는 한 round 안에서 많은 행·분할 후보의 통계를 모으는 계산이다. [학습 순서의 구현](https://github.com/smallstep-zzz/FuryBoost/blob/62faf49a29cc40230ee3df271b8f91ad8488eb5d/furyboost/training.py)
 
 ### Binning과 histogram은 어떤 일을 줄이는가
@@ -146,6 +195,37 @@ warm 6.573초만 원본 입력의 CPU 4.731/3.091초와 비교해 전체 성능 
 [30-tree XGBoost](https://github.com/smallstep-zzz/FuryBoost/blob/62faf49a29cc40230ee3df271b8f91ad8488eb5d/reports/rngd-server3/higgs-dev2/deep-30x5/xgboost.json) · [30-tree LightGBM](https://github.com/smallstep-zzz/FuryBoost/blob/62faf49a29cc40230ee3df271b8f91ad8488eb5d/reports/rngd-server3/higgs-dev2/deep-30x5/lightgbm.json)
 
 이 기록에서는 최적화한 FuryBoost도 시간과 AUC 모두 CPU 비교군을 따라잡지 못했다. 이것을 “RNGD는 tree 학습에 원리적으로 불가능”하다고 일반화할 수는 없지만, 현재 구현이 경쟁력을 입증했다고 말할 수도 없다.
+
+### 타일 조합 수가 EDF 호출 수로 이어지는 작은 예
+
+위의 수백만 호출을 이해하려면 **프로그램 종류 수**, **그 프로그램을 호출한 횟수**, **호출 안에서 한 비교 수**를 나누어 세어야 한다. 다음은 실제 dev4 run의 수치를 역산하는 공식이 아니라, 반복문의 차원을 보여 주는 교육용 예다.
+
+행 8개와 후보 6개가 있고 행 타일·후보 타일의 길이가 각각 2라고 하자. 행 타일은 4개, 후보 타일은 3개다. **한 타일 쌍을 한 EDF 호출로 처리한다는 가정**에서는 `4×3=12`번 호출하며, 한 호출 안에서 `2×2=4`개 비교를 하므로 전체 비교는 48개다. 반대로 인접한 후보 타일 세 개를 한 호출에 묶으면 행 타일마다 한 번, 총 4번 호출 안에 같은 48개 비교를 담을 수 있다.
+
+| 교육용 방식 | 행 타일 수 | 한 행 타일당 호출 수 | 전체 호출 수 | 전체 행·후보 비교 수 |
+|---|---:|---:|---:|---:|
+| 후보 타일 하나씩 호출 | 4 | 3 | 12 | 48 |
+| 후보 타일 세 개를 같은 호출로 묶음 | 4 | 1 | 4 | 48 |
+
+[tile_call_count_demo.py](../examples/tile_call_count_demo.py)는 타일 범위를 리스트로 만들어 개수만 세는 순수 Python이다. EDF를 생성하거나 실행하지 않는다.
+
+```python
+row_tiles = [list(range(start, start + 2)) for start in range(0, 8, 2)]
+candidate_tiles = [list(range(start, start + 2)) for start in range(0, 6, 2)]
+separate_calls = [(rows, candidates) for rows in row_tiles for candidates in candidate_tiles]
+# 한 행 타일에서 후보 타일 3개의 내용을 이어서 다루는 논리적 호출 목록
+all_candidates = [c for tile in candidate_tiles for c in tile]
+grouped_calls = [(rows, all_candidates) for rows in row_tiles]
+
+def comparison_count(calls):
+    return sum(len(rows) * len(candidates) for rows, candidates in calls)
+
+assert len(separate_calls) == 12 and len(grouped_calls) == 4
+assert comparison_count(separate_calls) == comparison_count(grouped_calls) == 48
+print(len(separate_calls), len(grouped_calls), comparison_count(grouped_calls))  # 12 4 48
+```
+
+같은 모양의 EDF 하나를 12번 실행할 수도 있으므로 12회 호출이 12개의 서로 다른 프로그램을 뜻하지 않는다. 반대로 큰 호출 하나는 더 큰 임시 메모리나 긴 실행 시간을 요구할 수 있어 묶기만 하면 무조건 빠른 것도 아니다. 실제 학습에서는 round·깊이·통계 종류별 작업, cache 재사용, 라우팅·예측 갱신 등이 더해진다. 따라서 위의 작은 곱셈만으로 실제 **2,317,884회**를 재구성했다고 주장하지 않는다. dev4의 실측은 바로 위 paired 표이고, 이 표는 호출을 줄이는 원리를 설명한다. [실제 grouped histogram 조건](https://github.com/smallstep-zzz/FuryBoost/blob/62faf49a29cc40230ee3df271b8f91ad8488eb5d/reports/rngd-server3/grouped-histograms/README.md)
 
 ## 6. 실측과 장치 실행 증거를 구분한다
 

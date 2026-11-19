@@ -259,6 +259,37 @@ for row in rank_hotspots(plan, events, entry="forward", limit=5):
 
 Task 시간의 합은 80 μs지만 두 Task가 겹친 30 μs를 두 번 센 값이다. 요청의 시작부터 결과 반환까지는 70 μs다. 따라서 `task_us` 순위는 계산량이 많이 관측된 후보를 찾는 자료이고, 그 Task를 줄였을 때 요청 시간이 정확히 그만큼 줄어든다는 예측은 아니다. 반대로 Task 사이에 큰 빈 구간이 있으면 호스트 준비·데이터 전송·완료 대기 같은 원인도 살핀다. 이 표는 실제 RNGD trace가 아니다.
 
+#### 가장 긴 Task를 줄이면 요청도 그만큼 짧아질까?
+
+위 시간표에서 A와 B의 시작 시각을 각각 10·20 μs로 유지하고, 두 작업이 끝난 뒤 복사에 10 μs가 든다고 하자. 이 가정에서는 요청 완료 시각이 `max(A의 끝, B의 끝)+10`이다. `max`가 필요한 이유는 **두 결과를 모두 요구하는 복사를 더 늦게 끝난 작업보다 먼저 시작할 수 없기 때문**이다.
+
+| 무엇을 바꾸는가? | A의 끝 | B의 끝 | 복사 시작 | 요청 완료 |
+|---|---:|---:|---:|---:|
+| 원래 시간표 | 50 | 60 | 60 | 70 μs |
+| A만 40→20 μs로 단축 | 30 | 60 | 60 | 70 μs |
+| B만 40→20 μs로 단축 | 50 | 40 | 50 | 60 μs |
+
+A를 20 μs 줄여도 B를 기다리는 시간이 남아 요청은 빨라지지 않는다. B를 20 μs 줄이면 이번에는 A가 마지막 완료 작업이 되어 요청은 10 μs만 줄어든다. 이처럼 의존 관계와 대기 때문에 **최종 완료 시점을 결정하는 경로를 critical path(임계 경로)라고** 한다. 원래 표에서는 B가 끝나야 시작하는 복사가 그 경로에 놓인다. B를 충분히 줄인 뒤에는 A 쪽이 새 제한이 된다.
+
+[critical_path_demo.py](../examples/critical_path_demo.py)는 이 시간표의 산술을 실행한다. 실시간 지연을 재거나 NPU 스케줄러를 흉내 내는 프로그램은 아니다.
+
+```python
+def completion_us(duration_a, duration_b):
+    start_a, start_b = 10, 20  # 시작 시각은 세 비교에서 같다고 가정
+    copy_us = 10  # 두 결과가 준비된 뒤에만 시작하는 마지막 복사 시간
+    end_a = start_a + duration_a
+    end_b = start_b + duration_b
+    return max(end_a, end_b) + copy_us
+
+original = completion_us(40, 40)
+faster_a = completion_us(20, 40)
+faster_b = completion_us(40, 20)
+assert (original, faster_a, faster_b) == (70, 70, 60)
+print(original, faster_a, faster_b)  # 70 70 60
+```
+
+따라서 trace에서 큰 Task를 찾은 뒤에는 그 출력이 무엇의 시작을 막는지, 다른 병렬 작업이 아직 남는지 확인한다. 실제 최적화에서는 자원 경쟁이 줄어 다른 작업의 시작 시각까지 바뀔 수 있으므로 위 수식을 모든 trace에 기계적으로 적용하지 않는다. **시간의 합은 처리한 일의 크기를 설명하고, 겹침과 의존성은 요청이 끝나는 시점을 설명한다.** 둘을 함께 본 뒤 전체 완료 시간을 다시 측정해야 한다.
+
 ## 실습 6. trace와 별개로 완료 시간을 잰다
 
 다음 함수는 **반환 시 실제 결과가 완료된 callable**을 측정한다. 일반 비동기 launch 함수는 작업을 큐에 넣은 뒤 계산이 끝나기 전에 반환할 수 있다. 그런 함수에 그대로 사용하면 택배 접수 시간만 재고 배송 완료 시간이라고 부르는 셈이므로 부적절하다. fxbX의 CPU 결과를 반환하는 `predict` 경로처럼 완료가 확인되는 함수를 전달하거나, 장치 resident 경로의 공식 완료 대기를 callable 안에 넣는다.
@@ -290,6 +321,59 @@ def measure_completed(call, *, warmup=5, repeats=30):
 함수의 입력은 인수가 없는 callable이고, 반환값은 nanosecond 단위 표본·중앙값·p95다. `warmup`은 최초 적재나 캐시 준비가 섞인 호출을 측정 표본에서 빼기 위해 먼저 호출하는 횟수다. 이것은 최초 비용을 없애는 것이 아니라 **warm 구간과 분리해서 기록**하는 것이다. p95는 정렬한 표본의 약 95%가 그 이하에 놓이는 지점이다.
 
 30회는 튜토리얼 시작값이지 tail latency를 확정하기에 충분하다는 보장이 아니다. 짧은 kernel은 여러 호출을 한 block으로 묶어 측정 비용을 줄이고, A/B/B/A처럼 순서를 바꾸어 시스템 변화의 영향을 관찰한다. compile·profiling과 성능 측정을 같은 CPU 자원에서 동시에 수행하면 host contention이 섞일 수 있다. FuryNo5의 보존된 runtime 선택 실험도 준비와 측정 구간을 나누었다. [실측 프로토콜](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/RUNTIME_SELECTION.md)
+
+### 상태를 가진 함수를 반복해서 재는 경우
+
+위 측정 함수는 callable을 여러 번 부르지만 **요청 상태를 초기화하지는 않는다.** KV cache나 누적값을 바꾸는 함수를 넣으면 warm-up도 상태를 바꾼다. 컴파일 결과·가중치가 준비된 warm 상태와, 새 요청의 KV가 비어 있는 초기 상태는 서로 다른 조건이다.
+
+가장 작은 예로 호출할 때마다 `state += 1`을 하는 함수를 보자. 초기값 0에서 warm-up을 두 번 하면 상태는 2다. 그 뒤 세 번을 그냥 재면 결과는 3·4·5이며, “초기 상태에서 같은 작업 세 번”이 아니다.
+
+| 측정 목적 | warm-up 후 준비 | 세 표본의 호출 직전 상태 | 표본 결과 |
+|---|---|---|---|
+| 서로 독립인 새 요청의 실행 시간 | 각 표본 전에 요청 상태를 0으로 초기화 | 0, 0, 0 | 1, 1, 1 |
+| 이미 진행 중인 한 세션의 다음 단계 | 초기 상태 2를 기록하고 계속 진행 | 2, 3, 4 | 3, 4, 5 |
+
+LLM의 연속 decode라면 길이 2·3·4의 KV를 읽는 단계들의 작업량이 달라질 수 있다. 그런 표본을 모두 같은 길이의 반복이라고 보고하지 않고 **각 표본의 시작 길이·위치와 완료 조건**을 함께 남긴다. 독립 요청 비교라면 같은 입력·같은 초기 상태가 되도록 준비한다. 이때 모델·EDF를 매번 다시 컴파일하라는 뜻은 아니다. 재사용할 실행 준비와 초기화할 요청 상태의 수명을 구별한다.
+
+[stateful_measurement_demo.py](../examples/stateful_measurement_demo.py)는 이 차이를 확인하는 완전한 순수 Python 예제다. 아래 `reset_request`는 우리가 만든 작은 counter의 함수이며 SDK의 reset API가 아니다.
+
+```python
+from time import perf_counter_ns
+
+state = {"counter": 0}
+
+def reset_request():
+    state["counter"] = 0  # 이 예제가 소유한 요청 상태만 초기화
+
+def completed_call():
+    state["counter"] += 1  # 반환 전에 상태 갱신이 완료되는 동기 함수
+    return state["counter"]
+
+def run_case(independent):
+    reset_request()
+    warmup_outputs = [completed_call() for _ in range(2)]  # 결과 1,2와 상태 2를 만듦
+    samples = []
+    for _ in range(3):
+        if independent:
+            reset_request()  # 측정 밖: 이 예는 초기화가 끝난 뒤의 실행만 잰다.
+        before = state["counter"]  # 표본마다 실제 출발 상태를 기록한다.
+        start = perf_counter_ns()
+        output = completed_call()
+        elapsed_ns = perf_counter_ns() - start  # completed_call 완료까지의 구간
+        samples.append((before, output, elapsed_ns))
+    return warmup_outputs, samples
+
+for independent in (True, False):
+    warmup, samples = run_case(independent)
+    transitions = [(before, output) for before, output, _ in samples]
+    expected = [(0, 1), (0, 1), (0, 1)] if independent else [(2, 3), (3, 4), (4, 5)]
+    assert transitions == expected
+    print("independent" if independent else "continuous", warmup, transitions)
+# independent [1, 2] [(0, 1), (0, 1), (0, 1)]
+# continuous [1, 2] [(2, 3), (3, 4), (4, 5)]
+```
+
+표시한 출력은 상태 전이를 검증하기 위한 것이며 counter의 나노초 값을 NPU 성능으로 보고하지 않는다. 측정 목표가 **요청 초기화부터 결과까지의 총시간**이면 초기화도 타이머 안으로 옮겨야 한다. 반대로 실행 자체만 비교할 때는 같은 초기 상태의 준비를 타이머 밖에서 완료한 뒤 시작하고, 제외한 준비 비용을 따로 적는다. 실제 장치에서 초기화·복사가 비동기라면 그 작업의 완료까지 확인해야 준비가 끝난 것이다. 구체적인 초기화·완료 API는 사용하는 runtime의 상태 계약을 따른다. 다음 절의 상태 격리 검사와 이 측정 경계가 같은 기준 상태를 사용해야 한다.
 
 ## 실습 7. 수치 실패는 첫 경계에서 찾는다
 

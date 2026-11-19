@@ -194,6 +194,19 @@ flowchart TB
 
 이 예제는 위 단계의 호출 경계를 보여준다. SDK 내부의 모든 메모리 할당·명령 패치·재배치 처리를 공개 소스 수준으로 해부했다는 뜻은 아니다. 실제 주소 바인딩과 host 실행 파일의 relocation을 구분할 수 있는 **공개 opt 구현 사례**는 [8장](08-eisa-visa.md)에 따로 설명한다.
 
+### `8`, `Single`, `0`은 서로 다른 설정이다
+
+이 실습에서 컴파일 명령은 `renegade-8pe`를 지정했고, 실행 코드는 `set_fusion(8)`, `MeshKind.Single()`, `furiosa:0`을 사용한다. 세 숫자·이름이 모두 장치 개수를 뜻하는 것은 아니다. 특히 `Single`과 8개 PE(Processing Element)는 서로 다른 설정 항목이므로 모순되지 않는다.
+
+| 설정 | 이 실습에서 읽어야 할 의미 | 서로 맞춰 확인하는 곳 |
+|---|---|---|
+| `--target-npu renegade-8pe` | 컴파일할 장치 실행 구성: RNGD의 8-PE 대상 | 이 대상으로 만든 EDF를 사용한다. |
+| `sdk.set_fusion(8)` | SDK에 요청하는 PE 결합 수 설정. 여기서는 8개 PE 구성 | 복원한 프로그램의 `expected_num_fusion`이 8인지 검사한다. |
+| `sdk.MeshKind.Single()` | SDK의 mesh 구성 선택값. mesh는 실행 자원을 구성하는 방식에 관한 별도 항목 | 이 consumer가 확인한 조합은 `fusion=8, mesh=single`이다. |
+| `"furiosa:0"` | 실행 객체와 tensor를 보낼 SDK의 논리 장치 식별자 | 실행 객체와 두 입력을 모두 같은 식별자로 보낸다. |
+
+이 표에서 `8`은 커널 8개나 사용자 요청 8개가 아니고, `0`은 PE 번호가 아니다. `Single`의 모든 내부 배치 규칙이나 논리 장치 번호와 물리 카드 번호의 일반 대응까지 공개 계약으로 확인한 것은 아니다. 따라서 여기서는 이름을 해석해 다른 조합을 만들지 않고, producer와 consumer가 검사한 동일 조합을 유지한다. fxbX의 해당 구현도 장치 식별자 `furiosa:0`과 계획의 `{'fusion': 8, 'mesh': 'single'}`을 제한 조건으로 검사한다. [EDF의 fusion 검사](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/tcl_compiler.py#L112-L134), [fxbX 장치 구성 계약](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py#L158-L161), [지원 장치 식별자와 적재](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py#L307-L422)
+
 ```python
 # run_edf.py — NPU와 호환 SDK가 필요하다.
 from pathlib import Path

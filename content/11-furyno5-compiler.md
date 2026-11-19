@@ -79,6 +79,72 @@ print(report["npu_execution"])  # not_run: 장치 수치 결과가 없음을 명
 
 preflight 중 SDK를 이용한 실제 NPU 실행은 요청하지 않는다. 그러나 설치된 producer와 matching fxbX package는 필요할 수 있다. 규칙에 막히면 `EXECUTION_RULE_GAP`을 던지고, `.plan/preflight.json`, `failure-groups.json`, `operator-inventory.json`에 이유를 남긴다. **앞선 값이 없어 후속 node를 연결하지 못한 오류와 실제 규칙 부재를 따로 기록**한다. 예를 들어 `h` 생성이 막혔다면 ReLU와 마지막 Linear도 값을 받을 수 없지만, 이것이 세 종류의 미지원 연산을 새로 발견했다는 뜻은 아니다. 따라서 미해결 node 수가 모두 독립 커널 개발 과제는 아니다. [진단 생성부](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/execution_plan.py#L1140-L1193)
 
+### 예외가 나서 report를 받지 못했을 때
+
+`report = export_model(...)`의 오른쪽에서 예외가 나면 `report`를 새로 배정하는 줄까지 도달하지 않는다. 따라서 `print(report["status"])`를 이어서 시도하지 말고, 예외의 `details=...` 경로나 출력 이름에서 작업 디렉터리를 찾는다. 위 이름이면 `preflight-only.fxbx.plan/`이다. 패키지 본체가 없어도 이 디렉터리에 실패까지의 진단은 남을 수 있다. 캡처나 환경 확인에서 더 일찍 실패하면 세 JSON이 모두 존재하지 않을 수도 있다.
+
+| 파일 | 먼저 읽을 필드 | 답하려는 질문 |
+|---|---|---|
+| `preflight.json` | `status`, `code`, `first_failures` | 어느 단계에서 멈췄으며 처음 관찰한 실패는 무엇인가? |
+| `failure-groups.json` | 각 항목의 `category`, `op`, `reason`, `occurrences` | 같은 연산·이유의 실패가 몇 번 반복되며, 원인 후보인가 후속 연결 실패인가? |
+| `operator-inventory.json` | `nodes`의 `node`, `operator`, `admission`, `admission_reason`, `inputs` | 해당 node가 어떤 입력 계약으로 검사되었는가? |
+
+[read_preflight.py](../examples/read_preflight.py)는 기존 진단 파일을 읽는 완성된 표준 Python 예제다. 컴파일이나 NPU 실행을 다시 요청하지 않는다. `python read_preflight.py preflight-only.fxbx.plan`처럼 실행한다.
+
+```python
+import argparse
+import json
+from pathlib import Path
+
+def read_optional(path):
+    if not path.is_file():
+        return None  # 파일 없음은 성공 판정이 아니다. 더 이른 실패일 수 있다.
+    return json.loads(path.read_text(encoding="utf-8"))
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("work", type=Path)  # 실패 메시지 또는 출력 이름에서 찾은 .plan 경로
+    work = parser.parse_args().work
+    summary = read_optional(work / "preflight.json")
+    groups = read_optional(work / "failure-groups.json")
+    inventory = read_optional(work / "operator-inventory.json")
+
+    if summary is None:
+        print("preflight.json 없음: 원래 예외와 캡처·환경 단계를 먼저 확인하세요.")
+    else:
+        print("STATUS", summary.get("status"), "CODE", summary.get("code"))
+        for row in summary.get("first_failures", []):
+            print("FIRST", row["node"], row["op"], row["category"], row["reason"])
+
+    if groups is None:
+        print("failure-groups.json 없음: 이 파일만으로 규칙 통과 여부를 판단하지 않습니다.")
+    else:
+        # 원인 후보를 먼저 읽고, 입력을 받지 못해 따라 실패한 항목은 별도로 읽는다.
+        for category in ("rule_or_contract_gap", "binding_dependency"):
+            for row in groups:
+                if row.get("category") == category:
+                    print("GROUP", category, row["op"], row["occurrences"], row["reason"])
+
+    if inventory is not None:
+        for row in inventory.get("nodes", []):
+            if row.get("admission") in ("rule_or_contract_gap", "binding_dependency"):
+                print("NODE", row["node"], row["operator"], row["admission"])
+                print("  inputs=", row.get("inputs"), "reason=", row.get("admission_reason"))
+
+if __name__ == "__main__":
+    main()
+```
+
+다음 세 줄은 실제 장치 로그가 아닌 **분류 필드의 의미를 보여주는 교육용 재구성**이다. 특정 ATen 연산이 이 조건에서 실패한다고 예측하는 예가 아니다.
+
+| 가상 node 관계 | 기록된 `category` | 독자가 내릴 수 있는 판단 |
+|---|---|---|
+| `n0`가 값 `h`를 만들려다 규칙 검사에서 중단 | `rule_or_contract_gap` | `n0`의 `op`, 입력 계약, `reason`을 먼저 조사한다. 규칙 없음과 지원 조건 불일치도 구분한다. |
+| `n1`은 `h`를 받아 값 `a`를 만들어야 함 | `binding_dependency` | 메시지 `upstream tensor binding unavailable`은 앞선 `h`를 연결할 수 없다는 뜻이다. |
+| `n2`는 `a`를 받아야 함 | `binding_dependency` | `n1`의 결과가 없어서 막혔다. 이것만으로 `n2`용 새 커널이 필요하다고 결론짓지 않는다. |
+
+`first_failures`는 첫 여덟 항목만 담고, 요약의 `failure_groups`도 상위 32개까지만 담는다. 반면 별도의 `failure-groups.json`에는 중복 제거한 모든 그룹을 쓴다. **그룹의 첫 항목과 발생 횟수는 원인 분석의 출발점이며 전체 의존 그래프 자체는 아니다.** 09장의 `node.args` 또는 원본 graph로 `n0 → n1 → n2` 연결을 확인하고, 첫 원인을 수정한 뒤 사전검사를 다시 수행해 독립적인 후속 문제를 확인한다. [실제 분류·요약 범위](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/execution_plan.py#L1140-L1175) · [연산 inventory 필드](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/operator_catalog.py#L15-L31)
+
 ## 3. 의미 계열을 선택한다
 
 **의미 계열**은 같은 계산 원리를 공유하는 연산 묶음이다. pointwise는 원소별 계산, reduction은 여러 원소를 한 축을 따라 모으는 계산, contraction은 행렬곱처럼 곱한 뒤 축약하는 계산이다. `compiler_registry.py`는 모델 이름 대신 이 계열을 컴파일 함수에 연결한다. registry는 Python dictionary 형태의 등록표다. 아래는 실제 등록표에 설명 주석을 추가한 발췌다.
@@ -119,9 +185,46 @@ print(flat_sum.tolist(), tuple(flat_sum.shape)) # 예상 [6.0, 15.0], (2,)
 
 예제의 첫 Linear는 `h[m,n] = sum_k(x[m,k] * weight[n,k]) + bias[n]`으로 쓸 수 있다. `M=4`는 처리할 입력 수, `K=8`은 곱한 뒤 합칠 특징 수, `N=12`는 출력 특징 수다. compiler는 단순히 곱셈과 덧셈이 많이 있다는 것보다 **어느 축을 유지하고 어느 축을 합치는지** 알 때 장치 계산을 구성하기 쉽다. TCL은 이런 의미를 표현한다.
 
+### node 하나가 컴파일 요청으로 바뀌는 중간 값
+
+연결을 확인하기 위해 첫 `Linear(8,12)`만 떼어 낸 정적 BF16 모델을 생각하자. 입력은 `x[4,8]`, 가중치는 `weight[12,8]`, bias는 `[12]`다. 이 절에서는 **bias 있는 Linear 하나를 독립 region으로 처리하는 소스 경로**를 따라간다. 원래 MLP 전체에서는 Linear와 ReLU가 함께 선택되거나 더 큰 region으로 묶일 수 있으므로, 전체 모델이 언제나 이 한 경로로 분할된다는 주장은 아니다.
+
+| 단계·함수 | 넘겨지는 실제 종류 | 이 작은 사례의 내용 |
+|---|---|---|
+| FX node → `lower_aten_node` | `node.target`, `node.args`, 각 입력의 `meta["val"]` | `aten.linear.default`, `(x, weight, bias)` 참조 |
+| → `AtenCandidate` | 연산 의미와 `TensorSpec` 목록 | `kind="linear"`, 입력 `[4,8]`·`[12,8]`·`[12]`, 출력 `[4,12]` |
+| → producer의 group·요청 | `kind`, `specs`, operand 이름, output 이름 | 각 spec의 `shape`, `dtype="bfloat16"`, stride `[8,1]`·`[8,1]`·`[1]`; 이 단순 Linear의 별도 `attrs`는 없음 |
+| → `_compile_kernel` | shape·dtype로 만든 임시 tensor tuple | 원본 weight 값을 복사하지 않은 메타데이터용 인수 세 개; `Region.forward(*v)`는 `functional.linear(*v)` |
+| → `export_edf` | 그 작은 `Region`의 `ExportedProgram`과 임시 입력 | 한 EDF를 만드는 compiler 경계. 아래에서 native/TCL 경로가 갈린다. |
+| TCL 분기 → kernel·dimensions | Python TCL kernel 객체와 dictionary | bias가 있으므로 `research.tcl_linear.linear_bias`; `{"M":4,"K":8,"N":12}` |
+| → `source`·`base_contract` | TCL 문자열과 인수 계약 dictionary | 구체화한 계산 표현과 `(x, weight, bias)` 순서를 함께 `compile_source`에 전달 |
+
+여기서 중요한 차이는 `specs`가 **값의 모양을 설명**하고 operand 이름이 **나중에 어느 값을 연결할지 설명**한다는 점이다. 컴파일 worker의 임시 tensor에는 실제 체크포인트 가중치를 실어 보내지 않는다. 만든 EDF를 실행할 때 계획의 parameter 연결을 통해 같은 shape의 실제 weight를 받는다. `AtenCandidate.source`도 후보 분석용 표현이며, 그것이 곧바로 모든 경로에서 최종 `source.tc`가 되는 것은 아니다. [node에서 후보 생성](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/aten.py#L94-L147) · [group 구성과 실제 요청 저장](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/execution_plan.py#L1091-L1190)
+
+앞 절의 `SEMANTIC_COMPILERS`는 모든 경로를 통과하는 중앙 실행 함수가 아니다. 이 고정 버전에서 `linear`는 그 등록표에 없으며 `_compile_kernel`의 기본 `Region` 경로를 사용한다. 반면 `kind="reduction"`이면 등록표가 선택한 `compile_reduction(specs, attrs, ...)`로 바로 간다. 다음은 차이를 만드는 실제 부분에 설명 주석을 추가한 발췌이며 독립 실행 파일이 아니다.
+
+```python
+# execution_plan.py의 _compile_kernel 내부: kind·specs·root 및 주변 분기는 생략했다.
+class Region(torch.nn.Module):
+    def forward(self, *v):
+        # v[0]: x[M,K], v[1]: weight[N,K], v[2]가 있으면 bias[N]
+        if kind in ('linear', 'linear_relu', 'batch_linear', 'batch_linear_relu'):
+            y = torch.nn.functional.linear(*v)  # linear의 인수 순서를 그대로 보존한다.
+            return torch.relu(y) if kind.endswith('_relu') else y
+
+args = tuple(torch.empty(s['shape'], dtype=getattr(torch, s['dtype'])) for s in specs)
+with torch.no_grad():
+    ep = torch.export.export(Region(), args, strict=False)  # 선택된 작은 계산만 다시 표현한다.
+# 실제 구현은 compile_candidate/retain_record로 실패 기록·cache 보관도 감싼다.
+```
+
+원래 MLP에서 Linear의 유일한 사용자가 ReLU이면 producer는 `linear_relu` 후보를 만들 수 있다. 이때 TCL 분기의 kernel 선택도 `linear_bias_relu` 등으로 달라진다. 개별 연산 지원표만 보지 말고 `compile-requests.json`의 `kind`와 요청 인수를 먼저 보는 이유다. [등록표와 기본 경로의 분기](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/execution_plan.py#L137-L181) · [Linear·ReLU 후보 선택](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/execution_plan.py#L1091-L1095)
+
 먼저 **compiler 진입점에 분기가 있다**. `edf_export.export_edf()`는 설치 환경에 `furiosa.native_common.compiler.compile`이 있으면 `target_ir='edf'`로 호출한다. 해당 import를 사용할 수 없을 때만 `tcl_edf.export_single_aten()`으로 간다. SDK compiler가 실패했다고 CPU로 넘어가거나 모든 실패를 TCL로 재시도하는 코드는 아니다. native 경로도 정확히 한 개의 `CompiledGraph`와 `is_edf() == True`를 요구한다. 아래 설명은 Python TCL 및 생성된 TCL 텍스트를 사용하는 경로이며, 모든 단일 EDF가 반드시 이 경로로 만들어진다는 뜻은 아니다. [실제 compiler 선택](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/edf_export.py#L171-L215)
 
 단일 수축 경로는 `tcl_edf.export_single_aten`에서 적절한 Python TCL kernel과 구체적인 축 크기를 선택한다. `M`, `N`, `K`는 단순 변수 이름이 아니라 어느 차원을 유지하고 축약하는지 설명하는 축이다. Linear weight가 `[N,K]`인지 일반 mm의 오른쪽 입력이 `[K,N]`인지가 출력 ABI에 영향을 준다.
+
+위 사례에서 `linear_bias`는 입력을 TCL의 `[M,K]`, `[N,K]`, `[N]`으로 선언하고 출력 `[M,N]`을 만든다. `operation.contract(..., to=[M,N])`가 공통 축 `K`를 축약하고, bias를 더한 뒤 출력 BF16으로 변환하는 kernel이다. 따라서 `dimensions`는 입력 숫자에서 추측한 값이 아니라 앞서 검사한 shape에서 얻는다. 별도 행렬 전치 tensor를 만들 필요 없이 weight의 축 이름으로 어떤 원소끼리 곱할지 표현한다. [선택할 kernel과 차원 dictionary](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/tcl_edf.py#L93-L120) · [bias 있는 실제 Linear kernel](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/research/tcl_linear.py#L8-L21)
 
 여기서 **특수화(specialization)는** 축 이름만 있던 커널에 실제 차원 값을 넣는 과정이다. 아래의 `kernel`은 앞 분기에서 선택한 Python TCL 커널, `dimensions`는 첫 Linear라면 `{"M": 4, "K": 8, "N": 12}` 같은 dictionary다. 이 변수들은 이미 선택되어 있다는 전제이며, 다음은 설명 주석을 추가한 내부 발췌다.
 
@@ -267,6 +370,7 @@ print("state updates:", entry["state_updates"])  # 다음 호출에 남길 상�
 
 | 자료 | 확인 범위 |
 |---|---|
+| [operator_catalog.py](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/operator_catalog.py), [bias Linear kernel](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/research/tcl_linear.py) | 진단 행의 필드, 실제 kernel 선택 이후의 계산 |
 | [Linear 2.10](https://docs.pytorch.org/docs/2.10/generated/torch.nn.Linear.html), [sum 2.10](https://docs.pytorch.org/docs/2.10/generated/torch.sum.html) | 행렬곱·전치·bias와 축약·자료형 변환의 의미 |
 | [graph_capture.py](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/graph_capture.py) | 추론 캡처·의미 정규화 |
 | [edf_export.py](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/edf_export.py) | 입력 바인딩 한계·native compiler/TCL 분기 |

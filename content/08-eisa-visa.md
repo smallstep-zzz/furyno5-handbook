@@ -109,7 +109,35 @@ DM에 정지해 있는 배열을 계산 엔진에 공급할 때는 **몇 차례�
 
 공식 예제는 `fetch::<m![1], m![A % 8]>()`를 사용한다. 한 번의 논리 전달 반복에서 각 active slice의 i32 8개를 읽는다. i32 하나는 4 bytes이므로 패킷은 32 bytes다. **Collect**는 뒤 엔진이 받는 32-byte 단위인 flit에 맞게 패킷을 정리한다. 이 예의 패킷은 이미 32 bytes여서 그 단위에 맞는다. 일반적으로 Collect는 작은 패킷에 padding을 더하거나 큰 패킷을 여러 단위로 나눌 수 있다. [Collect Engine](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/computing-tensors/collect-engine.md)
 
-이제 읽기 쉽게 입력값을 `input[a]=a`라고 정한 **설명용 추적**을 하자. 실제 template의 시험 입력은 난수다.
+### 한 slice에 16개가 있고 한 번에 8개씩 보낸다면
+
+Time이 1인 예만 보면 시간 방향에 배치한다는 말이 잘 드러나지 않는다. 이번에는 논리 원소 4,096개를 256개 slice에 16개씩 놓고, slice마다 8개씩 두 번 보낸다고 가정하자. **아래는 좌표를 검산하기 위한 교육용 mapping 모형**이다. 이 변경을 넣은 Rust 커널이 compiler·메모리 제약을 통과했다거나 NPU에서 실행됐다고 주장하지 않는다.
+
+논리 원소 번호 a를 `a = 16×slice + 8×time + packet_position`으로 나눈다. 여기서 `time`은 0·1 두 번의 전달, `packet_position`은 그때 전달하는 8개 안의 위치 0~7이다.
+
+| slice | time | packet 위치 0~7에 들어가는 논리 원소 | 그 slice의 DM Element 위치 |
+|---:|---:|---|---|
+| 0 | 0 | 0, 1, …, 7 | 0~7 |
+| 0 | 1 | 8, 9, …, 15 | 8~15 |
+| 4 | 0 | 64, 65, …, 71 | 0~7 |
+| 4 | 1 | 72, 73, …, 79 | 8~15 |
+
+예를 들어 a=77은 slice 4의 Element 13에 있다. 그 원소가 흐를 때는 두 번째 전달인 time 1의 packet 위치 5에 들어간다. time 0에 slice 4만 동작한다는 뜻은 아니다. 각 slice가 자기 첫 묶음을 공급하는 반복과 다음 묶음을 공급하는 반복을 구분한 것이다.
+
+```python
+# 좌표 분해의 검산이다. NPU API 호출이나 clock cycle 예측이 아니다.
+a = 77
+slice_id = a // 16                       # 원소 16개를 한 slice에 둔다: 4
+element = a % 16                         # 해당 slice 안의 저장 위치: 13
+time_index = element // 8                # 8개씩 보낼 때 몇 번째 묶음인가: 1
+packet_position = element % 8            # 그 묶음의 어느 원소인가: 5
+assert (slice_id, time_index, packet_position) == (4, 1, 5)
+assert 16 * slice_id + 8 * time_index + packet_position == a
+```
+
+저장 위치를 나타내는 `Element=13`과 한 전달 안의 `Packet 위치=5`는 이렇게 다른 좌표다. 또한 두 번의 전달이 곧 2 clock cycles라는 뜻도 아니다. 실제 읽기 폭·패킷 처리·뒤 엔진의 대기까지 고려한 스케줄이 필요하다. [공식 공간·시간 차원의 구분](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/mapping-tensors/spatial-temporal-dimensions.md)
+
+다시 원래의 A=2,048, slice마다 8개, Time=1인 공식 template로 돌아온다. 읽기 쉽게 입력값을 `input[a]=a`라고 정한 **설명용 추적**을 하자. 실제 template의 시험 입력은 난수다.
 
 | 단계 | a=37의 위치·상태 | 값이 바뀌는가? |
 |---|---|---|
@@ -163,33 +191,110 @@ flowchart TB
 
 ## 6. 공식 template로 컴파일·실행·정답 비교
 
-Linux x86-64, matching Rust toolchain, 필요한 cross compiler 및 NPU 드라이버를 준비한다. 아래 설치 명령은 공식 Quick Start의 경로다. 배포된 compiler와 template 의존성이 일치하는지 반드시 확인하고, 실험 기록에는 `Cargo.lock`과 compiler version을 함께 보관한다. [Setup and Tooling](https://developer.furiosa.ai/furiosa-opt/book/quick-start/setup-and-tooling.html)
+### 먼저 네 가지 버전을 각각 확인한다
+
+Python 프로젝트에서 Python 버전·설치한 명령 도구·라이브러리 버전을 따로 확인하듯, 여기서도 숫자 하나로 환경을 대표할 수 없다. **Template은** 소스 파일을 만드는 틀이고, **compiler는** 그 소스를 NPU 실행물로 바꾸는 설치된 프로그램이다. `furiosa-opt-std`는 프로젝트가 사용하는 Rust 라이브러리다. Rust toolchain은 프로그램을 빌드하는 Rust compiler·Cargo 등의 도구 묶음이며, opt compiler도 그 Rust compiler의 내부 인터페이스에 연결된다.
+
+이 장의 기준 commit `3d43bc9d20f324af60e3006c3f1541938d7f5097`은 이번 재검토에서 조회한 공식 `v0.10.0` 태그와 같다. 해당 소스의 compiler package와 std crate는 각각 `0.10.0`이고, template은 std에 `"0.10"`이라는 **허용 버전 범위**를 선언한다. 따라서 아래에서는 compiler 배포와 template을 따로 고정한다. std와 compiler의 숫자가 같다는 이유만으로 모든 조합이 호환된다는 규칙을 만든 것은 아니다. [태그가 가리키는 commit](https://api.github.com/repos/furiosa-ai/furiosa-opt/git/ref/tags/v0.10.0) · [compiler package·배포 위치](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/cargo-furiosa-opt/Cargo.toml) · [std package](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-std/Cargo.toml)
+
+| 확인 대상 | 이 장에서 선택하는 기준 | 내 환경에서 읽을 관측값 |
+|---|---|---|
+| Template 소스 | 전체 commit `3d43bc9d…`의 `base-template` | 아래 생성 명령의 `--revision`과 보관한 원본 commit. 생성 프로젝트의 새 Git HEAD와 혼동하지 않음 |
+| Compiler 배포 | 공식 `cargo-furiosa-opt` **0.10.0** 배포물 | 설치 완료 로그·`cargo install --list`의 package 버전, 실제로 선택되는 실행 파일 경로 |
+| Rust toolchain | **`nightly-2026-05-01`** | 프로젝트의 `rust-toolchain.toml`, `rustup show active-toolchain`, `rustc -Vv` |
+| 프로젝트 라이브러리 | 원본 template의 `furiosa-opt-std = "0.10"`; 이 실습에서는 `=0.10.0`으로 좁힘 | 프로젝트에서 생성한 `Cargo.lock`과 `cargo metadata`의 실제 `name`·`version`·`source` |
+
+Rust compiler의 내부 ABI(Application Binary Interface)에 연결되는 도구이므로 공식 문서는 지정 nightly를 요구한다. Linux x86-64의 Ubuntu 22.04 이상, host 빌드 도구·`libclang`, NPU build용 AArch64 cross compiler도 필요하다. 실제 NPU 실행에는 SDK와 장치 드라이버가 추가로 필요하다. 14장의 별도 preview 모델 조합을 이 일반 kernel 실습의 설치 기준으로 가져오지 않는다. [고정 버전 설치 전제](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/quick-start/setup-and-tooling.md) · [template toolchain](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/base-template/rust-toolchain.toml)
+
+### Compiler와 template을 고정해서 프로젝트를 만든다
+
+다음은 위 host 전제가 준비된 Linux의 Bash에서 실행할 명령이다. `cargo-binstall`은 이미 빌드된 배포물을 설치하고, `cargo-generate`는 template에서 새 프로젝트를 만든다. 두 보조 도구의 실제 설치 버전도 뒤의 설치 목록에 남긴다. NPU compiler의 공개 `main.rs`는 설치 안내를 출력하는 stub이므로, 이 compiler를 `cargo install --git ...`로 바꿔 설치한다고 같은 배포물이 만들어지지는 않는다. [공개 compiler 진입점](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/cargo-furiosa-opt/src/main.rs)
 
 ```bash
-# 이 template과 맞는 Rust toolchain을 준비한다.
+# tee로 로그를 남길 때 설치 명령의 실패를 놓치지 않도록 한다.
+set -o pipefail
+# 공식 compiler가 요구하는 nightly를 준비한다.
 rustup toolchain install nightly-2026-05-01
-# 사전 빌드된 compiler 배포물을 설치하는 도구를 설치한다.
 cargo +nightly-2026-05-01 install cargo-binstall
-cargo +nightly-2026-05-01 binstall cargo-furiosa-opt
-# 작은 완전한 프로젝트를 생성한다. 아래 kernel 조각만으로는 실행 파일이 아니다.
+# @0.10.0은 compiler 배포 버전이다. 버전을 생략해 최신 배포를 선택하지 않는다.
+cargo +nightly-2026-05-01 binstall cargo-furiosa-opt@0.10.0 2>&1 | tee opt-compiler-install.log
 cargo install cargo-generate
-cargo generate furiosa-ai/furiosa-opt base-template
+# branch 이름 대신 전체 commit을 지정하고, 그 안의 base-template을 사용한다.
+cargo generate --git https://github.com/furiosa-ai/furiosa-opt \
+  --revision 3d43bc9d20f324af60e3006c3f1541938d7f5097 \
+  --name opt-constant-add base-template
+cd opt-constant-add
+# 설치 로그도 생성한 프로젝트와 함께 보관한다.
+cp ../opt-compiler-install.log .
 ```
 
-생성한 프로젝트 디렉터리에서 실행한다. template을 기본 branch에서 가져온 경우 이 핸드북 commit 이후 바뀔 수 있으므로, 생성된 소스·의존성을 앞의 기준과 비교한다.
+`@버전`과 `--revision`은 각각 설치기와 생성기의 옵션이다. 실제 설치에서는 compiler archive의 이름 `cargo-furiosa-opt-v0.10.0-x86_64-unknown-linux-gnu.tgz`와 설치한 package 버전을 로그에서 대조한다. 공식 release에 이 배포물이 존재한다는 것은 확인했지만, 이 집필 환경에서 설치를 실행한 기록은 아니다. [공식 v0.10.0 배포](https://github.com/furiosa-ai/furiosa-opt/releases/tag/v0.10.0) · [Binstall 버전 선택](https://github.com/cargo-bins/cargo-binstall/blob/17717041b8b8d177fd061e56dc8c40abe41120f2/crates/bin/src/args.rs#L55-L76) · [Generate의 revision·name 옵션](https://github.com/cargo-generate/cargo-generate/blob/165d2fe0b0d3f4872058a091b2a6201f2bc2e23e/src/args.rs#L237-L278)
+
+### 허용 범위와 실제 선택된 라이브러리를 구분한다
+
+`Cargo.toml`의 `"0.10"`은 `0.10.0` 한 개를 뜻하지 않고 `0.10.x` 범위를 허용한다. 새 프로젝트의 `[dependencies]`에서 **기존 std 한 줄만** 다음과 같이 바꿔 이 실습의 직접 의존성을 고정한다. 아래는 파일 전체가 아니다. [Cargo 버전 범위·정확한 버전 표기](https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html)
+
+```toml
+# 생성된 Cargo.toml의 [dependencies] 안에서 기존 std 줄을 교체한다.
+furiosa-opt-std = "=0.10.0"
+```
+
+std가 사용하는 다른 라이브러리까지 선택한 결과는 **`Cargo.lock`에** 남는다. 새로운 프로젝트에서 한 번 만들고 이후에는 함께 보관한다. 이미 실험한 프로젝트의 lockfile을 다시 만들면 선택 버전이 바뀔 수 있다. 공식 저장소 루트의 `Cargo.lock`은 그 저장소 전체 workspace용이므로 생성 프로젝트의 lockfile 대신 복사하지 않는다. [Lockfile 생성·갱신 의미](https://doc.rust-lang.org/cargo/commands/cargo-generate-lockfile.html)
 
 ```bash
-# CPU 의미 비교
-cargo test --release --bin constant_add
+# 생성한 새 프로젝트에서만 실행한다. 아직 NPU를 열거나 kernel을 실행하지 않는다.
+cargo generate-lockfile
+# 실제 선택된 라이브러리 정보를 JSON으로 저장한다. --locked는 lockfile 변경을 거절한다.
+cargo metadata --locked --format-version 1 > cargo-metadata.json
+# 설치된 명령 도구 목록과 현재 Rust를 기록한다.
+cargo install --list > installed-tools.txt
+rustup show active-toolchain > active-toolchain.txt
+rustc -Vv > rustc-version.txt
+# PATH에 같은 이름이 여럿 있으면, 설치 로그와 먼저 선택되는 경로를 대조한다.
+type -a cargo-furiosa-opt furiosa-opt-driver > compiler-paths.txt
+```
 
-# NPU용 커널 컴파일
+`installed-tools.txt`에서는 `cargo-furiosa-opt v0.10.0` package와 두 실행 파일 이름을 찾는다. 이 목록은 설치 기록이므로, `compiler-paths.txt`가 다른 경로의 오래된 바이너리를 먼저 가리키면 같은 환경이라고 판단하지 않는다. 기본 Binstall 설치는 Cargo의 설치 기록을 갱신한다. 직접 복사하거나 별도 설치 경로를 썼다면 그 설치 출처·버전을 추가로 남겨야 한다. [Cargo 설치 목록](https://doc.rust-lang.org/cargo/commands/cargo-install.html#option-cargo-install---list) · [Binstall의 설치 기록 갱신](https://github.com/cargo-bins/cargo-binstall/blob/17717041b8b8d177fd061e56dc8c40abe41120f2/crates/binstalk-manifests/src/crates_manifests.rs#L145-L168)
+
+라이브러리는 명령 도구 목록이 아니라 다음처럼 `cargo-metadata.json`에서 읽는다. 이 코드는 표준 Python으로 기존 JSON만 읽는다.
+
+```python
+import json
+from pathlib import Path
+
+metadata = json.loads(Path("cargo-metadata.json").read_text())
+# std의 직접 버전과 image/runtime 계약에 가까운 의존성을 나란히 관찰한다.
+names = {"furiosa-opt-std", "furiosa-opt-abi", "furiosa-opt-rt"}
+for package in metadata["packages"]:
+    if package["name"] in names:
+        # source는 받은 곳의 식별자다. 이를 compiler 버전이라고 해석하지 않는다.
+        print(package["name"], package["version"], package["source"])
+```
+
+앞에서 고정한 std는 `0.10.0`이어야 한다. 기준 저장소의 lockfile에는 std·ABI·runtime이 각각 `0.10.0`으로 기록되어 있으므로 나란히 비교할 수 있다. 생성 프로젝트에서 다른 의존성이 선택되면 그 정확한 버전·source를 보관하고 변경 내용을 확인한다. **세 숫자의 일치는 관측 결과이지, compiler 호환성이나 NPU 정답의 증명이 아니다.** `Cargo.toml`·실제 `Cargo.lock`·template 원본 commit·설치 로그를 함께 보관해야 다음 실험자가 같은 입력 조건으로 돌아올 수 있다. [기준 workspace lockfile](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/Cargo.lock) · [Metadata의 name·version·source 계약](https://doc.rust-lang.org/cargo/commands/cargo-metadata.html)
+
+진행 여부도 이 관측값으로 정한다. 설치한 배포물과 PATH의 실행 파일을 연결하지 못하거나 지정 nightly·std·lockfile을 확인하지 못했다면 **NPU 컴파일·실행 전에 해당 설치 항목부터 해결**한다. ABI·runtime이 기준과 다른 버전으로 선택됐다면 그 변경의 호환 근거를 먼저 확인하고 다른 조합이라는 사실을 기록한다. 기준을 확인한 뒤 아래 CPU 비교 → NPU 컴파일 → NPU 정답 비교로 진행하며, 실제 성공은 각 단계의 결과로 판단한다.
+
+### 같은 기록으로 CPU 비교와 NPU 검증을 순서대로 한다
+
+생성한 프로젝트 디렉터리에서 실행한다. CPU 비교는 수치 의미, NPU 컴파일은 실제 mapping·compiler 계약, NPU test는 장치 실행 결과를 각각 확인한다.
+
+```bash
+# 재현에 사용할 lockfile을 기록한다. 이것은 설치·실행 성공 판정이 아니다.
+sha256sum Cargo.lock > cargo-lock.sha256
+# CPU에서 모든 출력 값을 비교한다. --locked는 의존성 변경을 허용하지 않는다.
+cargo test --locked --release --bin constant_add
+
+# NPU용 kernel 컴파일. 이 직접 compile 명령의 공식 문법에 임의 옵션을 더하지 않는다.
 cargo furiosa-opt compile constant_add_kernel
+# 직접 compile 이후에도 같은 의존성 기록인지 확인한다.
+sha256sum --check cargo-lock.sha256
 
-# 실제 NPU에서 값 비교
-cargo furiosa-opt test --release --bin constant_add
+# 실제 NPU에서 값 비교. test/run의 Cargo 인수는 wrapper가 그대로 전달한다.
+cargo furiosa-opt test --locked --release --bin constant_add
 
-# 실행 프로그램
-cargo furiosa-opt run --release --bin constant_add
+# 실행 프로그램. 값 전체의 검증은 바로 위 test가 맡는다.
+cargo furiosa-opt run --locked --release --bin constant_add
 ```
 
 대상 binary와 test는 template의 `src/constant_add.rs`에 있다. CPU reference(비교 기준)는 input의 각 원소에 1을 더한 값이다. 공식 test는 NPU 결과를 CPU로 가져온 뒤 모든 원소를 비교한다. 일반 `run`은 커널 실행 메시지를 출력하므로 값 검증에는 위 `test`가 필요하다. 이 test는 `wrapping_add(1)`을 사용한다. i32의 최대값을 넘어가면 32비트 범위 안에서 순환하는 정수 의미를 맞추려는 것이다. 크기가 무제한인 일반 Python 정수의 `+1`과 모든 입력에서 같다고 보면 안 된다. 이 원고 작성 환경에서는 Rust 컴파일·NPU 실행을 새로 수행하지 않았다. [공식 constant_add host/test](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/base-template/src/constant_add.rs)
@@ -276,7 +381,7 @@ furiosa-schedule-viewer --host 127.0.0.1 --port 9254
 
 **Gather**는 인덱스로 지정한 여러 위치에서 값을 모아 읽는 작업, **scatter**는 지정한 여러 위치로 값을 흩어 쓰는 작업이다. 예를 들어 embedding 표에서 토큰 ID 3의 특징 행을 읽을 때, 숫자 3이 행 번호인지 바이트 위치인지부터 구분해야 한다.
 
-embedding 같은 lookup에서는 `행 번호`와 `바이트 offset`을 섞으면 값이나 주소가 틀린다. 공개 DMA API는 `by_byte_offsets`와 `by_positions`를 구분한다. 후자는 SPM(Scratchpad Memory)의 위치 인덱스를 받는다. BF16 행의 길이가 128이면 한 행은 256 bytes이므로 행 3의 시작은 768 bytes다. 이 계산은 단순 예시이며 실제 tensor mapping·정렬 조건까지 충족해야 한다. [Gather·Scatter 계약](https://developer.furiosa.ai/furiosa-opt/book/moving-tensors/dma-engine.html#gather-and-scatter)
+embedding 같은 lookup에서는 `행 번호`와 `바이트 offset`을 섞으면 값이나 주소가 틀린다. 공개 DMA API는 `by_byte_offsets`와 `by_positions`를 구분한다. BF16 행의 길이가 128이면 한 행은 256 bytes이므로 행 3의 시작은 768 bytes다. 이 계산은 단순 예시이며 실제 tensor mapping·정렬 조건까지 충족해야 한다. [Gather·Scatter의 고정 계약](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/moving-tensors/dma-engine.md#gather-and-scatter)
 
 FuryNo5의 int32 입력 검사, embedding contraction과 projection 연결을 읽을 때도 **ID의 의미·단위·범위**부터 확인한다. 잘못된 인덱스를 CPU에서 검사하는 것은 장치의 embedding 계산을 CPU로 옮기는 것이 아니다.
 
@@ -295,7 +400,27 @@ assert byte_offset == 768                   # 기준 주소로부터 768 bytes �
 | 384 | 원소 단위 offset: `3×128` |
 | 768 | 바이트 단위 offset: `384×2` |
 
-바이트 offset을 받는 곳에 3을 넣으면 세 번째 행을 뜻하지 않는다. 반대로 `by_positions`를 임의의 행 번호 API로 생각하면 안 된다. 해당 경로는 SPM(Scratchpad Memory)에 놓은 위치 인덱스와 그 배치 계약을 따른다.
+두 API가 가리키는 값을 실제 배열 관계로 연결해 보자. 표의 shape가 `[I,P]`라면 I는 조회할 행의 축, P는 선택한 행에서 함께 읽을 특징값의 축이다. 인덱스 목록은 `[D]`이며 D는 **요청한 조회 목록의 길이**다. `position[d]`는 그 목록의 d번째 조회가 선택한 I축 좌표다. 따라서 결과는 `[D,P]`이고 `result[d,p] = table[position[d],p]`가 된다.
+
+| 목록의 위치 d | `position[d]` | 실제로 읽는 대상 | BF16·P=128일 때 byte offset |
+|---:|---:|---|---:|
+| 0 | 3 | `table[3,0:128]` | 768 |
+| 1 | 1 | `table[1,0:128]` | 256 |
+
+`by_positions`의 index tensor가 SPM(Scratchpad Memory)에 있다는 것은 **숫자 3·1을 저장한 목록의 위치**다. 조회 대상인 `table`은 여전히 HBM(High Bandwidth Memory)에 있다. 반면 `by_byte_offsets`는 HBM에 저장한 index tensor의 값으로 768·256을 받는다. offset의 기준은 해당 table 또는 view의 시작 주소이며, 그 값은 I축 byte stride의 정수배여야 한다. 즉 position과 byte offset은 같은 조회를 다른 단위와 다른 index 저장 위치로 표현한다. [인덱스 단위·형식의 공개 구현](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-std/src/tensor/memory/dma/gather.rs#L209-L334)
+
+SPM 경로에는 추가 배치 계약이 있다. 이 버전에서 인덱스 목록은 각 사용 cluster의 PE 0에 모여 있어야 하며 `IdxPe=m![1 # 4]`로 표현한다. `Domain`은 index가 **정의된 좌표들**이다. index tensor의 cluster mapping에 이름 있는 축 CL이 있으면 cluster마다 다른 목록이므로 `Domain=m![CL,D]`; 이름 있는 cluster 축 없이 한 목록을 사용하면 `Domain=m![D]`다. PE 번호 자체는 Domain에 넣지 않는다. Domain은 인덱스 숫자가 선택하는 I축과도 다르다. [SPM domain과 PE 배치 계약](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/moving-tensors/dma-engine.md#a-gathers-domain-from-an-spm-index)
+
+다음은 공식 `gather_spm`에서 **설명 주석을 추가한 짧은 발췌**다. 주변 선언과 index를 DM에서 SPM으로 옮기는 단계는 생략했으므로 독립 실행 예제가 아니다. 원본은 I=612, D=512, P=128, CL=2이며 `index_spm`의 타입은 `SpmTensor<i32, m![1], m![CL], m![1 # 4], m![D]>`다.
+
+```rust
+table
+    .gather::<m![I], m![P]>()             // index 숫자는 I축 위치를 고르고, P 특징을 함께 읽는다.
+    .by_positions::<m![CL, D]>(&index_spm) // cluster마다 D개인 SPM 목록의 좌표를 선언한다.
+    .to_dm(&mut device.tdma)             // 선택된 값들을 목적 DM 배치로 이동한다.
+```
+
+이렇게 I·P·Domain·index의 메모리 배치를 정했을 때 position 3이 “행 3”이 된다. 숫자 3만으로 임의 tensor의 행을 알아내는 API는 아니다. Scatter는 같은 인덱스 관계를 반대로 사용해 `destination[position[d],p] = updates[d,p]`로 기록한다. [공식 gather·scatter 예제](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/moving-tensors/dma-engine.md#gather-and-scatter)
 
 
 ### C. 앞 출력과 뒤 입력의 배치를 맞추기
@@ -411,6 +536,10 @@ host registry의 section과 참조는 [registry.rs](https://github.com/furiosa-a
 |---|---|
 | [공식 vISA 소개](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/introduction.md) | 공개 명칭·역할·실험적 상태 |
 | [Kernel Optimizer](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/tools/kernel-optimizer.md) | compiler·CPU/NPU·dump CLI |
+| [고정 설치 전제](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/quick-start/setup-and-tooling.md) · [v0.10.0 배포](https://github.com/furiosa-ai/furiosa-opt/releases/tag/v0.10.0) | host·Rust ABI 전제, compiler 배포의 선택 |
+| [Compiler manifest](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/cargo-furiosa-opt/Cargo.toml) · [Template manifest](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/base-template/Cargo.toml.liquid) | compiler 버전·배포 asset 규칙과 std 허용 범위의 구분 |
+| [Binstall 인수](https://github.com/cargo-bins/cargo-binstall/blob/17717041b8b8d177fd061e56dc8c40abe41120f2/crates/bin/src/args.rs) · [Generate 인수](https://github.com/cargo-generate/cargo-generate/blob/165d2fe0b0d3f4872058a091b2a6201f2bc2e23e/src/args.rs) | 설치 버전·template revision 고정 |
+| [Cargo 버전 요구](https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html) · [Cargo metadata](https://doc.rust-lang.org/cargo/commands/cargo-metadata.html) | 허용 범위와 실제 선택된 package·version·source의 구분 |
 | [template host/test](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/base-template/src/constant_add.rs) | 실행·CPU reference 비교 |
 | [template kernel](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/base-template/src/kernel/constant_add_kernel.rs) | mapping과 vector pipeline |
 | [launch.rs](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-std/src/runtime/launch.rs) | submit·await·선로딩·출력 재사용 |
@@ -430,3 +559,5 @@ host registry의 section과 참조는 [registry.rs](https://github.com/furiosa-a
 | [Spatial and Temporal Dimensions](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/mapping-tensors/spatial-temporal-dimensions.md) | 공간 단위 수·Element와 Lane·Time/Packet |
 | [Fetch Engine](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/moving-tensors/fetch-engine.md) · [Collect Engine](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/computing-tensors/collect-engine.md) | DM 읽기·패킷 전달·32-byte flit 정규화 |
 | [Schedule](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/scheduling/schedule.md) | context·자원 경쟁·메모리 의존성 |
+| [DMA Gather·Scatter](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/moving-tensors/dma-engine.md#gather-and-scatter) | position·byte offset·Domain·index 저장 배치 |
+| [Gather 구현](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-std/src/tensor/memory/dma/gather.rs) | HBM·SPM 인덱스 타입과 단위·배치 검사 |

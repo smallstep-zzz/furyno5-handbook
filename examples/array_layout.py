@@ -39,9 +39,34 @@ np.testing.assert_array_equal(xt, packed)
 # 이 예에서 xt는 x의 저장 공간을 공유하지만 packed는 별도 공간을 사용한다.
 print(np.shares_memory(x, xt), np.shares_memory(x, packed))  # True, False
 
+# 이 셀은 앞의 x, xt, packed를 이어서 사용한다.
+old_value = float(x[1, 0])  # 뒤의 예제에 영향을 주지 않도록 원래 값 4를 보관한다.
+xt[0, 1] = 40.0            # view를 통해 공유 저장 공간의 한 칸을 바꾼다.
+
+print(x[1, 0])       # 40.0: 원본도 같은 주소를 읽으므로 변경이 보인다.
+print(packed[0, 1])  # 4.0: 별도 복사본에는 이후 변경이 전파되지 않는다.
+assert x[1, 0] == 40.0
+assert packed[0, 1] == 4.0
+
+x[1, 0] = old_value  # 공유 공간을 4로 복원한다. xt[0,1]도 다시 4가 된다.
+
 bias = np.array([10, 20, 30], dtype=np.float32)  # 열마다 더할 값, shape (3,).
 y = x + bias  # 두 행에 같은 bias를 적용한다. 결과 shape는 (2, 3)이다.
 print(y)      # [[11., 22., 33.], [14., 25., 36.]]
+
+row_bias = np.array([10, 20], dtype=np.float32)  # 아직 shape는 (2,)이다.
+try:
+    x + row_bias  # 마지막 축 3과 2가 맞지 않아 ValueError가 발생한다.
+except ValueError:
+    print("행별 값에는 열 방향의 길이 1 축이 필요합니다.")
+else:
+    raise AssertionError("서로 맞지 않는 shape가 예상과 달리 허용됐습니다.")
+
+# 총 원소 수 2는 그대로다. 각 행에 값 하나를 두는 모양으로 해석한다.
+row_bias_2d = row_bias.reshape(2, 1)  # [[10], [20]]
+row_added = x + row_bias_2d  # 길이 1인 열 축의 값을 각 행의 세 열에 적용한다.
+print(row_added)  # [[11., 12., 13.], [24., 25., 26.]]
+np.testing.assert_array_equal(row_added, [[11, 12, 13], [24, 25, 26]])
 
 # shape가 (3, 2)로 같아도 reshape와 전치는 서로 다른 값을 배치한다.
 np.testing.assert_array_equal(reshaped, [[1, 2], [3, 4], [5, 6]])

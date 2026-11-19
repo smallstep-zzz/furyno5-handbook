@@ -1,8 +1,8 @@
 {
-  "chapters": 23,
+  "chapters": 24,
   "diagrams": 39,
-  "code_blocks": 124,
-  "source_urls": 333,
+  "code_blocks": 153,
+  "source_urls": 416,
   "generated_pages": [
     "index.html",
     "chapter/01-hardware.html",
@@ -27,6 +27,7 @@
     "glossary.html",
     "sources.html",
     "review.html",
+    "reader-review.html",
     "chapter/01-map.html",
     "chapter/02-stack-hardware.html",
     "chapter/03-aten-tcl.html",

@@ -1,6 +1,6 @@
 <!doctype html>
-<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="연산 스키마, 오버로드, 백엔드 구현을 구분하고 실제 등록 코드를 읽습니다."><meta name="theme-color" content="#fbfaf7"><title>PyTorch와 ATen 디스패처 · FuryNo5 개발 핸드북</title><link rel="icon" href="../assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="../assets/site.css?v=5454d41416bc"><script defer src="../assets/site.js?v=aeae33420bbb"></script></head>
-<body data-root="../" data-chapter="09-torch-aten" data-search-version="e58e3b38bb8f"><a class="skip" href="#content">본문으로 이동</a><header class="topbar"><button class="menu-toggle" type="button" aria-label="전체 목차 열기" aria-controls="sidebar" aria-expanded="false">☰</button><a class="brand" href="../index.html"><span class="brand-mark">Nº5</span>FuryNo5<small>DEVELOPER HANDBOOK</small></a><div class="top-actions"><a class="top-link" href="../sources.html">출처와 버전</a><button class="search-open" type="button" aria-label="핸드북 전체 검색"><span>전체 문서 검색</span><kbd>⌘ K</kbd></button></div></header><div class="progress" aria-hidden="true"></div><div class="mobile-shade"></div><aside class="sidebar" id="sidebar" aria-label="전체 목차"><nav><div class="nav-caption">시작하기</div><a class="nav-link"  href="../index.html"><span class="num">00</span><span>전체 지도와 읽는 방법</span></a><div class="nav-caption">I. 디바이스를 이해하기</div><a class="nav-link"  href="../chapter/01-hardware.html"><span class="num">01</span><span>RNGD · TCP · PE</span></a><a class="nav-link"  href="../chapter/02-memory-dma.html"><span class="num">02</span><span>메모리 · DMA · 배치</span></a><a class="nav-link"  href="../chapter/03-driver-runtime.html"><span class="num">03</span><span>드라이버와 공식 런타임</span></a><div class="nav-caption">II. 프로그램을 만들고 실행하기</div><a class="nav-link"  href="../chapter/04-tcl-edf.html"><span class="num">04</span><span>TCL 작성 · 컴파일 · 실행</span></a><a class="nav-link"  href="../chapter/05-graphs-fallback.html"><span class="num">05</span><span>실행그래프 · 오류 · 폴백</span></a><a class="nav-link"  href="../chapter/06-buckets-shapes.html"><span class="num">06</span><span>Shape · 버킷 · 컴파일 비용</span></a><a class="nav-link"  href="../chapter/07-optimization.html"><span class="num">07</span><span>최적화의 축과 우선순위</span></a><a class="nav-link"  href="../chapter/08-eisa-visa.html"><span class="num">08</span><span>eISA · vISA · furiosa-opt</span></a><div class="nav-caption">III. FuryNo5를 해부하기</div><a class="nav-link active" aria-current="page" href="../chapter/09-torch-aten.html"><span class="num">09</span><span>PyTorch · ATen · 등록</span></a><a class="nav-link"  href="../chapter/10-furyno5-architecture.html"><span class="num">10</span><span>FuryNo5 구조와 지원 범위</span></a><a class="nav-link"  href="../chapter/11-furyno5-compiler.html"><span class="num">11</span><span>FuryNo5 컴파일과 캐시</span></a><div class="nav-caption">IV. 모델 포팅과 서빙</div><a class="nav-link"  href="../chapter/12-fxbx.html"><span class="num">12</span><span>fxbX 포맷과 실행계획</span></a><a class="nav-link"  href="../chapter/13-porting-fha.html"><span class="num">13</span><span>포팅 · FHA · FuryAwesome</span></a><a class="nav-link"  href="../chapter/14-serving-vllm.html"><span class="num">14</span><span>vLLM · 서빙 브리지</span></a><a class="nav-link"  href="../chapter/15-multi-npu.html"><span class="num">15</span><span>PE · 여러 카드 · 여러 서버</span></a><div class="nav-caption">V. 검증과 다음 개발</div><a class="nav-link"  href="../chapter/16-furyboost.html"><span class="num">16</span><span>FuryBoost 실측과 남은 과제</span></a><a class="nav-link"  href="../chapter/17-debugging.html"><span class="num">17</span><span>측정 · 추적 · 실패 재현</span></a><div class="nav-caption">VI. 생태계 비교와 최적화 연구</div><a class="nav-link"  href="../chapter/18-npu-ecosystems.html"><span class="num">18</span><span>다른 NPU의 지원 방식</span></a><a class="nav-link"  href="../chapter/19-model-optimization.html"><span class="num">19</span><span>모델 사전 최적화 · 연구</span></a><div class="nav-caption">참고와 검증</div><a class="nav-link"  href="../glossary.html"><span class="num">·</span><span>약어와 용어 사전</span></a><a class="nav-link"  href="../sources.html"><span class="num">·</span><span>출처 · 버전 · 접근 범위</span></a><a class="nav-link"  href="../review.html"><span class="num">·</span><span>검토 기록과 미해결 질문</span></a></nav><div class="side-foot">비공식 개발 핸드북 · 2026.11.19<br>공식 SDK와 프로젝트 구현을 구분합니다.<br><a href="https://github.com/smallstep-zzz/furyno5-handbook">원고와 변경 이력 ↗</a></div></aside><div class="shell"><main class="page" id="content"><div class="eyebrow">III. FuryNo5를 해부하기 / CHAPTER 09</div><h1>PyTorch와 ATen 디스패처</h1><p class="dek">연산 스키마, 오버로드, 백엔드 구현을 구분하고 실제 등록 코드를 읽습니다.</p><div class="page-meta"><span>검토 2026.11.19</span><span>SDK 2026.4 계열 / 버전별 표기</span><span class="readtime">약 19분</span><span><a href="https://github.com/smallstep-zzz/furyno5-handbook/blob/main/content/09-torch-aten.md">원고</a></span></div><details class="mobile-toc"><summary>이 장의 목차</summary><div><a class="" href="#먼저-두-개의-작은-배열을-더해-보자">먼저 두 개의 작은 배열을 더해 보자</a><a class="" href="#schema와-overload는-함수-선언을-읽듯-이해한다">schema와 overload는 함수 선언을 읽듯 이해한다</a><a class="" href="#eager-실행에서-dispatcher가-고르는-것">eager 실행에서 Dispatcher가 고르는 것</a><a class="" href="#장치별-구현은-어떻게-등록하는가">장치별 구현은 어떻게 등록하는가</a><a class="" href="#cpu-폴백은-누가-결정하는가">CPU 폴백은 누가 결정하는가</a><a class="" href="#shape-변경과-전치는-값의-의미부터-확인한다">shape 변경과 전치는 값의 의미부터 확인한다</a><a class="" href="#함수-호출들을-그래프로-저장하면-무엇이-달라지는가">함수 호출들을 그래프로 저장하면 무엇이 달라지는가</a><a class="" href="#왜-aten이-만들어졌는가">왜 ATen이 만들어졌는가</a><a class="" href="#aten은-몇-개이며-어떤-종류가-있는가">ATen은 몇 개이며 어떤 종류가 있는가</a><a class="" href="#설치본에서-재현하는-방법">설치본에서 재현하는 방법</a><a class="" href="#다른-하드웨어가-같은-경계를-사용하는-방법">다른 하드웨어가 같은 경계를 사용하는 방법</a><a class="" href="#출처">출처</a></div></details><noscript><p class="noscript">본문과 그림은 JavaScript 없이 읽을 수 있습니다. 검색과 조절 실험에는 JavaScript가 필요합니다.</p></noscript><article class="article"><p>Python에서 <code>torch.add(x, y)</code>를 호출했을 때 CPU 코드가 실행될지 NPU 코드가 실행될지는 누가 결정할까? 이 장은 <strong>함수 이름, 함수의 호출 계약, 실제 구현, 모델 전체의 컴파일</strong>을 나누어 답한다. C의 함수 포인터 표를 떠올려도 좋다. 호출할 계산의 이름은 같아도 인수의 장치에 따라 다른 구현을 선택할 수 있다. 다만 PyTorch는 자동 미분 같은 부가 처리도 선택하므로 실제 과정은 단순한 장치별 <code>switch</code>보다 복잡하다.</p>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="연산 스키마, 오버로드, 백엔드 구현을 구분하고 실제 등록 코드를 읽습니다."><meta name="theme-color" content="#fbfaf7"><title>PyTorch와 ATen 디스패처 · FuryNo5 개발 핸드북</title><link rel="icon" href="../assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="../assets/site.css?v=cb5aa5a870ba"><script defer src="../assets/site.js?v=aeae33420bbb"></script></head>
+<body data-root="../" data-chapter="09-torch-aten" data-search-version="5328e86ff6da"><a class="skip" href="#content">본문으로 이동</a><header class="topbar"><button class="menu-toggle" type="button" aria-label="전체 목차 열기" aria-controls="sidebar" aria-expanded="false">☰</button><a class="brand" href="../index.html"><span class="brand-mark">Nº5</span>FuryNo5<small>DEVELOPER HANDBOOK</small></a><div class="top-actions"><a class="top-link" href="../sources.html">출처와 버전</a><button class="search-open" type="button" aria-label="핸드북 전체 검색"><span>전체 문서 검색</span><kbd>⌘ K</kbd></button></div></header><div class="progress" aria-hidden="true"></div><div class="mobile-shade"></div><aside class="sidebar" id="sidebar" aria-label="전체 목차"><nav><div class="nav-caption">시작하기</div><a class="nav-link"  href="../index.html"><span class="num">00</span><span>전체 지도와 읽는 방법</span></a><div class="nav-caption">I. 디바이스를 이해하기</div><a class="nav-link"  href="../chapter/01-hardware.html"><span class="num">01</span><span>RNGD · TCP · PE</span></a><a class="nav-link"  href="../chapter/02-memory-dma.html"><span class="num">02</span><span>메모리 · DMA · 배치</span></a><a class="nav-link"  href="../chapter/03-driver-runtime.html"><span class="num">03</span><span>드라이버와 공식 런타임</span></a><div class="nav-caption">II. 프로그램을 만들고 실행하기</div><a class="nav-link"  href="../chapter/04-tcl-edf.html"><span class="num">04</span><span>TCL 작성 · 컴파일 · 실행</span></a><a class="nav-link"  href="../chapter/05-graphs-fallback.html"><span class="num">05</span><span>실행그래프 · 오류 · 폴백</span></a><a class="nav-link"  href="../chapter/06-buckets-shapes.html"><span class="num">06</span><span>Shape · 버킷 · 컴파일 비용</span></a><a class="nav-link"  href="../chapter/07-optimization.html"><span class="num">07</span><span>최적화의 축과 우선순위</span></a><a class="nav-link"  href="../chapter/08-eisa-visa.html"><span class="num">08</span><span>eISA · vISA · furiosa-opt</span></a><div class="nav-caption">III. FuryNo5를 해부하기</div><a class="nav-link active" aria-current="page" href="../chapter/09-torch-aten.html"><span class="num">09</span><span>PyTorch · ATen · 등록</span></a><a class="nav-link"  href="../chapter/10-furyno5-architecture.html"><span class="num">10</span><span>FuryNo5 구조와 지원 범위</span></a><a class="nav-link"  href="../chapter/11-furyno5-compiler.html"><span class="num">11</span><span>FuryNo5 컴파일과 캐시</span></a><div class="nav-caption">IV. 모델 포팅과 서빙</div><a class="nav-link"  href="../chapter/12-fxbx.html"><span class="num">12</span><span>fxbX 포맷과 실행계획</span></a><a class="nav-link"  href="../chapter/13-porting-fha.html"><span class="num">13</span><span>포팅 · FHA · FuryAwesome</span></a><a class="nav-link"  href="../chapter/14-serving-vllm.html"><span class="num">14</span><span>vLLM · 서빙 브리지</span></a><a class="nav-link"  href="../chapter/15-multi-npu.html"><span class="num">15</span><span>PE · 여러 카드 · 여러 서버</span></a><div class="nav-caption">V. 검증과 다음 개발</div><a class="nav-link"  href="../chapter/16-furyboost.html"><span class="num">16</span><span>FuryBoost 실측과 남은 과제</span></a><a class="nav-link"  href="../chapter/17-debugging.html"><span class="num">17</span><span>측정 · 추적 · 실패 재현</span></a><div class="nav-caption">VI. 생태계 비교와 최적화 연구</div><a class="nav-link"  href="../chapter/18-npu-ecosystems.html"><span class="num">18</span><span>다른 NPU의 지원 방식</span></a><a class="nav-link"  href="../chapter/19-model-optimization.html"><span class="num">19</span><span>모델 사전 최적화 · 연구</span></a><div class="nav-caption">참고와 검증</div><a class="nav-link"  href="../glossary.html"><span class="num">·</span><span>약어와 용어 사전</span></a><a class="nav-link"  href="../sources.html"><span class="num">·</span><span>출처 · 버전 · 접근 범위</span></a><a class="nav-link"  href="../review.html"><span class="num">·</span><span>검토 기록과 미해결 질문</span></a><a class="nav-link"  href="../reader-review.html"><span class="num">·</span><span>3학년 독자 검토와 수정 기록</span></a></nav><div class="side-foot">비공식 개발 핸드북 · 2026.11.20<br>공식 SDK와 프로젝트 구현을 구분합니다.<br><a href="https://github.com/smallstep-zzz/furyno5-handbook">원고와 변경 이력 ↗</a></div></aside><div class="shell"><main class="page" id="content"><div class="eyebrow">III. FuryNo5를 해부하기 / CHAPTER 09</div><h1>PyTorch와 ATen 디스패처</h1><p class="dek">연산 스키마, 오버로드, 백엔드 구현을 구분하고 실제 등록 코드를 읽습니다.</p><div class="page-meta"><span>독자 검토 2026.11.20</span><span>SDK 2026.4 계열 / 버전별 표기</span><span class="readtime">약 23분</span><span><a href="https://github.com/smallstep-zzz/furyno5-handbook/blob/main/content/09-torch-aten.md">원고</a></span></div><details class="mobile-toc"><summary>이 장의 목차</summary><div><a class="" href="#먼저-두-개의-작은-배열을-더해-보자">먼저 두 개의 작은 배열을 더해 보자</a><a class="" href="#schema와-overload는-함수-선언을-읽듯-이해한다">schema와 overload는 함수 선언을 읽듯 이해한다</a><a class="" href="#eager-실행에서-dispatcher가-고르는-것">eager 실행에서 Dispatcher가 고르는 것</a><a class="" href="#장치별-구현은-어떻게-등록하는가">장치별 구현은 어떻게 등록하는가</a><a class="" href="#cpu-폴백은-누가-결정하는가">CPU 폴백은 누가 결정하는가</a><a class="" href="#shape-변경과-전치는-값의-의미부터-확인한다">shape 변경과 전치는 값의 의미부터 확인한다</a><a class="" href="#함수-호출들을-그래프로-저장하면-무엇이-달라지는가">함수 호출들을 그래프로 저장하면 무엇이 달라지는가</a><a class="minor" href="#대표-입력의-숫자도-그래프에-고정되는가">대표 입력의 숫자도 그래프에 고정되는가</a><a class="" href="#왜-aten이-만들어졌는가">왜 ATen이 만들어졌는가</a><a class="" href="#aten은-몇-개이며-어떤-종류가-있는가">ATen은 몇 개이며 어떤 종류가 있는가</a><a class="" href="#설치본에서-재현하는-방법">설치본에서 재현하는 방법</a><a class="" href="#다른-하드웨어가-같은-경계를-사용하는-방법">다른 하드웨어가 같은 경계를 사용하는 방법</a><a class="" href="#출처">출처</a></div></details><noscript><p class="noscript">본문과 그림은 JavaScript 없이 읽을 수 있습니다. 검색과 조절 실험에는 JavaScript가 필요합니다.</p></noscript><article class="article"><p>Python에서 <code>torch.add(x, y)</code>를 호출했을 때 CPU 코드가 실행될지 NPU 코드가 실행될지는 누가 결정할까? 이 장은 <strong>함수 이름, 함수의 호출 계약, 실제 구현, 모델 전체의 컴파일</strong>을 나누어 답한다. C의 함수 포인터 표를 떠올려도 좋다. 호출할 계산의 이름은 같아도 인수의 장치에 따라 다른 구현을 선택할 수 있다. 다만 PyTorch는 자동 미분 같은 부가 처리도 선택하므로 실제 과정은 단순한 장치별 <code>switch</code>보다 복잡하다.</p>
 <p>NPU(Neural Processing Unit)는 신경망 계산용 장치이고, 이 책의 대상은 Furiosa의 RNGD다. <strong>ATen(A Tensor Library)은</strong> PyTorch가 텐서 계산을 표현하는 공통 연산 계층이다. ATen 연산은 CPU(Central Processing Unit)의 기계어도 RNGD의 장치 명령어도 아니다. <code>더한다</code>, <code>행렬곱을 한다</code>는 계산 의미를 정해 두고, 장치별 구현이 그 의미를 수행한다. <a href="https://docs.pytorch.org/cppdocs/api/aten/index.html">ATen의 공식 역할</a></p>
 <blockquote>
 <p><strong>확인 범위</strong> · API(Application Programming Interface)는 PyTorch 공식 자료를, 개수는 v2.10.0 고정 소스와 저장된 Torch 2.10.0+cpu / furiosa-torch 2026.4.0 기록을 사용한다. 아래 예제는 호출 구조를 설명하기 위한 코드이며 이번 집필 환경에는 PyTorch와 RNGD가 없어 실행하지 않았다. 수치가 적힌 주석은 식에서 예상되는 값이다.</p>
@@ -206,6 +206,58 @@ print(t.tolist())        # 예상 [[1,4], [2,5], [3,6]]; shape [3,2]
 </tr>
 </tbody></table>
 </div><p>그래프가 있으면 compiler는 <code>h</code>를 만드는 연산과 사용하는 연산을 함께 검토할 수 있다. 여러 node를 한 실행 단위로 묶는 <strong>fusion(연산 결합)</strong>, 반대로 지원되는 작은 연산으로 나누는 decomposition을 선택할 수 있다. <code>torch.export</code>의 결과인 <strong>ExportedProgram</strong>은 graph와 입력·출력 서명, parameter 연결, 제약을 함께 보존하는 객체다. Python 모델 자체도, 이미 만들어진 NPU 바이너리도 아니다. <a href="https://docs.pytorch.org/docs/stable/user_guide/torch_compiler/export.html">export의 역할</a></p>
+<h3 id="대표-입력의-숫자도-그래프에-고정되는가"><a class="heading-anchor" href="#대표-입력의-숫자도-그래프에-고정되는가">대표 입력의 숫자도 그래프에 고정되는가</a></h3>
+<p>일반적인 tensor 입력의 <strong>원소 값은 실행 때 다시 공급</strong>한다. 예를 들어 <code>forward(x)</code>가 <code>x * 2 + 1</code>이면 캡처할 때 사용한 <code>x</code>가 모두 0이더라도, 얻은 프로그램에 같은 계약의 1을 넣으면 3을 계산해야 한다. 저장하는 것은 <code>x → 곱하기 2 → 더하기 1</code>의 관계다. 반면 이 식의 Python 상수 <code>2</code>, <code>1</code>과 정적으로 선택한 계산 경로는 그래프 표현의 일부가 된다. 같은 shape라고 임의의 Python 코드까지 항상 안전하게 재사용할 수 있다는 뜻은 아니다. <a href="https://github.com/pytorch/pytorch/blob/449b1768410104d3ed79d3bcfe4ba1d65c7f22c0/torch/export/__init__.py#L175-L203">고정 버전 export의 입력·제약 설명</a></p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th><code>forward</code>에 있는 표현</th>
+<th>캡처 때 결정할 수 있는 것</th>
+<th>다른 호출에 적용할 때 확인할 것</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>return x * 2 + 1</code></td>
+<td>연산 순서, 상수 2·1, 입력의 shape·dtype</td>
+<td>원소 값이 달라져도 같은 입력 계약이면 같은 식을 계산한다.</td>
+</tr>
+<tr>
+<td><code>if x.shape[0] == 4: return x + 1</code> / <code>else: return x - 1</code></td>
+<td>기본 정적 캡처에서 대표 입력의 첫 축이 4라는 조건과 그 경로</td>
+<td>첫 축 8의 입력을 같은 정적 프로그램에 넣지 않는다. 동적 shape는 별도로 선언하고 제약을 만족해야 한다.</td>
+</tr>
+<tr>
+<td><code>if x.sum() &gt; 0: return x + 1</code> / <code>else: return x - 1</code></td>
+<td>분기 조건이 매 호출의 원소 값에 달려 있어 shape만으로 선택할 수 없다.</td>
+<td>이 Python <code>if</code>가 그대로 export된다고 가정하지 않는다. 지원되는 제어 흐름 표현으로 모델을 바꾸거나 분기 경계를 밖에 두고 별도 검토한다.</td>
+</tr>
+</tbody></table>
+</div><p>마지막 경우의 문제는 합계를 계산할 수 없다는 것이 아니라, <strong>아직 들어오지 않은 값에 따라 Python 실행 경로가 바뀐다는 것</strong>이다. <code>strict=False</code>는 캡처 방법의 옵션이며 이 문제를 자동 해결하는 보증이 아니다. 실제 실패 여부와 메시지는 코드·버전에 따라 확인한다. PyTorch의 동적 shape를 선언할 수 있다는 사실도 FuryNo5의 현재 정적 커널이 임의 크기를 받는다는 의미로 이어지지 않는다. <a href="https://github.com/pytorch/pytorch/blob/449b1768410104d3ed79d3bcfe4ba1d65c7f22c0/torch/export/__init__.py#L236-L244">strict 옵션의 계약</a> · <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/aten.py">FuryNo5 정적 입력 검사</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>시점</th>
+<th>이 예제에서 보유하는 정보</th>
+<th>아직 계산하지 않은 것</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>캡처</td>
+<td><code>x[4,8]</code>, parameter 연결, <code>h → a → y</code> 계산 관계</td>
+<td>미래 호출의 다른 <code>x</code>에 대한 결과</td>
+</tr>
+<tr>
+<td>FuryNo5 컴파일</td>
+<td>정적 shape·dtype·stride와 연산 의미로 만든 EDF</td>
+<td>그 EDF에 다음 호출의 입력을 넣은 결과</td>
+</tr>
+<tr>
+<td>실행</td>
+<td>이번 <code>x</code>의 실제 원소 값과 연결된 가중치</td>
+<td>실행이 끝나야 <code>y</code>를 얻는다.</td>
+</tr>
+</tbody></table>
+</div><p>13장의 <code>x_second = x + 0.25</code> 검사는 이 구분을 확인한다. 입력 계약은 유지하면서 숫자를 바꾸어, 첫 대표 입력의 답을 재사용하는 오류가 없는지 검사하는 것이다.</p>
 <p><code>torch.compile</code>의 custom backend는 graph와 example input을 받아 실행 callable을 반환한다. callable은 Python에서 함수처럼 호출할 수 있는 객체다. AOTAutograd(Ahead-of-Time Autograd)를 사용하는 경로는 더 작은 함수형 ATen 집합을 backend 경계로 사용할 수 있다. 이처럼 <strong>graph backend</strong>는 여러 연산으로 구성된 함수 전체를 받아 최적화한다. 반면 <strong>Dispatcher backend</strong>에 대한 <code>torch.library</code> 등록은 특정 연산과 dispatch key의 구현을 연결한다. 둘은 함께 쓸 수 있지만, “torch.compile backend 등록 = 모든 ATen의 NPU 구현 등록”은 아니다. <a href="https://docs.pytorch.org/docs/main/user_guide/torch_compiler/torch.compiler_custom_backends.html">Custom Backends</a></p>
 <p>FuryNo5도 두 경로를 구분한다. <code>optimize</code>는 제한된 연산을 준비한 후 복사한 FX graph를 custom op로 바꾼다. <code>export_model</code>은 더 넓은 의미 규칙과 실행 계획 생성기를 사용해 파일을 생산한다. 두 함수의 지원 범위가 같다고 추정하지 않는다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/aten_runtime.py">aten_runtime.py</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span> · <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/execution_plan.py">execution_plan.py</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
 <h2 id="왜-aten이-만들어졌는가"><a class="heading-anchor" href="#왜-aten이-만들어졌는가">왜 ATen이 만들어졌는가</a></h2>
@@ -311,22 +363,105 @@ python examples/aten_inventory.py --import-module furiosa.torch \
 <div class="codebox"><div class="codebar"><span>bash</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-bash"># FuryNo5의 Core 기준 목록을 기록한다. NPU 지원 검증을 실행하는 명령은 아니다.
 python -m tplmachine.research.core_aten snapshot --out core-baseline.json
 </code></pre></div>
-<p>실제 모델이 사용하는 목록은 전체 ATen 수와 별도로 뽑는다. 작은 모델에서 다음 코드를 적용하면 graph target을 직접 볼 수 있다.</p>
+<p>실제 모델이 사용하는 목록은 전체 ATen 수와 별도로 뽑는다. 다음 완성 예제를 <a href="../examples/inspect_tiny_fx.py">inspect_tiny_fx.py</a>로 저장하면 <strong>입력 자리의 역할과 연산 사이의 연결</strong>을 함께 읽을 수 있다. PyTorch가 필요하며 NPU를 사용하지 않는다. 이 집필 환경에서는 PyTorch 실행을 하지 않았으므로, 아래의 설명 표를 이 스크립트의 실제 출력 로그로 취급하지 않는다.</p>
 <div class="codebox"><div class="codebar"><span>python</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-python">import torch
 
-model = torch.nn.Sequential(
-    torch.nn.Linear(8, 12),  # 입력 [4,8] → 행별 행렬곱·bias 덧셈 → [4,12]
-    torch.nn.ReLU(),        # 원소별 max(value, 0); [4,12] 유지
-    torch.nn.Linear(12, 8), # [4,12] → [4,8]
-).eval().requires_grad_(False)  # 추론 모드와 parameter의 미분 불필요를 각각 지정한다.
-x = torch.randn(4, 8)  # CPU FP32 대표 입력; 이 예에서는 BF16으로 변환하지 않는다.
-ep = torch.export.export(model, (x,), strict=False)  # 입력 하나의 tuple로 그래프를 얻는다.
-for node in ep.graph.nodes:
-    value = node.meta.get(&quot;val&quot;)  # 실제 NPU 결과가 아니라 캡처 중 추적한 값 정보다.
-    shape = tuple(value.shape) if isinstance(value, torch.Tensor) else None
-    print(node.op, node.name, node.target, shape)  # node 종류·이름·호출 대상·추적 shape
+def main():
+    model = torch.nn.Sequential(
+        torch.nn.Linear(8, 12),  # 입력 [4,8] → [4,12]
+        torch.nn.ReLU(),        # 음수만 0으로 바꾸며 [4,12] 유지
+        torch.nn.Linear(12, 8), # [4,12] → [4,8]
+    ).eval().requires_grad_(False)
+    x = torch.randn(4, 8)  # CPU FP32 대표 입력; BF16 장치 컴파일 예제와 구분한다.
+    ep = torch.export.export(model, (x,), strict=False)
+
+    for spec in ep.graph_signature.input_specs:
+        # arg.name은 그래프의 입력 자리, target은 연결할 parameter 이름이다.
+        # USER_INPUT의 target은 보통 None이며, PARAMETER는 '0.weight' 등이다.
+        name = getattr(spec.arg, &quot;name&quot;, repr(spec.arg))
+        print(&quot;INPUT&quot;, name, spec.kind.name, &quot;target=&quot;, spec.target)
+
+    for node in ep.graph.nodes:
+        value = node.meta.get(&quot;val&quot;)  # 계산 결과가 아니라 캡처 중 추적한 tensor 정보
+        shape = tuple(value.shape) if isinstance(value, torch.Tensor) else None
+        print(&quot;NODE&quot;, node.op, node.name, node.target, &quot;shape=&quot;, shape)
+        print(&quot;  args=&quot;, node.args, &quot;kwargs=&quot;, node.kwargs)  # 선행 node 참조와 상수
+
+    x_second = x + 0.25  # shape [4,8]은 그대로 두고 입력의 숫자만 바꾼다.
+    with torch.no_grad():
+        actual = ep.module()(x_second)  # parameter를 다시 연결한 CPU 실행 module
+        expected = model(x_second)     # 같은 가중치의 원본 Python 모델
+    torch.testing.assert_close(actual, expected)
+    print(&quot;changed-input CPU comparison passed&quot;)  # 위 비교가 실제 통과한 경우에만 출력
+
+if __name__ == &quot;__main__&quot;:
+    main()
 </code></pre></div>
-<p><code>placeholder</code>는 외부에서 값을 받아야 하는 자리, <code>call_function</code>은 연산 호출, <code>output</code>은 반환할 값을 나타낸다. <code>node.target</code>은 호출할 연산이고 <code>node.meta[&quot;val&quot;]</code>은 분석 중 얻은 tensor 정보이지 이미 NPU로 계산한 출력이 아니다. parameter가 별도 placeholder로 보일 수 있으므로 입력 node 수가 사용자의 인수 개수와 같다고 가정하지 않는다.</p>
+<p><code>placeholder</code>는 외부에서 값을 받아야 하는 자리, <code>call_function</code>은 연산 호출, <code>output</code>은 반환할 값을 나타낸다. <code>node.target</code>은 호출할 연산이고, <code>node.args</code>와 <code>node.kwargs</code>에 다른 node가 들어 있으면 <strong>그 node가 만든 값을 인수로 사용</strong>한다. 일반 Python의 함수 인수 목록과 같은 순서로 읽으면 된다. <code>node.meta[&quot;val&quot;]</code>은 분석 중 얻은 tensor 정보이지 이미 NPU로 계산한 출력이 아니다.</p>
+<p>다음은 실제 로그가 아니라 <strong>node 이름을 <code>x</code>, <code>w0</code>, <code>h</code> 등으로 줄인 교육용 재구성</strong>이다. 먼저 <code>INPUT</code> 줄로 placeholder의 출처를 찾고, 다음으로 <code>NODE</code>의 <code>args</code>를 따라간다. 입력 순서와 자동 이름은 설치 버전에서 위 코드로 확인한다.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>짧게 부른 입력 자리</th>
+<th><code>input_specs</code>의 kind</th>
+<th><code>target</code>이 가리키는 것</th>
+<th>호출자가 직접 넘기는가</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>w0</code>, <code>b0</code></td>
+<td><code>PARAMETER</code></td>
+<td><code>0.weight</code>, <code>0.bias</code></td>
+<td><code>ep.module()</code>이 모델 상태에 연결한다.</td>
+</tr>
+<tr>
+<td><code>w2</code>, <code>b2</code></td>
+<td><code>PARAMETER</code></td>
+<td><code>2.weight</code>, <code>2.bias</code></td>
+<td>위와 같다.</td>
+</tr>
+<tr>
+<td><code>x</code></td>
+<td><code>USER_INPUT</code></td>
+<td>모델 parameter가 아니므로 <code>None</code></td>
+<td><code>ep.module()(x_second)</code>의 인수다.</td>
+</tr>
+</tbody></table>
+</div><div class="table-wrap"><table>
+<thead>
+<tr>
+<th>만드는 값</th>
+<th>node 종류·호출 대상</th>
+<th>순서 있는 인수 참조</th>
+<th>이 줄을 읽은 뜻</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>h</code></td>
+<td><code>call_function</code>, <code>aten.linear.default</code></td>
+<td><code>(x, w0, b0)</code></td>
+<td>사용자 입력과 첫 weight·bias로 <code>[4,12]</code>를 만든다.</td>
+</tr>
+<tr>
+<td><code>a</code></td>
+<td><code>call_function</code>, <code>aten.relu.default</code></td>
+<td><code>(h,)</code></td>
+<td>바로 위의 결과를 받아 음수만 0으로 바꾼다.</td>
+</tr>
+<tr>
+<td><code>y</code></td>
+<td><code>call_function</code>, <code>aten.linear.default</code></td>
+<td><code>(a, w2, b2)</code></td>
+<td>ReLU 결과와 둘째 weight·bias로 <code>[4,8]</code>를 만든다.</td>
+</tr>
+<tr>
+<td>함수 출력</td>
+<td><code>output</code></td>
+<td><code>((y,),)</code></td>
+<td>그래프의 출력 tensor가 <code>y</code>임을 기록한다.</td>
+</tr>
+</tbody></table>
+</div><p>따라서 사용자 입력이 하나여도 이 예제의 parameter 네 개가 입력 자리로 분리되면 placeholder는 다섯 개다. <code>ep.graph</code>는 이 다섯 입력의 관계를 드러내고, <code>ep.module()</code>은 parameter를 다시 묶어 사용자 입력 하나로 호출할 수 있게 한다. 실제 그래프에 decomposition이 적용되었다면 <code>linear</code> 대신 더 작은 연산들이 보일 수 있으므로, 그때도 <code>target</code>과 인수 참조로 같은 의존 관계를 따라간다. <a href="https://github.com/pytorch/pytorch/blob/449b1768410104d3ed79d3bcfe4ba1d65c7f22c0/torch/export/graph_signature.py#L165-L180">그래프 입력 서명과 parameter 분리 계약</a></p>
 <p>모델 수, 관측 node 수, 지원 overload 수, 검증한 shape/dtype 수를 각각 기록하면 과장된 “지원율”을 피할 수 있다. 다음 장은 이 호출 경계를 FuryNo5 코드의 실제 파일에 연결한다.</p>
 <h2 id="다른-하드웨어가-같은-경계를-사용하는-방법"><a class="heading-anchor" href="#다른-하드웨어가-같은-경계를-사용하는-방법">다른 하드웨어가 같은 경계를 사용하는 방법</a></h2>
 <p>장치 연산을 <code>PrivateUse1</code>에 등록하는 방법 외에도 <code>torch.compile</code> 그래프를 받거나, Hugging Face 모델 어댑터를 통해 컴파일·적재를 연결하는 방법이 있다. Ascend, Rebellions, AWS Neuron, Tenstorrent가 이 경계를 어떻게 사용하는지는 <a href="../chapter/18-npu-ecosystems.html">18장 다른 NPU의 PyTorch 지원 방식</a>에서 공식 자료와 코드를 비교한다. 같은 Torch API를 호출해도 내부 컴파일 산출물과 CPU 폴백 정책은 backend마다 다르다.</p>
@@ -339,6 +474,10 @@ for node in ep.graph.nodes:
 </tr>
 </thead>
 <tbody><tr>
+<td><a href="https://github.com/pytorch/pytorch/blob/449b1768410104d3ed79d3bcfe4ba1d65c7f22c0/torch/export/__init__.py">export 입력·제약</a>, <a href="https://github.com/pytorch/pytorch/blob/449b1768410104d3ed79d3bcfe4ba1d65c7f22c0/torch/export/graph_signature.py">그래프 입력 서명</a></td>
+<td>대표 입력의 값·shape 구분, parameter와 사용자 입력 자리</td>
+</tr>
+<tr>
 <td><a href="https://docs.pytorch.org/docs/2.10/generated/torch.reshape.html">reshape 2.10</a>, <a href="https://docs.pytorch.org/docs/2.10/generated/torch.transpose.html">transpose 2.10</a>, <a href="https://docs.pytorch.org/docs/2.10/generated/torch.nn.Linear.html">Linear 2.10</a></td>
 <td>원소 재해석·축 교환·행렬곱과 bias 계약</td>
 </tr>
@@ -376,4 +515,4 @@ for node in ep.graph.nodes:
 </tr>
 </tbody></table>
 </div><p>FuryNo5 소스 링크는 조사 시점에 비공개 저장소였으므로 열람 권한이 필요하다.</p>
-</article><nav class="next-prev" aria-label="이전과 다음 장"><a href="../chapter/08-eisa-visa.html"><small>← 이전 장</small><b>eISA 질문에서 vISA 실습으로</b></a><a href="../chapter/10-furyno5-architecture.html"><small>다음 장 →</small><b>FuryNo5의 실제 구조</b></a></nav><footer class="footer">FuryNo5 개발 핸드북 · 비공식 자료<br>공식 문서와 소스의 권리는 각 프로젝트에 있습니다. 코드 인용은 출처와 함께 표시합니다.<br><a href="../review.html">검토 기록과 남은 질문</a> · <a href="../sources.html">출처와 버전</a> · <a href="../glossary.html">용어 사전</a></footer></main></div><aside class="right-toc" aria-label="이 장의 목차"><h2>이 장에서 다루는 내용</h2><a class="" href="#먼저-두-개의-작은-배열을-더해-보자">먼저 두 개의 작은 배열을 더해 보자</a><a class="" href="#schema와-overload는-함수-선언을-읽듯-이해한다">schema와 overload는 함수 선언을 읽듯 이해한다</a><a class="" href="#eager-실행에서-dispatcher가-고르는-것">eager 실행에서 Dispatcher가 고르는 것</a><a class="" href="#장치별-구현은-어떻게-등록하는가">장치별 구현은 어떻게 등록하는가</a><a class="" href="#cpu-폴백은-누가-결정하는가">CPU 폴백은 누가 결정하는가</a><a class="" href="#shape-변경과-전치는-값의-의미부터-확인한다">shape 변경과 전치는 값의 의미부터 확인한다</a><a class="" href="#함수-호출들을-그래프로-저장하면-무엇이-달라지는가">함수 호출들을 그래프로 저장하면 무엇이 달라지는가</a><a class="" href="#왜-aten이-만들어졌는가">왜 ATen이 만들어졌는가</a><a class="" href="#aten은-몇-개이며-어떤-종류가-있는가">ATen은 몇 개이며 어떤 종류가 있는가</a><a class="" href="#설치본에서-재현하는-방법">설치본에서 재현하는 방법</a><a class="" href="#다른-하드웨어가-같은-경계를-사용하는-방법">다른 하드웨어가 같은 경계를 사용하는 방법</a><a class="" href="#출처">출처</a></aside><dialog class="search-dialog" aria-label="문서 검색"><div class="search-head"><input type="search" aria-label="검색어" placeholder="DMA, EDF, 폴백, 버킷…" autocomplete="off"><button class="close-search" type="button">닫기</button></div><div class="search-status" role="status">용어나 함수 이름을 입력하세요.</div><div class="search-results"></div></dialog></body></html>
+</article><nav class="next-prev" aria-label="이전과 다음 장"><a href="../chapter/08-eisa-visa.html"><small>← 이전 장</small><b>eISA 질문에서 vISA 실습으로</b></a><a href="../chapter/10-furyno5-architecture.html"><small>다음 장 →</small><b>FuryNo5의 실제 구조</b></a></nav><footer class="footer">FuryNo5 개발 핸드북 · 비공식 자료<br>공식 문서와 소스의 권리는 각 프로젝트에 있습니다. 코드 인용은 출처와 함께 표시합니다.<br><a href="../reader-review.html">3학년 독자 재검토</a> · <a href="../review.html">검토 기록과 남은 질문</a> · <a href="../sources.html">출처와 버전</a> · <a href="../glossary.html">용어 사전</a></footer></main></div><aside class="right-toc" aria-label="이 장의 목차"><h2>이 장에서 다루는 내용</h2><a class="" href="#먼저-두-개의-작은-배열을-더해-보자">먼저 두 개의 작은 배열을 더해 보자</a><a class="" href="#schema와-overload는-함수-선언을-읽듯-이해한다">schema와 overload는 함수 선언을 읽듯 이해한다</a><a class="" href="#eager-실행에서-dispatcher가-고르는-것">eager 실행에서 Dispatcher가 고르는 것</a><a class="" href="#장치별-구현은-어떻게-등록하는가">장치별 구현은 어떻게 등록하는가</a><a class="" href="#cpu-폴백은-누가-결정하는가">CPU 폴백은 누가 결정하는가</a><a class="" href="#shape-변경과-전치는-값의-의미부터-확인한다">shape 변경과 전치는 값의 의미부터 확인한다</a><a class="" href="#함수-호출들을-그래프로-저장하면-무엇이-달라지는가">함수 호출들을 그래프로 저장하면 무엇이 달라지는가</a><a class="minor" href="#대표-입력의-숫자도-그래프에-고정되는가">대표 입력의 숫자도 그래프에 고정되는가</a><a class="" href="#왜-aten이-만들어졌는가">왜 ATen이 만들어졌는가</a><a class="" href="#aten은-몇-개이며-어떤-종류가-있는가">ATen은 몇 개이며 어떤 종류가 있는가</a><a class="" href="#설치본에서-재현하는-방법">설치본에서 재현하는 방법</a><a class="" href="#다른-하드웨어가-같은-경계를-사용하는-방법">다른 하드웨어가 같은 경계를 사용하는 방법</a><a class="" href="#출처">출처</a></aside><dialog class="search-dialog" aria-label="문서 검색"><div class="search-head"><input type="search" aria-label="검색어" placeholder="DMA, EDF, 폴백, 버킷…" autocomplete="off"><button class="close-search" type="button">닫기</button></div><div class="search-status" role="status">용어나 함수 이름을 입력하세요.</div><div class="search-results"></div></dialog></body></html>

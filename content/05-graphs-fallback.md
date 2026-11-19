@@ -176,6 +176,76 @@ python build_and_run.py
 
 가중치는 `model.state_dict()`로 별도 전달한다. 이 예제는 동일한 프로세스에 모델이 있어 바로 넘기지만, 실제 배포에서는 모델 코드가 없어도 읽을 수 있는 호환 checkpoint와 가중치 이름 계약을 함께 보존해야 한다. `0.02` 오차는 작은 BF16 예제를 위한 값이며 모든 모델의 합격 기준이 아니다. 재실행에는 새 출력 디렉터리를 사용해 실험 결과를 분리한다.
 
+### `atol=0.02, rtol=0.02`가 허용하는 차이
+
+**절대 허용오차(atol, absolute tolerance)는** 값의 크기와 무관하게 허용할 차이고, **상대 허용오차(rtol, relative tolerance)는** 기준값 크기에 비례한 차이다. 유한한 일반 실수 tensor의 각 원소에 대해 `assert_close(actual, expected)`는 다음 조건을 확인한다. 오른쪽 기준은 `actual`이 아니라 `expected`다. [PyTorch 2.10의 비교 규칙](https://docs.pytorch.org/docs/2.10/testing.html#torch.testing.assert_close)
+
+`abs(actual - expected) <= atol + rtol * abs(expected)`
+
+| 기준 원소 expected | 이번 예의 허용 차이 | 비교 결과의 예 |
+|---:|---:|---|
+| 0 | `0.02 + 0.02×0 = 0.02` | actual=0.01은 통과, 0.03은 실패 |
+| 100 | `0.02 + 0.02×100 = 2.02` | actual=102는 통과, 103은 실패 |
+
+따라서 rtol 0.02를 “어떤 원소든 차이가 0.02 이하면 된다”로 읽으면 안 된다. 0 근처에서는 atol이 영향을 크게 주고 큰 값에서는 rtol 항이 커진다. 두 값 모두 0이면 원소 값이 정확히 같아야 한다. 위 숫자는 판정식을 이해하기 위한 예이며 모델 품질 기준을 정한 실험은 아니다. 실제 모델에서는 작은 출력의 중요도, 누적 오차, 정답률·생성 품질을 보고 허용오차를 정한다.
+
+### 저장한 package에서 실제 값 ID를 따라 읽기
+
+1절의 `tmp_sum`은 교육용 이름이었다. 이제 방금 만든 파일에서 **실제 이름과 연결**을 읽어 보자. fxbX의 `read_execution_plan(path)`는 package와 EDF 해시를 검사한 뒤 Python `dict`를 돌려준다. 장치에 실행 객체를 적재하거나 계산을 제출하는 함수는 아니다. 이 고정 버전의 읽기 함수는 구현 모듈 `fxbex.execution_fxb`에 있으며, `fxbx` 최상위의 안정된 공식 SDK API라는 뜻으로 제시하지 않는다. [실제 reader와 검증](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py#L136-L304)
+
+| 실제 필드 | 프로그램을 읽을 때 묻는 질문 |
+|---|---|
+| `plan['tensors'][value_id]` | 이 값의 shape·dtype·stride·역할은 무엇인가? |
+| `plan['entries']['forward']['inputs']` | 호출자가 넘길 입력 tensor ID와 그 순서는 무엇인가? |
+| `entry['steps'][i]['kernel']` | i번째 단계가 어떤 컴파일 결과를 사용할 것인가? |
+| `step['inputs']`, `step['outputs']` | 이 단계가 읽을 값 ID, 새로 만들 값 ID는 무엇인가? |
+| `plan['kernels'][kernel_id]['member']` | 해당 EDF가 ZIP package 안의 어느 경로에 있는가? |
+| `entry['outputs']` | 중간값들 중 어떤 것을 호출자에게 돌려줄 것인가? |
+
+다음 완전한 읽기 전용 스크립트([inspect_execution_plan.py](../examples/inspect_execution_plan.py))를 저장하고 앞 실습과 같은 디렉터리에서 실행한다. `read_execution_plan`이 검증한 연결을 그대로 출력하며 파일을 수정하거나 NPU를 호출하지 않는다.
+
+```python
+# inspect_execution_plan.py — 고정 버전과 호환되는 fxbX 설치가 필요하다.
+import sys
+from fxbex.execution_fxb import read_execution_plan
+
+def main(path):
+    plan = read_execution_plan(path)      # schema·연결·저장 EDF 해시를 검사하고 dict 반환
+    entry = plan["entries"]["forward"]
+    tensors = plan["tensors"]
+    # 값 ID -> 이 값을 준비한 곳. 매 호출 입력과 외부 가중치·상태를 먼저 등록한다.
+    origin = {name: "호출자 입력" for name in entry["inputs"]}
+    for name, spec in tensors.items():
+        if spec["kind"] in {"parameter", "buffer", "state"}:
+            origin[name] = f"{spec['kind']}:{spec.get('target', name)}"
+
+    print("entry inputs:", entry["inputs"])
+    for number, step in enumerate(entry["steps"]):
+        kernel_id = step["kernel"]
+        kernel = plan["kernels"][kernel_id]
+        print(f"step {number}: kernel={kernel_id}, EDF={kernel['member']}")
+        for name in step["inputs"]:
+            spec = tensors[name]
+            # 같은 ID를 쓰는 소비자가 누구에게서 값을 받는지 보인다.
+            print(f"  read {name} <- {origin[name]}, shape={spec['shape']}, dtype={spec['dtype']}")
+        for name in step["outputs"]:
+            origin[name] = f"step {number}의 출력"
+            print(f"  write {name}, shape={tensors[name]['shape']}")
+    for name in entry["outputs"]:
+        print(f"return {name} <- {origin[name]}") # 마지막 step 출력이라고 가정하지 않는다.
+    print("state updates:", entry["state_updates"]) # 이 MLP에는 지속 상태 갱신이 없다.
+
+if __name__ == "__main__":
+    main(sys.argv[1])
+```
+
+```bash
+# plan 읽기 성공은 package를 읽었다는 뜻이며 NPU 실행 성공이 아니다.
+python inspect_execution_plan.py ./small-mlp.fxbx
+```
+
+출력에서 어떤 ID가 `step 0`의 `write`에 나타나고 나중 단계의 `read`에 다시 나타나면, 그 ID가 두 단계를 잇는 중간값이다. `parameter:...`로 표시되는 입력은 `state_dict()`의 이름과 연결된 가중치다. 이들은 사용자가 `predict((x,))`에 넘기는 입력 목록과 구분된다. 커널 결합 결과에 따라 Linear·ReLU가 한 step에 함께 들어갈 수 있으므로 **Python 연산 수와 step 수가 같다고 미리 정하지 않는다**. 실제 출력 이름과 step 수를 이 작성 환경에서 새로 생성·관측한 것은 아니다.
+
 터미널에서는 저장소에 있는 재현 스크립트를 사용할 수 있다.
 
 ```bash
@@ -219,6 +289,98 @@ FuryNo5를 검증할 때는 다음 네 항목을 연결해 본다.
 
 첫 항목만으로 모든 단계의 NPU 실행이 증명되지는 않는다. 준비된 상수를 반환하는 EDF와 새 값을 계산하는 EDF도 다르게 기록한다. 저장소는 `static_value_preparation`을 NPU compute 증거와 구분한다. [준비된 값과 계산 구분](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/fxbx-producer/EXECUTION_PLAN.md)
 
+### 방금 실행한 step을 공식 profiler 기록과 대조한다
+
+**Trace는** 실행 중에 관측한 사건의 목록이다. 이 경로의 공식 `furiosa.torch.profiler.Profiler`는 JSON 파일에 `traceEvents`를 기록한다. 호스트의 `RecordFunction` 구간 이름과 NPU의 Task 이름은 다른 사건이다. fxbX는 `FXBX_TRACE_STEPS=1`일 때 각 step에 `execution_plan::forward::단계번호::커널ID`라는 이름을 붙이고 `propagate=True`로 전달한다. 고정 소스의 검증 worker는 Task 이름의 `::Task::` 뒤에서 이 이름을 찾아 대응을 확인한다. [step 이름을 붙이는 consumer](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py#L598-L648), [공식 profiler 호출·필드 판독의 실제 예](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/verified_worker.py#L21-L101)
+
+| 기록에서 확인할 것 | 확인되는 범위 |
+|---|---|
+| `name`이 `execution_plan::...`으로 시작 | 호스트가 해당 이름의 실행 구간을 기록했다. 이것만으로 장치 계산은 증명되지 않는다. |
+| `name`에 `::Task::execution_plan::...` 포함 | 같은 계획 step 이름에 연결된 공식 NPU Task가 수집됐다. |
+| `name`에 `run_by_cpu` 포함 | 이 수집기가 인식하는 CPU 실행 경로가 관측됐다. 개수가 0이어도 이것만으로 전체 동작을 증명하지 않는다. |
+| 필요한 step의 Task가 누락되거나 JSON 필드가 다름 | 이 절차로는 해당 실행을 확인하지 못했다. 성공으로 바꾸어 기록하지 않는다. |
+
+아래 `observe_execution.py`는 5절의 `build_and_run.py`가 만든 **동일한 작은 MLP package**를 재사용한다. 같은 seed·모델 선언으로 외부 가중치를 준비하므로 다른 모델의 package에 그대로 적용하는 범용 실행기는 아니다. NPU·호환 SDK·fxbX가 필요하며, 준비·적재는 trace 밖에서, 한 번의 `predict()`는 trace 안에서 수행한다. `output_device="cpu"`인 이 consumer는 결과를 CPU로 옮기고 stream을 동기화한 뒤 반환한다. [완료를 포함하는 predict 구현](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py#L576-L648)
+
+[observe_execution.py](../examples/observe_execution.py)를 내려받아 앞 실습에서 만든 package와 함께 사용한다.
+
+```python
+# observe_execution.py — 앞의 small-mlp.fxbx를 새 프로세스에서 한 번 관찰한다.
+import json
+import os
+from pathlib import Path
+import sys
+
+# SDK/fxbX를 불러오기 전에 설정한다. 각 step의 이름을 trace에 남기는 경로를 고른다.
+os.environ["FXBX_TRACE_STEPS"] = "1"
+import torch
+from fxbx import GraphFXB
+from fxbex.execution_fxb import read_execution_plan
+from furiosa.torch.profiler import Profiler
+
+def main(package_path, trace_path):
+    trace_path = Path(trace_path)
+    if trace_path.exists():
+        raise FileExistsError("Use a new trace path to preserve the previous observation")
+    plan = read_execution_plan(package_path)
+    entry = plan["entries"]["forward"]
+    expected = {
+        f"execution_plan::forward::{i}::{step['kernel']}"
+        for i, step in enumerate(entry["steps"])
+    }
+    # 입력 없는 '정적 값 준비'로 계획에 명시된 단계만 계산 Task의 필수 대상에서 뺀다.
+    prepared = {
+        f"execution_plan::forward::{i}::{step['kernel']}"
+        for i, step in enumerate(entry["steps"])
+        if not step["inputs"] and
+        plan["kernels"][step["kernel"]].get("execution_kind") == "static_value_preparation"
+    }
+    required = expected - prepared
+    if not required:
+        raise RuntimeError("This example requires at least one NPU compute step")
+
+    torch.manual_seed(42)                 # 5절 생산자와 같은 가중치·입력을 만든다.
+    model = torch.nn.Sequential(
+        torch.nn.Linear(8, 12), torch.nn.ReLU(), torch.nn.Linear(12, 8)
+    ).bfloat16().eval().requires_grad_(False)
+    x = torch.randn(4, 8, dtype=torch.bfloat16)
+    with GraphFXB(package_path, weights=model.state_dict()) as session:
+        # 이 consumer는 load 때 CPU fallback을 끈다. 적재 실패는 예외로 남는다.
+        with Profiler(str(trace_path)):
+            actual, = session.predict((x,), output_device="cpu")
+    torch.testing.assert_close(actual, model(x), atol=0.02, rtol=0.02)
+
+    # 공식 profiler와 고정 worker에서 확인한 필드만 읽는다. 누락되면 실패한다.
+    events = json.loads(trace_path.read_text())["traceEvents"]
+    names = [event.get("name", "") for event in events]
+    host_spans = {name for name in names if name.startswith("execution_plan::")}
+    task_steps = {
+        name.split("::Task::", 1)[1] for name in names
+        if "::Task::execution_plan::" in name
+    }
+    cpu_routes = sum("run_by_cpu" in name for name in names)
+    for name in sorted(expected):
+        print(name, "host=", name in host_spans, "NPU Task=", name in task_steps)
+    print("cpu_routes:", cpu_routes, "trace:", trace_path)
+    missing = sorted(required - task_steps)
+    if cpu_routes or host_spans != expected or missing or not task_steps <= expected:
+        raise RuntimeError(f"Execution evidence incomplete; missing NPU steps={missing}")
+    # 한 번의 호출·이 collector 범위의 관측이다. 전체 모델 지원의 인증이 아니다.
+    print("numerical comparison passed; NPU tasks observed for required steps")
+
+if __name__ == "__main__":
+    main(sys.argv[1], sys.argv[2])
+```
+
+```bash
+# package를 만든 디렉터리에서 새 trace 파일 이름을 지정한다.
+python observe_execution.py ./small-mlp.fxbx ./small-mlp-trace-001.json
+```
+
+예를 들어 한 행에서 `host=True, NPU Task=False`이면 제출 구간은 보였지만 필요한 장치 Task는 확인되지 않은 상태다. 원인을 조사하기 전에는 이를 NPU 실행 성공이나 CPU 폴백 성공으로 해석하지 않는다. Task 하나와 ATen 연산 하나가 일대일 대응한다는 뜻도 아니다. 커널 하나에서 Task가 여러 개 나올 수 있으므로 이 예는 단순 Task 개수 대신 **필요한 step 이름의 포함 여부**를 본다.
+
+이 추적 모드는 step별 기록을 위해 준비된 sequence 재생 경로를 끈다. 따라서 출력의 실행 여부를 확인하는 용도로 쓰고 성능 비교에는 같은 조건의 별도 무추적 측정을 사용한다. 이 코드는 고정 소스와 대조한 재현 절차이며, 이번 문서 수정 환경에서 `small-mlp-trace-001.json`이나 NPU 성공 결과를 생성한 것은 아니다.
+
 ## 출처
 
 | 근거 | 확인한 내용 |
@@ -229,3 +391,6 @@ FuryNo5를 검증할 때는 다음 네 항목을 연결해 본다.
 | [터미널 예제](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/examples/native_execution_plan.py) | build/run 분리 |
 | [공식 FXB 문서](https://developer.furiosa.ai/v2026.4.0/en/furiosa_llm/fxb.html) | cache fallback 의미와 실패 |
 | [Kernel Optimizer](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/tools/kernel-optimizer.md) | CPU build와 NPU build |
+| [PyTorch 2.10 testing](https://docs.pytorch.org/docs/2.10/testing.html) | 절대·상대 허용오차 판정식 |
+| [fxbX reader와 실행기](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py) | 실제 계획 필드, step 이름, 적재·호출·완료 경계 |
+| [FuryNo5 독립 검증 worker](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/verified_worker.py) | Profiler 사용과 traceEvents·Task 이름 판독 |
