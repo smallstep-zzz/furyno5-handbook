@@ -17,3 +17,39 @@
 
 /* 독자 검토 기록: 질문은 항상 보이고 근거와 재독 답은 항목별로 펼친다. */
 .reader-review-item{margin:14px 0;border:1px solid var(--line);border-radius:10px;background:var(--white);padding:0 18px}.reader-review-item summary{padding:15px 0;cursor:pointer;font-weight:650;line-height:1.75}.reader-review-item summary:focus-visible{outline:2px solid var(--green);outline-offset:4px;border-radius:3px}.reader-review-item[open] summary{border-bottom:1px solid var(--line);margin-bottom:14px}.reader-review-item p{font-size:14px}.reader-review-item .reader-id{font-size:11px;letter-spacing:.02em;color:var(--green);margin-right:8px;white-space:nowrap}.reader-review-item>p:last-child{margin-bottom:20px}
+@media screen {
+  :root {
+    color-scheme: dark;
+    background: #111417;
+    --paper: #111417;
+    --white: #1d2328;
+    --ink: #e5eaf0;
+    --muted: #a9b5bf;
+    --line: #3d4852;
+    --red: #ffa4a9;
+    --red-soft: #3b252b;
+    --green: #8ddac1;
+    --nav: #171c21;
+  }
+  a:hover { color: #ffd0d2; }
+  .topbar { background: var(--paper); }
+  .skip, .search-open, .nav-link.active, .table-wrap, .badge, .book-card,
+  .next-prev a, .tabs button, .mobile-toc, .matrix-table, .matrix-result,
+  .lab select, .stat, .route-steps li, .close-search { background: var(--white); }
+  p code, li code, td code, h3 code, th, .diagram details pre, .nav-link:hover,
+  .callout, .search-result:hover, .matrix-table th { background: #283138; }
+  blockquote, th, .nav-link, .right-toc a, .lab .explain, .lab label,
+  .lab select, .stat small, .bar-legend, .tabs button, .matrix-table caption { color: var(--muted); }
+  th, td, .right-toc a, .search-open kbd, .diagram figcaption, .lab, .lab select,
+  .stat, .route-steps li, .tabs button, .search-dialog, .matrix-table,
+  .matrix-table th, .matrix-table td, .matrix-result { border-color: var(--line); }
+  .lab { background: #172624; }
+  .stat b, .matrix-result .matrix-formula { color: var(--green); }
+  .tabs button[aria-selected=true], .matrix-table .matrix-selected { background: #244b40; color: var(--ink); }
+  .bucket-bar { background: #33463e; }
+  .search-result mark, .noscript { background: #49391f; color: #ffe0a3; }
+  .source-private { color: #ffe0a3; border-color: #765f35; }
+  .diagram { background: var(--white); }
+  .diagram img { background: #fbfaf7; border-radius: 6px; }
+  .brand-mark { background: #a92d35; }
+}
