@@ -6,7 +6,7 @@
 
 ## 1. 같은 두 연산으로도 다른 프로그램이 된다
 
-**ReLU(Rectified Linear Unit)**는 각 원소가 음수이면 0, 그렇지 않으면 원래 값을 반환하는 함수다. 여기서는 `relu(v) = max(0,v)`만 알면 된다. 두 입력 벡터 `x=[-2,1]`, `b=[1,2]`에 대해 먼저 원소별 덧셈을 하고 ReLU를 적용해 보자.
+**ReLU(Rectified Linear Unit)는** 각 원소가 음수이면 0, 그렇지 않으면 원래 값을 반환하는 함수다. 여기서는 `relu(v) = max(0,v)`만 알면 된다. 두 입력 벡터 `x=[-2,1]`, `b=[1,2]`에 대해 먼저 원소별 덧셈을 하고 ReLU를 적용해 보자.
 
 ```python
 # CPU에서 두 실행 순서가 서로 다른 결과를 내는지 확인한다.
@@ -29,7 +29,7 @@ assert z == [1, 3]                            # 같은 Add·ReLU여도 연결 �
 
 두 연산 모두 길이 2의 벡터를 받는다. 따라서 “길이 2를 받는 Add EDF와 ReLU EDF가 있다”는 사실만으로 어떤 프로그램인지 정할 수 없다. **입출력 형상이 같아도 연결 의미는 다를 수 있다.** 그래프가 보관하는 핵심 정보가 이 연결이다.
 
-그래프에서 **노드(node)**는 연산이나 값이고, **간선(edge)**은 누가 만든 값을 누가 사용하는지 나타낸다. 아래 그림은 첫 번째 프로그램이다. Add는 x와 b가 필요하고, ReLU는 Add가 만든 중간값이 필요하다.
+그래프에서 **노드(node)는** 연산이나 값이고, **간선(edge)은** 누가 만든 값을 누가 사용하는지 나타낸다. 아래 그림은 첫 번째 프로그램이다. Add는 x와 b가 필요하고, ReLU는 Add가 만든 중간값이 필요하다.
 
 ```mermaid
 flowchart TB
@@ -51,7 +51,7 @@ flowchart TB
 | `tmp_sum` | Add의 출력 | ReLU의 입력 | ReLU가 읽기를 완료했는가? |
 | `output_y` | ReLU의 출력 | 호출자 | 결과 전달과 사용이 끝났는가? |
 
-**버퍼(buffer)**는 이 값이 실제로 저장되는 공간이다. 계획의 값 이름과 현재 프로세스의 버퍼는 별개이며, 둘을 연결하는 것을 **binding(바인딩)**이라고 한다. 중간값 `tmp_sum`을 만드는 커널을 CPU가 제출했다고 바로 공간을 재사용할 수 있는 것도 아니다. 그 값을 읽는 작업의 **완료**까지 보장되어야 한다. FuryNo5 실행계획과 fxbX 로더는 이러한 입력·출력·상태 연결을 명시한다. [공유 실행계획 계약](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/fxbx-producer/EXECUTION_PLAN.md), [로더의 값 수명 처리](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py)
+**버퍼(buffer)는** 이 값이 실제로 저장되는 공간이다. 계획의 값 이름과 현재 프로세스의 버퍼는 별개이며, 둘을 연결하는 것을 **binding(바인딩)이라고** 한다. 중간값 `tmp_sum`을 만드는 커널을 CPU가 제출했다고 바로 공간을 재사용할 수 있는 것도 아니다. 그 값을 읽는 작업의 **완료**까지 보장되어야 한다. FuryNo5 실행계획과 fxbX 로더는 이러한 입력·출력·상태 연결을 명시한다. [공유 실행계획 계약](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/fxbx-producer/EXECUTION_PLAN.md), [로더의 값 수명 처리](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py)
 
 ## 2. 서로 다른 네 종류의 그래프와 스케줄
 
@@ -188,7 +188,7 @@ python examples/native_execution_plan.py run ./small-mlp.fxbx
 
 ## 6. EDF 누락과 CPU 폴백을 구분한다
 
-**폴백(fallback)**은 원래 시도한 실행 경로를 사용할 수 없을 때 다른 구현으로 계산을 이어가는 정책이다. 예를 들어 NPU용 구현이 없는 연산을 CPU 구현으로 수행하도록 백엔드가 명시적으로 지원할 수 있다. 그러나 파일 읽기 실패, 컴파일 실패, NPU 호출 실패가 모두 이런 정책을 갖는 것은 아니다.
+**폴백(fallback)은** 원래 시도한 실행 경로를 사용할 수 없을 때 다른 구현으로 계산을 이어가는 정책이다. 예를 들어 NPU용 구현이 없는 연산을 CPU 구현으로 수행하도록 백엔드가 명시적으로 지원할 수 있다. 그러나 파일 읽기 실패, 컴파일 실패, NPU 호출 실패가 모두 이런 정책을 갖는 것은 아니다.
 
 4장 예제는 먼저 `Path("matmul.edf").read_bytes()`를 수행한다. 파일이 없으면 Python의 파일 읽기가 실패하므로 NPU 실행 함수에 도착하지 않는다. 그 코드에는 오류를 잡아 `left @ right`로 바꾸는 분기가 없다. **EDF가 없으면 자동으로 CPU로 넘어간다는 일반 규칙은 없다.** 실제로 호출한 경로를 기준으로 판단해야 한다.
 

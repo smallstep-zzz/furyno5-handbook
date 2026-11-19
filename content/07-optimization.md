@@ -117,7 +117,7 @@ if __name__ == "__main__":
 python benchmark_mlp.py
 ```
 
-**지연시간(latency)**은 요청 한 개가 끝날 때까지의 시간이고, **처리량(throughput)**은 초당 끝낸 요청·토큰 수다. 위 코드는 요청을 하나씩 실행하므로 동시 요청이 있는 서버의 처리량·대기열·p95를 측정하지 않는다. p95는 여기서 측정한 100개 완료 시간의 높은 쪽 꼬리를 보는 값일 뿐 운영 환경 전체의 보장이 아니다. 모델 구조나 가중치를 바꿨다면 새 계약과 패키지를 사용한다. 상태가 있는 모델에는 이 반복 코드를 그대로 적용하지 말고 요청별 초기 상태·reset 정책을 정해야 한다.
+**지연시간(latency)은** 요청 한 개가 끝날 때까지의 시간이고, **처리량(throughput)은** 초당 끝낸 요청·토큰 수다. 위 코드는 요청을 하나씩 실행하므로 동시 요청이 있는 서버의 처리량·대기열·p95를 측정하지 않는다. p95는 여기서 측정한 100개 완료 시간의 높은 쪽 꼬리를 보는 값일 뿐 운영 환경 전체의 보장이 아니다. 모델 구조나 가중치를 바꿨다면 새 계약과 패키지를 사용한다. 상태가 있는 모델에는 이 반복 코드를 그대로 적용하지 말고 요청별 초기 상태·reset 정책을 정해야 한다.
 
 ## 3. 첫 비교: 요청마다 적재하는가, 같은 객체를 재사용하는가
 
@@ -183,7 +183,7 @@ assert packed.tolist() == transposed.tolist()  # 논리 값은 같고 저장 배
 
 ### 계산량과 읽을 데이터량을 함께 센다
 
-행렬곱 `A[M,K] @ W[K,N] -> C[M,N]`은 출력 한 칸마다 K개의 곱을 합산한다. **FLOP(Floating-Point Operation)**은 부동소수점 연산 한 번을 세는 단위다. 곱셈과 덧셈을 각각 하나로 세면 일반적인 근사 계산량은 `2×M×N×K`다.
+행렬곱 `A[M,K] @ W[K,N] -> C[M,N]`은 출력 한 칸마다 K개의 곱을 합산한다. **FLOP(Floating-Point Operation)은** 부동소수점 연산 한 번을 세는 단위다. 곱셈과 덧셈을 각각 하나로 세면 일반적인 근사 계산량은 `2×M×N×K`다.
 
 | 단순 모형의 항목 | 식 | M=2, K=3, N=2일 때 |
 |---|---|---:|
@@ -200,7 +200,7 @@ Rust vISA(Virtual Instruction Set Architecture)의 mapping도 논리 원소를 �
 
 ## 5. 연산 결합: 어떤 경계를 줄였는지 말한다
 
-**Fusion(연산 결합)**은 여러 계산을 함께 다루어 호출·중간 저장·데이터 이동을 줄이려는 선택이다. 그런데 이 이름 아래에도 서로 다른 변경이 있다.
+**Fusion(연산 결합)은** 여러 계산을 함께 다루어 호출·중간 저장·데이터 이동을 줄이려는 선택이다. 그런데 이 이름 아래에도 서로 다른 변경이 있다.
 
 | 변경 | 예 | 주로 줄이려는 경계 |
 |---|---|---|
@@ -251,7 +251,7 @@ FuryNo5 저장소의 **2026-11-08** 실험은 BF16 hidden 128, intermediate 256�
 | packed 선택안 | 164.99 µs | 7,200 |
 | 3-program 분할 대조군 | 296.76 µs | 4,020 |
 
-각 항목은 30개 측정 block이다. 이 시간은 resident 입력을 사용하고 Python dispatch와 stream 완료를 포함하며, compile·load·정적 packing·H2D·profiling·D2H를 제외했다. 전체 개선은 **4.18%**로 보고서의 5% 배포 기준에 못 미쳐 baseline을 유지했다. 이 표는 이번 집필에서 새로 측정한 결과가 아니다. 보존된 raw block JSON을 재집계해 수치를 확인했다. [실험 설명](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/RUNTIME_SELECTION.md) · [원시 측정 block](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/validation/runtime-selection-20261108/repeated_blocks.json) · [영역 선택 기록](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/validation/runtime-selection-20261108/decision.json)
+각 항목은 30개 측정 block이다. 이 시간은 resident 입력을 사용하고 Python dispatch와 stream 완료를 포함하며, compile·load·정적 packing·H2D·profiling·D2H를 제외했다. 전체 개선은 **4.18%로** 보고서의 5% 배포 기준에 못 미쳐 baseline을 유지했다. 이 표는 이번 집필에서 새로 측정한 결과가 아니다. 보존된 raw block JSON을 재집계해 수치를 확인했다. [실험 설명](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/RUNTIME_SELECTION.md) · [원시 측정 block](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/validation/runtime-selection-20261108/repeated_blocks.json) · [영역 선택 기록](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/validation/runtime-selection-20261108/decision.json)
 
 교훈은 “분할은 항상 나쁘다”가 아니다. 이 조건에서는 해당 분할이 느렸고, 지역적 최적화의 이득도 전체 기준에는 부족했다. 다른 shape·메모리 한계·입출력 API에서는 다시 비교해야 한다.
 

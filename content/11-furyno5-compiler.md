@@ -20,7 +20,7 @@ FuryNo5의 `export_model`은 이런 계산을 분석하는 생산자다. 여기�
 
 ## 1. 캡처: Python 모델을 추론 그래프로 고정한다
 
-**캡처(capture)**는 Python 함수의 계산을 “입력 node → 연산 node → 출력 node” 관계로 얻는 작업이다. PyTorch의 **FX graph**는 이 관계를 보관하는 자료구조이고, **ExportedProgram**은 graph에 입력·출력 서명과 parameter 연결·제약을 함께 담는 객체다. 최종 숫자를 저장하는 작업과 다르다. 출발점은 `tclmachine.export_model`이고 실질 구현은 `tplmachine/execution_plan.py`다. 먼저 `graph_capture.capture_for_export`가 `torch.no_grad()` 아래에서 `torch.export.export(..., strict=False)`를 호출한다. 이미 `ExportedProgram`이면 다시 모델을 실행해 캡처하지 않고 정규화로 간다. [capture_for_export](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/graph_capture.py#L188-L195)
+**캡처(capture)는** Python 함수의 계산을 “입력 node → 연산 node → 출력 node” 관계로 얻는 작업이다. PyTorch의 **FX graph**는 이 관계를 보관하는 자료구조이고, **ExportedProgram**은 graph에 입력·출력 서명과 parameter 연결·제약을 함께 담는 객체다. 최종 숫자를 저장하는 작업과 다르다. 출발점은 `tclmachine.export_model`이고 실질 구현은 `tplmachine/execution_plan.py`다. 먼저 `graph_capture.capture_for_export`가 `torch.no_grad()` 아래에서 `torch.export.export(..., strict=False)`를 호출한다. 이미 `ExportedProgram`이면 다시 모델을 실행해 캡처하지 않고 정규화로 간다. [capture_for_export](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/graph_capture.py#L188-L195)
 
 아래는 `capture_for_export` **함수 몸체에 설명 주석을 추가한 발췌**다. `model`은 호출자가 준 module, `inputs`는 예제 tensor 목록, `normalize_exported`는 같은 파일에 정의된 정규화 함수다. 완성된 독립 스크립트가 아니므로 이 발췌만 실행하지 않는다.
 
@@ -38,11 +38,11 @@ return normalize_exported(exported, preserve_layer_norm=preserve_layer_norm)
 
 `strict=False`를 “어떤 Python 코드도 반드시 캡처한다”로 해석하면 안 된다. 그래프에 나타나는 데이터 의존 제어 흐름, 상태 변경, alias(서로 다른 tensor가 같은 저장소를 공유하는 관계), 입력 계약의 한계는 여전히 검토해야 한다. FuryNo5의 정규화는 평가 모드에서 계산이 필요 없는 dropout, 확인 가능한 조건 검사인 guard, 필요한 공개 decomposition 등을 좁게 처리한다. 모든 연산을 무조건 가장 작은 primitive로 풀지는 않는다. [정규화 코드](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/graph_capture.py#L83-L127)
 
-여기서 **decomposition(분해)**은 복합 연산을 더 기본적인 연산으로 표현하는 것이다. 수학적으로 같아 보여도 중간 dtype, 반올림 위치, mask(계산에 참여할 위치를 정하는 값) 처리, alias 의미가 달라질 수 있다. `build_verified_model`은 최종 계획용 그래프를 원본 CPU 결과와 비교하는 검사를 추가한다. 일반 `export_model` 호출만으로 그 수치 검사가 완료된 것은 아니다. [검증 producer](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/verified_build.py)
+여기서 **decomposition(분해)은** 복합 연산을 더 기본적인 연산으로 표현하는 것이다. 수학적으로 같아 보여도 중간 dtype, 반올림 위치, mask(계산에 참여할 위치를 정하는 값) 처리, alias 의미가 달라질 수 있다. `build_verified_model`은 최종 계획용 그래프를 원본 CPU 결과와 비교하는 검사를 추가한다. 일반 `export_model` 호출만으로 그 수치 검사가 완료된 것은 아니다. [검증 producer](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/verified_build.py)
 
 ## 2. 바인딩과 사전검사: 값이 무엇인지 먼저 확정한다
 
-**바인딩(binding)**은 graph의 빈 입력 자리에 실제 어떤 값이 들어가는지 연결하는 작업이다. 사용자의 `x`, 첫 weight, 마지막 weight는 모두 tensor이지만 역할이 다르다. 함수 포인터를 호출하기 전에 인수 목록을 올바른 순서로 구성하듯, compiler와 실행기가 같은 순서를 사용해야 한다. 이 예제의 사용자 인수는 `x` 하나이므로 `(x,)`로 전달한다. `tuple(x)`는 행들을 여러 인수로 분리할 수 있어 같은 뜻이 아니다.
+**바인딩(binding)은** graph의 빈 입력 자리에 실제 어떤 값이 들어가는지 연결하는 작업이다. 사용자의 `x`, 첫 weight, 마지막 weight는 모두 tensor이지만 역할이 다르다. 함수 포인터를 호출하기 전에 인수 목록을 올바른 순서로 구성하듯, compiler와 실행기가 같은 순서를 사용해야 한다. 이 예제의 사용자 인수는 `x` 하나이므로 `(x,)`로 전달한다. `tuple(x)`는 행들을 여러 인수로 분리할 수 있어 같은 뜻이 아니다.
 
 | 값 | 공급 경로 | 현재 예제의 검사 정보 |
 |---|---|---|
@@ -123,7 +123,7 @@ print(flat_sum.tolist(), tuple(flat_sum.shape)) # 예상 [6.0, 15.0], (2,)
 
 단일 수축 경로는 `tcl_edf.export_single_aten`에서 적절한 Python TCL kernel과 구체적인 축 크기를 선택한다. `M`, `N`, `K`는 단순 변수 이름이 아니라 어느 차원을 유지하고 축약하는지 설명하는 축이다. Linear weight가 `[N,K]`인지 일반 mm의 오른쪽 입력이 `[K,N]`인지가 출력 ABI에 영향을 준다.
 
-여기서 **특수화(specialization)**는 축 이름만 있던 커널에 실제 차원 값을 넣는 과정이다. 아래의 `kernel`은 앞 분기에서 선택한 Python TCL 커널, `dimensions`는 첫 Linear라면 `{"M": 4, "K": 8, "N": 12}` 같은 dictionary다. 이 변수들은 이미 선택되어 있다는 전제이며, 다음은 설명 주석을 추가한 내부 발췌다.
+여기서 **특수화(specialization)는** 축 이름만 있던 커널에 실제 차원 값을 넣는 과정이다. 아래의 `kernel`은 앞 분기에서 선택한 Python TCL 커널, `dimensions`는 첫 Linear라면 `{"M": 4, "K": 8, "N": 12}` 같은 dictionary다. 이 변수들은 이미 선택되어 있다는 전제이며, 다음은 설명 주석을 추가한 내부 발췌다.
 
 ```python
 # tcl_edf.py: M=4, K=8, N=12처럼 구체적인 축 크기를 kernel에 대입한다.
@@ -136,7 +136,7 @@ source = (
 
 `source`는 계산한 tensor가 아니라 TCL 텍스트 문자열이다. `.dsl`은 그 텍스트를 얻는 속성이다. 이후 `compile_source(source, base_contract, ...)`로 보내며, `base_contract`에는 소스 바깥에서 유지해야 하는 입력·출력·가중치 연결 설명이 들어 있다. 따라서 “TCL은 Python이니 compiler에 .py를 그대로 던진다”가 아니라, **Python eDSL(embedded Domain-Specific Language) 표현을 구체화하고 TCL 표현을 얻는 경로**가 존재한다. 다른 의미 계열은 검증된 메타데이터에서 TCL 텍스트를 직접 생성하기도 한다. 둘 모두 최종 compiler와 EDF 계약 검사를 공유한다. [단일 EDF 경로](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/tcl_edf.py#L113-L120)
 
-**region(영역)**은 함께 컴파일하려는 연결된 연산 묶음이다. 예제에서 첫 Linear와 ReLU를 묶는 후보를 생각할 수 있지만 실제 producer의 선택·지원 검사를 통과해야 한다. 여러 연산을 하나의 장치 실행 단위로 결합하는 것을 fusion이라고 한다. `tcl_region.emit_region`은 제한된 SSA(Static Single Assignment) 형태를 사용한다. 각 결과는 고유 이름으로 한 번 정의되고, 사용하기 전에 입력이나 선행 결과로 존재해야 한다. 예제에서는 `h`를 덮어써 버리지 않고 `a = relu(h)`라는 별도 값으로 표현하므로 어느 연산이 어떤 값을 쓰는지 분명하다. 이 생성기의 현재 허용 범위는 BF16의 mm/bmm/linear/add/ReLU, 최대 8개 연산과 입출력 합 16개, 생성 tensor 크기 합 64 MiB(Mebibyte)다. 이 64 MiB는 **논리적인 admission 제한**이며 물리 HBM(High Bandwidth Memory) 점유 측정치가 아니다. [영역 생성기](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/tcl_region.py#L35-L107)
+**region(영역)은** 함께 컴파일하려는 연결된 연산 묶음이다. 예제에서 첫 Linear와 ReLU를 묶는 후보를 생각할 수 있지만 실제 producer의 선택·지원 검사를 통과해야 한다. 여러 연산을 하나의 장치 실행 단위로 결합하는 것을 fusion이라고 한다. `tcl_region.emit_region`은 제한된 SSA(Static Single Assignment) 형태를 사용한다. 각 결과는 고유 이름으로 한 번 정의되고, 사용하기 전에 입력이나 선행 결과로 존재해야 한다. 예제에서는 `h`를 덮어써 버리지 않고 `a = relu(h)`라는 별도 값으로 표현하므로 어느 연산이 어떤 값을 쓰는지 분명하다. 이 생성기의 현재 허용 범위는 BF16의 mm/bmm/linear/add/ReLU, 최대 8개 연산과 입출력 합 16개, 생성 tensor 크기 합 64 MiB(Mebibyte)다. 이 64 MiB는 **논리적인 admission 제한**이며 물리 HBM(High Bandwidth Memory) 점유 측정치가 아니다. [영역 생성기](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/tcl_region.py#L35-L107)
 
 ## 5. compiler 호출: 진짜 EDF를 만든다
 
@@ -165,7 +165,7 @@ compiler에 넘긴 `source.tc`, 표준 출력·오류를 보관한 `compile.log`
 
 ## 6. EDF가 생긴 뒤에도 ABI를 검사한다
 
-함수 선언과 다른 인수 순서로 동적 라이브러리 함수를 호출하면 잘못된 값을 읽는 것처럼, EDF도 실제 바이너리의 호출 계약과 계획이 맞아야 한다. **역직렬화(deserialization)**는 저장한 bytes를 SDK가 해석 가능한 실행 표현으로 되돌리는 작업이다. `tcl_compiler._verify_abi`는 공식 `sdk.ir.Runnable.from_serialized_edf`로 EDF bytes를 읽는다. 실제 입출력 개수와 `expected_num_fusion == 8`을 검사하고 shape 표현을 기록한다. 여기의 fusion 8은 8개 PE(Processing Element, 장치의 처리 단위)를 묶는 장치 실행 설정이다. 앞 절에서 여러 연산을 묶는 graph fusion과 같은 숫자가 아니며 NPU 카드 8개라는 뜻도 아니다.
+함수 선언과 다른 인수 순서로 동적 라이브러리 함수를 호출하면 잘못된 값을 읽는 것처럼, EDF도 실제 바이너리의 호출 계약과 계획이 맞아야 한다. **역직렬화(deserialization)는** 저장한 bytes를 SDK가 해석 가능한 실행 표현으로 되돌리는 작업이다. `tcl_compiler._verify_abi`는 공식 `sdk.ir.Runnable.from_serialized_edf`로 EDF bytes를 읽는다. 실제 입출력 개수와 `expected_num_fusion == 8`을 검사하고 shape 표현을 기록한다. 여기의 fusion 8은 8개 PE(Processing Element, 장치의 처리 단위)를 묶는 장치 실행 설정이다. 앞 절에서 여러 연산을 묶는 graph fusion과 같은 숫자가 아니며 NPU 카드 8개라는 뜻도 아니다.
 
 아래의 `raw`는 EDF 파일 bytes, `sdk`는 `furiosa.torch`다. 반환하는 `runnable`은 ABI를 조회할 수 있는 SDK 내부 실행 표현이며 여기에서 사용자 입력 `x`를 계산하지 않는다.
 

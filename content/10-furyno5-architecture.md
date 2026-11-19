@@ -1,6 +1,6 @@
 # 10. 작은 모델 하나로 읽는 FuryNo5의 구조
 
-Python 모델을 NPU(Neural Processing Unit)에서 실행하려면 `forward()`의 계산을 장치용 프로그램으로 만들고, 그 프로그램에 입력·가중치를 연결해야 한다. **FuryNo5는 이 준비를 맡는 생산자(producer)**다. 실제 RNGD 코드 생성은 Furiosa의 compiler에 맡기고, 만들어진 파일을 읽어 실행하는 소비자(consumer)는 SDK(Software Development Kit) 런타임이나 fxbX다. C 소스를 컴파일한 뒤 별도 실행기가 바이너리를 적재하는 흐름과 비슷하지만, 여기서는 여러 텐서 프로그램의 연결 계획도 함께 필요하다.
+Python 모델을 NPU(Neural Processing Unit)에서 실행하려면 `forward()`의 계산을 장치용 프로그램으로 만들고, 그 프로그램에 입력·가중치를 연결해야 한다. **FuryNo5는 이 준비를 맡는 생산자(producer)다**. 실제 RNGD 코드 생성은 Furiosa의 compiler에 맡기고, 만들어진 파일을 읽어 실행하는 소비자(consumer)는 SDK(Software Development Kit) 런타임이나 fxbX다. C 소스를 컴파일한 뒤 별도 실행기가 바이너리를 적재하는 흐름과 비슷하지만, 여기서는 여러 텐서 프로그램의 연결 계획도 함께 필요하다.
 
 먼저 작은 모델이 어떤 자료구조와 파일로 바뀌는지 따라가자. 그다음 실제 파일·함수와 지원 범위를 읽으면, “후보를 만들었다”, “컴파일했다”, “NPU에서 정답을 확인했다”가 서로 다른 결과라는 점도 자연스럽게 드러난다. FuryNo5는 모든 ATen(A Tensor Library) 연산을 완성한 범용 backend가 아니며 README도 전체 모델 자동 이식 완료를 주장하지 않는다. [프로젝트의 현재 범위](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/README.md)
 
@@ -27,7 +27,7 @@ Python 모델을 NPU(Neural Processing Unit)에서 실행하려면 `forward()`�
 
 ## 이 모델이 어떤 객체와 파일로 바뀌는가
 
-**capture(캡처)**는 모델의 호출 관계를 graph라는 자료구조로 얻는 과정이다. graph node는 계산이나 입력을 나타내고, 간선은 앞 계산의 결과를 뒤 계산이 사용한다는 뜻이다. **region(영역)**은 함께 컴파일할 연산 묶음이다. **kernel(커널)**은 그 계산을 실행할 구현 단위이며, 같은 계약의 kernel 하나를 여러 위치에서 재사용할 수 있다. 아래 단계의 이름은 저장소가 하는 일을 설명하며, 예제에서 region이나 EDF가 항상 3개 생긴다는 뜻은 아니다.
+**capture(캡처)는** 모델의 호출 관계를 graph라는 자료구조로 얻는 과정이다. graph node는 계산이나 입력을 나타내고, 간선은 앞 계산의 결과를 뒤 계산이 사용한다는 뜻이다. **region(영역)은** 함께 컴파일할 연산 묶음이다. **kernel(커널)은** 그 계산을 실행할 구현 단위이며, 같은 계약의 kernel 하나를 여러 위치에서 재사용할 수 있다. 아래 단계의 이름은 저장소가 하는 일을 설명하며, 예제에서 region이나 EDF가 항상 3개 생긴다는 뜻은 아니다.
 
 | 단계 | 입력 → 결과 | 이번 모델에서 의미하는 것 |
 |---|---|---|
@@ -61,7 +61,7 @@ TCL(Tensor Contraction Language)은 텐서 계산을 compiler에 설명하는 �
 
 ## 첫 단계: 후보 생성은 실행이 아니다
 
-**규칙(rule)**은 “이 연산의 이 입력 조건을 어떤 계산으로 표현할 수 있는가”를 판정하는 코드다. 규칙이 통과하면 compiler에 시도할 후보를 만들 수 있지만, 아직 compiler 성공이나 장치 정답은 모른다. **수축(contraction)**은 행렬곱처럼 원소를 곱한 뒤 공통 축을 따라 더하는 계산이다. `aten.py`의 현재 `RULES`에는 `mm`, `bmm`, `matmul`, `linear`의 제한된 수축 후보가 들어 있다. 동일 파일은 BF16, 정적 양의 shape, 지원 rank(축의 개수), contiguous stride, 정확한 축 크기를 검사한다. 규칙이 맞으면 `AtenCandidate`에 의미·입출력·TCL source를 담는다. 파일 상단도 이것이 하드웨어 지원 인증표가 아니라고 명시한다. [실제 규칙](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/aten.py#L40-L66)
+**규칙(rule)은** “이 연산의 이 입력 조건을 어떤 계산으로 표현할 수 있는가”를 판정하는 코드다. 규칙이 통과하면 compiler에 시도할 후보를 만들 수 있지만, 아직 compiler 성공이나 장치 정답은 모른다. **수축(contraction)은** 행렬곱처럼 원소를 곱한 뒤 공통 축을 따라 더하는 계산이다. `aten.py`의 현재 `RULES`에는 `mm`, `bmm`, `matmul`, `linear`의 제한된 수축 후보가 들어 있다. 동일 파일은 BF16, 정적 양의 shape, 지원 rank(축의 개수), contiguous stride, 정확한 축 크기를 검사한다. 규칙이 맞으면 `AtenCandidate`에 의미·입출력·TCL source를 담는다. 파일 상단도 이것이 하드웨어 지원 인증표가 아니라고 명시한다. [실제 규칙](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/aten.py#L40-L66)
 
 ```python
 # 후보 분석 경로다. EDF 컴파일이나 NPU 추론을 요청하지 않는다.
@@ -107,7 +107,7 @@ library.impl(name, meta, 'Meta')  # 계산 없이 출력 shape·dtype만 설명�
 
 이번에는 다시 `[4,8]` 입력을 가진 전체 MLP로 돌아온다. `model`은 계산 방법과 weight를 가진 Python 객체, `(x,)`는 입력이 한 개임을 나타내는 tuple, `"tiny.fxbx"`는 출력 파일 경로다. 출력 패키지에 외부 weight의 연결 계약을 담는 것과 weight 값 자체를 모두 넣는 것은 다르므로 실행 때는 해당 weight를 별도로 제공한다.
 
-`export_model`은 모델을 캡처하고, 입력·상태를 연결하고, 의미 규칙으로 영역을 정하고, 고유 커널만 컴파일한다. 성공하면 `execution-plan.json`과 패키지를 만들지만 반환 상태는 **`built_not_runtime_validated`**다. 이 이름 그대로 받아들이는 것이 중요하다. [결과 생성부](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/execution_plan.py#L1287-L1300)
+`export_model`은 모델을 캡처하고, 입력·상태를 연결하고, 의미 규칙으로 영역을 정하고, 고유 커널만 컴파일한다. 성공하면 `execution-plan.json`과 패키지를 만들지만 반환 상태는 **`built_not_runtime_validated`다**. 이 이름 그대로 받아들이는 것이 중요하다. [결과 생성부](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/execution_plan.py#L1287-L1300)
 
 ```python
 # 호환 SDK와 FuryNo5/fxbX 설치본에서 실행할 생산 예제.

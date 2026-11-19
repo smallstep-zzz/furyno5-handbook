@@ -1,6 +1,6 @@
 # 13. 모델 파일을 실행 가능한 패키지로 포팅하기
 
-Python에서 모델을 실행할 때는 모델 클래스, 가중치, 입력 tensor가 같은 프로세스에 있다. NPU(Neural Processing Unit)로 옮겨 다른 프로세스에서 실행하려면 이 정보를 분리해서 전달해야 한다. **포팅(porting)**은 파일 확장자를 바꾸는 작업이 아니라, 원래 계산의 의미를 보존하면서 대상 장치가 받아들이는 연산·입출력·실행 순서로 바꾸고 검증하는 작업이다.
+Python에서 모델을 실행할 때는 모델 클래스, 가중치, 입력 tensor가 같은 프로세스에 있다. NPU(Neural Processing Unit)로 옮겨 다른 프로세스에서 실행하려면 이 정보를 분리해서 전달해야 한다. **포팅(porting)은** 파일 확장자를 바꾸는 작업이 아니라, 원래 계산의 의미를 보존하면서 대상 장치가 받아들이는 연산·입출력·실행 순서로 바꾸고 검증하는 작업이다.
 
 이 장의 목표는 작은 `Linear → ReLU → Linear` 모델로 세 질문에 답하는 것이다. “어떤 가중치와 입력으로 컴파일했는가?”, “다른 프로세스가 무엇을 읽어 실행하는가?”, “원래 모델과 같은 계산을 했다는 근거가 무엇인가?” 처음에는 아래 파일의 역할을 구분하면 된다.
 
@@ -10,7 +10,7 @@ Python에서 모델을 실행할 때는 모델 클래스, 가중치, 입력 tens
 | 학습으로 정해진 tensor 값 | `tiny-state.pt` | 가중치 이름을 패키지의 입력 슬롯에 연결 |
 | 비교할 입력과 원래 모델의 출력 | `tiny-cases.pt` | 같은 입력을 넣고 출력이 허용오차 안에서 일치하는지 검사 |
 
-EDF는 장치에서 수행할 계산을 담은 산출물이다. **실행 계획**은 어느 EDF에 어느 tensor를 넣고 그 출력을 다음 어디에 연결할지 적은 자료구조다. **패키지**는 이런 코드와 설명 자료를 함께 전달하는 파일이며, **manifest**는 안에 어떤 파일과 버전·규격이 있는지 기록한 목록이다. **schema**는 그 목록의 필드·자료형·버전 규칙이고, **계산 그래프(graph)**는 입력·계산·출력의 의존 관계를 node와 간선으로 표현한 자료구조다. 체크포인트의 가중치만으로는 실행 순서와 장치 코드가 생기지 않는다. 반대로 이 예제의 패키지만 있어도 별도로 요구하는 가중치가 없으면 원래 모델을 재현할 수 없다. [최소 모델의 생성·가중치 전달](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/examples/native_execution_plan.py) · [fxbX의 실행 계획 소비](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py)
+EDF는 장치에서 수행할 계산을 담은 산출물이다. **실행 계획**은 어느 EDF에 어느 tensor를 넣고 그 출력을 다음 어디에 연결할지 적은 자료구조다. **패키지**는 이런 코드와 설명 자료를 함께 전달하는 파일이며, **manifest**는 안에 어떤 파일과 버전·규격이 있는지 기록한 목록이다. **schema**는 그 목록의 필드·자료형·버전 규칙이고, **계산 그래프(graph)는** 입력·계산·출력의 의존 관계를 node와 간선으로 표현한 자료구조다. 체크포인트의 가중치만으로는 실행 순서와 장치 코드가 생기지 않는다. 반대로 이 예제의 패키지만 있어도 별도로 요구하는 가중치가 없으면 원래 모델을 재현할 수 없다. [최소 모델의 생성·가중치 전달](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/examples/native_execution_plan.py) · [fxbX의 실행 계획 소비](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py)
 
 **FHA(Furiosa-Hug-Anything)는 FuryAwesome·FuryNo5·fxbX를 연결해 모델 포팅을 돕는 도구 모음이다.** FuryAwesome에서 배포된 모델과 포팅 요청을 찾고, FuryNo5에 공통 연산 구현·실행 계획·패키지 생성을 맡기며, fxbX로 적재·실행을 확인한다. 검증된 결과를 공유할 때는 HF(Hugging Face) 파일 배포와 FuryAwesome 카탈로그 등록을 연결한다. 각 도구의 책임과 현재 연결 범위를 알아야 실패한 부분을 고칠 수 있다. [FHA 포팅 skill](https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/skills/rngd-model-porting/SKILL.md) · [FuryAwesome 소개](https://github.com/smallstep-zzz/furyawesome/blob/c668ecbceac2bedd04c6e539c1a5509a404a464d/README.md)
 
@@ -78,7 +78,7 @@ python -m forge_fxbex requests --cached --model 'hf:OWNER/MODEL'
 
 입력 `x`의 shape가 `[4,8]`이라는 것은 **샘플 4개를 행에 놓고 각 샘플의 특징 8개를 열에 놓았다**는 뜻이다. `Linear(8,12)`는 각 행의 특징 8개를 출력 특징 12개로 바꾼다. 가중치 `W`의 shape는 `[12,8]`이다. 가중치의 한 행이 출력 특징 하나를 계산하는 계수 8개를 갖는다.
 
-행렬곱 `A @ B`는 A의 한 행과 B의 한 열에서 같은 위치의 원소를 곱해 더한다. `[M,K] @ [K,N]`의 결과는 `[M,N]`이며 가운데 크기 K가 같아야 한다. 그래서 이 층은 `x @ W.T + b`를 계산한다. `W.T`는 행과 열을 맞바꾸는 **전치(transpose)**로 `[8,12]`가 되어 곱셈이 가능해진다. bias `b[12]`는 출력의 모든 행에 같은 12개 값을 더한다. 이 자동 확장이 **broadcasting**이며 bias를 4번 학습한다는 뜻은 아니다. 첫 출력값 하나는 `x[0,0]*W[0,0] + … + x[0,7]*W[0,7] + b[0]`이다. [PyTorch Linear의 계산과 가중치 규격](https://docs.pytorch.org/docs/2.10/generated/torch.nn.Linear.html)
+행렬곱 `A @ B`는 A의 한 행과 B의 한 열에서 같은 위치의 원소를 곱해 더한다. `[M,K] @ [K,N]`의 결과는 `[M,N]`이며 가운데 크기 K가 같아야 한다. 그래서 이 층은 `x @ W.T + b`를 계산한다. `W.T`는 행과 열을 맞바꾸는 **전치(transpose)로** `[8,12]`가 되어 곱셈이 가능해진다. bias `b[12]`는 출력의 모든 행에 같은 12개 값을 더한다. 이 자동 확장이 **broadcasting**이며 bias를 4번 학습한다는 뜻은 아니다. 첫 출력값 하나는 `x[0,0]*W[0,0] + … + x[0,7]*W[0,7] + b[0]`이다. [PyTorch Linear의 계산과 가중치 규격](https://docs.pytorch.org/docs/2.10/generated/torch.nn.Linear.html)
 
 | 단계 | 계산 | 입력 → 출력 shape | 값의 의미 |
 |---|---|---|---|
@@ -90,7 +90,7 @@ python -m forge_fxbex requests --cached --model 'hf:OWNER/MODEL'
 
 ### 크기뿐 아니라 자료형과 저장 순서도 계약이다
 
-**dtype(data type)**은 각 원소의 저장·계산 자료형이다. 이 예제의 BF16(Bfloat16)은 16비트 부동소수점이므로 FP32(Float32) 값을 바꾸면 반올림이 생길 수 있다. **stride**는 각 축의 인덱스가 1 증가할 때 저장 공간에서 몇 원소 이동하는지 나타낸다. 일반적인 연속 배열 `x[4,8]`은 stride `[8,1]`이다. **contiguous**는 요구하는 순서대로 원소가 연속해 놓인 상태다. 같은 숫자와 shape를 갖더라도 전치로 얻은 view는 stride가 다를 수 있다. 따라서 shape만 같다고 같은 커널 입력 계약이라고 판단하지 않는다.
+**dtype(data type)은** 각 원소의 저장·계산 자료형이다. 이 예제의 BF16(Bfloat16)은 16비트 부동소수점이므로 FP32(Float32) 값을 바꾸면 반올림이 생길 수 있다. **stride**는 각 축의 인덱스가 1 증가할 때 저장 공간에서 몇 원소 이동하는지 나타낸다. 일반적인 연속 배열 `x[4,8]`은 stride `[8,1]`이다. **contiguous**는 요구하는 순서대로 원소가 연속해 놓인 상태다. 같은 숫자와 shape를 갖더라도 전치로 얻은 view는 stride가 다를 수 있다. 따라서 shape만 같다고 같은 커널 입력 계약이라고 판단하지 않는다.
 
 포팅 계약에는 원본 모델 revision, configuration, 실제 입력 shape·dtype·stride, 전후처리, mask 의미, 가변 길이 정책, 상태 변화가 들어간다. 예를 들어 같은 `aten.mm`이라도 BF16(Bfloat16) contiguous 행렬과 FP32(Float32) 비연속 view는 같은 시험이 아니다. 연산 이름이 같아도 크기·배치·메모리 계약이 달라지면 기존 EDF를 사용할 수 있는지 다시 판단해야 한다. [FHA feature 정의](https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/docs/AUTOMATED_PORTING.md) · [FuryNo5 입력 검사](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/execution_plan.py)
 
@@ -388,7 +388,7 @@ if "place-catalog.json" in files or any(p.startswith("model-catalog/") for p in 
 
 ### 기존 standalone 패키지의 실제 게시 명령
 
-다음은 앞 절의 Tiny 패키지가 아니라 **이미 새 프로세스에서 검증한 기존 형식 `verified-model.fxbex`**를 위한 예다. 첫 명령은 로컬 완료만 명시한다. 두 번째는 게시 메타데이터 초안을 만들며 업로드하지 않는다. 생성한 JSON에서 원본 HF repository·40자리 revision, 배포 버전·SDK, 원본과 패키지의 라이선스, 해당 파일 SHA-256에 연결된 검토·승인 정보를 확인한 뒤 마지막 명령을 실행한다. [CLI 분기](https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/forge_fxbex/__main__.py) · [게시 메타데이터 검증](https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/forge_fxbex/publish.py#L109-L132)
+다음은 앞 절의 Tiny 패키지가 아니라 **이미 새 프로세스에서 검증한 기존 형식 `verified-model.fxbex`를** 위한 예다. 첫 명령은 로컬 완료만 명시한다. 두 번째는 게시 메타데이터 초안을 만들며 업로드하지 않는다. 생성한 JSON에서 원본 HF repository·40자리 revision, 배포 버전·SDK, 원본과 패키지의 라이선스, 해당 파일 SHA-256에 연결된 검토·승인 정보를 확인한 뒤 마지막 명령을 실행한다. [CLI 분기](https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/forge_fxbex/__main__.py) · [게시 메타데이터 검증](https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/forge_fxbex/publish.py#L109-L132)
 
 ```bash
 # 검증한 기존 FXB_EX v1 파일의 로컬 완료를 기록한다. 공개 게시를 하지 않는다.

@@ -17,7 +17,7 @@
 | 실행·수치 검사 | 장치 계산의 완료와 실제 값을 확인 | 내 요청의 NPU 작업이 있었으며 결과가 `[4,5]`인가 |
 | 성능 검사 | 정한 구간의 완료 시간을 측정 | 준비가 끝난 호출과 최초 컴파일을 섞지 않았는가 |
 
-ABI(Application Binary Interface)는 C의 함수 호출에서도 인수 타입·배치·호출 규칙을 맞추는 것과 같은 종류의 계약이다. 여기서 **binding은 데이터 인수 연결**을 뜻하며, 어느 PE(Processing Element) 자원을 사용할지 정하는 PE binding과 다른 문맥이다. **Runtime(실행기)**은 적재한 프로그램의 메모리·호출·완료를 관리한다. 단계를 나누는 이유는 앞 단계의 성공이 뒤 단계의 정답을 보장하지 않기 때문이다. 실행물 생성에 성공해도 결과가 `[4,6]`일 수 있고, 결과가 맞아도 작은 호출을 너무 많이 제출해 느릴 수 있다.
+ABI(Application Binary Interface)는 C의 함수 호출에서도 인수 타입·배치·호출 규칙을 맞추는 것과 같은 종류의 계약이다. 여기서 **binding은 데이터 인수 연결**을 뜻하며, 어느 PE(Processing Element) 자원을 사용할지 정하는 PE binding과 다른 문맥이다. **Runtime(실행기)은** 적재한 프로그램의 메모리·호출·완료를 관리한다. 단계를 나누는 이유는 앞 단계의 성공이 뒤 단계의 정답을 보장하지 않기 때문이다. 실행물 생성에 성공해도 결과가 `[4,6]`일 수 있고, 결과가 맞아도 작은 호출을 너무 많이 제출해 느릴 수 있다.
 
 ```mermaid
 flowchart TB
@@ -78,11 +78,11 @@ for name in ("torch", "furiosa-torch", "furiosa-tcc", "fxbx", "tplmachine"):
 print(json.dumps(versions, indent=2))
 ```
 
-입력 tensor는 다차원 배열이다. 논리적으로 같은 2×2 배열이어도 메모리에 저장한 위치가 다를 수 있다. 그 배치가 **layout**이고, **stride**는 각 축으로 한 칸 이동할 때 저장소에서 몇 원소를 건너뛰는지 나타낸다. **Storage offset**은 원본 저장소의 시작에서 첫 원소까지의 거리다. C의 배열 주소 계산처럼, 원소 위치는 `offset + Σ(index[축] × stride[축])`로 정해진다. **Σ(시그마)**는 각 축에서 구한 항을 모두 더하라는 뜻이다. 두 축이면 `offset + 행번호×행stride + 열번호×열stride`다. stride와 offset은 바이트가 아니라 원소 단위이므로 바이트 주소를 구할 때는 dtype의 원소 크기를 곱한다.
+입력 tensor는 다차원 배열이다. 논리적으로 같은 2×2 배열이어도 메모리에 저장한 위치가 다를 수 있다. 그 배치가 **layout**이고, **stride**는 각 축으로 한 칸 이동할 때 저장소에서 몇 원소를 건너뛰는지 나타낸다. **Storage offset**은 원본 저장소의 시작에서 첫 원소까지의 거리다. C의 배열 주소 계산처럼, 원소 위치는 `offset + Σ(index[축] × stride[축])`로 정해진다. **Σ(시그마)는** 각 축에서 구한 항을 모두 더하라는 뜻이다. 두 축이면 `offset + 행번호×행stride + 열번호×열stride`다. stride와 offset은 바이트가 아니라 원소 단위이므로 바이트 주소를 구할 때는 dtype의 원소 크기를 곱한다.
 
-다음은 PyTorch가 있는 CPU(Central Processing Unit) 환경에서 배열 주소를 관찰하는 예다. `arange(12)`는 0부터 11까지 값 12개를 만든다. **Reshape(모양 변경)**는 논리적 원소 순서를 유지하며 축 길이를 새로 정한다. `reshape(3,4)`는 이 12개 값을 3행·4열로 읽으므로 첫 행은 `[0,1,2,3]`이다. 전체 원소 수는 `12=3×4`로 같아야 하며, 이 예에서 `reshape(5,3)`은 15칸이 필요해 불가능하다. reshape는 배치에 따라 저장소를 공유하거나 복사할 수 있으므로 복사 없는 연산이라고 일괄 가정하지 않는다.
+다음은 PyTorch가 있는 CPU(Central Processing Unit) 환경에서 배열 주소를 관찰하는 예다. `arange(12)`는 0부터 11까지 값 12개를 만든다. **Reshape(모양 변경)는** 논리적 원소 순서를 유지하며 축 길이를 새로 정한다. `reshape(3,4)`는 이 12개 값을 3행·4열로 읽으므로 첫 행은 `[0,1,2,3]`이다. 전체 원소 수는 `12=3×4`로 같아야 하며, 이 예에서 `reshape(5,3)`은 15칸이 필요해 불가능하다. reshape는 배치에 따라 저장소를 공유하거나 복사할 수 있으므로 복사 없는 연산이라고 일괄 가정하지 않는다.
 
-**Slice(부분 선택)**는 행·열의 일부를 고르는 것이고, **view**는 원본 저장소를 공유하는 배열 표현이다. 코드의 `1:`는 1번부터 끝까지, `1::2`는 1번부터 두 칸 간격으로 고른다. **Axis(축)**의 번호와 배열 인덱스는 0부터 센다. `contiguous()`는 필요할 때 새 저장소로 복사해 표준 연속 배치를 만든다.
+**Slice(부분 선택)는** 행·열의 일부를 고르는 것이고, **view**는 원본 저장소를 공유하는 배열 표현이다. 코드의 `1:`는 1번부터 끝까지, `1::2`는 1번부터 두 칸 간격으로 고른다. **Axis(축)의** 번호와 배열 인덱스는 0부터 센다. `contiguous()`는 필요할 때 새 저장소로 복사해 표준 연속 배치를 만든다.
 
 ```python
 import torch
@@ -102,7 +102,7 @@ for name, x in [("base", base), ("view", view), ("packed", packed)]:
 
 표는 코드가 의미하는 값·배치의 계산이다. `view[1,0]`은 원본 저장소의 `5+1×4+0×2=9`번 원소다. `packed[1,0]`은 새 저장소의 2번 원소이며 값은 똑같이 9다. 커널이 연속 배치만 지원하는데 shape가 같다는 이유로 view를 넘기면 잘못된 값을 읽거나 입력 검사에서 거절될 수 있다. **값 비교와 메모리 계약 검사는 둘 다 필요하다.**
 
-**Transpose(전치)**는 reshape와 구별한다. `base.reshape(4,3)`의 첫 행은 `[0,1,2]`지만, `base.transpose(0,1)`은 행·열 축을 교환하므로 첫 행이 `[0,4,8]`이다. 결과 shape는 둘 다 `[4,3]`이어도 어느 값이 어느 좌표에 있는지가 다르다. 전치는 종종 stride를 바꾼 view로 표현할 수 있지만, 다음 커널이 다른 연속 배치를 요구하면 실제 복사가 필요할 수 있다.
+**Transpose(전치)는** reshape와 구별한다. `base.reshape(4,3)`의 첫 행은 `[0,1,2]`지만, `base.transpose(0,1)`은 행·열 축을 교환하므로 첫 행이 `[0,4,8]`이다. 결과 shape는 둘 다 `[4,3]`이어도 어느 값이 어느 좌표에 있는지가 다르다. 전치는 종종 stride를 바꾼 view로 표현할 수 있지만, 다음 커널이 다른 연속 배치를 요구하면 실제 복사가 필요할 수 있다.
 
 이제 아래 수집 함수가 왜 이 필드들을 기록하는지 알 수 있다. `requires_grad`는 그 tensor의 기울기를 추적할 대상으로 지정했는지 나타내며, `device`는 저장소가 CPU인지 장치인지 알려준다.
 
@@ -118,14 +118,14 @@ def tensor_contract(x):
     }
 ```
 
-실제 재현에서는 `tensor_contract(view)`와 `tensor_contract(packed)`를 출력해 차이를 보고한다. 이 계약은 모델/입력의 실제 값을 공개하지 않고도 실패 원인을 좁히는 데 도움이 된다. **Specialization(특수화)**은 shape나 상수값이 정해져 있다고 가정하고 그 경우에 맞는 실행물을 만드는 것이다. **Guard(가정 검사)**는 실행 전에 그 가정이 아직 맞는지 확인한다. 예를 들어 상수 scale이 2라고 접어 만든 커널에 scale 3을 넘기면 같은 shape라도 의미가 달라진다. 값에 따라 특수화했다면 값 해시와 검사 조건도 필요하다. [계획의 계약·guard 관리](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/execution_plan.py#L20-L38)
+실제 재현에서는 `tensor_contract(view)`와 `tensor_contract(packed)`를 출력해 차이를 보고한다. 이 계약은 모델/입력의 실제 값을 공개하지 않고도 실패 원인을 좁히는 데 도움이 된다. **Specialization(특수화)은** shape나 상수값이 정해져 있다고 가정하고 그 경우에 맞는 실행물을 만드는 것이다. **Guard(가정 검사)는** 실행 전에 그 가정이 아직 맞는지 확인한다. 예를 들어 상수 scale이 2라고 접어 만든 커널에 scale 3을 넘기면 같은 shape라도 의미가 달라진다. 값에 따라 특수화했다면 값 해시와 검사 조건도 필요하다. [계획의 계약·guard 관리](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/execution_plan.py#L20-L38)
 
 ## 실습 2. 미해결 node를 독립 문제 수로 오해하지 않는다
 
 `export_model(..., preflight_only=True)` 결과의 `operator-inventory.json`에는 metadata admission, 직접 규칙/계약 gap, 선행 binding dependency가 나뉘어 있다. 첫 `transpose` 결과를 만들지 못해 그 뒤 100개 node를 연결하지 못했다면, 101개 TCL을 새로 작성해야 한다는 뜻이 아니다.
 
 
-빌드 시스템에서 공통 헤더 하나가 없어 여러 파일의 컴파일이 실패하는 상황과 비슷하다. 모델의 graph는 연산을 정점, 값 전달을 간선으로 하는 의존 그래프다. **Node(노드)**는 연산 한 단위다. 다음 표에서 진짜로 먼저 고칠 곳은 n1이다.
+빌드 시스템에서 공통 헤더 하나가 없어 여러 파일의 컴파일이 실패하는 상황과 비슷하다. 모델의 graph는 연산을 정점, 값 전달을 간선으로 하는 의존 그래프다. **Node(노드)는** 연산 한 단위다. 다음 표에서 진짜로 먼저 고칠 곳은 n1이다.
 
 | 노드 | 필요한 앞 결과 | 상태를 해석하는 방법 |
 |---|---|---|
@@ -134,7 +134,7 @@ def tensor_contract(x):
 | n2: matmul | n1 | n1의 결과가 없어 인수 연결을 진행하지 못함 |
 | n3: 활성 함수 | n2 | 앞 결과를 기다리며 함께 막힘 |
 
-**Transpose(전치)**는 배열 축의 순서를 바꾸는 연산이다. n1을 해결해 다시 분석했을 때 n2·n3도 통과할 수 있고, 그제야 별도의 진짜 문제가 드러날 수도 있다. 그래서 실패 개수만 더하지 말고 최초 직접 원인과 후속 의존 실패를 나눈다. 아래 코드는 분석 전에 실행하는 도구가 아니라, 이미 생성된 JSON 진단을 읽는 코드다.
+**Transpose(전치)는** 배열 축의 순서를 바꾸는 연산이다. n1을 해결해 다시 분석했을 때 n2·n3도 통과할 수 있고, 그제야 별도의 진짜 문제가 드러날 수도 있다. 그래서 실패 개수만 더하지 말고 최초 직접 원인과 후속 의존 실패를 나눈다. 아래 코드는 분석 전에 실행하는 도구가 아니라, 이미 생성된 JSON 진단을 읽는 코드다.
 
 ```python
 import json
@@ -180,7 +180,7 @@ FURYNO5_COMPILE_TIMEOUT_S=1800 \
 
 ## 실습 4. 실행 증거를 수집한다
 
-이제 **trace(시간순 실행 기록)**를 수집한다. profiler는 계산의 이름·시작·끝 등을 기록하는 계측기다. **Span**은 한 작업이 차지한 시간 구간이고, **NPU Task**는 장치 쪽 실행 작업의 기록이다. 호스트가 일을 제출한 span과 장치가 그 일을 실행한 Task는 다른 사건이다.
+이제 **trace(시간순 실행 기록)를** 수집한다. profiler는 계산의 이름·시작·끝 등을 기록하는 계측기다. **Span**은 한 작업이 차지한 시간 구간이고, **NPU Task**는 장치 쪽 실행 작업의 기록이다. 호스트가 일을 제출한 span과 장치가 그 일을 실행한 Task는 다른 사건이다.
 
 다음 함수는 **이미 준비된 fxbX runtime**과 입력 tuple을 받아 공식 profiler로 한 요청을 기록한다. `FXBX_TRACE_STEPS`는 runtime을 만들기 전에 설정한다. profiler 활성화 시간은 성능 비교의 정답으로 사용하지 않는다.
 
@@ -337,7 +337,7 @@ TCL 기반 문제는 먼저 보존된 TCL·compiler 로그·EDF trace로 좁힌�
 FuryNo5의 `official_tools.capabilities()`는 설치된 `furiosa-tcc --help`에서 `--evaluate-tcl` 등 지원 옵션을 확인한다. 지원하는 경우의 cycle estimate와 NPU task 측정치를 구분해서 보존한다. eISA와 opt 도구의 구체적인 재현·schedule viewer 절차는 08장을 따른다. [capability probe](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/official_tools.py#L13-L24) · [공식 도구 안내](https://developer.furiosa.ai/furiosa-opt/book/quick-start/setup-and-tooling.html)
 
 
-**Schedule(스케줄)**은 어떤 계산·메모리 이동을 언제, 어느 자원에서 수행할지 정한 순서다. 정적 schedule viewer는 compiler가 배치한 계획을 보여주고, profiler trace는 실제 실행에서 관측한 사건을 보여준다. 예를 들어 정적 계획에 계산 사이 빈칸이 있으면 의존성이나 자원 충돌을 조사할 수 있지만, 실제 서버의 요청 큐 대기시간을 그 정적 그림에서 읽을 수는 없다.
+**Schedule(스케줄)은** 어떤 계산·메모리 이동을 언제, 어느 자원에서 수행할지 정한 순서다. 정적 schedule viewer는 compiler가 배치한 계획을 보여주고, profiler trace는 실제 실행에서 관측한 사건을 보여준다. 예를 들어 정적 계획에 계산 사이 빈칸이 있으면 의존성이나 자원 충돌을 조사할 수 있지만, 실제 서버의 요청 큐 대기시간을 그 정적 그림에서 읽을 수는 없다.
 
 이미 `furiosa-opt` 방식으로 빌드되는 Rust 프로젝트에 `constant_add_kernel` 함수가 준비되어 있고 호환 도구가 설치되어 있다면, 다음은 해당 함수의 계획을 꺼내는 실제 명령이다. 임의 EDF 파일을 입력하는 명령이 아니다.
 
@@ -346,7 +346,7 @@ cargo furiosa-opt compile constant_add_kernel --dump-schedule constant-add.sched
 furiosa-schedule-viewer --host 127.0.0.1 --port 9254
 ```
 
-첫 명령의 입력은 프로젝트 안의 함수 이름이고 출력은 `constant-add.schedule.json`이다. 두 번째는 로컬 viewer 서버를 연다. 브라우저에서 이 JSON을 열고 계산·전송의 의존 관계, 중간 tensor의 살아 있는 시간, 자원 점유를 읽는다. **Buffer lifetime(버퍼 수명)**은 값이 생성되어 마지막 소비가 끝날 때까지 보관해야 하는 구간이다. 동시에 살아 있는 큰 버퍼가 많으면 메모리 피크가 커진다. 계획에서 찾은 가설은 같은 입력의 실제 수치와 완료시간으로 다시 검증한다. [고정 CLI 문서](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/tools/kernel-optimizer.md) · [Schedule Viewer](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/tools/schedule-viewer.md)
+첫 명령의 입력은 프로젝트 안의 함수 이름이고 출력은 `constant-add.schedule.json`이다. 두 번째는 로컬 viewer 서버를 연다. 브라우저에서 이 JSON을 열고 계산·전송의 의존 관계, 중간 tensor의 살아 있는 시간, 자원 점유를 읽는다. **Buffer lifetime(버퍼 수명)은** 값이 생성되어 마지막 소비가 끝날 때까지 보관해야 하는 구간이다. 동시에 살아 있는 큰 버퍼가 많으면 메모리 피크가 커진다. 계획에서 찾은 가설은 같은 입력의 실제 수치와 완료시간으로 다시 검증한다. [고정 CLI 문서](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/tools/kernel-optimizer.md) · [Schedule Viewer](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/tools/schedule-viewer.md)
 
 ## 좋은 실패 보고서의 최소 내용
 

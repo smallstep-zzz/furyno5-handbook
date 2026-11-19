@@ -1,10 +1,10 @@
 # eISA 확인과 vISA 실전: 배열의 원소를 장치 위치에 연결하기
 
-CPU(Central Processing Unit)에서 C의 2차원 배열을 사용하여 `a[row][col]`을 읽으면, 결국 한 저장 공간 안의 어느 위치를 읽을지 정해야 한다. NPU(Neural Processing Unit)에서도 같은 문제가 있지만, 값이 여러 chip·PE·slice의 메모리에 나뉘고 여러 차례에 걸쳐 계산 경로로 전달될 수 있다. **Mapping(매핑)**은 이 논리 좌표와 실제 저장·처리 위치의 관계를 표현한다.
+CPU(Central Processing Unit)에서 C의 2차원 배열을 사용하여 `a[row][col]`을 읽으면, 결국 한 저장 공간 안의 어느 위치를 읽을지 정해야 한다. NPU(Neural Processing Unit)에서도 같은 문제가 있지만, 값이 여러 chip·PE·slice의 메모리에 나뉘고 여러 차례에 걸쳐 계산 경로로 전달될 수 있다. **Mapping(매핑)은** 이 논리 좌표와 실제 저장·처리 위치의 관계를 표현한다.
 
 이 장은 먼저 2×3 배열의 주소 계산부터 시작한다. 그 다음 공식 `constant_add` 예제의 2,048개 정수 중 **37번 원소 하나가 어느 위치에 있고 어떻게 38이 되는지** 따라간다. 계산식 `x+1`은 간단하게 유지하고, 메모리와 실행 경로를 읽는 데 집중한다.
 
-> **명칭과 버전** · ISA(Instruction Set Architecture)는 명령어 집합 구조다. 공개 프로그래밍 문서의 이름은 **vISA(Virtual Instruction Set Architecture)**다. 요청에 나온 eISA의 공식 풀네임과 독립적인 공개 실행 API(Application Programming Interface)는 이번 조사에서 확인하지 못했으므로 두 이름을 같다고 단정하지 않는다. 이 장은 `furiosa-opt` commit `3d43bc9d20f324af60e3006c3f1541938d7f5097`과 `furiosa-opt-std = "0.10"` template을 기준으로 한다. [공식 소개](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/introduction.md), [template 의존성](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/base-template/Cargo.toml.liquid)
+> **명칭과 버전** · ISA(Instruction Set Architecture)는 명령어 집합 구조다. 공개 프로그래밍 문서의 이름은 **vISA(Virtual Instruction Set Architecture)다**. 요청에 나온 eISA의 공식 풀네임과 독립적인 공개 실행 API(Application Programming Interface)는 이번 조사에서 확인하지 못했으므로 두 이름을 같다고 단정하지 않는다. 이 장은 `furiosa-opt` commit `3d43bc9d20f324af60e3006c3f1541938d7f5097`과 `furiosa-opt-std = "0.10"` template을 기준으로 한다. [공식 소개](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/introduction.md), [template 의존성](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/base-template/Cargo.toml.liquid)
 
 ## 1. 같은 행렬을 두 저장 순서로 표현한다
 
@@ -42,7 +42,7 @@ pub type ColumnMajor = m![W, H]; // H가 안쪽: 물리 위치 p를 W=p/2, H=p%2
 
 `m![]`의 Rust 타입은 **물리 위치에서 어떤 논리 좌표를 읽는지**를 표현한다. 따라서 이미 행 우선으로 저장된 버퍼를 그대로 두고 타입 이름만 열 우선으로 바꾸면 같은 행렬이 되지 않는다. 좌표 `(0,1)`에서 원래의 1 대신 물리 위치 2의 값 2를 읽게 된다. 필요한 데이터 이동 또는 성립하는 view 변환을 구분해야 한다. [공식 Mapping Expressions](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/mapping-tensors/mapping-expressions.md)
 
-**Reshape**는 원소 수를 유지하면서 차원 길이를 다시 묶는 것이고, **transpose(전치)**는 좌표 축을 교환하는 것이다. 예를 들어 `[0,1,2,10,11,12]`를 `(3,2)`로 reshape하면 `[[0,1],[2,10],[11,12]]`다. 원래 행렬을 transpose한 `[[0,10],[1,11],[2,12]]`와 값의 좌표가 다르다. 저수준 코드에서도 이름이나 shape를 바꾸는 것과 실제 원소를 올바른 위치로 옮기는 것을 구분해야 한다.
+**Reshape**는 원소 수를 유지하면서 차원 길이를 다시 묶는 것이고, **transpose(전치)는** 좌표 축을 교환하는 것이다. 예를 들어 `[0,1,2,10,11,12]`를 `(3,2)`로 reshape하면 `[[0,1],[2,10],[11,12]]`다. 원래 행렬을 transpose한 `[[0,10],[1,11],[2,12]]`와 값의 좌표가 다르다. 저수준 코드에서도 이름이나 shape를 바꾸는 것과 실제 원소를 올바른 위치로 옮기는 것을 구분해야 한다.
 
 ## 2. 논리 축과 물리 자원의 이름을 구분한다
 
@@ -56,7 +56,7 @@ pub type ColumnMajor = m![W, H]; // H가 안쪽: 물리 위치 p를 W=p/2, H=p%2
 | Slice | PE 안에서 데이터를 나누고 계산하는 더 작은 단위 | PE당 64개, cluster당 256개 |
 | Lane | 수축 연산과 TRF 배치에 쓰는 slice 내부의 세부 병렬 차원 | TRF의 slice당 8개 lane |
 
-**TRF(Tensor Register File)**는 반복 사용할 수축 연산 피연산자를 가까이 두는 레지스터 묶음이다. 그러나 모든 저장소에 Lane 차원이 붙는 것은 아니다. `DmTensor`는 `Chip·Cluster·Slice·Element`로 나뉘고, `TrfTensor`는 여기에 `Lane`이 추가된다. `Element`는 선택한 물리 단위 **안의 저장 위치**다. DM(Data Memory)의 원소 8개와 TRF의 lane 8개는 개수가 같아도 다른 개념이다. [공간·시간 차원의 공식 정의](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/mapping-tensors/spatial-temporal-dimensions.md)
+**TRF(Tensor Register File)는** 반복 사용할 수축 연산 피연산자를 가까이 두는 레지스터 묶음이다. 그러나 모든 저장소에 Lane 차원이 붙는 것은 아니다. `DmTensor`는 `Chip·Cluster·Slice·Element`로 나뉘고, `TrfTensor`는 여기에 `Lane`이 추가된다. `Element`는 선택한 물리 단위 **안의 저장 위치**다. DM(Data Memory)의 원소 8개와 TRF의 lane 8개는 개수가 같아도 다른 개념이다. [공간·시간 차원의 공식 정의](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/mapping-tensors/spatial-temporal-dimensions.md)
 
 장치 tensor의 타입은 어느 물리 단위에 어떤 논리 좌표를 놓는지 표현한다. 실제 메모리를 소유하고 주소를 관리하는 것은 storage 객체와 런타임이다. 값을 놓는 규칙을 맞췄다고 저장 공간 할당까지 끝났다고 생각하면 안 된다.
 
@@ -94,7 +94,7 @@ pub type Slice = m![A / 8 # 256]; // 논리 인덱스 A를 8개씩 묶어 256 sl
 
 ## 4. 저장된 값이 계산 경로로 흘러가는 과정
 
-HBM(High Bandwidth Memory)은 큰 장치 메모리이고, DM은 계산에 가까운 칩 내부 메모리다. **DMA(Direct Memory Access)**는 CPU가 각 원소를 복사하는 대신 전송 엔진이 데이터를 옮기는 방식이다. CPU↔HBM 전송과 HBM↔DM 전송을 구분한다. **Fetch**는 DM 값을 Tensor Unit의 계산 흐름으로 읽고, **Commit**은 계산 결과를 DM에 기록한다.
+HBM(High Bandwidth Memory)은 큰 장치 메모리이고, DM은 계산에 가까운 칩 내부 메모리다. **DMA(Direct Memory Access)는** CPU가 각 원소를 복사하는 대신 전송 엔진이 데이터를 옮기는 방식이다. CPU↔HBM 전송과 HBM↔DM 전송을 구분한다. **Fetch**는 DM 값을 Tensor Unit의 계산 흐름으로 읽고, **Commit**은 계산 결과를 DM에 기록한다.
 
 `constant_add_kernel`의 첫 이동은 HBM 입력을 앞 절의 DM mapping으로 옮기는 것이다. 아래는 해당 함수 안에서 사용하는 한 줄에 설명 주석을 추가한 발췌다. `input`, `device`, `Cluster`, `Slice`, `A`는 template의 선언을 사용한다.
 
@@ -196,7 +196,7 @@ cargo furiosa-opt run --release --bin constant_add
 
 ## 7. 제출과 완료를 분리해 호스트 작업을 겹친다
 
-CPU의 비동기 작업과 마찬가지로 **submit(제출)**과 **completion(완료)**은 다른 시점이다. 제출 뒤 CPU가 다른 준비를 할 수 있어도 NPU의 결과가 이미 기록되었다는 뜻은 아니다. Rust의 `.await`는 해당 비동기 결과가 준비될 때까지 다음 의존 작업으로 진행하지 않게 한다.
+CPU의 비동기 작업과 마찬가지로 **submit(제출)과** **completion(완료)은** 다른 시점이다. 제출 뒤 CPU가 다른 준비를 할 수 있어도 NPU의 결과가 이미 기록되었다는 뜻은 아니다. Rust의 `.await`는 해당 비동기 결과가 준비될 때까지 다음 의존 작업으로 진행하지 않게 한다.
 
 선택한 commit의 `launch.rs`에는 `Prepared`, `.submit()`, `Submitted`, `.await`가 구분되어 있다. 첫 launch의 이미지 로딩을 앞당기는 `function.load(&device)`와 기존 output storage를 사용하는 `.output(&mut out)`도 있다. [현재 launch 구현](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-std/src/runtime/launch.rs)
 

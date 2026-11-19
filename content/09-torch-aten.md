@@ -2,7 +2,7 @@
 
 Python에서 `torch.add(x, y)`를 호출했을 때 CPU 코드가 실행될지 NPU 코드가 실행될지는 누가 결정할까? 이 장은 **함수 이름, 함수의 호출 계약, 실제 구현, 모델 전체의 컴파일**을 나누어 답한다. C의 함수 포인터 표를 떠올려도 좋다. 호출할 계산의 이름은 같아도 인수의 장치에 따라 다른 구현을 선택할 수 있다. 다만 PyTorch는 자동 미분 같은 부가 처리도 선택하므로 실제 과정은 단순한 장치별 `switch`보다 복잡하다.
 
-NPU(Neural Processing Unit)는 신경망 계산용 장치이고, 이 책의 대상은 Furiosa의 RNGD다. **ATen(A Tensor Library)**은 PyTorch가 텐서 계산을 표현하는 공통 연산 계층이다. ATen 연산은 CPU(Central Processing Unit)의 기계어도 RNGD의 장치 명령어도 아니다. `더한다`, `행렬곱을 한다`는 계산 의미를 정해 두고, 장치별 구현이 그 의미를 수행한다. [ATen의 공식 역할](https://docs.pytorch.org/cppdocs/api/aten/index.html)
+NPU(Neural Processing Unit)는 신경망 계산용 장치이고, 이 책의 대상은 Furiosa의 RNGD다. **ATen(A Tensor Library)은** PyTorch가 텐서 계산을 표현하는 공통 연산 계층이다. ATen 연산은 CPU(Central Processing Unit)의 기계어도 RNGD의 장치 명령어도 아니다. `더한다`, `행렬곱을 한다`는 계산 의미를 정해 두고, 장치별 구현이 그 의미를 수행한다. [ATen의 공식 역할](https://docs.pytorch.org/cppdocs/api/aten/index.html)
 
 > **확인 범위** · API(Application Programming Interface)는 PyTorch 공식 자료를, 개수는 v2.10.0 고정 소스와 저장된 Torch 2.10.0+cpu / furiosa-torch 2026.4.0 기록을 사용한다. 아래 예제는 호출 구조를 설명하기 위한 코드이며 이번 집필 환경에는 PyTorch와 RNGD가 없어 실행하지 않았다. 수치가 적힌 주석은 식에서 예상되는 값이다.
 
@@ -19,7 +19,7 @@ z = torch.add(x, y, alpha=2)  # 각 i에 대해 x[i] + 2*y[i]; shape [2] 유지
 print(z)  # 식의 예상값: tensor([22., 44.]); 원래 x와 y는 바꾸지 않는다.
 ```
 
-이 호출의 계산은 `x + 2*y`다. 프로그램이 전달하는 것은 두 배열만이 아니다. 연산 이름 `add`, 두 인수가 tensor라는 사실, 추가 인수 `alpha=2`, 두 tensor가 CPU에 있다는 정보도 전달된다. 이후 구현을 고르는 **dispatcher(디스패처)**가 이 호출을 CPU의 덧셈 구현에 연결한다. dispatcher는 C에서 함수 포인터를 골라 호출하는 역할에 가깝고, 덧셈의 계산식 자체를 정의하는 계층과는 구분된다. [Dispatcher의 선택 과정](https://docs.pytorch.org/devlogs/dispatcher/2026-04-16-how-does-the-dispatcher-work/)
+이 호출의 계산은 `x + 2*y`다. 프로그램이 전달하는 것은 두 배열만이 아니다. 연산 이름 `add`, 두 인수가 tensor라는 사실, 추가 인수 `alpha=2`, 두 tensor가 CPU에 있다는 정보도 전달된다. 이후 구현을 고르는 **dispatcher(디스패처)가** 이 호출을 CPU의 덧셈 구현에 연결한다. dispatcher는 C에서 함수 포인터를 골라 호출하는 역할에 가깝고, 덧셈의 계산식 자체를 정의하는 계층과는 구분된다. [Dispatcher의 선택 과정](https://docs.pytorch.org/devlogs/dispatcher/2026-04-16-how-does-the-dispatcher-work/)
 
 | 단계 | 이 예에서 가지고 있는 정보 | 아직 결정하지 않은 것 |
 |---|---|---|
@@ -31,11 +31,11 @@ print(z)  # 식의 예상값: tensor([22., 44.]); 원래 x와 y는 바꾸지 않
 
 ## schema와 overload는 함수 선언을 읽듯 이해한다
 
-**schema(스키마)**는 연산의 함수 선언에 해당한다. 이름, 인수 이름·자료형·기본값, 반환 자료형을 적고, 필요한 경우 어느 인수를 변경하는지와 결과가 기존 메모리를 공유하는지도 표현한다. 데이터베이스 schema가 저장할 데이터의 구조를 정하듯, 여기서는 호출이 지켜야 할 구조를 정한다.
+**schema(스키마)는** 연산의 함수 선언에 해당한다. 이름, 인수 이름·자료형·기본값, 반환 자료형을 적고, 필요한 경우 어느 인수를 변경하는지와 결과가 기존 메모리를 공유하는지도 표현한다. 데이터베이스 schema가 저장할 데이터의 구조를 정하듯, 여기서는 호출이 지켜야 할 구조를 정한다.
 
 `add.Tensor(Tensor self, Tensor other, *, Scalar alpha=1) -> Tensor`를 왼쪽부터 읽으면, tensor 두 개를 받고 `alpha`라는 스칼라 옵션을 가진 뒤 tensor 하나를 반환한다는 뜻이다. Python의 `*` 뒤 인수는 이름을 붙여 전달한다. 여기의 `Tensor`와 `Scalar`는 특정 하드웨어의 자료형이 아니라 호출 인수의 종류다.
 
-**overload(오버로드)**는 기본 이름이 같지만 인수 형태가 다른 함수다. `add.Tensor`는 tensor와 tensor, `add.Scalar`는 tensor와 수 하나를 더한다. `add.out`은 결과를 담을 버퍼를 호출자가 주므로 메모리 변경 계약도 다르다. **operator packet(연산 묶음)**은 이 overload들을 `aten::add`라는 기본 이름 아래 모아 놓은 것이다. [고정된 schema 선언](https://github.com/pytorch/pytorch/blob/449b1768410104d3ed79d3bcfe4ba1d65c7f22c0/aten/src/ATen/native/native_functions.yaml)
+**overload(오버로드)는** 기본 이름이 같지만 인수 형태가 다른 함수다. `add.Tensor`는 tensor와 tensor, `add.Scalar`는 tensor와 수 하나를 더한다. `add.out`은 결과를 담을 버퍼를 호출자가 주므로 메모리 변경 계약도 다르다. **operator packet(연산 묶음)은** 이 overload들을 `aten::add`라는 기본 이름 아래 모아 놓은 것이다. [고정된 schema 선언](https://github.com/pytorch/pytorch/blob/449b1768410104d3ed79d3bcfe4ba1d65c7f22c0/aten/src/ATen/native/native_functions.yaml)
 
 | 구분 | 이 예의 이름 | 익숙한 개념으로 읽으면 |
 |---|---|---|
@@ -45,7 +45,7 @@ print(z)  # 식의 예상값: tensor([22., 44.]); 원래 x와 y는 바꾸지 않
 | backend kernel | CPU의 add 구현 | 그 선언을 실제로 수행하는 함수 몸체 |
 | NPU 실행 프로그램 | 해당 backend가 준비한 EDF(Executable Device Format) 등 | 장치가 실행할 컴파일 결과 |
 
-여기서 **kernel(커널)**은 계산을 수행하는 구현 단위라는 뜻이다. 운영체제 커널과 같은 말이 아니다. CPU backend에서는 C++ 함수일 수 있고, NPU backend에서는 준비된 장치 프로그램을 호출하는 함수일 수 있다. 하나의 ATen 연산을 지원한다는 말은 schema의 의미와 메모리 계약을 지키는 구현이 있다는 뜻이다. 이름만 같은 함수를 등록하는 것으로 끝나지 않는다.
+여기서 **kernel(커널)은** 계산을 수행하는 구현 단위라는 뜻이다. 운영체제 커널과 같은 말이 아니다. CPU backend에서는 C++ 함수일 수 있고, NPU backend에서는 준비된 장치 프로그램을 호출하는 함수일 수 있다. 하나의 ATen 연산을 지원한다는 말은 schema의 의미와 메모리 계약을 지키는 구현이 있다는 뜻이다. 이름만 같은 함수를 등록하는 것으로 끝나지 않는다.
 
 
 
@@ -107,7 +107,7 @@ print(torch.ops.handbook_demo.plus_one(x))  # 예상 tensor([3., 5.]); 이 줄�
 
 앞 코드에서 `lib.define`은 함수 선언을 만들고 `lib.impl`은 그 선언의 CPU·Meta 구현을 연결한다. 마지막 `torch.ops.handbook_demo.plus_one(x)`가 실제 호출이다. 새 namespace를 정의하므로 같은 이름의 정의를 여러 번 실행하지 않도록 새 Python 프로세스에서 실행한다. `lib` 객체를 보관하는 이유는 등록의 수명도 유지해야 하기 때문이다.
 
-**metadata(메타데이터)**는 tensor의 값 자체가 아닌 shape·dtype·stride 같은 설명 정보다. `Meta` 구현은 실제 원소를 더하지 않고 출력이 어떤 tensor여야 하는지 알려준다. **FakeTensor**도 컴파일 준비 중 실제 장치 계산 없이 tensor 성질을 추적하기 위한 수단이다. Meta가 있다고 NPU 계산이 구현된 것은 아니다. custom operator를 `torch.compile`·export와 함께 쓰려면 실제 연산과 FakeTensor/Meta 결과의 shape·dtype·stride 계약도 맞아야 한다. 장치 구현 함수 안에서 같은 장치의 동일 연산을 그대로 다시 호출하면 재귀가 생길 수 있으므로, 실제 커널 호출 또는 올바른 redispatch 설계가 필요하다. [torch.library 2.10](https://docs.pytorch.org/docs/2.10/library.html)
+**metadata(메타데이터)는** tensor의 값 자체가 아닌 shape·dtype·stride 같은 설명 정보다. `Meta` 구현은 실제 원소를 더하지 않고 출력이 어떤 tensor여야 하는지 알려준다. **FakeTensor**도 컴파일 준비 중 실제 장치 계산 없이 tensor 성질을 추적하기 위한 수단이다. Meta가 있다고 NPU 계산이 구현된 것은 아니다. custom operator를 `torch.compile`·export와 함께 쓰려면 실제 연산과 FakeTensor/Meta 결과의 shape·dtype·stride 계약도 맞아야 한다. 장치 구현 함수 안에서 같은 장치의 동일 연산을 그대로 다시 호출하면 재귀가 생길 수 있으므로, 실제 커널 호출 또는 올바른 redispatch 설계가 필요하다. [torch.library 2.10](https://docs.pytorch.org/docs/2.10/library.html)
 
 ## CPU 폴백은 누가 결정하는가
 
@@ -117,7 +117,7 @@ FuryNo5의 공개 `optimize(..., fallback="error")`는 `"error"` 이외 값을 �
 
 ## shape 변경과 전치는 값의 의미부터 확인한다
 
-그래프에는 덧셈뿐 아니라 tensor의 모양을 바꾸는 연산도 등장한다. **reshape**는 원소 수를 유지하면서 같은 논리적 원소열을 새로운 shape로 읽는 연산이다. **transpose(전치)**는 지정한 두 축을 맞바꾼다. 두 연산의 출력 shape가 같을 때도 숫자가 놓이는 위치는 다를 수 있다.
+그래프에는 덧셈뿐 아니라 tensor의 모양을 바꾸는 연산도 등장한다. **reshape**는 원소 수를 유지하면서 같은 논리적 원소열을 새로운 shape로 읽는 연산이다. **transpose(전치)는** 지정한 두 축을 맞바꾼다. 두 연산의 출력 shape가 같을 때도 숫자가 놓이는 위치는 다를 수 있다.
 
 ```python
 import torch
@@ -148,7 +148,7 @@ flowchart TB
     H --> I
 ```
 
-앞에서는 한 번의 덧셈을 봤다. 모델 전체를 최적화하려면 여러 호출 사이의 관계가 필요하다. **capture(캡처)**는 Python 모델과 예제 입력에서 연산·값·의존 관계를 추출하는 과정이다. **FX graph**는 PyTorch가 그 관계를 담는 자료구조다. node는 입력, 함수 호출, 출력 등을 나타내고, 한 node가 다른 node를 인수로 쓰면 데이터 의존 간선이 생긴다. C compiler의 중간 표현과 비슷하게 읽을 수 있다. 여기서는 최종 값 대신 “어떤 계산으로 값을 만드는지”를 다룬다.
+앞에서는 한 번의 덧셈을 봤다. 모델 전체를 최적화하려면 여러 호출 사이의 관계가 필요하다. **capture(캡처)는** Python 모델과 예제 입력에서 연산·값·의존 관계를 추출하는 과정이다. **FX graph**는 PyTorch가 그 관계를 담는 자료구조다. node는 입력, 함수 호출, 출력 등을 나타내고, 한 node가 다른 node를 인수로 쓰면 데이터 의존 간선이 생긴다. C compiler의 중간 표현과 비슷하게 읽을 수 있다. 여기서는 최종 값 대신 “어떤 계산으로 값을 만드는지”를 다룬다.
 
 이후 장에서도 사용할 모델을 `Linear(8,12) → ReLU → Linear(12,8)`로 정하자. Linear는 입력 행마다 weight를 곱하고 bias를 더하며, ReLU(Rectified Linear Unit)는 음수 원소를 0으로 바꾼다. 입력 `[4,8]`은 길이 8의 입력 4개다.
 

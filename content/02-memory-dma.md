@@ -4,7 +4,7 @@
 
 ## 1. `reshape(2, 3)`은 무엇을 하는가
 
-먼저 숫자 여섯 개를 만든다. **Shape(형상)**는 각 축의 길이이며, 길이 6인 1차원 배열의 shape는 `(6,)`이다. `reshape`는 원소의 총수를 유지하면서 이 값을 어떤 모양으로 읽을지 바꾸는 함수다. `reshape(2, 3)`은 **2행 3열로 읽겠다**는 뜻이다. 새로 곱셈이나 덧셈을 수행하는 연산은 아니다. [NumPy reshape 계약](https://numpy.org/doc/stable/reference/generated/numpy.reshape.html)
+먼저 숫자 여섯 개를 만든다. **Shape(형상)는** 각 축의 길이이며, 길이 6인 1차원 배열의 shape는 `(6,)`이다. `reshape`는 원소의 총수를 유지하면서 이 값을 어떤 모양으로 읽을지 바꾸는 함수다. `reshape(2, 3)`은 **2행 3열로 읽겠다**는 뜻이다. 새로 곱셈이나 덧셈을 수행하는 연산은 아니다. [NumPy reshape 계약](https://numpy.org/doc/stable/reference/generated/numpy.reshape.html)
 
 ```python
 import numpy as np  # CPU에서 숫자 배열과 메모리 표현을 살펴보기 위해 사용한다.
@@ -24,11 +24,11 @@ print(reshaped)   # [[1., 2.], [3., 4.], [5., 6.]]
 
 `2×3=6`, `3×2=6`이므로 두 변환이 가능하다. `reshape(4,2)`는 8칸을 요구하므로 이 6개짜리 배열에는 사용할 수 없다. `reshape(-1,3)`처럼 한 차원에 `-1`을 쓰면 전체 원소 수에서 그 길이를 계산한다. 여기서는 `6÷3=2`이므로 `(2,3)`이 된다. `-1`은 축 길이가 음수라는 뜻이 아니다.
 
-**값의 재해석과 메모리 복사도 구분한다.** 위처럼 가능한 경우에는 같은 저장 공간을 공유하는 **view(뷰)**를 만든다. 그러나 원래 배열의 저장 순서와 요청한 모양에 따라 reshape에 복사가 필요할 수도 있다. 따라서 함수 이름만으로 “항상 공짜인 메타데이터 변경”이라고 판단하지 않는다. [reshape의 view·copy 설명](https://numpy.org/doc/stable/reference/generated/numpy.reshape.html)
+**값의 재해석과 메모리 복사도 구분한다.** 위처럼 가능한 경우에는 같은 저장 공간을 공유하는 **view(뷰)를** 만든다. 그러나 원래 배열의 저장 순서와 요청한 모양에 따라 reshape에 복사가 필요할 수도 있다. 따라서 함수 이름만으로 “항상 공짜인 메타데이터 변경”이라고 판단하지 않는다. [reshape의 view·copy 설명](https://numpy.org/doc/stable/reference/generated/numpy.reshape.html)
 
 ## 2. `reshape`와 전치는 결과부터 다르다
 
-**전치(transpose)**는 행과 열처럼 축의 역할을 바꾸는 연산이다. 2차원 배열의 `x.T`는 새 배열의 `[열,행]`이 원래 배열의 `[행,열]`을 읽게 한다. 원래 첫 행 `[1,2,3]`은 결과의 첫 열이 된다. [NumPy transpose](https://numpy.org/doc/stable/reference/generated/numpy.transpose.html)
+**전치(transpose)는** 행과 열처럼 축의 역할을 바꾸는 연산이다. 2차원 배열의 `x.T`는 새 배열의 `[열,행]`이 원래 배열의 `[행,열]`을 읽게 한다. 원래 첫 행 `[1,2,3]`은 결과의 첫 열이 된다. [NumPy transpose](https://numpy.org/doc/stable/reference/generated/numpy.transpose.html)
 
 ```python
 # 앞 절의 x는 [[1,2,3],[4,5,6]], shape는 (2, 3)이다.
@@ -49,11 +49,11 @@ print(xt)
 
 ## 3. stride를 보면 주소 계산이 보인다
 
-**Stride(스트라이드)**는 한 축의 인덱스를 1 늘렸을 때 주소를 얼마나 이동할지 나타낸다. NumPy의 `strides` 단위는 **바이트**다. float32는 값 하나가 4바이트이므로, 행부터 연속으로 저장한 `(2,3)` 배열은 다음 행으로 이동할 때 `3×4=12`바이트, 다음 열로 이동할 때 4바이트를 건너뛴다. 따라서 `x.strides == (12,4)`다. [NumPy ndarray의 주소·stride](https://numpy.org/doc/stable/reference/arrays.ndarray.html)
+**Stride(스트라이드)는** 한 축의 인덱스를 1 늘렸을 때 주소를 얼마나 이동할지 나타낸다. NumPy의 `strides` 단위는 **바이트**다. float32는 값 하나가 4바이트이므로, 행부터 연속으로 저장한 `(2,3)` 배열은 다음 행으로 이동할 때 `3×4=12`바이트, 다음 열로 이동할 때 4바이트를 건너뛴다. 따라서 `x.strides == (12,4)`다. [NumPy ndarray의 주소·stride](https://numpy.org/doc/stable/reference/arrays.ndarray.html)
 
 `x[1,2]`의 주소는 `시작 주소 + 1×12 + 2×4`, 즉 시작에서 20바이트 떨어진 곳이다. 값 6이 들어 있는 여섯 번째 원소의 위치와 일치한다. C에서 배열 주소를 계산하는 원리와 같다.
 
-전치 view `xt`는 원본 저장 공간을 읽는 방향을 바꾸므로 stride가 `(4,12)`다. `xt[0,1]`은 시작에서 12바이트 떨어진 값 4를 읽는다. 여기에 **contiguous(연속 배치)**가 필요한 소비자가 있다면, 값을 새 순서로 실제 복사할 수 있다.
+전치 view `xt`는 원본 저장 공간을 읽는 방향을 바꾸므로 stride가 `(4,12)`다. `xt[0,1]`은 시작에서 12바이트 떨어진 값 4를 읽는다. 여기에 **contiguous(연속 배치)가** 필요한 소비자가 있다면, 값을 새 순서로 실제 복사할 수 있다.
 
 ```python
 # ascontiguousarray는 xt의 '논리적 값'을 유지하며 C 순서로 연속 배치한다.
@@ -83,7 +83,7 @@ print(np.shares_memory(x, xt), np.shares_memory(x, packed))  # True, False
 
 ### 같은 작은 값을 여러 행에 더할 때: broadcasting
 
-모델에는 각 출력 행에 같은 보정값을 더하는 계산도 있다. `x + [10,20,30]`은 첫 행에만 더하는 것이 아니라 두 행 모두에 적용된다. 이런 크기 확장 규칙을 **broadcasting(브로드캐스팅)**이라고 한다. NumPy는 오른쪽 축부터 길이를 비교해, 같거나 한쪽이 1인 축을 맞춘다. `(2,3)`과 `(3,)`에서는 뒤의 길이 3을 맞추고 앞의 행 방향에 같은 값을 적용할 수 있다. [NumPy broadcasting 규칙](https://numpy.org/doc/stable/user/basics.broadcasting.html)
+모델에는 각 출력 행에 같은 보정값을 더하는 계산도 있다. `x + [10,20,30]`은 첫 행에만 더하는 것이 아니라 두 행 모두에 적용된다. 이런 크기 확장 규칙을 **broadcasting(브로드캐스팅)이라고** 한다. NumPy는 오른쪽 축부터 길이를 비교해, 같거나 한쪽이 1인 축을 맞춘다. `(2,3)`과 `(3,)`에서는 뒤의 길이 3을 맞추고 앞의 행 방향에 같은 값을 적용할 수 있다. [NumPy broadcasting 규칙](https://numpy.org/doc/stable/user/basics.broadcasting.html)
 
 ```python
 bias = np.array([10, 20, 30], dtype=np.float32)  # 열마다 더할 값, shape (3,).
@@ -95,7 +95,7 @@ print(y)      # [[11., 22., 33.], [14., 25., 36.]]
 
 ## 4. NPU에서는 주소에 장치 위치가 더해진다
 
-호스트 배열은 시작 주소와 stride로 값을 찾았다. RNGD에서는 그 값이 **어느 칩, 어느 cluster, 어느 slice의 어느 위치에 있는지**도 선택해야 한다. Cluster는 칩 안의 PE 묶음이다. PE(Processing Element)는 큰 실행 단위이고, slice는 그 안의 작은 병렬 데이터 처리 단위다. 장치 위치와 논리적 인덱스를 연결하는 규칙이 **mapping(매핑)**이다.
+호스트 배열은 시작 주소와 stride로 값을 찾았다. RNGD에서는 그 값이 **어느 칩, 어느 cluster, 어느 slice의 어느 위치에 있는지**도 선택해야 한다. Cluster는 칩 안의 PE 묶음이다. PE(Processing Element)는 큰 실행 단위이고, slice는 그 안의 작은 병렬 데이터 처리 단위다. 장치 위치와 논리적 인덱스를 연결하는 규칙이 **mapping(매핑)이다**.
 
 다음은 개념을 보여 주기 위해 두 slice만 그린 예다. 실제 Rust 커널이 요구하는 활성 단위 수·정렬·패딩 조건을 표현한 설정은 아니다.
 
@@ -110,7 +110,7 @@ print(y)      # [[11., 22., 33.], [14., 25., 36.]]
 
 ## 5. DMA는 어디서 어디로 무엇을 옮기는가
 
-**DMA(Direct Memory Access)**는 CPU가 원소마다 복사 명령을 반복하는 대신 전송 엔진에 데이터 이동을 맡기는 방식이다. CPU·런타임이 전송을 준비하고 완료를 관리하는 일까지 없어지지는 않는다. **호스트(host)**는 NPU를 제어하는 CPU 쪽 시스템, **장치(device)**는 여기서는 RNGD다.
+**DMA(Direct Memory Access)는** CPU가 원소마다 복사 명령을 반복하는 대신 전송 엔진에 데이터 이동을 맡기는 방식이다. CPU·런타임이 전송을 준비하고 완료를 관리하는 일까지 없어지지는 않는다. **호스트(host)는** NPU를 제어하는 CPU 쪽 시스템, **장치(device)는** 여기서는 RNGD다.
 
 HBM(High Bandwidth Memory)은 카드의 큰 메모리, DM(Data Memory)은 계산할 값을 준비하는 칩 내부 메모리다. **Tensor Unit**은 DM에서 읽은 값을 여러 연산 엔진을 거쳐 처리하는 칩 내부 계산 파이프라인이다. **Fetch**는 DM에서 그 계산 흐름으로 값을 읽고, **Commit**은 계산 결과를 DM에 저장한다. 아래의 서로 다른 화살표를 구분하는 것이 출발점이다.
 
@@ -142,13 +142,13 @@ flowchart TB
 
 ### 주소를 하나씩 계산하는 대신 sequencer를 준비한다
 
-**Sequencer(시퀀서)**는 반복 범위와 주소 증가량으로 읽기·쓰기 주소를 차례로 만드는 장치 기능이다. `for row`와 `for col`에서 주소를 계산하는 일을 떠올리면 된다. `x`를 읽는 쪽은 행 증가 12바이트·열 증가 4바이트, 전치한 연속 결과를 쓰는 쪽은 다른 증가량을 사용할 수 있다. 읽는 순서와 쓰는 순서를 달리하면 데이터 이동과 함께 배치도 바꿀 수 있다.
+**Sequencer(시퀀서)는** 반복 범위와 주소 증가량으로 읽기·쓰기 주소를 차례로 만드는 장치 기능이다. `for row`와 `for col`에서 주소를 계산하는 일을 떠올리면 된다. `x`를 읽는 쪽은 행 증가 12바이트·열 증가 4바이트, 전치한 연속 결과를 쓰는 쪽은 다른 증가량을 사용할 수 있다. 읽는 순서와 쓰는 순서를 달리하면 데이터 이동과 함께 배치도 바꿀 수 있다.
 
 Furiosa의 DMA는 출발·도착 mapping으로 이러한 주소 발생 규칙을 만든다. 이때 **목적지의 mapping을 가진 새 값을 만드는 것**과 **원본 객체의 의미를 바꾸는 것**을 구분한다. 앞에서 `xt`와 `packed`를 나눴던 이유가 장치 경로에서도 이어진다. [공식 sequencer와 DMA 재배치](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/moving-tensors/dma-engine.md)
 
 ## 6. 작은 복사를 많이 하면 왜 느릴 수 있는가
 
-전송은 시작 준비에도 시간이 든다. 첫 근사로 `전송 시간 ≈ 제출·시작 시간 + 바이트 수 ÷ 유효 대역폭`이라고 생각할 수 있다. **대역폭(bandwidth)**은 초당 옮길 수 있는 데이터 양이다. 아래는 차이를 이해하기 위한 가상 수치이며 RNGD의 실측값이 아니다.
+전송은 시작 준비에도 시간이 든다. 첫 근사로 `전송 시간 ≈ 제출·시작 시간 + 바이트 수 ÷ 유효 대역폭`이라고 생각할 수 있다. **대역폭(bandwidth)은** 초당 옮길 수 있는 데이터 양이다. 아래는 차이를 이해하기 위한 가상 수치이며 RNGD의 실측값이 아니다.
 
 가정: 전송 한 번을 시작하는 비용이 10마이크로초이고, 1 kB를 옮기는 데 1마이크로초가 든다고 하자. 여기의 kB는 1,000바이트다.
 
@@ -165,27 +165,27 @@ Furiosa의 DMA는 출발·도착 mapping으로 이러한 주소 발생 규칙을
 
 <!-- interactive:dma -->
 
-**Tile(타일)**은 큰 배열을 나눠 한 번에 처리하는 작은 묶음이다. 겹침을 만들려면 계산 중인 타일과 다음에 복사할 타일이 서로의 데이터를 덮어쓰면 안 된다. 두 버퍼를 번갈아 쓰는 **double buffering(이중 버퍼링)**이 한 방법이다. 장치의 실제 엔진·메모리 경쟁과 제출 비용 때문에 모든 작업이 이 이상적 시간에 도달하는 것은 아니다. [공식 메모리 이동·스케줄 전제](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/moving-tensors/index.md)
+**Tile(타일)은** 큰 배열을 나눠 한 번에 처리하는 작은 묶음이다. 겹침을 만들려면 계산 중인 타일과 다음에 복사할 타일이 서로의 데이터를 덮어쓰면 안 된다. 두 버퍼를 번갈아 쓰는 **double buffering(이중 버퍼링)이** 한 방법이다. 장치의 실제 엔진·메모리 경쟁과 제출 비용 때문에 모든 작업이 이 이상적 시간에 도달하는 것은 아니다. [공식 메모리 이동·스케줄 전제](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/moving-tensors/index.md)
 
 ## 7. 정렬·bank·채널이 성능에 영향을 주는 이유
 
 ### 정렬: 요청이 하드웨어 전송 단위의 경계를 넘는가
 
-**Alignment(정렬)**는 시작 주소나 크기를 장치가 처리하는 단위에 맞추는 것이다. 공개 HBM 문서는 256바이트 전송 단위를 설명한다. 주소 240부터 32바이트를 읽으면 `240~255`와 `256~271`로 두 단위에 걸친다. 전체 데이터가 작아도 내부 요청은 나뉠 수 있다.
+**Alignment(정렬)는** 시작 주소나 크기를 장치가 처리하는 단위에 맞추는 것이다. 공개 HBM 문서는 256바이트 전송 단위를 설명한다. 주소 240부터 32바이트를 읽으면 `240~255`와 `256~271`로 두 단위에 걸친다. 전체 데이터가 작아도 내부 요청은 나뉠 수 있다.
 
-쓰기는 더 까다롭다. 256바이트 중 일부만 바꾸려면 나머지를 보존하기 위해 기존 단위를 읽고, 일부를 고치고, 다시 쓸 수 있다. 이를 **RMW(Read-Modify-Write)**라고 한다. 시작 주소가 정렬돼 있어도 마지막 조각의 크기가 전송 단위를 채우지 않으면 부분 쓰기가 남을 수 있다. 그래서 시작 주소만 보는 것으로 끝나지 않는다. [HBM 정렬·부분 쓰기](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/moving-tensors/memory-performance.md#misaligned-access)
+쓰기는 더 까다롭다. 256바이트 중 일부만 바꾸려면 나머지를 보존하기 위해 기존 단위를 읽고, 일부를 고치고, 다시 쓸 수 있다. 이를 **RMW(Read-Modify-Write)라고** 한다. 시작 주소가 정렬돼 있어도 마지막 조각의 크기가 전송 단위를 채우지 않으면 부분 쓰기가 남을 수 있다. 그래서 시작 주소만 보는 것으로 끝나지 않는다. [HBM 정렬·부분 쓰기](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/moving-tensors/memory-performance.md#misaligned-access)
 
 ### Bank: 메모리 안에서도 접근이 한곳에 몰릴 수 있다
 
-**Bank(뱅크)**는 메모리 내부에서 접근을 나눠 처리하는 구획이다. 개념을 보기 위해 4개 bank에 주소를 번갈아 배치한다고 가정하자. 원소 위치 `0,1,2,3`을 읽으면 bank `0,1,2,3`으로 분산된다. `0,4,8,12`를 읽으면 모두 bank 0에 몰릴 수 있다. 연산기를 여러 개 켜도 같은 bank를 기다리면 이득이 줄어든다.
+**Bank(뱅크)는** 메모리 내부에서 접근을 나눠 처리하는 구획이다. 개념을 보기 위해 4개 bank에 주소를 번갈아 배치한다고 가정하자. 원소 위치 `0,1,2,3`을 읽으면 bank `0,1,2,3`으로 분산된다. `0,4,8,12`를 읽으면 모두 bank 0에 몰릴 수 있다. 연산기를 여러 개 켜도 같은 bank를 기다리면 이득이 줄어든다.
 
-실제 고정 문서의 DM slice는 16개 bank와 8바이트 폭을 설명한다. 위 4-bank 예는 원리 설명이며 실제 주소 비트식을 대체하지 않는다. HBM의 **channel(채널)**도 병렬 전송에 사용하는 통로다. **Interleaving(교차 분산)**은 연속 요청을 여러 bank·채널에 나눠 한 통로에 몰리지 않게 하는 배치다. [DM bank·HBM 채널 설명](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/moving-tensors/memory-performance.md)
+실제 고정 문서의 DM slice는 16개 bank와 8바이트 폭을 설명한다. 위 4-bank 예는 원리 설명이며 실제 주소 비트식을 대체하지 않는다. HBM의 **channel(채널)도** 병렬 전송에 사용하는 통로다. **Interleaving(교차 분산)은** 연속 요청을 여러 bank·채널에 나눠 한 통로에 몰리지 않게 하는 배치다. [DM bank·HBM 채널 설명](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/moving-tensors/memory-performance.md)
 
 특정 잘못된 접근은 느려지는 데서 끝나지 않을 수 있다. 공식 문서는 우선순위가 높은 Fetch·Commit이 같은 DM bank를 계속 사용해 DMA가 장시간 기다리는 경우, NoC(Network-on-Chip, 칩 내부 연결망) timeout과 복구가 필요할 수 있다고 설명한다. 따라서 저수준 mapping을 수정할 때는 먼저 지원 조건을 지키고, 이후 trace에서 대기를 확인한다. 문서의 특정 패턴에 대한 감속 배수를 사용자 모델 전체의 예상 감속률로 옮기지 않는다. [Bank starvation의 조건](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/moving-tensors/memory-performance.md#bank-starvation)
 
 ## 8. 할당한 버퍼는 언제 다시 쓸 수 있는가
 
-**Buffer(버퍼)**는 데이터를 넣기 위해 확보한 메모리 영역이다. **할당(allocation)**은 그 영역을 확보하는 일이고, **해제**는 더는 사용하지 않음을 알리는 일이다. 비동기 작업에서는 Python 함수나 Rust 함수가 반환돼도 장치가 그 버퍼를 계속 읽고 있을 수 있다.
+**Buffer(버퍼)는** 데이터를 넣기 위해 확보한 메모리 영역이다. **할당(allocation)은** 그 영역을 확보하는 일이고, **해제**는 더는 사용하지 않음을 알리는 일이다. 비동기 작업에서는 Python 함수나 Rust 함수가 반환돼도 장치가 그 버퍼를 계속 읽고 있을 수 있다.
 
 요청 A의 입력 버퍼를 전송 중인데 요청 B의 값으로 덮어쓰면, 장치가 A의 앞부분과 B의 뒷부분을 읽는 오류가 생길 수 있다. 계산 결과가 나오기 전에 다음 연산이 읽는 것도 같은 종류의 문제다. 여기서는 **업로드 원본인 호스트 버퍼**와 **장치 계산이 읽는 장치 버퍼**의 수명을 나누어 봐야 한다.
 
@@ -203,11 +203,11 @@ flowchart TB
 
 호스트 원본은 DMA가 마지막으로 읽은 뒤, 장치 입력은 계산이 마지막으로 읽은 뒤에 재사용할 수 있다. 위 그림은 호스트 쪽 재사용을 전송 전체 완료로 확인하는 보수적인 예다. SDK가 더 긴 소유권·수명 계약을 요구하거나 완료를 더 큰 작업 단위로만 알린다면 해당 계약을 따라야 한다.
 
-핵심은 **각 버퍼의 마지막 사용자가 끝났는가**다. 메모리를 공유하는 **alias(별칭)**가 있거나 제출된 작업이 소유권을 갖고 있으면, 지역 변수 하나를 지웠다고 실제 메모리를 즉시 재사용할 수 있는 것은 아니다. 공개 runtime은 제출한 작업이 끝날 때까지 관련 메모리를 유지하고 충돌하는 접근의 순서를 관리하는 계약을 설명한다. [Runtime의 수명·충돌 보장](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-rt/README.md)
+핵심은 **각 버퍼의 마지막 사용자가 끝났는가**다. 메모리를 공유하는 **alias(별칭)가** 있거나 제출된 작업이 소유권을 갖고 있으면, 지역 변수 하나를 지웠다고 실제 메모리를 즉시 재사용할 수 있는 것은 아니다. 공개 runtime은 제출한 작업이 끝날 때까지 관련 메모리를 유지하고 충돌하는 접근의 순서를 관리하는 계약을 설명한다. [Runtime의 수명·충돌 보장](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-rt/README.md)
 
 ### Pinned memory와 장치 주소
 
-호스트의 가상 주소를 숫자로 바꿔 장치에 넘기는 것만으로 DMA가 읽을 수 있는 버퍼가 되지는 않는다. 운영체제의 가상 메모리와 장치가 사용하는 주소 변환을 연결해야 한다. **Pinned memory(핀 고정 메모리)**와 등록 절차는 전송 중 장치가 참조할 메모리의 접근 가능성과 수명을 유지하는 데 사용된다.
+호스트의 가상 주소를 숫자로 바꿔 장치에 넘기는 것만으로 DMA가 읽을 수 있는 버퍼가 되지는 않는다. 운영체제의 가상 메모리와 장치가 사용하는 주소 변환을 연결해야 한다. **Pinned memory(핀 고정 메모리)와** 등록 절차는 전송 중 장치가 참조할 메모리의 접근 가능성과 수명을 유지하는 데 사용된다.
 
 공개 `Device::map()`은 pinned memory를 장치 전송에 사용할 수 있도록 등록한다. 한편 `mmap()`으로 장치의 제어 영역을 매핑하는 것은 레지스터·큐 등을 접근하기 위한 경로일 수 있다. **전송할 숫자 배열을 등록하는 일**과 **장치를 제어하는 주소 영역을 매핑하는 일**을 구별하자. [장치 버퍼 등록](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-rt/src/device/mod.rs), [제어 영역 매핑](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-rt/src/driver/kernel/map.rs)
 
@@ -250,7 +250,7 @@ fn main() -> Result<()> {
 }
 ```
 
-SMI(System Management Interface)의 메모리 집계와 이 allocator의 집계 범위는 다를 수 있다. 할당 실패를 **OOM(Out Of Memory)**이라고 부르더라도 어느 범위의 부족인지 기록해야 진단할 수 있다.
+SMI(System Management Interface)의 메모리 집계와 이 allocator의 집계 범위는 다를 수 있다. 할당 실패를 **OOM(Out Of Memory)이라고** 부르더라도 어느 범위의 부족인지 기록해야 진단할 수 있다.
 
 ## 10. 무엇을 반복문 밖으로 옮길 것인가
 

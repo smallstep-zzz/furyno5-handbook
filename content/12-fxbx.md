@@ -2,7 +2,7 @@
 
 Python에서 모델을 만든 프로세스를 종료하면 `model` 객체, 중간 tensor, 장치 메모리 주소, 준비된 호출 객체도 함께 사라진다. 디스크에 컴파일 결과만 남겼다면 다른 프로세스는 무엇을 해야 할까? **fxbX는 저장한 실행 파일과 연결 설명을 읽고, 현재 프로세스의 가중치·입력·장치 객체를 연결해 실행하는 프로젝트**다.
 
-배포용 **package(패키지)**는 필요한 파일을 묶은 전달 단위다. 프로그램 설치 파일이나 아카이브를 생각하면 된다. **manifest(매니페스트)**는 묶음 안에 어떤 파일이 있고 어떤 조건에서 써야 하는지 적은 설명서다. 실행계획은 한 단계 더 구체적이다. 어떤 계산에 어떤 tensor를 넘기고 그 결과를 어디에 연결할지를 적는다. 파일 목록과 함수 호출 목록은 역할이 다르다.
+배포용 **package(패키지)는** 필요한 파일을 묶은 전달 단위다. 프로그램 설치 파일이나 아카이브를 생각하면 된다. **manifest(매니페스트)는** 묶음 안에 어떤 파일이 있고 어떤 조건에서 써야 하는지 적은 설명서다. 실행계획은 한 단계 더 구체적이다. 어떤 계산에 어떤 tensor를 넘기고 그 결과를 어디에 연결할지를 적는다. 파일 목록과 함수 호출 목록은 역할이 다르다.
 
 이 장은 fxbX commit `03d993b4d1b36cdda209d61bbf447434c174b401`와 FuryNo5 `bba9efea8201aec48150514a35d0b637d29d107e`를 기준으로 한다. fxbX는 공식 FXB(Furiosa Executable Bundle)를 대신하는 공식 표준이 아니다. 초기 패키지 형식과 최신 실행계획 형식을 모두 다루므로 뒤에서 어느 파일을 어느 reader가 읽는지 나눈다. 집필 환경에서는 새 RNGD 실행을 하지 않았다. [현재 프로젝트 범위](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/README.md)
 
@@ -12,7 +12,7 @@ Python에서 모델을 만든 프로세스를 종료하면 `model` 객체, 중�
 
 행렬곱 `@`는 왼쪽 행과 오른쪽 열의 대응 원소를 곱해 더한다. 첫 층의 가중치 `W[12,8]`은 출력 특징 12개 각각의 계수 8개를 담으므로, `W.T`로 축을 맞바꾼 `[8,12]`를 사용한다. 결과 `x[4,8] @ W.T[8,12]`의 shape는 `[4,12]`이고, bias `[12]`를 모든 행에 똑같이 더한다. 이 **broadcasting**을 포함한 계산이 `Linear(8,12)`의 계약이다. 두 번째 층도 같은 방식으로 12개 특징을 8개로 바꾼다. 패키지를 읽는 쪽이 weight의 행·열 의미를 바꾸거나 bias를 다른 축에 연결하면 파일이 정상이어도 잘못된 모델을 실행한다. [Linear의 계산과 weight shape](https://docs.pytorch.org/docs/2.10/generated/torch.nn.Linear.html)
 
-FuryNo5가 만드는 **EDF(Executable Device Format)**는 RNGD NPU(Neural Processing Unit)에서 계산할 장치 바이너리다. 이는 Python의 모델 객체와 다르다. 실행 소비자는 파일 bytes를 해석하고 장치 자원을 준비하는 **loader(로더)**를 통해 계산 가능한 객체를 만든다. 메모리에서 객체를 파일로 저장하는 직렬화와 그 반대인 역직렬화도 이 경계에서 등장한다. [EDF 정의](https://developer.furiosa.ai/furiosa-opt/book/quick-start/kernel-validation.html), [실행 소비자](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py)
+FuryNo5가 만드는 **EDF(Executable Device Format)는** RNGD NPU(Neural Processing Unit)에서 계산할 장치 바이너리다. 이는 Python의 모델 객체와 다르다. 실행 소비자는 파일 bytes를 해석하고 장치 자원을 준비하는 **loader(로더)를** 통해 계산 가능한 객체를 만든다. 메모리에서 객체를 파일로 저장하는 직렬화와 그 반대인 역직렬화도 이 경계에서 등장한다. [EDF 정의](https://developer.furiosa.ai/furiosa-opt/book/quick-start/kernel-validation.html), [실행 소비자](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py)
 
 | 다른 프로세스가 알아야 할 것 | 예제에서의 값 | 저장·공급하는 곳 |
 |---|---|---|
@@ -35,7 +35,7 @@ FuryNo5는 그래프를 분석해 이러한 EDF와 연결 계획을 생산한다
 
 ## 2. 현재 공존하는 세 가지 산출물
 
-**schema(스키마)**는 파일의 필드·자료형·버전 규칙이다. 데이터베이스의 테이블 정의처럼 reader와 writer가 같은 규칙을 알아야 한다. 확장자는 사람이 파일을 구분하는 이름의 일부이고 schema는 내부 구조다. 이름을 `.fxb`로 바꾸었다고 공식 실행계약으로 변환되지는 않는다.
+**schema(스키마)는** 파일의 필드·자료형·버전 규칙이다. 데이터베이스의 테이블 정의처럼 reader와 writer가 같은 규칙을 알아야 한다. 확장자는 사람이 파일을 구분하는 이름의 일부이고 schema는 내부 구조다. 이름을 `.fxb`로 바꾸었다고 공식 실행계약으로 변환되지는 않는다.
 
 | 산출물 | 핵심 내용 | 실행 주체 | 공식 Furiosa-LLM에 바로 전달 가능한가 |
 |---|---|---|---|
@@ -126,7 +126,7 @@ flowchart TB
 
 저장된 계획은 graph capture·분해·의존성 추론·커널 컴파일을 재실행할 필요를 줄인다. 그래도 해시 검사, 버전 검사, EDF 역직렬화, 장치 버퍼 할당, 가중치 업로드, runtime object 생성, 요청 상태 준비는 남는다. `ExecutionFXB` 생성자도 마지막 사용 위치를 계산해 임시 tensor를 해제할 step 목록을 만든다. 이는 저장된 그래프에서 **런타임 bookkeeping을 파생**하는 일이며, EDF만 보고 원본 모델의 실행 의미를 복원하는 일이 아니다. [생성자와 last-use 처리](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py#L307-L352)
 
-**last use(마지막 사용 위치)**를 작은 모델에 적용해 보자. 설명용 세 단계에서는 `h`가 ReLU에 전달된 뒤 더 이상 필요하지 않고, `a`는 마지막 Linear 이후 필요하지 않다. 다른 분기에서 다시 쓰지 않는다는 것을 계획에서 알면 논리적으로 임시 객체를 놓을 시점을 정할 수 있다. 실제 장치 버퍼 재사용·해제 시점은 SDK 실행·완료 계약도 따라야 하므로 이 표만으로 물리 메모리 사용량이 결정되지는 않는다.
+**last use(마지막 사용 위치)를** 작은 모델에 적용해 보자. 설명용 세 단계에서는 `h`가 ReLU에 전달된 뒤 더 이상 필요하지 않고, `a`는 마지막 Linear 이후 필요하지 않다. 다른 분기에서 다시 쓰지 않는다는 것을 계획에서 알면 논리적으로 임시 객체를 놓을 시점을 정할 수 있다. 실제 장치 버퍼 재사용·해제 시점은 SDK 실행·완료 계약도 따라야 하므로 이 표만으로 물리 메모리 사용량이 결정되지는 않는다.
 
 **stateless**는 호출을 마친 뒤 다음 호출로 넘길 내부 상태 갱신이 없는 경우다. 이번 MLP가 그런 예다. 현재 소스에는 stateless entry를 SDK `RunnableSequence`로 묶는 최적화가 있다. 이는 준비된 여러 호출의 연결을 SDK 실행 객체 하나에 구성하는 방법이다. 상태 update가 있거나 논리 예산으로 전체 중간 tensor 보유를 감당할 수 없으면 해당 sequence 경로를 건너뛴다. sidecar는 주 패키지에 덧붙는 보조 산출물이다. 호환되는 merged-runnable sidecar, 즉 여러 실행 구간을 미리 결합해 둔 보조 파일이 있으면 연속 구간을 더 묶을 수 있고, 없거나 해시·ABI가 달라지면 기본 EDF 경로를 사용한다. 이 선택에서 `_RunnableSequenceBuilder`, `_inner` 같은 내부 API를 사용하므로 안정된 공개 ABI라고 설명해서는 안 된다. [sequence 구성](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py#L423-L474) · [sidecar 검사](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py#L476-L520)
 

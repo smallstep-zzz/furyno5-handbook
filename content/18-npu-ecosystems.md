@@ -6,9 +6,9 @@ C에서 같은 함수 이름을 호출해도 링크한 구현이나 함수 포�
 
 ## 1. 지원이라는 말을 네 개의 계약으로 나눈다
 
-**Tensor(텐서)**는 계산할 다차원 배열이다. 저장소 주소 외에 shape(축별 길이), dtype(원소 자료형), stride(축마다 한 칸 움직일 때 건너뛸 원소 수), device(어느 장치의 저장소인지)를 가진다고 생각하면 된다. 예를 들어 연속 저장된 2×3 배열은 shape `[2,3]`, stride `[3,1]`이므로 다음 행으로 가려면 원소 세 개, 다음 열로 가려면 한 개를 이동한다. 실제 저장 순서를 **layout(배치)**이라고 한다.
+**Tensor(텐서)는** 계산할 다차원 배열이다. 저장소 주소 외에 shape(축별 길이), dtype(원소 자료형), stride(축마다 한 칸 움직일 때 건너뛸 원소 수), device(어느 장치의 저장소인지)를 가진다고 생각하면 된다. 예를 들어 연속 저장된 2×3 배열은 shape `[2,3]`, stride `[3,1]`이므로 다음 행으로 가려면 원소 세 개, 다음 열로 가려면 한 개를 이동한다. 실제 저장 순서를 **layout(배치)이라고** 한다.
 
-**Backend**는 같은 상위 연산을 실제로 수행하는 구현 쪽이다. 한 연산씩 적절한 backend 함수를 고르는 것을 **dispatch(디스패치)**라고 한다. 반면 **계산 그래프**는 연산을 정점, 값 전달을 간선으로 기록한 프로그램이다. Python 코드 `y=x*2+3`을 `입력→곱하기→더하기→출력`으로 적으면 실행 전에 전체 관계를 분석할 수 있다. 컴파일 중 쓰는 이런 표현이 IR(Intermediate Representation, 중간 표현)이다.
+**Backend**는 같은 상위 연산을 실제로 수행하는 구현 쪽이다. 한 연산씩 적절한 backend 함수를 고르는 것을 **dispatch(디스패치)라고** 한다. 반면 **계산 그래프**는 연산을 정점, 값 전달을 간선으로 기록한 프로그램이다. Python 코드 `y=x*2+3`을 `입력→곱하기→더하기→출력`으로 적으면 실행 전에 전체 관계를 분석할 수 있다. 컴파일 중 쓰는 이런 표현이 IR(Intermediate Representation, 중간 표현)이다.
 
 이제 “지원한다”를 다음 네 질문으로 나눌 수 있다.
 
@@ -53,7 +53,7 @@ flowchart TB
 
 실제 PyTorch dispatcher는 장치 외에도 자동미분 같은 여러 키를 고려한다. `PrivateUse1` 등록이 “없는 모든 연산을 자동 변환한다”는 의미는 아니다. 구현이나 분해 경로가 없는 연산을 만났을 때 오류를 낼지, 별도 fallback을 쓸지도 backend가 정의해야 한다.
 
-장치 tensor를 만들려면 **allocator(메모리 할당기)**가 저장 공간을 확보하고, CPU 값을 옮기는 복사 경로가 있어야 한다. 현재 사용할 장치를 선택·복구하는 **device guard**, 작업 제출 순서를 관리하는 **stream**도 실행기 설계에 들어간다. stream에 제출이 끝났다고 장치 계산까지 끝난 것은 아니다. 따라서 올바른 결과를 CPU로 읽을 때 완료 대기도 필요하다.
+장치 tensor를 만들려면 **allocator(메모리 할당기)가** 저장 공간을 확보하고, CPU 값을 옮기는 복사 경로가 있어야 한다. 현재 사용할 장치를 선택·복구하는 **device guard**, 작업 제출 순서를 관리하는 **stream**도 실행기 설계에 들어간다. stream에 제출이 끝났다고 장치 계산까지 끝난 것은 아니다. 따라서 올바른 결과를 CPU로 읽을 때 완료 대기도 필요하다.
 
 ### Ascend: TorchNPU와 TorchAir를 구분한다
 
@@ -166,22 +166,22 @@ restored = torch.jit.load("small-neuron.pt")  # 호환 Neuron 환경에서 실�
 prediction = restored(sample)               # 같은 입력 계약으로 실제 추론
 ```
 
-이 경로는 예제 입력의 shape와 dtype 조건을 고정한다. **Bucket(입력 규격 묶음)**은 서로 다른 입력 크기에 맞춰 준비한 실행 규격이다. 가령 별도 배치 1용 `[1,16]`과 배치 4용 `[4,16]` 실행물을 준비했다면 요청 수에 맞는 것을 고르는 정책이 추가로 필요하다. 위 코드가 그 두 규격을 자동으로 생성한다는 뜻은 아니다. 가변 길이를 다루는 방법으로 bucketing을 설명하며, 추론 시 아무 shape나 받아 동일 실행물을 재사용한다는 의미가 아니다. FuryNo5의 shape 계약과 버킷 문제도 같은 관점에서 읽을 수 있다. [Neuron tracing 제약](https://awsdocs-neuron.readthedocs-hosted.com/en/v2.31.1/frameworks/torch/torch-neuronx/api-reference-guide/inference/api-torch-neuronx-trace.html) · [06장](06-buckets-shapes.md)
+이 경로는 예제 입력의 shape와 dtype 조건을 고정한다. **Bucket(입력 규격 묶음)은** 서로 다른 입력 크기에 맞춰 준비한 실행 규격이다. 가령 별도 배치 1용 `[1,16]`과 배치 4용 `[4,16]` 실행물을 준비했다면 요청 수에 맞는 것을 고르는 정책이 추가로 필요하다. 위 코드가 그 두 규격을 자동으로 생성한다는 뜻은 아니다. 가변 길이를 다루는 방법으로 bucketing을 설명하며, 추론 시 아무 shape나 받아 동일 실행물을 재사용한다는 의미가 아니다. FuryNo5의 shape 계약과 버킷 문제도 같은 관점에서 읽을 수 있다. [Neuron tracing 제약](https://awsdocs-neuron.readthedocs-hosted.com/en/v2.31.1/frameworks/torch/torch-neuronx/api-reference-guide/inference/api-torch-neuronx-trace.html) · [06장](06-buckets-shapes.md)
 
-**DMA(Direct Memory Access)**는 CPU가 원소마다 복사 명령을 반복하기보다 전송 장치에 메모리 이동을 맡기는 방식이다. 전송의 출발지·도착지·크기 등을 나타낸 자료가 **descriptor(전송 설명 자료)**다. **Pseudo instruction(의사 명령)**은 파일에 기록된 더 추상적인 동작 표현으로, 적재기가 실제 장치에서 필요한 명령이나 전송 설명 자료로 구체화할 수 있다.
+**DMA(Direct Memory Access)는** CPU가 원소마다 복사 명령을 반복하기보다 전송 장치에 메모리 이동을 맡기는 방식이다. 전송의 출발지·도착지·크기 등을 나타낸 자료가 **descriptor(전송 설명 자료)다**. **Pseudo instruction(의사 명령)은** 파일에 기록된 더 추상적인 동작 표현으로, 적재기가 실제 장치에서 필요한 명령이나 전송 설명 자료로 구체화할 수 있다.
 
 또 하나 배울 점은 **바이너리 파일과 장치에 바로 복사할 원시 명령열이 항상 같은 것은 아니라는 사실**이다. Neuron Runtime 2.28 문서는 NEFF 컨테이너 안의 명령·텐서 정보 등을 읽고, 일부 pseudo instruction을 적재 시 하드웨어 명령과 DMA(Direct Memory Access) descriptor로 변환하는 단계를 명시한다. 이것은 Neuron의 확인된 사례다. 이 사실만으로 Furiosa EDF도 같은 pseudo instruction·patching 포맷이라고 추정하지 않는다. [Neuron Runtime 구조](https://awsdocs-neuron.readthedocs-hosted.com/en/v2.28.0/neuron-runtime/nrt-developer-guide.html) · [Furiosa EDF의 확인 범위](04-tcl-edf.md)
 
 ## 4. Tenstorrent: 공통 IR과 고수준 의미를 함께 보존한다
 
-**Frontend(입력 처리부)**는 PyTorch 같은 사용자 프로그램을 compiler가 이해하는 표현으로 바꾸고, runtime interface는 컴파일 결과를 장치에 적재·실행하는 호출 경계를 제공한다. TT-XLA는 PJRT(Portable JAX Runtime) 인터페이스를 통해 PyTorch/XLA·JAX의 StableHLO 그래프를 TT-MLIR 컴파일러로 전달한다. StableHLO는 HLO 연산을 주고받기 위한 중간 표현이고, MLIR(Multi-Level Intermediate Representation)은 여러 수준의 표현을 다루는 컴파일러 기반이다. **Lowering**은 이런 고수준 연산을 장치가 처리할 더 구체적인 연산·배치로 바꾸는 과정이다. TTNN은 Tenstorrent의 장치 연산 라이브러리 이름이다. 조회한 공식 저장소는 PyTorch의 주 frontend로 TT-XLA를 안내하고 **TT-Torch를 deprecated**로 표시한다. 따라서 과거 `tt-torch` 소개를 최신 권장 경로로 복사하지 않았다. [고정 README](https://github.com/tenstorrent/tt-xla/blob/fdc3b7773674081b8f8c0698de3400d8d899dc8f/README.md)
+**Frontend(입력 처리부)는** PyTorch 같은 사용자 프로그램을 compiler가 이해하는 표현으로 바꾸고, runtime interface는 컴파일 결과를 장치에 적재·실행하는 호출 경계를 제공한다. TT-XLA는 PJRT(Portable JAX Runtime) 인터페이스를 통해 PyTorch/XLA·JAX의 StableHLO 그래프를 TT-MLIR 컴파일러로 전달한다. StableHLO는 HLO 연산을 주고받기 위한 중간 표현이고, MLIR(Multi-Level Intermediate Representation)은 여러 수준의 표현을 다루는 컴파일러 기반이다. **Lowering**은 이런 고수준 연산을 장치가 처리할 더 구체적인 연산·배치로 바꾸는 과정이다. TTNN은 Tenstorrent의 장치 연산 라이브러리 이름이다. 조회한 공식 저장소는 PyTorch의 주 frontend로 TT-XLA를 안내하고 **TT-Torch를 deprecated**로 표시한다. 따라서 과거 `tt-torch` 소개를 최신 권장 경로로 복사하지 않았다. [고정 README](https://github.com/tenstorrent/tt-xla/blob/fdc3b7773674081b8f8c0698de3400d8d899dc8f/README.md)
 
 
 ### RMSNorm을 기본 산술에서 다시 묶는 이유
 
-RMSNorm은 벡터의 원소 크기를 정규화하는 연산이다. **RMS(Root Mean Square)**는 “제곱 → 평균 → 제곱근” 순서로 구한다. 설명용 입력 `[3,4]`의 제곱은 `[9,16]`, 평균은 `(9+16)/2=12.5`, 제곱근은 약 3.5355다. 원소를 그 값으로 나누면 약 `[0.8485,1.1314]`가 된다. 실제 연산은 작은 `epsilon`을 더해 0 나눗셈 등을 피하고, 학습한 원소별 가중치도 곱한다.
+RMSNorm은 벡터의 원소 크기를 정규화하는 연산이다. **RMS(Root Mean Square)는** “제곱 → 평균 → 제곱근” 순서로 구한다. 설명용 입력 `[3,4]`의 제곱은 `[9,16]`, 평균은 `(9+16)/2=12.5`, 제곱근은 약 3.5355다. 원소를 그 값으로 나누면 약 `[0.8485,1.1314]`가 된다. 실제 연산은 작은 `epsilon`을 더해 0 나눗셈 등을 피하고, 학습한 원소별 가중치도 곱한다.
 
-compiler가 이 계산을 “제곱·합·나눗셈·제곱근·곱”으로만 보게 되면 정규화라는 의미를 놓칠 수 있다. **Fusion(연산 결합)**은 여러 연산을 함께 처리하는 변환이고, **composite(복합 연산 표식)**는 묶인 계산에 `rms_norm` 같은 의미 있는 이름을 남겨 후속 변환이 알아보도록 하는 방법이다. 표식만 붙였다고 빠른 커널이 생기는 것은 아니며, 아래 compiler가 그 의미를 구현하는 경로도 필요하다.
+compiler가 이 계산을 “제곱·합·나눗셈·제곱근·곱”으로만 보게 되면 정규화라는 의미를 놓칠 수 있다. **Fusion(연산 결합)은** 여러 연산을 함께 처리하는 변환이고, **composite(복합 연산 표식)는** 묶인 계산에 `rms_norm` 같은 의미 있는 이름을 남겨 후속 변환이 알아보도록 하는 방법이다. 표식만 붙였다고 빠른 커널이 생기는 것은 아니며, 아래 compiler가 그 의미를 구현하는 경로도 필요하다.
 
 FuryNo5에 특히 참고할 부분은 **분해하기 전에 연산의 의미를 남기는 방법**이다. TT-XLA는 등록된 RMSNorm(Root Mean Square Normalization) 패턴과 shape 조건이 맞으면 여러 기본 연산을 FX 패턴으로 찾고 표준 정규화 연산으로 재결합한다. 이어 StableHLO composite 표식을 남겨, 후속 분해를 거친 뒤에도 TT-MLIR가 최적화된 연산으로 인식할 수 있게 한다. [Fusing and Composite Ops](https://github.com/tenstorrent/tt-xla/blob/fdc3b7773674081b8f8c0698de3400d8d899dc8f/docs/source/fusing_and_composite_ops.md)
 
@@ -196,7 +196,7 @@ flowchart TB
   E --> G
 ```
 
-**Attention**은 현재 위치가 참고할 다른 위치들의 가중치를 계산해 내용을 섞는 연산이다. **Gated MLP(Multilayer Perceptron)**는 여러 선형 층으로 만든 벡터에 별도의 gate 벡터를 원소별로 곱해 통과량을 조절하는 형태다. 이들 역시 작은 산술 연산의 목록과 전체 의미를 함께 이해하는 것이 도움이 된다.
+**Attention**은 현재 위치가 참고할 다른 위치들의 가중치를 계산해 내용을 섞는 연산이다. **Gated MLP(Multilayer Perceptron)는** 여러 선형 층으로 만든 벡터에 별도의 gate 벡터를 원소별로 곱해 통과량을 조절하는 형태다. 이들 역시 작은 산술 연산의 목록과 전체 의미를 함께 이해하는 것이 도움이 된다.
 
 이것을 FuryNo5에 옮기는 연구 가설은 “모든 ATen을 가능한 한 잘게 쪼개기”에만 집중하지 말고, **RMSNorm·Attention·gated MLP 같은 영역의 의미를 유지한 채 합법적인 TCL 또는 커스텀 커널 후보를 선택하자**는 것이다. 실제 효과는 대상 shape와 반올림·dtype·상태 조건에 따라 측정해야 한다. 외부 프로젝트의 최적화가 RNGD에서도 같은 성능을 낸다는 증거는 아니다. [19장 모델·실행 방식 최적화 연구](19-model-optimization.md)
 
