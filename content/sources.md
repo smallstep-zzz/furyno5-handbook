@@ -4,7 +4,7 @@
 
 공식 문서의 기능 설명, 소스에 구현된 처리, 저장된 장치 측정값은 근거의 종류가 다르다. 코드가 있다는 이유만으로 모든 입력에서 빠르고 정확하게 실행된다고 판단하지 않는다.
 
-각 장은 주장 가까이에 출처를 붙이고 마지막에 핵심 출처 표를 둔다. 버전 기준일은 모든 제품의 최신 릴리스나 장치 실험일을 뜻하지 않는다. 모든 인용 URL은 빌드 과정에서 생성하는 [전체 출처 색인](data/source-index.json)에서 확인할 수 있다. 이 페이지는 그 자료를 어떤 기준으로 읽고 재현해야 하는지 설명한다.
+본문의 출처 링크는 해당 설명의 근거로 연결된다. 중요한 구현은 커밋을 고정했으므로 설치본과 차이가 있을 때 같은 파일을 대조할 수 있다. 모든 인용 URL은 [전체 출처 색인](data/source-index.json)에 있다.
 
 ## 버전 기준: URL의 숫자와 설치본은 다를 수 있다
 
@@ -98,7 +98,7 @@ fxbX가 공개 저장소라는 사실은 Furiosa의 공식 지원 형식이라�
 
 ## 재현 결과에 남길 최소 기록
 
-먼저 **어떤 프로그램을 어떤 환경에서 어떤 기준으로 검증했는지**를 고정한다. 이 순서는 비교를 가능하게 하기 위한 핸드북의 권장 방법이며 모든 서비스에 같은 최적화 우선순위를 강요하는 규칙은 아니다.
+다른 날에 측정을 반복할 수 있도록 다음 정보를 함께 남긴다. 특히 입력 크기와 측정 범위가 바뀌면 같은 모델 이름 아래의 결과도 직접 비교하기 어렵다.
 
 1. **환경**: SDK·compiler·driver·firmware·Python·Torch 버전, 프로젝트 commit, 장치 수·PE 구성·mesh, host CPU와 NUMA 배치.
 2. **의미**: 모델·가중치 revision, shape·dtype·stride, mask·상태 갱신 의미, reference 구현, 허용오차와 과제 품질 기준.
@@ -108,11 +108,17 @@ fxbX가 공개 저장소라는 사실은 Furiosa의 공식 지원 형식이라�
 
 정답이 일치하는 것과 NPU에서 계산한 것은 서로 다른 질문이다. 반대로 NPU Task가 보인다고 모델의 의미가 맞는 것도 아니다. 둘을 함께 확인하는 절차는 [5장](05-graphs-fallback.md), 성능 측정의 축은 [7장](07-optimization.md), 이식 실습의 완료 기준은 [13장](13-porting-fha.md)에 연결되어 있다.
 
-## 수정할 때 지켜야 할 규칙
+## 실행물의 이름과 읽는 코드
 
-새 버전의 지원 범위를 추가할 때는 기존 설명을 조용히 덮어쓰기보다 **변경된 버전·코드·검증 범위**를 같이 남긴다. 문서와 코드가 다르면 어느 쪽이 어떤 시점을 나타내는지 적는다. 최신 브랜치 링크만 남기면 같은 주장을 나중에 재검토하기 어려우므로 중요한 구현과 시험 결과는 커밋을 고정한다.
+TCL은 Tensor Contraction Language, EDF는 공식 검증 문서에서 Executable Device Format으로 표기한다. vISA는 컴파일 중간 표현이며, 이 책의 공개 opt 예제에서 eISA의 동의어로 사용하지 않는다. [EDF의 공식 표기](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/quick-start/kernel-validation.md)
 
-공식 풀네임을 확인하지 못한 약어는 확장하지 않는다. eISA에 대한 이 책의 경계가 여기에 해당한다. **EDF는 추가 조사에서 공식 Kernel Validation의 Executable Device Format 표기를 확인하여 갱신했다.** TCL은 Tensor Contraction Language, PERT는 PE Runtime으로 확인했으며 [용어사전](glossary.md)에 명시했다. [EDF 이름의 고정 원문](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/quick-start/kernel-validation.md)
+홈의 경로 비교는 2026-11-21에 다음 코드를 대조했다. 파일 이름 대신 실제로 쓰고 읽는 함수가 맞는지 확인할 때 사용할 수 있다.
+
+| 경로 | 산출물을 쓰는 쪽 | 읽는 쪽 |
+|---|---|---|
+| FuryNo5 TCL export | [계획과 EDF 패키지 생성](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/execution_plan.py#L1243-L1297) | [fxbX 검사·SDK 적재](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py#L392-L439) |
+| FuryNo5 direct | [SDK compile·serialize](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/direct_runtime.py) | 같은 모듈의 SDK deserialize·Runnable 적재 |
+| 공개 opt | [Image와 포함된 장치 코드](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-abi/src/image.rs) | [Image 해석·Function 적재](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-rt/src/registry/load/mod.rs) |
 
 ## 추가 조사: 다른 NPU와 모델 사전 최적화
 
@@ -120,7 +126,7 @@ fxbX가 공개 저장소라는 사실은 Furiosa의 공식 지원 형식이라�
 
 [19장](19-model-optimization.md)은 NetsPresso 제품·공개 Python client·공개 trainer를 구분하고, 라이브러리별 GitHub와 고정 소스를 연결한다. 공개 라이브러리가 만드는 ONNX·양자화 tensor·다른 backend 실행물을 RNGD가 바로 읽는다는 뜻으로 사용하지 않는다. 원본 모델의 의미 보존, 품질 허용 범위, 목표 compiler의 수용, 실제 NPU 실행을 순서대로 대조해야 한다.
 
-홈의 경로 그림은 vISA를 직접 실행하는 것처럼 보이지 않도록 컴파일 산출물과 Image 적재를 추가했다. 검색 색인의 문구가 고정 소스나 현재 문서 본문과 다를 때는 그 문구만으로 내부 pass 순서·새 CLI 옵션을 확정하지 않았다. 구체적인 확인 범위와 교차 호환성 실험 제안은 [08장](08-eisa-visa.md)에 있다.
+공개 opt의 Image에는 실행 코드와 호출·메모리 정보가 함께 들어 있다. Image를 읽는 로더는 [08장](08-eisa-visa.md)에서 다룬다. TCL EDF, SDK 직렬화 Runnable, opt Image의 교차 적재 호환성은 이 소스 대조만으로 확인되지 않았다.
 
 ## 출처
 

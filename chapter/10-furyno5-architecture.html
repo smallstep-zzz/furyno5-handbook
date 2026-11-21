@@ -1,12 +1,9 @@
 <!doctype html>
-<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="작은 모델 하나가 FuryNo5 안에서 어떤 객체와 파일로 바뀌는지 따라갑니다."><meta name="color-scheme" content="dark"><meta name="theme-color" content="#111417"><title>FuryNo5의 실제 구조 · FuryNo5 개발 핸드북</title><link rel="icon" href="../assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="../assets/site.css?v=e91cad038c9a"><script defer src="../assets/site.js?v=aeae33420bbb"></script></head>
-<body data-root="../" data-chapter="10-furyno5-architecture" data-search-version="0acad0ae83fa"><a class="skip" href="#content">본문으로 이동</a><header class="topbar"><button class="menu-toggle" type="button" aria-label="전체 목차 열기" aria-controls="sidebar" aria-expanded="false">☰</button><a class="brand" href="../index.html"><span class="brand-mark">Nº5</span>FuryNo5<small>DEVELOPER HANDBOOK</small></a><div class="top-actions"><a class="top-link" href="../sources.html">출처와 버전</a><button class="search-open" type="button" aria-label="핸드북 전체 검색"><span>전체 문서 검색</span><kbd>⌘ K</kbd></button></div></header><div class="progress" aria-hidden="true"></div><div class="mobile-shade"></div><aside class="sidebar" id="sidebar" aria-label="전체 목차"><nav><div class="nav-caption">시작하기</div><a class="nav-link"  href="../index.html"><span class="num">00</span><span>전체 지도와 읽는 방법</span></a><div class="nav-caption">I. 디바이스를 이해하기</div><a class="nav-link"  href="../chapter/01-hardware.html"><span class="num">01</span><span>RNGD · TCP · PE</span></a><a class="nav-link"  href="../chapter/02-memory-dma.html"><span class="num">02</span><span>메모리 · DMA · 배치</span></a><a class="nav-link"  href="../chapter/03-driver-runtime.html"><span class="num">03</span><span>드라이버와 공식 런타임</span></a><div class="nav-caption">II. 프로그램을 만들고 실행하기</div><a class="nav-link"  href="../chapter/04-tcl-edf.html"><span class="num">04</span><span>TCL 작성 · 컴파일 · 실행</span></a><a class="nav-link"  href="../chapter/05-graphs-fallback.html"><span class="num">05</span><span>실행그래프 · 오류 · 폴백</span></a><a class="nav-link"  href="../chapter/06-buckets-shapes.html"><span class="num">06</span><span>Shape · 버킷 · 컴파일 비용</span></a><a class="nav-link"  href="../chapter/07-optimization.html"><span class="num">07</span><span>최적화의 축과 우선순위</span></a><a class="nav-link"  href="../chapter/08-eisa-visa.html"><span class="num">08</span><span>eISA · vISA · furiosa-opt</span></a><div class="nav-caption">III. FuryNo5를 해부하기</div><a class="nav-link"  href="../chapter/09-torch-aten.html"><span class="num">09</span><span>PyTorch · ATen · 등록</span></a><a class="nav-link active" aria-current="page" href="../chapter/10-furyno5-architecture.html"><span class="num">10</span><span>FuryNo5 구조와 지원 범위</span></a><a class="nav-link"  href="../chapter/11-furyno5-compiler.html"><span class="num">11</span><span>FuryNo5 컴파일과 캐시</span></a><div class="nav-caption">IV. 모델 포팅과 서빙</div><a class="nav-link"  href="../chapter/12-fxbx.html"><span class="num">12</span><span>fxbX 포맷과 실행계획</span></a><a class="nav-link"  href="../chapter/13-porting-fha.html"><span class="num">13</span><span>포팅 · FHA · FuryAwesome</span></a><a class="nav-link"  href="../chapter/14-serving-vllm.html"><span class="num">14</span><span>vLLM · 서빙 브리지</span></a><a class="nav-link"  href="../chapter/15-multi-npu.html"><span class="num">15</span><span>PE · 여러 카드 · 여러 서버</span></a><div class="nav-caption">V. 검증과 다음 개발</div><a class="nav-link"  href="../chapter/16-furyboost.html"><span class="num">16</span><span>FuryBoost 학습 성능</span></a><a class="nav-link"  href="../chapter/17-debugging.html"><span class="num">17</span><span>측정 · 추적 · 실패 재현</span></a><div class="nav-caption">VI. 생태계 비교와 최적화 연구</div><a class="nav-link"  href="../chapter/18-npu-ecosystems.html"><span class="num">18</span><span>다른 NPU의 지원 방식</span></a><a class="nav-link"  href="../chapter/19-model-optimization.html"><span class="num">19</span><span>모델 사전 최적화 · 연구</span></a><div class="nav-caption">참고와 검증</div><a class="nav-link"  href="../glossary.html"><span class="num">·</span><span>약어와 용어 사전</span></a><a class="nav-link"  href="../sources.html"><span class="num">·</span><span>출처 · 버전 · 접근 범위</span></a><a class="nav-link"  href="../review.html"><span class="num">·</span><span>실행 전 확인사항</span></a><a class="nav-link"  href="../reader-review.html"><span class="num">·</span><span>핵심 질문과 해설</span></a></nav><div class="side-foot">비공식 개발 핸드북<br>공식 SDK와 프로젝트 구현을 구분합니다.<br><a href="https://github.com/smallstep-zzz/furyno5-handbook">원고와 변경 이력 ↗</a></div></aside><div class="shell"><main class="page" id="content"><div class="eyebrow">III. FuryNo5를 해부하기 / CHAPTER 10</div><h1>FuryNo5의 실제 구조</h1><p class="dek">작은 모델 하나가 FuryNo5 안에서 어떤 객체와 파일로 바뀌는지 따라갑니다.</p><div class="page-meta"><span>SDK 2026.4 계열 / 버전별 표기</span><span class="readtime">약 21분</span><span><a href="https://github.com/smallstep-zzz/furyno5-handbook/blob/main/content/10-furyno5-architecture.md">원고</a></span></div><details class="mobile-toc"><summary>이 장의 목차</summary><div><a class="" href="#공통-예제-8개-특징을-받아-8개-값을-돌려주는-모델">공통 예제: 8개 특징을 받아 8개 값을 돌려주는 모델</a><a class="" href="#이-모델이-어떤-객체와-파일로-바뀌는가">이 모델이 어떤 객체와 파일로 바뀌는가</a><a class="" href="#이름과-import-경로">이름과 import 경로</a><a class="" href="#첫-단계-후보-생성은-실행이-아니다">첫 단계: 후보 생성은 실행이 아니다</a><a class="" href="#두-번째-단계-준비한-그래프만-dispatch한다">두 번째 단계: 준비한 그래프만 dispatch한다</a><a class="minor" href="#product를-준비하고-한-번-실행하기">Product를 준비하고 한 번 실행하기</a><a class="" href="#세-번째-단계-전체-파일을-생산하는-경로">세 번째 단계: 전체 파일을 생산하는 경로</a><a class="" href="#모든-aten-지원-을-어떻게-판단할-것인가">“모든 ATen 지원”을 어떻게 판단할 것인가</a><a class="" href="#프로젝트를-세-부분으로-읽자">프로젝트를 세 부분으로 읽자</a><a class="" href="#개발자가-따라갈-파일-지도">개발자가 따라갈 파일 지도</a><a class="" href="#새-연산을-추가할-때-지켜야-할-경계">새 연산을 추가할 때 지켜야 할 경계</a><a class="" href="#출처">출처</a></div></details><noscript><p class="noscript">본문과 그림은 JavaScript 없이 읽을 수 있습니다. 검색과 조절 실험에는 JavaScript가 필요합니다.</p></noscript><article class="article"><blockquote>
-<p><strong>전체 경로에서의 위치</strong></p>
-<p>작은 PyTorch 모델 하나가 FuryNo5 안에서 어떤 객체와 파일로 바뀌는지 따라간다. 자세한 컴파일은 <a href="../chapter/11-furyno5-compiler.html">11장</a>, 파일을 받아 실행하는 쪽은 <a href="../chapter/12-fxbx.html">12장</a>에서 다룬다.</p>
-</blockquote>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="작은 모델 하나가 FuryNo5 안에서 어떤 객체와 파일로 바뀌는지 따라갑니다."><meta name="color-scheme" content="dark"><meta name="theme-color" content="#111417"><title>FuryNo5의 실제 구조 · FuryNo5 개발 핸드북</title><link rel="icon" href="../assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="../assets/site.css?v=e91cad038c9a"><script defer src="../assets/site.js?v=c9a152506172"></script></head>
+<body data-root="../" data-chapter="10-furyno5-architecture" data-search-version="84c28885b389"><a class="skip" href="#content">본문으로 이동</a><header class="topbar"><button class="menu-toggle" type="button" aria-label="전체 목차 열기" aria-controls="sidebar" aria-expanded="false">☰</button><a class="brand" href="../index.html"><span class="brand-mark">Nº5</span>FuryNo5<small>DEVELOPER HANDBOOK</small></a><div class="top-actions"><a class="top-link" href="../sources.html">출처와 버전</a><button class="search-open" type="button" aria-label="핸드북 전체 검색"><span>전체 문서 검색</span><kbd>⌘ K</kbd></button></div></header><div class="progress" aria-hidden="true"></div><div class="mobile-shade"></div><aside class="sidebar" id="sidebar" aria-label="전체 목차"><nav><div class="nav-caption">시작하기</div><a class="nav-link"  href="../index.html"><span class="num">00</span><span>전체 지도와 읽는 방법</span></a><div class="nav-caption">I. 디바이스를 이해하기</div><a class="nav-link"  href="../chapter/01-hardware.html"><span class="num">01</span><span>RNGD · TCP · PE</span></a><a class="nav-link"  href="../chapter/02-memory-dma.html"><span class="num">02</span><span>메모리 · DMA · 배치</span></a><a class="nav-link"  href="../chapter/03-driver-runtime.html"><span class="num">03</span><span>드라이버와 공식 런타임</span></a><div class="nav-caption">II. 프로그램을 만들고 실행하기</div><a class="nav-link"  href="../chapter/04-tcl-edf.html"><span class="num">04</span><span>TCL 작성 · 컴파일 · 실행</span></a><a class="nav-link"  href="../chapter/05-graphs-fallback.html"><span class="num">05</span><span>실행그래프 · 오류 · 폴백</span></a><a class="nav-link"  href="../chapter/06-buckets-shapes.html"><span class="num">06</span><span>Shape · 버킷 · 컴파일 비용</span></a><a class="nav-link"  href="../chapter/07-optimization.html"><span class="num">07</span><span>최적화의 축과 우선순위</span></a><a class="nav-link"  href="../chapter/08-eisa-visa.html"><span class="num">08</span><span>eISA · vISA · furiosa-opt</span></a><div class="nav-caption">III. FuryNo5를 해부하기</div><a class="nav-link"  href="../chapter/09-torch-aten.html"><span class="num">09</span><span>PyTorch · ATen · 등록</span></a><a class="nav-link active" aria-current="page" href="../chapter/10-furyno5-architecture.html"><span class="num">10</span><span>FuryNo5 구조와 지원 범위</span></a><a class="nav-link"  href="../chapter/11-furyno5-compiler.html"><span class="num">11</span><span>FuryNo5 컴파일과 캐시</span></a><div class="nav-caption">IV. 모델 포팅과 서빙</div><a class="nav-link"  href="../chapter/12-fxbx.html"><span class="num">12</span><span>fxbX 포맷과 실행계획</span></a><a class="nav-link"  href="../chapter/13-porting-fha.html"><span class="num">13</span><span>포팅 · FHA · FuryAwesome</span></a><a class="nav-link"  href="../chapter/14-serving-vllm.html"><span class="num">14</span><span>vLLM · 서빙 브리지</span></a><a class="nav-link"  href="../chapter/15-multi-npu.html"><span class="num">15</span><span>PE · 여러 카드 · 여러 서버</span></a><div class="nav-caption">V. 검증과 다음 개발</div><a class="nav-link"  href="../chapter/16-furyboost.html"><span class="num">16</span><span>FuryBoost 학습 성능</span></a><a class="nav-link"  href="../chapter/17-debugging.html"><span class="num">17</span><span>측정 · 추적 · 실패 재현</span></a><div class="nav-caption">VI. 생태계 비교와 최적화 연구</div><a class="nav-link"  href="../chapter/18-npu-ecosystems.html"><span class="num">18</span><span>다른 NPU의 지원 방식</span></a><a class="nav-link"  href="../chapter/19-model-optimization.html"><span class="num">19</span><span>모델 사전 최적화 · 연구</span></a><div class="nav-caption">참고와 검증</div><a class="nav-link"  href="../glossary.html"><span class="num">·</span><span>약어와 용어 사전</span></a><a class="nav-link"  href="../sources.html"><span class="num">·</span><span>출처 · 버전 · 접근 범위</span></a><a class="nav-link"  href="../review.html"><span class="num">·</span><span>실행 전 확인사항</span></a><a class="nav-link"  href="../reader-review.html"><span class="num">·</span><span>핵심 질문과 해설</span></a></nav><div class="side-foot">비공식 개발 핸드북<br>공식 SDK와 프로젝트 구현을 구분합니다.<br><a href="https://github.com/smallstep-zzz/furyno5-handbook">원고와 변경 이력 ↗</a></div></aside><div class="shell"><main class="page" id="content"><div class="eyebrow">III. FuryNo5를 해부하기 / CHAPTER 10</div><h1>FuryNo5의 실제 구조</h1><p class="dek">작은 모델 하나가 FuryNo5 안에서 어떤 객체와 파일로 바뀌는지 따라갑니다.</p><div class="page-meta"><span>SDK 2026.4 계열 / 버전별 표기</span><span class="readtime">약 21분</span><span><a href="https://github.com/smallstep-zzz/furyno5-handbook/blob/main/content/10-furyno5-architecture.md">원고</a></span></div><details class="mobile-toc"><summary>이 장의 목차</summary><div><a class="" href="#공통-예제-8개-특징을-받아-8개-값을-돌려주는-모델">공통 예제: 8개 특징을 받아 8개 값을 돌려주는 모델</a><a class="" href="#이-모델이-어떤-객체와-파일로-바뀌는가">이 모델이 어떤 객체와 파일로 바뀌는가</a><a class="" href="#이름과-import-경로">이름과 import 경로</a><a class="" href="#첫-단계-후보-생성은-실행이-아니다">첫 단계: 후보 생성은 실행이 아니다</a><a class="" href="#두-번째-단계-준비한-그래프만-dispatch한다">두 번째 단계: 준비한 그래프만 dispatch한다</a><a class="minor" href="#product를-준비하고-한-번-실행하기">Product를 준비하고 한 번 실행하기</a><a class="" href="#세-번째-단계-전체-파일을-생산하는-경로">세 번째 단계: 전체 파일을 생산하는 경로</a><a class="" href="#모든-aten-지원-을-어떻게-판단할-것인가">“모든 ATen 지원”을 어떻게 판단할 것인가</a><a class="" href="#프로젝트를-세-부분으로-읽자">프로젝트를 세 부분으로 읽자</a><a class="" href="#개발자가-따라갈-파일-지도">개발자가 따라갈 파일 지도</a><a class="" href="#새-연산을-추가할-때-지켜야-할-경계">새 연산을 추가할 때 지켜야 할 경계</a><a class="" href="#출처">출처</a></div></details><noscript><p class="noscript">본문과 그림은 JavaScript 없이 읽을 수 있습니다. 검색과 조절 실험에는 JavaScript가 필요합니다.</p></noscript><article class="article"><p>PyTorch의 연산 호출을 이해했으니 FuryNo5가 그 사이에서 무엇을 준비하는지 보자. 작은 모델 하나를 사용해 입력·그래프·컴파일 결과를 따라간다. 컴파일 내부는 <a href="../chapter/11-furyno5-compiler.html">11장</a>, 저장물을 읽는 실행기는 <a href="../chapter/12-fxbx.html">12장</a>에서 자세히 다룬다.</p>
 <p>Python의 모델은 계산 방법과 그 계산에 쓸 가중치를 알고 있다. NPU에서 실행하려면 이 계산을 장치 프로그램으로 바꾸고 실제 입력을 넣을 수 있게 준비해야 한다. <strong>FuryNo5는 이 준비를 맡는다.</strong></p>
 <p>이 책에서는 파일을 만드는 쪽을 생산자(producer), 만들어진 파일을 읽어 실행하는 쪽을 소비자(consumer)라고 부른다. 최종 NPU 코드 생성은 Furiosa 컴파일러가 맡고, 소비자는 선택한 경로의 SDK 실행기나 fxbX가 된다.</p>
-<p>먼저 작은 모델이 어떤 자료구조와 파일로 바뀌는지 따라가자. 그다음 실제 파일·함수와 지원 범위를 읽으면, “후보를 만들었다”, “컴파일했다”, “NPU에서 정답을 확인했다”가 서로 다른 결과라는 점도 자연스럽게 드러난다. FuryNo5는 모든 ATen(A Tensor Library) 연산을 완성한 범용 backend가 아니며 README도 전체 모델 자동 이식 완료를 주장하지 않는다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/README.md">프로젝트의 현재 범위</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
+<p>예제 모델을 따라가며 먼저 만들어지는 자료구조와 파일을 보자. 이어서 그 일을 수행하는 함수와 현재 지원 범위를 확인한다. 이때 연산 후보의 등록, 컴파일 성공, 장치에서의 정답 확인을 구별해야 한다. FuryNo5의 README는 모든 ATen 연산이나 임의 모델의 자동 이식을 완료했다고 설명하지 않는다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/README.md">프로젝트의 현재 범위</a><span class="source-private" title="이 저장소의 소스 링크는 접근 권한이 필요합니다. 같은 장에서는 저장소마다 처음 한 번 표시합니다.">권한 필요</span></p>
 <blockquote>
 <p><strong>코드와 검증 기준</strong> · FuryNo5 commit <code>bba9efea8201aec48150514a35d0b637d29d107e</code>를 2026-11-19에 확인했다. 소스 링크는 비공개 저장소 열람 권한이 필요할 수 있다. 지원 여부는 아래의 등록·컴파일·수치·장치 검증 범위를 나누어 읽는다.</p>
 </blockquote>
@@ -64,7 +61,7 @@
 </tbody></table>
 </div><p>모델이 가지고 있는 weight·bias 같은 조정 가능한 배열을 <strong>parameter(매개변수)라고</strong> 한다. 이 실습은 학습이 아니라 이미 정한 값으로 답을 구하므로 값을 갱신하는 데 필요한 계산 기록을 요구하지 않는다. <code>requires_grad_(False)</code>가 이 설정에 해당한다.</p>
 <p><code>eval()</code>은 학습할 때와 추론할 때 동작이 다른 층을 평가 모드로 바꾼다. 미분 기록을 끄는 설정과 목적이 다르다. <code>.bfloat16()</code>은 숫자의 저장 형식을 바꾸므로, 실제 모델에서는 이 변경 뒤 답의 오차도 확인해야 한다.</p>
-<p>같은 shape의 tensor라도 메모리 해석이 다를 수 있다. <strong>stride</strong>는 한 축에서 원소 하나 이동할 때 저장소에서 건너뛰는 원소 수다. 행이 연속으로 저장된 <code>[4,8]</code> 입력의 stride는 <code>[8,1]</code>이다. <strong>contiguous</strong>는 해당 순서로 빈틈없이 이어진 배치를 뜻한다. 전치된 view처럼 메모리를 공유하되 stride가 다른 입력을 같은 커널에 무조건 넣을 수는 없다. FuryNo5 규칙은 이런 조건도 함께 검사한다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/edf_export.py#L33-L109">입력 계약 검사</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
+<p>같은 shape의 tensor라도 메모리 해석이 다를 수 있다. stride는 한 축에서 원소 하나 이동할 때 저장소에서 건너뛰는 원소 수다. 행이 연속으로 저장된 <code>[4,8]</code> 입력의 stride는 <code>[8,1]</code>이다. contiguous는 해당 순서로 빈틈없이 이어진 배치를 뜻한다. 전치된 view처럼 메모리를 공유하되 stride가 다른 입력을 같은 커널에 무조건 넣을 수는 없다. FuryNo5 규칙은 이런 조건도 함께 검사한다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/edf_export.py#L33-L109">입력 계약 검사</a></p>
 <h2 id="이-모델이-어떤-객체와-파일로-바뀌는가"><a class="heading-anchor" href="#이-모델이-어떤-객체와-파일로-바뀌는가">이 모델이 어떤 객체와 파일로 바뀌는가</a></h2>
 <p>모델의 연결을 종이에 적는다고 생각하자. ‘입력을 첫 Linear에 넣고, 그 결과를 ReLU에 넣고, 다음 Linear의 답을 반환한다’는 관계를 프로그램 안의 자료구조로 얻는 일이 <strong>캡처(capture)다</strong>.</p>
 <p>이 구조에서 계산·입력 하나를 표시한 점이 node, 앞 결과가 다음 계산으로 간다는 선이 연결이다. 함께 컴파일할 계산 묶음은 region(영역)이라고 한다. 아래 표는 이 연결에서 파일까지 무엇을 만드는지 보여 준다. 연산 세 개가 반드시 EDF 세 개가 된다는 뜻은 아니다.</p>
@@ -114,7 +111,7 @@
 </tbody></table>
 </div><p>TCL(Tensor Contraction Language)은 텐서 계산을 compiler에 설명하는 언어이고, EDF(Executable Device Format)는 컴파일된 장치 프로그램이다. JSON(JavaScript Object Notation) 실행계획에는 코드 대신 값의 이름과 연결이 들어간다. <strong>export</strong>는 여기서 메모리의 모델을 다른 단계가 사용할 객체·파일로 내보내는 작업을 뜻한다. <code>torch.export</code>가 만드는 객체와 FuryNo5 <code>export_model</code>이 만드는 패키지는 서로 다른 단계의 export다.</p>
 <h2 id="이름과-import-경로"><a class="heading-anchor" href="#이름과-import-경로">이름과 import 경로</a></h2>
-<p>제품명은 <strong>FuryNo5</strong>다. 과거 TCLMachine과의 호환 때문에 배포 패키지와 내부 폴더에 <code>tplmachine</code>, 외부에서 부르는 얇은 함수 계층인 공개 facade에 <code>tclmachine</code>이 남아 있다. 이것은 문서에서 다른 프로젝트를 의미하는 것이 아니다. 코드 예제를 실제로 실행하려면 현재 존재하는 import 경로를 그대로 써야 한다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tclmachine/__init__.py">공개 facade</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
+<p>제품명은 <strong>FuryNo5</strong>다. 과거 TCLMachine과의 호환 때문에 배포 패키지와 내부 폴더에 <code>tplmachine</code>, 외부에서 부르는 얇은 함수 계층인 공개 facade에 <code>tclmachine</code>이 남아 있다. 이것은 문서에서 다른 프로젝트를 의미하는 것이 아니다. 코드 예제를 실제로 실행하려면 현재 존재하는 import 경로를 그대로 써야 한다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tclmachine/__init__.py">공개 facade</a></p>
 <p>공개 진입점의 중요한 차이는 다음과 같다.</p>
 <div class="table-wrap"><table>
 <thead>
@@ -186,9 +183,9 @@
 <td><code>read_execution_plan(&quot;tiny.fxbx&quot;)</code>는 계획 dictionary, <code>GraphFXB(&quot;tiny.fxbx&quot;, weights=...)</code>는 실행 소비자 객체를 만든다.</td>
 </tr>
 </tbody></table>
-</div><p>예를 들어 앞의 MLP를 <code>export_model</code>로 만들었다면 12장의 <code>GraphFXB</code> 경로를 고른다. 그 패키지나 옆의 <code>execution-plan.json</code>을 <code>load_plan</code>의 첫 인수로 바꾸어 넣지 않는다. 반대로 측정 선택 경로는 준비 기록의 <code>runtime_input_specs</code>와 artifact 해시를 확인하며, 필요하면 이미 포장된 가중치까지 그 인수 계약대로 제공해야 한다. 이런 변환을 <code>load_plan</code>이 원본 모델에서 자동 추론하지는 않는다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tclmachine/__init__.py#L33-L51">공개 함수의 세 입력·schema 검사</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span> · <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/research/selected_runtime.py#L79-L145">측정 선택 실행기의 입력·loader</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span> · <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/region_planner.py#L212-L227">분석용 영역 계획기</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
+</div><p>예를 들어 앞의 MLP를 <code>export_model</code>로 만들었다면 12장의 <code>GraphFXB</code> 경로를 고른다. 그 패키지나 옆의 <code>execution-plan.json</code>을 <code>load_plan</code>의 첫 인수로 바꾸어 넣지 않는다. 반대로 측정 선택 경로는 준비 기록의 <code>runtime_input_specs</code>와 artifact 해시를 확인하며, 필요하면 이미 포장된 가중치까지 그 인수 계약대로 제공해야 한다. 이런 변환을 <code>load_plan</code>이 원본 모델에서 자동 추론하지는 않는다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tclmachine/__init__.py#L33-L51">공개 함수의 세 입력·schema 검사</a> · <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/research/selected_runtime.py#L79-L145">측정 선택 실행기의 입력·loader</a> · <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/region_planner.py#L212-L227">분석용 영역 계획기</a></p>
 <h2 id="첫-단계-후보-생성은-실행이-아니다"><a class="heading-anchor" href="#첫-단계-후보-생성은-실행이-아니다">첫 단계: 후보 생성은 실행이 아니다</a></h2>
-<p><strong>규칙(rule)은</strong> “이 연산의 이 입력 조건을 어떤 계산으로 표현할 수 있는가”를 판정하는 코드다. 규칙이 통과하면 compiler에 시도할 후보를 만들 수 있지만, 아직 compiler 성공이나 장치 정답은 모른다. <strong>수축(contraction)은</strong> 행렬곱처럼 원소를 곱한 뒤 공통 축을 따라 더하는 계산이다. <code>aten.py</code>의 현재 <code>RULES</code>에는 <code>mm</code>, <code>bmm</code>, <code>matmul</code>, <code>linear</code>의 제한된 수축 후보가 들어 있다. 동일 파일은 BF16, 정적 양의 shape, 지원 rank(축의 개수), contiguous stride, 정확한 축 크기를 검사한다. 규칙이 맞으면 <code>AtenCandidate</code>에 의미·입출력·TCL source를 담는다. 파일 상단도 이것이 하드웨어 지원 인증표가 아니라고 명시한다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/aten.py#L40-L66">실제 규칙</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
+<p>규칙(rule)은 “이 연산의 이 입력 조건을 어떤 계산으로 표현할 수 있는가”를 판정하는 코드다. 규칙이 통과하면 compiler에 시도할 후보를 만들 수 있지만, 아직 compiler 성공이나 장치 정답은 모른다. 수축(contraction)은 행렬곱처럼 원소를 곱한 뒤 공통 축을 따라 더하는 계산이다. <code>aten.py</code>의 현재 <code>RULES</code>에는 <code>mm</code>, <code>bmm</code>, <code>matmul</code>, <code>linear</code>의 제한된 수축 후보가 들어 있다. 동일 파일은 BF16, 정적 양의 shape, 지원 rank(축의 개수), contiguous stride, 정확한 축 크기를 검사한다. 규칙이 맞으면 <code>AtenCandidate</code>에 의미·입출력·TCL source를 담는다. 파일 상단도 이것이 하드웨어 지원 인증표가 아니라고 명시한다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/aten.py#L40-L66">실제 규칙</a></p>
 <div class="codebox"><div class="codebar"><span>python</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-python"># 후보 분석 경로다. EDF 컴파일이나 NPU 추론을 요청하지 않는다.
 import torch
 from tplmachine.aten import plan_exported
@@ -217,7 +214,7 @@ library.impl(name, meta, 'Meta')  # 계산 없이 출력 shape·dtype만 설명�
 </code></pre></div>
 <p>위 네 줄은 내부 함수의 발췌이며 독립 실행 예제가 아니다. <code>name</code>은 준비 과정에서 만든 고유 연산명, <code>schema_args</code>는 입력 tensor들의 함수 선언, <code>implementation</code>은 준비된 장치 프로그램을 호출하는 함수, <code>meta</code>는 출력 정보만 만드는 함수다. <code>Library(..., &#39;FRAGMENT&#39;)</code>는 같은 namespace에 구현 조각을 추가할 때 사용하는 등록 객체다.</p>
 <p>준비가 끝나면 <code>optimize</code>는 모델 그래프의 복사본에서 호출할 함수를 바꾼다. 예를 들어 원래 <code>aten.mm(a,b)</code>를 호출하던 점이, 이 입력 조건으로 미리 준비한 <code>tclmachine</code> 연산을 호출하도록 바뀐다. 여기서 <strong>target</strong>은 그 점이 호출하는 함수다.</p>
-<p>프로그램 안의 모든 <code>torch.mm</code>를 전역으로 바꾸는 것은 아니다. 선택한 그래프와 지원 입력 조건의 호출을 준비하는 경로다. 실제 실행 때는 저장된 실행 객체에 현재 입력을 전달한다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/aten_runtime.py#L104-L119">등록과 rewrite 구현</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span> · <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/aten_runtime.py#L210-L276">준비 과정</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
+<p>프로그램 안의 모든 <code>torch.mm</code>를 전역으로 바꾸는 것은 아니다. 선택한 그래프와 지원 입력 조건의 호출을 준비하는 경로다. 실제 실행 때는 저장된 실행 객체에 현재 입력을 전달한다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/aten_runtime.py#L104-L119">등록과 rewrite 구현</a> · <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/aten_runtime.py#L210-L276">준비 과정</a></p>
 <p>이 방식은 “일반적인 Torch의 모든 함수를 호출하기만 하면 FuryNo5가 자동 개입한다”와 다르다. 사용자가 지원 범위의 그래프에 <code>optimize</code>를 명시적으로 적용해야 한다.</p>
 <h3 id="product를-준비하고-한-번-실행하기"><a class="heading-anchor" href="#product를-준비하고-한-번-실행하기">Product를 준비하고 한 번 실행하기</a></h3>
 <p>앞의 <code>Product</code>를 실제 callable로 만드는 완성 예제는 <a href="../examples/run_prepared_product.py">run_prepared_product.py</a>다. 호환 SDK, FuryNo5와 NPU가 필요하다. <strong>이 shape의 실제 지원 여부는 컴파일과 장치 수치 비교로 확인해야 한다.</strong> 사전 규칙을 통과하는 입력이라는 사실과 설치된 compiler의 성공은 별도다.</p>
@@ -291,10 +288,10 @@ if __name__ == &quot;__main__&quot;:
 <td>같은 객체로 다시 호출할 수 없음</td>
 </tr>
 </tbody></table>
-</div><p>여기서는 <code>prepared</code>가 <code>Product.forward</code>의 반환 구조를 유지하므로 tensor 하나를 받는다. 12장의 <code>GraphFXB.predict()</code>는 별도 패키지 API로 항상 출력 tuple을 돌려주는 경로이므로 <code>actual, = ...</code>를 사용한다. <code>example_inputs</code>를 넘겼다고 같은 CPU tensor로 <code>prepared(a, b)</code>를 실행할 수 있는 것은 아니다. 준비된 PrivateUse1 구현은 지정 장치의 인수를 검사하며, 공개 <code>optimize</code>는 CPU reference를 등록하지 않는다. 또한 <code>prepared.report</code>는 준비 영수증이므로 호출 후 자동으로 NPU 검증 보고서로 변하지 않는다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tclmachine/__init__.py#L19-L24">facade 인수</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span> · <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/aten_runtime.py#L76-L100">입력·장치 검사</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span> · <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/aten_runtime.py#L181-L283">수명과 반환 보고서</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
+</div><p>여기서는 <code>prepared</code>가 <code>Product.forward</code>의 반환 구조를 유지하므로 tensor 하나를 받는다. 12장의 <code>GraphFXB.predict()</code>는 별도 패키지 API로 항상 출력 tuple을 돌려주는 경로이므로 <code>actual, = ...</code>를 사용한다. <code>example_inputs</code>를 넘겼다고 같은 CPU tensor로 <code>prepared(a, b)</code>를 실행할 수 있는 것은 아니다. 준비된 PrivateUse1 구현은 지정 장치의 인수를 검사하며, 공개 <code>optimize</code>는 CPU reference를 등록하지 않는다. 또한 <code>prepared.report</code>는 준비 영수증이므로 호출 후 자동으로 NPU 검증 보고서로 변하지 않는다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tclmachine/__init__.py#L19-L24">facade 인수</a> · <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/aten_runtime.py#L76-L100">입력·장치 검사</a> · <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/aten_runtime.py#L181-L283">수명과 반환 보고서</a></p>
 <h2 id="세-번째-단계-전체-파일을-생산하는-경로"><a class="heading-anchor" href="#세-번째-단계-전체-파일을-생산하는-경로">세 번째 단계: 전체 파일을 생산하는 경로</a></h2>
 <p>이번에는 다시 <code>[4,8]</code> 입력을 가진 전체 MLP로 돌아온다. <code>model</code>은 계산 방법과 weight를 가진 Python 객체, <code>(x,)</code>는 입력이 한 개임을 나타내는 tuple, <code>&quot;tiny.fxbx&quot;</code>는 출력 파일 경로다. 출력 패키지에 외부 weight의 연결 계약을 담는 것과 weight 값 자체를 모두 넣는 것은 다르므로 실행 때는 해당 weight를 별도로 제공한다.</p>
-<p><code>export_model</code>은 모델을 캡처하고, 입력·상태를 연결하고, 의미 규칙으로 영역을 정하고, 고유 커널만 컴파일한다. 성공하면 <code>execution-plan.json</code>과 패키지를 만들지만 반환 상태는 <strong><code>built_not_runtime_validated</code>다</strong>. 이 이름 그대로 받아들이는 것이 중요하다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/execution_plan.py#L1287-L1300">결과 생성부</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
+<p><code>export_model</code>은 모델을 캡처하고, 입력·상태를 연결하고, 의미 규칙으로 영역을 정하고, 고유 커널만 컴파일한다. 성공하면 <code>execution-plan.json</code>과 패키지를 만들지만 반환 상태는 <strong><code>built_not_runtime_validated</code>다</strong>. 이 이름 그대로 받아들이는 것이 중요하다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/execution_plan.py#L1287-L1300">결과 생성부</a></p>
 <div class="codebox"><div class="codebar"><span>python</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-python"># 호환 SDK와 FuryNo5/fxbX 설치본에서 실행할 생산 예제.
 import torch
 from tclmachine import export_model
@@ -318,9 +315,9 @@ def main():
 if __name__ == &quot;__main__&quot;:  # spawn한 worker에서 전체 작업이 재실행되는 것을 막는다.
     main()
 </code></pre></div>
-<p>이 예제는 <code>.py</code> 파일로 저장해 실행한다. 병렬 컴파일은 <code>spawn</code>으로 자식 프로세스를 만들 수 있으므로 <code>__main__</code> 보호가 필요하다. 성공한 호출의 <code>result</code>는 출력 tensor가 아니라 생산 보고서다. <code>regions</code>는 계획의 영역 수, <code>unique_kernels</code>는 서로 다른 컴파일 결과 수, <code>timings_s</code>는 생산 단계별 시간이다. 같은 kernel을 여러 번 사용할 수 있으므로 이 수들을 같다고 가정하지 않는다. <code>tiny.fxbx.plan</code>은 준비와 진단 산출물을 보관하는 디렉터리이며 <code>tiny.fxbx</code>는 전달용 패키지다. 이미 출력 파일이나 <code>.plan</code> 디렉터리가 있는 경로를 덮어쓰지 않는다. 수정 후 비교 실험은 새로운 출력 경로를 쓴다. 생성된 파일을 검증하는 완전한 과정은 포팅 장에서 다룬다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/execution_plan.py">컴파일 작업 실행</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
+<p>이 예제는 <code>.py</code> 파일로 저장해 실행한다. 병렬 컴파일은 <code>spawn</code>으로 자식 프로세스를 만들 수 있으므로 <code>__main__</code> 보호가 필요하다. 성공한 호출의 <code>result</code>는 출력 tensor가 아니라 생산 보고서다. <code>regions</code>는 계획의 영역 수, <code>unique_kernels</code>는 서로 다른 컴파일 결과 수, <code>timings_s</code>는 생산 단계별 시간이다. 같은 kernel을 여러 번 사용할 수 있으므로 이 수들을 같다고 가정하지 않는다. <code>tiny.fxbx.plan</code>은 준비와 진단 산출물을 보관하는 디렉터리이며 <code>tiny.fxbx</code>는 전달용 패키지다. 이미 출력 파일이나 <code>.plan</code> 디렉터리가 있는 경로를 덮어쓰지 않는다. 수정 후 비교 실험은 새로운 출력 경로를 쓴다. 생성된 파일을 검증하는 완전한 과정은 포팅 장에서 다룬다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/execution_plan.py">컴파일 작업 실행</a></p>
 <h2 id="모든-aten-지원-을-어떻게-판단할-것인가"><a class="heading-anchor" href="#모든-aten-지원-을-어떻게-판단할-것인가">“모든 ATen 지원”을 어떻게 판단할 것인가</a></h2>
-<p><strong>지원 범위</strong>는 연산 이름 목록만으로 나타낼 수 없다. overload는 같은 기본 이름 아래 인수 형태가 다른 함수이고, 같은 overload도 shape·dtype·stride·속성에 따라 다른 구현이 필요하다. 아래 <strong>Core</strong>는 PyTorch가 작은 공통 집합으로 구분한 연산들이며 전체 ATen과 같지 않다.</p>
+<p>지원 범위는 연산 이름 목록만으로 나타낼 수 없다. overload는 같은 기본 이름 아래 인수 형태가 다른 함수이고, 같은 overload도 shape·dtype·stride·속성에 따라 다른 구현이 필요하다. 아래 Core는 PyTorch가 작은 공통 집합으로 구분한 연산들이며 전체 ATen과 같지 않다.</p>
 <p>소스에 남은 <strong>2026-11-10 Core 기준선</strong>은 다음과 같다. 이 표는 현재 모든 코드의 최종 지원율이 아니라, 당시 동일한 분모와 증거 규칙으로 만든 상태표다. 후속 수정으로 성공한 사례를 이 표에 임의로 더하지 않는다.</p>
 <div class="table-wrap"><table>
 <thead>
@@ -361,8 +358,8 @@ if __name__ == &quot;__main__&quot;:  # spawn한 worker에서 전체 작업이 �
 <td>고정 Core overload 목록</td>
 </tr>
 </tbody></table>
-</div><p>13개 중 6개는 다른 입력 조건에서는 실패도 관측되었다. 이 사실은 모순이 아니다. 연산 이름 하나가 아니라 <strong>overload × shape × dtype × stride × 속성 × 상태 × SDK</strong>가 지원 계약이기 때문이다. 예를 들어 contiguous BF16 행렬곱 성공은 비연속 FP32(Floating Point 32-bit) broadcast 행렬곱 성공을 보장하지 않는다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/validation/core-aten-20261110/coverage.json">기계식 coverage.json</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
-<p>최신 지원 상태를 만들 때는 <code>core_aten snapshot/report</code>로 분모와 corpus를 고정하고, trace·수치·반복 실행이 있는 증거만 승계한다. 단순 <code>metadata_admitted</code>를 NPU 지원으로 승격하지 않는 코드가 이미 있다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/research/core_aten.py">지원표 생성기</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
+</div><p>13개 중 6개는 다른 입력 조건에서는 실패도 관측되었다. 이 사실은 모순이 아니다. 연산 이름 하나가 아니라 <strong>overload × shape × dtype × stride × 속성 × 상태 × SDK</strong>가 지원 계약이기 때문이다. 예를 들어 contiguous BF16 행렬곱 성공은 비연속 FP32(Floating Point 32-bit) broadcast 행렬곱 성공을 보장하지 않는다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/validation/core-aten-20261110/coverage.json">기계식 coverage.json</a></p>
+<p>최신 지원 상태를 만들 때는 <code>core_aten snapshot/report</code>로 분모와 corpus를 고정하고, trace·수치·반복 실행이 있는 증거만 승계한다. 단순 <code>metadata_admitted</code>를 NPU 지원으로 승격하지 않는 코드가 이미 있다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/research/core_aten.py">지원표 생성기</a></p>
 <h2 id="프로젝트를-세-부분으로-읽자"><a class="heading-anchor" href="#프로젝트를-세-부분으로-읽자">프로젝트를 세 부분으로 읽자</a></h2>
 <div class="table-wrap"><table>
 <thead>
@@ -392,8 +389,8 @@ if __name__ == &quot;__main__&quot;:  # spawn한 worker에서 전체 작업이 �
 <td>forward 중 무제한 탐색·자동 CPU 모델 폴백</td>
 </tr>
 </tbody></table>
-</div><p>이제 파일을 만드는 흐름을 보았으므로, 같은 저장소 안의 분석 기능과 실행 기능을 구분할 수 있다. 표의 DAG(Directed Acyclic Graph)는 순환 없는 의존 그래프이며, 비용 예측은 실제 장치 실행을 대신하는 모델이다. 분석 코어에서 합성 자원 충돌을 줄여 예측 시간이 절반이 되더라도 실기기 속도가 두 배가 된 것은 아니다. 반대로 실행 경로가 genuine EDF를 만들었다고 시뮬레이터의 비용 예측까지 검증된 것은 아니다. <code>hardware_measured</code>는 장치에서 측정한 값인지, <code>source_kind</code>는 예측·기록 중 어디에서 얻었는지를 알려준다. 환경 지문은 SDK·compiler 등 결과의 조건을 식별하는 정보다. 이를 함께 읽어야 예측치를 실측으로 오해하지 않는다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/ARCHITECTURE.md">설계</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span> · <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/ir.py">IR(Intermediate Representation) 정의</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
-<figure class="diagram"><img src="../assets/diagrams/10-furyno5-architecture-cc3b87c6150e.svg?v=cccc4ee08bcb" alt="FuryNo5의 실제 구조 · 도식 1" loading="lazy"><figcaption>도식 1 · FuryNo5의 실제 구조 — 설명을 위해 단순화한 관계도. 실제 호출 조건과 근거는 본문을 함께 읽으세요.</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
+</div><p>이제 파일을 만드는 흐름을 보았으므로, 같은 저장소 안의 분석 기능과 실행 기능을 구분할 수 있다. 표의 DAG(Directed Acyclic Graph)는 순환 없는 의존 그래프이며, 비용 예측은 실제 장치 실행을 대신하는 모델이다. 분석 코어에서 합성 자원 충돌을 줄여 예측 시간이 절반이 되더라도 실기기 속도가 두 배가 된 것은 아니다. 반대로 실행 경로가 genuine EDF를 만들었다고 시뮬레이터의 비용 예측까지 검증된 것은 아니다. <code>hardware_measured</code>는 장치에서 측정한 값인지, <code>source_kind</code>는 예측·기록 중 어디에서 얻었는지를 알려준다. 환경 지문은 SDK·compiler 등 결과의 조건을 식별하는 정보다. 이를 함께 읽어야 예측치를 실측으로 오해하지 않는다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/ARCHITECTURE.md">설계</a> · <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/ir.py">IR(Intermediate Representation) 정의</a></p>
+<figure class="diagram"><img src="../assets/diagrams/10-furyno5-architecture-cc3b87c6150e.svg?v=cccc4ee08bcb" alt="FuryNo5의 실제 구조 · 도식 1" loading="lazy"><figcaption>도식 1 · FuryNo5의 실제 구조</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
     A[&quot;모델 + 예제 입력 + 상태 계약&quot;] --&gt; B[&quot;capture와 의미 정규화&quot;]
     B --&gt; C[&quot;shape · dtype · layout 규칙&quot;]
     C --&gt; D[&quot;영역 선택과 TCL 생성&quot;]
@@ -403,7 +400,7 @@ if __name__ == &quot;__main__&quot;:  # spawn한 worker에서 전체 작업이 �
     C --&gt; H[&quot;지원 gap과 재현 recipe&quot;]
     D --&gt; I[&quot;비용 예측과 후보 탐색&quot;]
     I --&gt; J[&quot;별도 수치 · trace · 성능 검증&quot;]
-    J --&gt; D</pre></details></figure><p>그림에서 fxbX의 역할은 준비된 계약을 소비하는 것이다. FuryNo5가 누락된 연산 규칙을 정의하고 컴파일하므로, fxbX 실행 중 다시 생산자를 불러 미지원 연산을 고치는 구조로 설명하면 안 된다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/NATIVE_EXECUTION_PLAN.md">Native 실행 책임</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
+    J --&gt; D</pre></details></figure><p>그림에서 fxbX의 역할은 준비된 계약을 소비하는 것이다. FuryNo5가 누락된 연산 규칙을 정의하고 컴파일하므로, fxbX 실행 중 다시 생산자를 불러 미지원 연산을 고치는 구조로 설명하면 안 된다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/NATIVE_EXECUTION_PLAN.md">Native 실행 책임</a></p>
 <h2 id="개발자가-따라갈-파일-지도"><a class="heading-anchor" href="#개발자가-따라갈-파일-지도">개발자가 따라갈 파일 지도</a></h2>
 <p>아래 표는 앞의 값·객체·파일 변환을 구현한 위치다. 처음부터 모두 열 필요는 없다. 예를 들어 입력 계약이 막히면 <code>edf_export.py</code>, 준비된 호출이 잘못 연결되면 <code>aten_runtime.py</code>를 확인한다. ABI(Application Binary Interface)는 컴파일된 프로그램과 호출자가 합의한 인수 순서·자료형·배치의 계약이다. 각 파일의 실제 위치는 고정 commit 링크에서 확인할 수 있다.</p>
 <div class="table-wrap"><table>
@@ -415,62 +412,62 @@ if __name__ == &quot;__main__&quot;:  # spawn한 worker에서 전체 작업이 �
 </tr>
 </thead>
 <tbody><tr>
-<td><a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tclmachine/__init__.py">tclmachine/<strong>init</strong>.py</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></td>
+<td><a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tclmachine/__init__.py">tclmachine/<strong>init</strong>.py</a></td>
 <td>공개 호출 경계</td>
 <td>사용자가 어떤 작업을 명시적으로 요청했는가</td>
 </tr>
 <tr>
-<td><a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/graph_capture.py#L188-L195">graph_capture.py · capture_for_export</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></td>
+<td><a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/graph_capture.py#L188-L195">graph_capture.py · capture_for_export</a></td>
 <td>export·정규화</td>
 <td>원본 의미가 보존되었는가</td>
 </tr>
 <tr>
-<td><a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/edf_export.py">edf_export.py · bind_exported</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></td>
+<td><a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/edf_export.py">edf_export.py · bind_exported</a></td>
 <td>입력·가중치·출력 바인딩</td>
 <td>어떤 값이 어느 ABI(Application Binary Interface) 인수인가</td>
 </tr>
 <tr>
-<td><a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/aten.py#L94-L133">aten.py · plan_aten_call</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></td>
+<td><a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/aten.py#L94-L133">aten.py · plan_aten_call</a></td>
 <td>제한된 수축 후보 규칙</td>
 <td>정적 shape·dtype·stride 계약에 맞는가</td>
 </tr>
 <tr>
-<td><a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/pointwise_rules.py">pointwise_rules.py</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></td>
+<td><a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/pointwise_rules.py">pointwise_rules.py</a></td>
 <td>원소별 의미·broadcasting·TCL</td>
 <td>같은 의미 계열을 공통으로 해결하는가</td>
 </tr>
 <tr>
-<td><a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/reduction_rules.py">reduction_rules.py</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></td>
+<td><a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/reduction_rules.py">reduction_rules.py</a></td>
 <td>축약 축·출력 형식</td>
 <td>어느 축을 줄이고 무엇으로 누산하는가</td>
 </tr>
 <tr>
-<td><a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/compiler_registry.py">compiler_registry.py</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></td>
+<td><a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/compiler_registry.py">compiler_registry.py</a></td>
 <td>의미 계열→컴파일 함수·소스 의존성</td>
 <td>어떤 변경이 캐시를 무효화하는가</td>
 </tr>
 <tr>
-<td><a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/execution_plan.py#L331-L355">execution_plan.py · export_model</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></td>
+<td><a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/execution_plan.py#L331-L355">execution_plan.py · export_model</a></td>
 <td>영역·컴파일 작업·계획 조립</td>
 <td>값과 EDF를 어떤 순서로 연결하는가</td>
 </tr>
 <tr>
-<td><a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/tcl_compiler.py#L158-L234">tcl_compiler.py · compile_source</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></td>
+<td><a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/tcl_compiler.py#L158-L234">tcl_compiler.py · compile_source</a></td>
 <td>공식 컴파일·캐시·EDF 계약</td>
 <td>산출물이 정확한 source/SDK와 일치하는가</td>
 </tr>
 <tr>
-<td><a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/compile_job.py">compile_job.py</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></td>
+<td><a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/compile_job.py">compile_job.py</a></td>
 <td>subprocess·시간제한·실패 증거</td>
 <td>compiler 거절과 환경 종료를 구분했는가</td>
 </tr>
 <tr>
-<td><a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/aten_runtime.py">aten_runtime.py</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></td>
+<td><a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/aten_runtime.py">aten_runtime.py</a></td>
 <td>준비된 custom op 등록·복사한 FX graph 수정</td>
 <td>실행 때 준비되지 않은 계약을 거부하는가</td>
 </tr>
 <tr>
-<td><a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/verified_build.py">verified_build.py / verified_worker.py</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></td>
+<td><a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/verified_build.py">verified_build.py / verified_worker.py</a></td>
 <td>생산자와 독립된 소비자 검증</td>
 <td>컴파일 없이 다시 로드되어 올바르게 실행되는가</td>
 </tr>
@@ -486,7 +483,7 @@ if __name__ == &quot;__main__&quot;:  # spawn한 worker에서 전체 작업이 �
 <li>작은 정상·경계·거부 사례에서 CPU 의미, 컴파일 ABI, NPU 수치와 trace를 확인한다.</li>
 <li>영향을 받은 모델만 다시 preflight하고, 마지막에 파일의 독립 소비자 replay를 수행한다.</li>
 </ol>
-<p>이 순서는 현재 저장소의 수정 가이드와 맞춰 구성했다. 허용오차를 바꾸거나 모델명 예외로 통과시키면 지원 범위가 늘어난 것이 아니라 계약이 달라진 것이다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/REPAIR_GUIDE.md">수정 가이드</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></p>
+<p>이 순서는 현재 저장소의 수정 가이드와 맞춰 구성했다. 허용오차를 바꾸거나 모델명 예외로 통과시키면 지원 범위가 늘어난 것이 아니라 계약이 달라진 것이다. <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/REPAIR_GUIDE.md">수정 가이드</a></p>
 <h2 id="출처"><a class="heading-anchor" href="#출처">출처</a></h2>
 <div class="table-wrap"><table>
 <thead>
@@ -496,7 +493,7 @@ if __name__ == &quot;__main__&quot;:  # spawn한 worker에서 전체 작업이 �
 </tr>
 </thead>
 <tbody><tr>
-<td><a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tclmachine/__init__.py">공개 facade</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span>, <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/research/selected_runtime.py">측정 선택 실행기</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span>, <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/region_planner.py">영역 분석기</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></td>
+<td><a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tclmachine/__init__.py">공개 facade</a>, <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/research/selected_runtime.py">측정 선택 실행기</a>, <a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/region_planner.py">영역 분석기</a></td>
 <td>optimize의 공개 인수, 서로 다른 plan의 생산·소비 계약</td>
 </tr>
 <tr>
@@ -504,27 +501,27 @@ if __name__ == &quot;__main__&quot;:  # spawn한 worker에서 전체 작업이 �
 <td>가중치 shape·전치·행렬곱·bias의 의미</td>
 </tr>
 <tr>
-<td><a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/README.md">README</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></td>
+<td><a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/README.md">README</a></td>
 <td>목표·분석 코어·미구현 경계</td>
 </tr>
 <tr>
-<td><a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/aten.py">ATen 후보 규칙</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></td>
+<td><a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/aten.py">ATen 후보 규칙</a></td>
 <td>정적 BF16 수축 admission</td>
 </tr>
 <tr>
-<td><a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/aten_runtime.py">준비 실행 경로</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></td>
+<td><a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/aten_runtime.py">준비 실행 경로</a></td>
 <td>custom namespace 등록과 forward 경계</td>
 </tr>
 <tr>
-<td><a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/execution_plan.py">계획 생성기</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></td>
+<td><a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/execution_plan.py">계획 생성기</a></td>
 <td>다중 EDF·계획·생성 상태</td>
 </tr>
 <tr>
-<td><a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/CORE_ATEN_WORKFLOW.md">Core 지원 기준선</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></td>
+<td><a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/CORE_ATEN_WORKFLOW.md">Core 지원 기준선</a></td>
 <td>과거 snapshot의 분모와 증거 단계</td>
 </tr>
 <tr>
-<td><a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/verified_worker.py">독립 소비자 검증</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span></td>
+<td><a href="https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/verified_worker.py">독립 소비자 검증</a></td>
 <td>생산자 import·재컴파일 차단·NPU trace</td>
 </tr>
 </tbody></table>

@@ -1,8 +1,8 @@
 {
   "chapters": 24,
-  "diagrams": 39,
+  "diagrams": 37,
   "code_blocks": 170,
-  "source_urls": 418,
+  "source_urls": 421,
   "generated_pages": [
     "index.html",
     "chapter/01-hardware.html",

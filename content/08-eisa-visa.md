@@ -1,14 +1,12 @@
 # 저수준 프로그래밍: vISA와 furiosa-opt
 
-> **전체 경로에서의 위치**
->
-> 개발자가 숫자의 저장 위치와 이동 순서를 더 직접 지정하는 경로다. 먼저 작은 배열을 배치해 보고 실제 도구의 표기로 넓힌다. [04장](04-tcl-edf.md)의 TCL 실습과는 사용하는 API를 구분한다.
+[07장](07-optimization.md)에서 데이터 이동이나 배치를 개선할 필요를 찾았다면, 그 부분을 더 직접 지정해 볼 수 있다. 여기서는 TCL 대신 공개 furiosa-opt 도구를 사용한다. 계산식은 `x+1`로 두고, 값이 놓이는 위치와 이동 순서에 집중하자.
 
-CPU(Central Processing Unit)에서 C의 2차원 배열을 사용하여 `a[row][col]`을 읽으면, 결국 한 저장 공간 안의 어느 위치를 읽을지 정해야 한다. NPU(Neural Processing Unit)에서도 같은 문제가 있지만, 값이 여러 chip·PE·slice의 메모리에 나뉘고 여러 차례에 걸쳐 계산 경로로 전달될 수 있다. **Mapping(매핑)은** 이 논리 좌표와 실제 저장·처리 위치의 관계를 표현한다.
+배열의 37번 원소를 읽으려면 그 값이 저장된 위치를 알아야 한다. NPU에서는 값이 여러 chip·PE·slice에 나뉘어 놓일 수 있어, 배열의 번호만으로 실제 위치가 정해지지 않는다. 이 둘의 대응을 나타내는 것이 매핑(mapping)이다.
 
-이 장은 먼저 2×3 배열의 주소 계산부터 시작한다. 그 다음 공식 `constant_add` 예제의 2,048개 정수 중 **37번 원소 하나가 어느 위치에 있고 어떻게 38이 되는지** 따라간다. 계산식 `x+1`은 간단하게 유지하고, 메모리와 실행 경로를 읽는 데 집중한다.
+2×3 배열에서 주소를 구하는 법을 확인한 뒤, 공식 `constant_add` 예제의 정수 2,048개로 넓힌다. 그중 37번 원소가 어느 위치에 놓이고, 어떤 경로를 거쳐 38이 되는지 따라가겠다.
 
-> **명칭과 버전** · ISA(Instruction Set Architecture)는 명령어 집합 구조다. 공개 프로그래밍 문서의 이름은 **vISA(Virtual Instruction Set Architecture)다**. eISA라는 명칭을 이 공개 API의 동의어로 사용하지 않는다. 이 장에서 사용하는 코드와 도구는 vISA 경로다. 이 장은 `furiosa-opt` commit `3d43bc9d20f324af60e3006c3f1541938d7f5097`과 `furiosa-opt-std = "0.10"` template을 기준으로 한다. [공식 소개](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/introduction.md), [template 의존성](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/base-template/Cargo.toml.liquid)
+> 명칭과 버전 · ISA(Instruction Set Architecture)는 명령어 집합 구조다. 공개 프로그래밍 문서의 이름은 vISA(Virtual Instruction Set Architecture)다. eISA라는 명칭을 이 공개 API의 동의어로 사용하지 않는다. 이 장에서 사용하는 코드와 도구는 vISA 경로다. 이 장은 `furiosa-opt` commit `3d43bc9d20f324af60e3006c3f1541938d7f5097`과 `furiosa-opt-std = "0.10"` template을 기준으로 한다. [공식 소개](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/introduction.md), [template 의존성](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/base-template/Cargo.toml.liquid)
 
 ## 1. 같은 행렬을 두 저장 순서로 표현한다
 
@@ -33,7 +31,7 @@ for h in range(H):
 | `(1,0)` | 10 | 3 | 1 |
 | `(1,2)` | 12 | 5 | 5 |
 
-여기서 **shape**는 `(2,3)`이라는 축의 길이, **layout**은 행 우선·열 우선 같은 저장 규칙이다. **Stride**는 한 축을 한 칸 이동할 때의 저장 간격이다. 이 행 우선 배열의 stride는 원소 단위로 `(3,1)`이다. 실제 바이트 주소는 `버퍼 시작 주소 + 원소 위치 × 원소당 바이트 수`로 구한다. mapping은 이 규칙을 표현하며 **실제 버퍼 시작 주소를 그 자체에 저장하는 것은 아니다.**
+여기서 **shape**는 `(2,3)`이라는 축의 길이, **layout**은 행 우선·열 우선 같은 저장 규칙이다. Stride는 한 축을 한 칸 이동할 때의 저장 간격이다. 이 행 우선 배열의 stride는 원소 단위로 `(3,1)`이다. 실제 바이트 주소는 `버퍼 시작 주소 + 원소 위치 × 원소당 바이트 수`로 구한다. mapping은 이 규칙을 표현하며 실제 버퍼 시작 주소를 그 자체에 저장하는 것은 아니다.
 
 공식 Rust mapping 표현에서는 아래처럼 이름 있는 축과 순서를 지정한다. 이는 mapping 문법을 설명하는 조각이며, 아직 장치의 cluster·slice에 배치한 커널은 아니다.
 
@@ -108,7 +106,7 @@ pub type Slice = m![A / 8 # 256]; // 논리 인덱스 A를 8개씩 묶어 256 sl
 
 ## 4. 저장된 값이 계산 경로로 흘러가는 과정
 
-HBM(High Bandwidth Memory)은 큰 장치 메모리이고, DM은 계산에 가까운 칩 내부 메모리다. **DMA는** CPU가 각 원소를 복사하는 대신 전송 엔진이 데이터를 옮기는 방식이다. CPU↔HBM 전송과 HBM↔DM 전송을 구분한다. **Fetch**는 DM 값을 Tensor Unit의 계산 흐름으로 읽고, **Commit**은 계산 결과를 DM에 기록한다.
+HBM(High Bandwidth Memory)은 큰 장치 메모리이고, DM은 계산에 가까운 칩 내부 메모리다. DMA는 CPU가 각 원소를 복사하는 대신 전송 엔진이 데이터를 옮기는 방식이다. CPU↔HBM 전송과 HBM↔DM 전송을 구분한다. Fetch는 DM 값을 Tensor Unit의 계산 흐름으로 읽고, **Commit**은 계산 결과를 DM에 기록한다.
 
 `constant_add_kernel`의 첫 이동은 HBM 입력을 앞 절의 DM mapping으로 옮기는 것이다. 아래는 해당 함수 안에서 사용하는 한 줄에 설명 주석을 추가한 발췌다. `input`, `device`, `Cluster`, `Slice`, `A`는 template의 선언을 사용한다.
 
@@ -185,23 +183,14 @@ vISA는 성능이 중요한 작은 구간의 가설을 직접 실험할 때 유�
 
 vISA는 계산과 이동을 컴파일러가 다루는 표현이다. 작성한 설명은 다시 컴파일되어 장치 실행물로 바뀌어야 한다. vISA 텍스트를 NPU에 바로 보내 실행하지는 않는다.
 
-따라서 ‘중간 vISA가 생성됨’과 ‘전체 컴파일이 끝남’, ‘장치에 적재됨’, ‘결과가 맞음’을 나누어 확인한다. 아래 그림은 이 순서와 각 산출물을 보여 준다. [중간 vISA 출력](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/tools/kernel-optimizer.md) · [컴파일된 EDF의 실행](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/quick-start/kernel-validation.md) · [공개 실행물 계약](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-abi/README.md)
+중간 vISA가 만들어져도 장치에 적재할 준비가 끝난 것은 아니다. 컴파일러는 장치 코드를 생성하고, 그 코드와 메모리 연결 정보를 Image에 담는다. 링크 단계는 이 Image를 host 실행 프로그램의 registry에 연결한다. registry는 호출할 함수를 찾는 표이고, Image는 그 함수의 실행에 필요한 묶음이다. [중간 vISA 출력](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/tools/kernel-optimizer.md) · [Image의 구성](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-abi/src/image.rs) · [registry의 역할](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-rt/src/registry/mod.rs)
 
-```mermaid
-flowchart TB
-    S["Rust device 함수"] --> C["cargo furiosa-opt"]
-    C --> V["중간 vISA"]
-    V --> E["컴파일된 장치 실행물"]
-    E --> I["Device Function Image·registry"]
-    I --> R["furiosa-opt-std launch"]
-    R --> T["opt-rt 적재·인수 연결"]
-    T --> D["드라이버·장치 펌웨어"]
-    D --> N["NPU 실행과 완료"]
-    C --> J["정적 schedule JSON"]
-    J --> W["Schedule Viewer"]
-```
+<figure class="diagram">
+<img src="../assets/diagrams/opt-program-lifecycle.svg" alt="빌드에서 Image와 registry를 만들고 실행 시 Image를 읽어 Function을 적재한 뒤 실제 입력으로 호출하는 opt의 과정" loading="lazy">
+<figcaption>Image는 실행 코드와 메모리 연결 정보를 담는다. registry는 host 프로그램에서 그 Image를 찾게 해 준다. <a href="../assets/diagrams/opt-program-lifecycle.svg" target="_blank" rel="noopener">그림 크게 보기</a></figcaption>
+</figure>
 
-그림의 “컴파일된 장치 실행물”은 문서에서 EDF로 설명하는 단계다. **그 다음에 나오는 opt Device Function Image의 직렬화 형식을 SDK(Software Development Kit) Python의 `.edf`와 바이트 단위로 같다고 표시한 그림은 아니다.** IR(Intermediate Representation, 중간 표현), 컴파일 결과, 이를 host 프로그램에 연결하는 image·registry, 실제 장치 적재를 구분하기 위해 나누어 그렸다. TCL/`furiosa-tcc` 경로와 Rust/opt 경로가 모두 NPU 실행물을 만든다는 사실만으로 서로의 loader를 교환할 수는 없다.
+그림에서 장치 코드는 Image **안에 포함된다**. ‘EDF 파일을 만든 다음 별도의 Image 파일로 변환한다’는 공정으로 읽으면 안 된다. 공식 검증 문서는 컴파일된 장치 실행물을 EDF라고 설명하지만, 그 명칭만으로 TCL/SDK의 `.edf`와 같은 바이트 형식이라고 판단할 수는 없다. 이 장은 공개 opt의 Image와 그것을 읽는 로더를 기준으로 설명한다. [공식 검증 절차의 EDF 설명](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/quick-start/kernel-validation.md) · [로더 구현](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-rt/src/registry/load/mod.rs)
 
 이때 컴파일은 실행 방법을 만드는 단계이고, 적재(load)는 그 결과를 현재 장치 자원에 준비하는 단계다. 실행할 입력 값은 호출 시 다시 연결한다.
 
@@ -477,7 +466,7 @@ CPU 실행 파일도 기계어 명령만 있는 배열이 아니라 적재할 �
 
 `Image`는 `FOP2` 식별자와 bincode로 직렬화한 구조를 읽고, 내부 `Executable`은 별도의 `FOE1` 식별자와 chunk 표를 읽는다. 따라서 **이 공개 opt 실행물은 아무 메타데이터도 없는 raw instruction 배열로 설명할 수 없다.** 코드와 그 코드를 어떻게 배치·호출할지 설명하는 정보가 나뉜다. `Image::parse()`는 decode 결과, topology, cluster 수, 인수 slot 등 해당 형식의 계약을 검사한다. [image.rs](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-abi/src/image.rs), [executable.rs](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-abi/src/executable.rs), [registry.rs](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-abi/src/registry.rs)
 
-이것은 **SDK `.edf`도 FOP2·FOE1을 사용한다거나 ELF(Executable and Linkable Format)라는 증거가 아니다.** 같은 “바이너리”라는 분류 안에서도 직렬화 schema, ABI(Application Binary Interface), 장치 프로토콜은 달라질 수 있다. SDK의 `ir.Runnable.from_serialized_edf()` 및 `Runnable(...).to(device)` 경계는 [4장](04-tcl-edf.md)의 별도 경로로 읽는다.
+이것은 SDK `.edf`도 FOP2·FOE1을 사용한다거나 ELF(Executable and Linkable Format)라는 증거가 아니다. 같은 “바이너리”라는 분류 안에서도 직렬화 schema, ABI(Application Binary Interface), 장치 프로토콜은 달라질 수 있다. SDK의 `ir.Runnable.from_serialized_edf()` 및 `Runnable(...).to(device)` 경계는 [4장](04-tcl-edf.md)의 별도 경로로 읽는다.
 
 ### 파일이 준비된 뒤 runtime이 추가하는 것
 

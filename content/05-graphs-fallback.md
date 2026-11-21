@@ -1,10 +1,8 @@
 # 실행그래프와 폴백: 계산의 연결을 누가 알고 있는가
 
-> **전체 경로에서의 위치**
->
-> 첫 계산의 답을 다음 계산의 입력으로 보내 모델 하나를 실행하는 단계다. 그 연결을 파일에 담아 전달하는 방법은 [12장](12-fxbx.md)으로 이어진다.
+[04장](04-tcl-edf.md)에서는 커널 하나를 실행했다. 모델에 계산이 둘 이상 있으면 첫 결과를 어디로 보낼지도 정해야 한다. 덧셈과 ReLU를 연결하면서 실행그래프가 보관하는 정보를 살펴보자.
 
-함수 두 개가 있다고 해서 프로그램 하나가 정해지지는 않는다. `add`와 `relu`라는 함수를 가진 CPU(Central Processing Unit) 라이브러리에도 **무엇을 먼저 호출하고 결과를 어디에 넘길지** 정한 코드가 필요하다. NPU(Neural Processing Unit)의 컴파일된 커널도 같다. EDF(Executable Device Format)는 장치에서 실행할 컴파일 결과이고, 여러 EDF 사이의 연결은 별도의 실행계획이 담당할 수 있다.
+`add`와 `relu`라는 함수를 준비했다고 하자. 아직은 둘 중 무엇을 먼저 호출할지, 덧셈 결과를 어디에 넘길지 정하지 않았다. 장치용 프로그램인 EDF를 두 개 준비했을 때도 이 정보가 필요하다. 실행계획은 각 프로그램의 입력과 결과를 이어 주는 역할을 한다.
 
 이 장에서는 두 연산을 연결하는 예로 그래프를 이해한 뒤, 그래프를 저장했을 때 줄어드는 작업과 실제 `export_model()`·`GraphFXB` 호출을 살펴본다. 마지막에는 EDF가 없을 때 발생하는 오류와 CPU 폴백을 구분한다.
 
@@ -55,7 +53,7 @@ flowchart TB
 | `tmp_sum` | Add의 출력 | ReLU의 입력 | ReLU가 읽기를 완료했는가? |
 | `output_y` | ReLU의 출력 | 호출자 | 결과 전달과 사용이 끝났는가? |
 
-**버퍼(buffer)는** 이 값이 실제로 저장되는 공간이다. 계획의 값 이름과 현재 프로세스의 버퍼는 별개이며, 둘을 연결하는 것을 **binding(바인딩)이라고** 한다. 중간값 `tmp_sum`을 만드는 커널을 CPU가 제출했다고 바로 공간을 재사용할 수 있는 것도 아니다. 그 값을 읽는 작업의 **완료**까지 보장되어야 한다. FuryNo5 실행계획과 fxbX 로더는 이러한 입력·출력·상태 연결을 명시한다. [공유 실행계획 계약](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/fxbx-producer/EXECUTION_PLAN.md), [로더의 값 수명 처리](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py)
+**버퍼(buffer)는** 이 값이 실제로 저장되는 공간이다. 계획의 값 이름과 현재 프로세스의 버퍼는 별개이며, 둘을 연결하는 것을 binding(바인딩)이라고 한다. 중간값 `tmp_sum`을 만드는 커널을 CPU가 제출했다고 바로 공간을 재사용할 수 있는 것도 아니다. 그 값을 읽는 작업의 완료까지 보장되어야 한다. FuryNo5 실행계획과 fxbX 로더는 이러한 입력·출력·상태 연결을 명시한다. [공유 실행계획 계약](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/fxbx-producer/EXECUTION_PLAN.md), [로더의 값 수명 처리](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py)
 
 ## 2. 서로 다른 네 종류의 그래프와 스케줄
 

@@ -1,14 +1,12 @@
 # 10. 작은 모델 하나로 읽는 FuryNo5의 구조
 
-> **전체 경로에서의 위치**
->
-> 작은 PyTorch 모델 하나가 FuryNo5 안에서 어떤 객체와 파일로 바뀌는지 따라간다. 자세한 컴파일은 [11장](11-furyno5-compiler.md), 파일을 받아 실행하는 쪽은 [12장](12-fxbx.md)에서 다룬다.
+PyTorch의 연산 호출을 이해했으니 FuryNo5가 그 사이에서 무엇을 준비하는지 보자. 작은 모델 하나를 사용해 입력·그래프·컴파일 결과를 따라간다. 컴파일 내부는 [11장](11-furyno5-compiler.md), 저장물을 읽는 실행기는 [12장](12-fxbx.md)에서 자세히 다룬다.
 
 Python의 모델은 계산 방법과 그 계산에 쓸 가중치를 알고 있다. NPU에서 실행하려면 이 계산을 장치 프로그램으로 바꾸고 실제 입력을 넣을 수 있게 준비해야 한다. **FuryNo5는 이 준비를 맡는다.**
 
 이 책에서는 파일을 만드는 쪽을 생산자(producer), 만들어진 파일을 읽어 실행하는 쪽을 소비자(consumer)라고 부른다. 최종 NPU 코드 생성은 Furiosa 컴파일러가 맡고, 소비자는 선택한 경로의 SDK 실행기나 fxbX가 된다.
 
-먼저 작은 모델이 어떤 자료구조와 파일로 바뀌는지 따라가자. 그다음 실제 파일·함수와 지원 범위를 읽으면, “후보를 만들었다”, “컴파일했다”, “NPU에서 정답을 확인했다”가 서로 다른 결과라는 점도 자연스럽게 드러난다. FuryNo5는 모든 ATen(A Tensor Library) 연산을 완성한 범용 backend가 아니며 README도 전체 모델 자동 이식 완료를 주장하지 않는다. [프로젝트의 현재 범위](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/README.md)
+예제 모델을 따라가며 먼저 만들어지는 자료구조와 파일을 보자. 이어서 그 일을 수행하는 함수와 현재 지원 범위를 확인한다. 이때 연산 후보의 등록, 컴파일 성공, 장치에서의 정답 확인을 구별해야 한다. FuryNo5의 README는 모든 ATen 연산이나 임의 모델의 자동 이식을 완료했다고 설명하지 않는다. [프로젝트의 현재 범위](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/README.md)
 
 > **코드와 검증 기준** · FuryNo5 commit `bba9efea8201aec48150514a35d0b637d29d107e`를 2026-11-19에 확인했다. 소스 링크는 비공개 저장소 열람 권한이 필요할 수 있다. 지원 여부는 아래의 등록·컴파일·수치·장치 검증 범위를 나누어 읽는다.
 
@@ -37,7 +35,7 @@ Linear의 출력 하나는 입력의 각 수에 계수를 곱해 더하고 보�
 
 `eval()`은 학습할 때와 추론할 때 동작이 다른 층을 평가 모드로 바꾼다. 미분 기록을 끄는 설정과 목적이 다르다. `.bfloat16()`은 숫자의 저장 형식을 바꾸므로, 실제 모델에서는 이 변경 뒤 답의 오차도 확인해야 한다.
 
-같은 shape의 tensor라도 메모리 해석이 다를 수 있다. **stride**는 한 축에서 원소 하나 이동할 때 저장소에서 건너뛰는 원소 수다. 행이 연속으로 저장된 `[4,8]` 입력의 stride는 `[8,1]`이다. **contiguous**는 해당 순서로 빈틈없이 이어진 배치를 뜻한다. 전치된 view처럼 메모리를 공유하되 stride가 다른 입력을 같은 커널에 무조건 넣을 수는 없다. FuryNo5 규칙은 이런 조건도 함께 검사한다. [입력 계약 검사](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/edf_export.py#L33-L109)
+같은 shape의 tensor라도 메모리 해석이 다를 수 있다. stride는 한 축에서 원소 하나 이동할 때 저장소에서 건너뛰는 원소 수다. 행이 연속으로 저장된 `[4,8]` 입력의 stride는 `[8,1]`이다. contiguous는 해당 순서로 빈틈없이 이어진 배치를 뜻한다. 전치된 view처럼 메모리를 공유하되 stride가 다른 입력을 같은 커널에 무조건 넣을 수는 없다. FuryNo5 규칙은 이런 조건도 함께 검사한다. [입력 계약 검사](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/edf_export.py#L33-L109)
 
 ## 이 모델이 어떤 객체와 파일로 바뀌는가
 
@@ -87,7 +85,7 @@ TCL(Tensor Contraction Language)은 텐서 계산을 compiler에 설명하는 �
 
 ## 첫 단계: 후보 생성은 실행이 아니다
 
-**규칙(rule)은** “이 연산의 이 입력 조건을 어떤 계산으로 표현할 수 있는가”를 판정하는 코드다. 규칙이 통과하면 compiler에 시도할 후보를 만들 수 있지만, 아직 compiler 성공이나 장치 정답은 모른다. **수축(contraction)은** 행렬곱처럼 원소를 곱한 뒤 공통 축을 따라 더하는 계산이다. `aten.py`의 현재 `RULES`에는 `mm`, `bmm`, `matmul`, `linear`의 제한된 수축 후보가 들어 있다. 동일 파일은 BF16, 정적 양의 shape, 지원 rank(축의 개수), contiguous stride, 정확한 축 크기를 검사한다. 규칙이 맞으면 `AtenCandidate`에 의미·입출력·TCL source를 담는다. 파일 상단도 이것이 하드웨어 지원 인증표가 아니라고 명시한다. [실제 규칙](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/aten.py#L40-L66)
+규칙(rule)은 “이 연산의 이 입력 조건을 어떤 계산으로 표현할 수 있는가”를 판정하는 코드다. 규칙이 통과하면 compiler에 시도할 후보를 만들 수 있지만, 아직 compiler 성공이나 장치 정답은 모른다. 수축(contraction)은 행렬곱처럼 원소를 곱한 뒤 공통 축을 따라 더하는 계산이다. `aten.py`의 현재 `RULES`에는 `mm`, `bmm`, `matmul`, `linear`의 제한된 수축 후보가 들어 있다. 동일 파일은 BF16, 정적 양의 shape, 지원 rank(축의 개수), contiguous stride, 정확한 축 크기를 검사한다. 규칙이 맞으면 `AtenCandidate`에 의미·입출력·TCL source를 담는다. 파일 상단도 이것이 하드웨어 지원 인증표가 아니라고 명시한다. [실제 규칙](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/aten.py#L40-L66)
 
 ```python
 # 후보 분석 경로다. EDF 컴파일이나 NPU 추론을 요청하지 않는다.
@@ -218,7 +216,7 @@ if __name__ == "__main__":  # spawn한 worker에서 전체 작업이 재실행�
 
 ## “모든 ATen 지원”을 어떻게 판단할 것인가
 
-**지원 범위**는 연산 이름 목록만으로 나타낼 수 없다. overload는 같은 기본 이름 아래 인수 형태가 다른 함수이고, 같은 overload도 shape·dtype·stride·속성에 따라 다른 구현이 필요하다. 아래 **Core**는 PyTorch가 작은 공통 집합으로 구분한 연산들이며 전체 ATen과 같지 않다.
+지원 범위는 연산 이름 목록만으로 나타낼 수 없다. overload는 같은 기본 이름 아래 인수 형태가 다른 함수이고, 같은 overload도 shape·dtype·stride·속성에 따라 다른 구현이 필요하다. 아래 Core는 PyTorch가 작은 공통 집합으로 구분한 연산들이며 전체 ATen과 같지 않다.
 
 소스에 남은 **2026-11-10 Core 기준선**은 다음과 같다. 이 표는 현재 모든 코드의 최종 지원율이 아니라, 당시 동일한 분모와 증거 규칙으로 만든 상태표다. 후속 수정으로 성공한 사례를 이 표에 임의로 더하지 않는다.
 

@@ -36,7 +36,7 @@ NPU를 쓰려면 계산 방법과 데이터가 장치에 전달되어야 한다.
 3. 계산을 요청한다.
 4. 완료된 결과를 받아 다음 일에 사용한다.
 
-여기서 **호스트(host)는** NPU를 제어하는 CPU 쪽 시스템, **장치(device)는** RNGD를 뜻한다. CPU 메모리의 배열과 NPU 메모리의 배열은 위치가 다르므로 값을 옮기는 작업도 필요하다. 이 전송을 전용 엔진에 맡기는 방식이 **DMA**다. [02장](02-memory-dma.md)에서 실제 이동 경로와 버퍼를 다시 써도 되는 시점을 다룬다.
+여기서 **호스트(host)는** NPU를 제어하는 CPU 쪽 시스템, 장치(device)는 RNGD를 뜻한다. CPU 메모리의 배열과 NPU 메모리의 배열은 위치가 다르므로 값을 옮기는 작업도 필요하다. 이 전송을 전용 엔진에 맡기는 방식이 DMA다. [02장](02-memory-dma.md)에서 실제 이동 경로와 버퍼를 다시 써도 되는 시점을 다룬다.
 
 ## 계산을 준비하는 일과 실제 값을 넣어 실행하는 일
 
@@ -78,28 +78,20 @@ FuryNo5 export 경로를 예로 들면 다음과 같다. 화살표는 역할의 
 
 공개 `furiosa-opt`에는 Rust로 장치 계산과 메모리 배치를 더 구체적으로 쓰는 경로가 있다. 여기서 다루는 **vISA는 컴파일 중간 표현**이다. vISA 텍스트를 그대로 장치에 보내 실행하는 것은 아니다. 이 경로의 컴파일과 적재는 08장에서 다룬다.
 
-다음 그림은 이 세 경로를 비교한다. TCL·SDK 경로와 opt 경로가 같은 바이너리를 서로 읽는다는 뜻은 아니다. 각 경로의 산출물과 로더가 맞아야 한다.
+그림의 각 행을 왼쪽부터 읽어 보자. 왼쪽 도구가 가운데 산출물을 만들고, 오른쪽 실행기가 그것을 읽는다. FuryNo5에는 TCL을 만드는 경로 외에 SDK compiler를 직접 호출하는 경로도 있어 별도 행으로 나누었다.
 
-```mermaid
-flowchart TB
-  M["모델 또는 커널 작성"] --> A["공식 모델 빌드"]
-  M --> B["PyTorch · FuryNo5 · TCL"]
-  M --> C["Rust device 함수 · vISA 표현"]
-  A --> AB["FXB · 컴파일된 EDF"]
-  B --> BC["TCC 계열 컴파일"]
-  BC --> BE["컴파일된 EDF"]
-  B --> BP["FuryNo5 실행계획 구성"]
-  C --> CC["furiosa-opt 컴파일"]
-  CC --> CE["컴파일된 실행물 · EDF 계층"]
-  CE --> CI["Device Function Image"]
-  AB --> L["Furiosa-LLM 적재 · 실행"]
-  BE --> F["SDK 적재 · Runnable 실행 · fxbX"]
-  BP --> F
-  CI --> O["furiosa-opt-rt 적재 · 실행"]
-  L --> N["각 경로의 드라이버 · 펌웨어를 거쳐 RNGD"]
-  F --> N
-  O --> N
-```
+<figure class="diagram">
+<img src="assets/diagrams/execution-routes.svg" alt="공식 FXB, FuryNo5 TCL export와 fxbX, SDK 직접 컴파일, 공개 opt의 산출물과 실행기를 비교한 네 경로" loading="lazy">
+<figcaption>각 행은 하나의 경로다. 왼쪽 도구가 가운데 산출물을 만들고, 오른쪽 실행기가 읽는다. 세부 호출 순서와 장치 제출 과정은 아래 본문과 연결 장에서 다룬다. <a href="assets/diagrams/execution-routes.svg" target="_blank" rel="noopener">그림 크게 보기</a></figcaption>
+</figure>
+
+공식 경로에서는 `fxb build`로 만든 FXB와 모델의 가중치·설정·tokenizer를 Furiosa-LLM에 제공한다. FXB에 가중치가 포함되는 것은 아니다. [공식 FXB의 구성](https://developer.furiosa.ai/v2026.4.0/en/furiosa_llm/fxb.html)
+
+FuryNo5의 TCL export에서는 TCC가 만든 EDF와 ‘어느 결과를 다음 입력으로 쓸지’ 적은 실행계획을 패키지로 묶는다. **이 계획을 읽는 쪽이 fxbX이고, fxbX가 SDK를 호출한다.** SDK가 먼저 모델의 연결을 추측해 fxbX에 넘기는 순서가 아니다. 조건이 맞으면 여러 호출을 SDK sequence로 묶으며, 실제 가중치와 요청 입력도 연결해야 한다. [계획 생성](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/execution_plan.py#L1243-L1297) · [fxbX의 적재 코드](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py#L392-L439)
+
+직접 컴파일 경로는 `ft.compiler.compile`의 결과를 SDK 형식으로 저장·복원한다. 이 `model.runnable`을 TCC가 만든 `.edf`와 같은 저장물로 취급하면 읽는 함수를 잘못 고르게 된다. [직접 컴파일과 복원](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/direct_runtime.py)
+
+opt 경로에서는 compiler가 장치 코드와 메모리 연결 정보를 Image에 담고, host 실행 프로그램의 registry에 연결한다. 런타임은 그 Image를 읽어 함수를 장치에 적재한다. 그림은 드라이버·펌웨어 내부 호출을 펼친 호출 그래프가 아니라, **산출물을 만드는 쪽과 읽는 쪽의 관계**다. 같은 RNGD를 사용해도 서로 다른 행의 파일을 바꿔 넣을 수 있다는 뜻은 아니다. [Image의 구성](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-abi/src/image.rs) · [Image를 읽는 로더](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-rt/src/registry/load/mod.rs)
 
 <!-- interactive:route -->
 

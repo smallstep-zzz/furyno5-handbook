@@ -29,7 +29,7 @@ function lab(type){
  if(type==='bucket')return start+`<h3>버킷을 바꾸면 얼마나 남을까?</h3><div class="lab-controls"><label>실제 입력 길이 <output data-value="tokens">120</output><input aria-label="실제 입력 토큰 수" data-key="tokens" type="range" min="1" max="2048" step="1" value="120"></label><label>준비한 버킷<select aria-label="버킷 집합 선택" data-key="preset"><option value="fine">촘촘한 집합 · 128, 256, 512, 1024, 2048</option><option value="coarse">성긴 집합 · 512, 2048</option><option value="single">큰 버킷 하나 · 2048</option></select></label></div><div class="stat-row"><div class="stat"><small>선택한 버킷</small><b data-stat="bucket">128</b></div><div class="stat"><small>패딩 토큰</small><b data-stat="padding">8</b></div><div class="stat"><small>유효 길이 비율</small><b data-stat="use">93.8%</b></div></div><div class="bucket-bar" role="img" aria-label="유효 토큰과 패딩 토큰의 비율"><span data-bar="used" style="width:93.75%"></span></div><div class="bar-legend"><span>초록: 실제 입력</span><span>회색: 패딩</span></div><p class="explain">길이 한 축만 비교한 개념 모델입니다. 실제 attention 버킷은 배치·문맥·새 입력 길이를 함께 다루며, 패딩량만으로 실행시간을 예측할 수 없습니다. 가장 작은 호환 버킷을 선택하는 교육용 규칙입니다.</p></section>`;
  if(type==='dma')return start+`<h3>복사와 계산을 겹쳐 보기</h3><div class="lab-controls"><label>타일 하나의 복사 시간 <output data-value="copy">3 ms</output><input aria-label="타일 복사 시간" data-key="copy" type="range" min="1" max="10" value="3"></label><label>타일 하나의 계산 시간 <output data-value="compute">5 ms</output><input aria-label="타일 계산 시간" data-key="compute" type="range" min="1" max="10" value="5"></label><label>타일 수 <output data-value="tiles">4</output><input aria-label="타일 수" data-key="tiles" type="range" min="2" max="8" value="4"></label></div><div class="stat-row"><div class="stat"><small>완전히 직렬</small><b data-stat="serial">32 ms</b></div><div class="stat"><small>이상적인 겹침</small><b data-stat="overlap">23 ms</b></div><div class="stat"><small>계산상 단축</small><b data-stat="saving">28.1%</b></div></div><div class="timeline" data-timeline></div><p class="explain">독립적인 복사 엔진과 계산 엔진, 별도 버퍼, 타일 간 계산 독립성을 가정합니다. 시작·마무리 비용은 포함하지만 제출·동기화·결과 회수·자원 경합은 생략한 설명용 모델입니다. RNGD의 측정값이 아닙니다.</p></section>`;
  if(type==='optimization')return start+`<h3>어느 구간부터 줄일까?</h3><div class="lab-controls"><label>전체 시간 중 커널 계산의 비중 <output data-value="fraction">30%</output><input aria-label="커널 계산 비중" data-key="fraction" type="range" min="5" max="95" step="5" value="30"></label><label>커널만 빨라지는 배수 <output data-value="factor">2×</output><input aria-label="커널 개선 배수" data-key="factor" type="range" min="1" max="10" value="2"></label></div><div class="stat-row"><div class="stat"><small>기존 전체 시간</small><b>100</b></div><div class="stat"><small>개선 후 전체 시간</small><b data-stat="after">85.0</b></div><div class="stat"><small>전체 속도 향상</small><b data-stat="speedup">1.18×</b></div></div><p class="explain">직렬 구간에 대한 Amdahl의 법칙: 개선 후 시간 = (1 − 계산 비중) + 계산 비중 / 개선 배수. 단위 없는 상대시간이며, CPU 대기·복사·상태 갱신이 그대로일 때의 계산입니다. 겹치는 실행에는 구간 합산 대신 실제 임계경로를 측정하세요.</p></section>`;
- if(type==='route')return start+`<h3>어느 실행 경로를 보고 있나요?</h3><div class="tabs" role="tablist" aria-label="실행 경로 선택"><button type="button" role="tab" aria-selected="true" data-route="prepared">FuryNo5 prepared</button><button type="button" role="tab" aria-selected="false" data-route="export">FuryNo5 export</button><button type="button" role="tab" aria-selected="false" data-route="llm">공식 Furiosa-LLM</button><button type="button" role="tab" aria-selected="false" data-route="opt">furiosa-opt</button></div><ol class="route-steps" data-route-steps></ol><p class="explain" data-route-note>같은 NPU를 사용해도 모델 실행계획을 만들고 요청을 스케줄링하는 주체가 다릅니다.</p></section>`;
+ if(type==='route')return start+`<h3>어느 실행 경로를 보고 있나요?</h3><div class="tabs" role="tablist" aria-label="실행 경로 선택"><button type="button" role="tab" aria-selected="true" data-route="prepared">FuryNo5 prepared</button><button type="button" role="tab" aria-selected="false" data-route="export">FuryNo5 export</button><button type="button" role="tab" aria-selected="false" data-route="llm">공식 Furiosa-LLM</button><button type="button" role="tab" aria-selected="false" data-route="direct">FuryNo5 direct</button><button type="button" role="tab" aria-selected="false" data-route="opt">furiosa-opt</button></div><ol class="route-steps" data-route-steps></ol><p class="explain" data-route-note>같은 NPU를 사용해도 모델 실행계획을 만들고 요청을 스케줄링하는 주체가 다릅니다.</p></section>`;
  return `<p class="callout">이 개념의 조절 실험은 <a href="06-buckets-shapes.html">버킷 설계</a>와 <a href="07-optimization.html">최적화</a> 장에서 볼 수 있습니다.</p>`;
 }
 
@@ -58,7 +58,7 @@ function page(c,index,raw){
     if(!fs.existsSync(svg)||process.argv.includes('--render')){
      execFileSync('python3',[path.join(root,'tools/render_diagrams.py'),mmd,svg],{stdio:'pipe'});
     }
-    return `<figure class="diagram"><img src="${prefix}${file}.svg?v=${assetVersion(file+'.svg')}" alt="${esc(c.title)} · 도식 ${diagramNo}" loading="lazy"><figcaption>도식 ${diagramNo} · ${esc(c.title)} — 설명을 위해 단순화한 관계도. 실제 호출 조건과 근거는 본문을 함께 읽으세요.</figcaption><details><summary>그림의 구조 보기</summary><pre>${esc(text)}</pre></details></figure>`;
+    return `<figure class="diagram"><img src="${prefix}${file}.svg?v=${assetVersion(file+'.svg')}" alt="${esc(c.title)} · 도식 ${diagramNo}" loading="lazy"><figcaption>도식 ${diagramNo} · ${esc(c.title)}</figcaption><details><summary>그림의 구조 보기</summary><pre>${esc(text)}</pre></details></figure>`;
    }
    codes++;
    return `<div class="codebox"><div class="codebar"><span>${esc(lang||'text')}</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-${esc(lang||'text')}">${esc(text)}\n</code></pre></div>\n`;
@@ -67,7 +67,12 @@ function page(c,index,raw){
  };
  const parser=new Marked({gfm:true,breaks:false,renderer});
  let body=parser.parse(raw);
- body=body.replace(/<a href="(https:\/\/github\.com\/smallstep-zzz\/(?:FuryNo5|Furiosa-Hug-Anything|FuryBoost)\/[^"#]*)(#[^"]*)?">([\s\S]*?)<\/a>/g,(m,url,hash,label)=>`<a href="${url}${hash||''}">${label}</a><span class="source-private" title="이 소스 저장소는 조회일 기준 비공개입니다. 접근 권한이 필요합니다.">권한 필요</span>`);
+ const privateRepos=new Set();
+ body=body.replace(/<a href="(https:\/\/github\.com\/smallstep-zzz\/(FuryNo5|Furiosa-Hug-Anything|FuryBoost)\/[^"#]*)(#[^"]*)?">([\s\S]*?)<\/a>/g,(m,url,repo,hash,label)=>{
+  if(privateRepos.has(repo))return m;
+  privateRepos.add(repo);
+  return `<a href="${url}${hash||''}">${label}</a><span class="source-private" title="이 저장소의 소스 링크는 접근 권한이 필요합니다. 같은 장에서는 저장소마다 처음 한 번 표시합니다.">권한 필요</span>`;
+ });
  const chapterText=plain(body);
  const readTime=Math.max(4,Math.round(chapterText.length/800));
  const toc=headings.map(h=>`<a class="${h.depth===3?'minor':''}" href="#${esc(h.id)}">${esc(h.title)}</a>`).join('');
@@ -94,7 +99,7 @@ for(let i=0;i<chapters.length;i++){
  page(c,i,fs.readFileSync(f,'utf8'));
 }
 fs.writeFileSync(path.join(root,'search-index.json'),JSON.stringify(search));outputFiles.push('search-index.json');
-const sourceData=[...allSources.entries()].map(([url,ids])=>({url,chapters:[...ids],source_baseline_on:'2026-11-19',catalog_updated_on:'2026-11-20',access:/github.com\/smallstep-zzz\/(FuryNo5|Furiosa-Hug-Anything|FuryBoost)\//.test(url)?'repository permission required':'public'}));
+const sourceData=[...allSources.entries()].map(([url,ids])=>({url,chapters:[...ids],source_baseline_on:'2026-11-19',catalog_updated_on:'2026-11-21',access:/github.com\/smallstep-zzz\/(FuryNo5|Furiosa-Hug-Anything|FuryBoost)\//.test(url)?'repository permission required':'public'}));
 fs.writeFileSync(path.join(root,'data/source-index.json'),JSON.stringify(sourceData,null,2)+'\n');
 const aliases={'01-map':'../index.html','02-stack-hardware':'01-hardware.html','03-aten-tcl':'09-torch-aten.html','04-tcl-hands-on':'04-tcl-edf.html','05-eisa-visa':'08-eisa-visa.html','06-execution-paths':'05-graphs-fallback.html','07-llm-vllm':'14-serving-vllm.html','08-smi-performance':'17-debugging.html'};
 for(const [name,target]of Object.entries(aliases)){

@@ -1,18 +1,5 @@
 [
   {
-    "url": "https://developer.furiosa.ai/v2026.4.0/en/overview/software_stack.html",
-    "chapters": [
-      "00-reading-map",
-      "03-driver-runtime",
-      "glossary",
-      "sources",
-      "review"
-    ],
-    "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
-    "access": "public"
-  },
-  {
     "url": "https://developer.furiosa.ai/v2026.4.0/en/furiosa_llm/fxb.html",
     "chapters": [
       "00-reading-map",
@@ -26,7 +13,76 @@
       "review"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
+    "access": "public"
+  },
+  {
+    "url": "https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/execution_plan.py#L1243-L1297",
+    "chapters": [
+      "00-reading-map",
+      "sources"
+    ],
+    "source_baseline_on": "2026-11-19",
+    "catalog_updated_on": "2026-11-21",
+    "access": "repository permission required"
+  },
+  {
+    "url": "https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py#L392-L439",
+    "chapters": [
+      "00-reading-map",
+      "sources"
+    ],
+    "source_baseline_on": "2026-11-19",
+    "catalog_updated_on": "2026-11-21",
+    "access": "public"
+  },
+  {
+    "url": "https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/direct_runtime.py",
+    "chapters": [
+      "00-reading-map",
+      "03-driver-runtime",
+      "04-tcl-edf",
+      "05-graphs-fallback",
+      "sources"
+    ],
+    "source_baseline_on": "2026-11-19",
+    "catalog_updated_on": "2026-11-21",
+    "access": "repository permission required"
+  },
+  {
+    "url": "https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-abi/src/image.rs",
+    "chapters": [
+      "00-reading-map",
+      "04-tcl-edf",
+      "08-eisa-visa",
+      "sources"
+    ],
+    "source_baseline_on": "2026-11-19",
+    "catalog_updated_on": "2026-11-21",
+    "access": "public"
+  },
+  {
+    "url": "https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-rt/src/registry/load/mod.rs",
+    "chapters": [
+      "00-reading-map",
+      "08-eisa-visa",
+      "sources"
+    ],
+    "source_baseline_on": "2026-11-19",
+    "catalog_updated_on": "2026-11-21",
+    "access": "public"
+  },
+  {
+    "url": "https://developer.furiosa.ai/v2026.4.0/en/overview/software_stack.html",
+    "chapters": [
+      "00-reading-map",
+      "03-driver-runtime",
+      "glossary",
+      "sources",
+      "review"
+    ],
+    "source_baseline_on": "2026-11-19",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -36,7 +92,7 @@
       "sources"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -46,7 +102,7 @@
       "sources"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -56,7 +112,7 @@
       "glossary"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -65,7 +121,7 @@
       "01-hardware"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -76,7 +132,7 @@
       "glossary"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -86,7 +142,7 @@
       "sources"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -98,7 +154,7 @@
       "sources"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -111,7 +167,7 @@
       "glossary"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -120,7 +176,7 @@
       "01-hardware"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -133,7 +189,7 @@
       "sources"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -142,7 +198,7 @@
       "01-hardware"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -151,7 +207,7 @@
       "01-hardware"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -161,7 +217,7 @@
       "sources"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -170,7 +226,7 @@
       "01-hardware"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -179,7 +235,7 @@
       "01-hardware"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -188,7 +244,7 @@
       "01-hardware"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -198,7 +254,7 @@
       "sources"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -208,7 +264,7 @@
       "glossary"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -217,7 +273,7 @@
       "02-memory-dma"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -226,7 +282,7 @@
       "02-memory-dma"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -235,7 +291,7 @@
       "02-memory-dma"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -245,7 +301,7 @@
       "sources"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -255,7 +311,7 @@
       "glossary"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -264,7 +320,7 @@
       "02-memory-dma"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -273,7 +329,7 @@
       "02-memory-dma"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -282,7 +338,7 @@
       "02-memory-dma"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -291,7 +347,7 @@
       "02-memory-dma"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -300,7 +356,7 @@
       "02-memory-dma"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -310,7 +366,7 @@
       "03-driver-runtime"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -320,7 +376,7 @@
       "03-driver-runtime"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -330,7 +386,7 @@
       "03-driver-runtime"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -339,7 +395,7 @@
       "02-memory-dma"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -349,7 +405,7 @@
       "07-optimization"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -362,7 +418,7 @@
       "sources"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -375,7 +431,7 @@
       "sources"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -384,7 +440,7 @@
       "03-driver-runtime"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -394,7 +450,7 @@
       "08-eisa-visa"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -405,7 +461,7 @@
       "08-eisa-visa"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -414,7 +470,7 @@
       "03-driver-runtime"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -423,7 +479,7 @@
       "03-driver-runtime"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -433,7 +489,7 @@
       "08-eisa-visa"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -445,19 +501,8 @@
       "17-debugging"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
-  },
-  {
-    "url": "https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/direct_runtime.py",
-    "chapters": [
-      "03-driver-runtime",
-      "04-tcl-edf",
-      "05-graphs-fallback"
-    ],
-    "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
-    "access": "repository permission required"
   },
   {
     "url": "https://developer.furiosa.ai/v2026.4.0/en/device_management/system_management_interface/furiosa_smi_lib.html",
@@ -465,7 +510,7 @@
       "03-driver-runtime"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -474,7 +519,7 @@
       "03-driver-runtime"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -485,7 +530,7 @@
       "sources"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -494,7 +539,7 @@
       "03-driver-runtime"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -503,7 +548,7 @@
       "03-driver-runtime"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -512,7 +557,7 @@
       "04-tcl-edf"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -522,7 +567,7 @@
       "11-furyno5-compiler"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -532,7 +577,7 @@
       "11-furyno5-compiler"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -544,7 +589,7 @@
       "17-debugging"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -553,7 +598,7 @@
       "04-tcl-edf"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -562,7 +607,7 @@
       "04-tcl-edf"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -572,7 +617,7 @@
       "12-fxbx"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -582,17 +627,7 @@
       "12-fxbx"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
-    "access": "public"
-  },
-  {
-    "url": "https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-abi/src/image.rs",
-    "chapters": [
-      "04-tcl-edf",
-      "08-eisa-visa"
-    ],
-    "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -601,7 +636,7 @@
       "04-tcl-edf"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -612,7 +647,7 @@
       "sources"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -622,7 +657,7 @@
       "19-model-optimization"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -635,7 +670,7 @@
       "15-multi-npu"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -645,7 +680,7 @@
       "10-furyno5-architecture"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -657,7 +692,7 @@
       "sources"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -666,7 +701,7 @@
       "05-graphs-fallback"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -677,7 +712,7 @@
       "13-porting-fha"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -692,7 +727,7 @@
       "sources"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -702,7 +737,7 @@
       "13-porting-fha"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -711,7 +746,7 @@
       "05-graphs-fallback"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -720,7 +755,7 @@
       "05-graphs-fallback"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -729,7 +764,7 @@
       "05-graphs-fallback"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -738,7 +773,7 @@
       "05-graphs-fallback"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -747,7 +782,7 @@
       "05-graphs-fallback"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -759,7 +794,7 @@
       "17-debugging"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -768,7 +803,7 @@
       "06-buckets-shapes"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -777,7 +812,7 @@
       "06-buckets-shapes"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -786,7 +821,7 @@
       "06-buckets-shapes"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -795,7 +830,7 @@
       "06-buckets-shapes"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -804,7 +839,7 @@
       "06-buckets-shapes"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -813,7 +848,7 @@
       "06-buckets-shapes"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -822,7 +857,7 @@
       "07-optimization"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -832,7 +867,7 @@
       "glossary"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -842,7 +877,7 @@
       "19-model-optimization"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -852,7 +887,7 @@
       "19-model-optimization"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -863,7 +898,7 @@
       "19-model-optimization"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -873,7 +908,7 @@
       "11-furyno5-compiler"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -882,7 +917,7 @@
       "07-optimization"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -891,7 +926,7 @@
       "07-optimization"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -900,7 +935,7 @@
       "07-optimization"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -909,7 +944,7 @@
       "07-optimization"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -919,7 +954,7 @@
       "17-debugging"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -928,7 +963,7 @@
       "07-optimization"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -937,7 +972,7 @@
       "07-optimization"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -947,7 +982,7 @@
       "11-furyno5-compiler"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -956,7 +991,7 @@
       "07-optimization"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -965,7 +1000,7 @@
       "07-optimization"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -975,7 +1010,7 @@
       "17-debugging"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -984,7 +1019,7 @@
       "07-optimization"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -993,7 +1028,7 @@
       "07-optimization"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -1003,7 +1038,7 @@
       "glossary"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -1013,7 +1048,7 @@
       "sources"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -1022,7 +1057,7 @@
       "08-eisa-visa"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -1031,7 +1066,7 @@
       "08-eisa-visa"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -1040,7 +1075,7 @@
       "08-eisa-visa"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -1049,16 +1084,16 @@
       "08-eisa-visa"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
-    "url": "https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-abi/README.md",
+    "url": "https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-rt/src/registry/mod.rs",
     "chapters": [
       "08-eisa-visa"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -1067,7 +1102,7 @@
       "08-eisa-visa"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -1076,7 +1111,7 @@
       "08-eisa-visa"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -1085,7 +1120,7 @@
       "08-eisa-visa"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -1094,7 +1129,7 @@
       "08-eisa-visa"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -1103,7 +1138,7 @@
       "08-eisa-visa"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -1112,7 +1147,7 @@
       "08-eisa-visa"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -1121,7 +1156,7 @@
       "08-eisa-visa"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -1130,7 +1165,7 @@
       "08-eisa-visa"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -1139,7 +1174,7 @@
       "08-eisa-visa"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -1148,7 +1183,7 @@
       "08-eisa-visa"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -1157,7 +1192,7 @@
       "08-eisa-visa"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -1166,7 +1201,7 @@
       "08-eisa-visa"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -1175,7 +1210,7 @@
       "08-eisa-visa"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -1184,7 +1219,7 @@
       "08-eisa-visa"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -1193,7 +1228,7 @@
       "08-eisa-visa"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -1202,7 +1237,7 @@
       "08-eisa-visa"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -1212,7 +1247,7 @@
       "sources"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -1222,7 +1257,7 @@
       "sources"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -1231,7 +1266,7 @@
       "08-eisa-visa"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -1240,7 +1275,7 @@
       "08-eisa-visa"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -1249,7 +1284,7 @@
       "08-eisa-visa"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -1258,7 +1293,7 @@
       "08-eisa-visa"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -1267,7 +1302,7 @@
       "08-eisa-visa"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -1276,7 +1311,7 @@
       "08-eisa-visa"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -1285,7 +1320,7 @@
       "08-eisa-visa"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -1295,7 +1330,7 @@
       "sources"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -1304,7 +1339,7 @@
       "08-eisa-visa"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -1313,16 +1348,7 @@
       "08-eisa-visa"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
-    "access": "public"
-  },
-  {
-    "url": "https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-rt/src/registry/load/mod.rs",
-    "chapters": [
-      "08-eisa-visa"
-    ],
-    "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -1331,7 +1357,7 @@
       "08-eisa-visa"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -1340,7 +1366,7 @@
       "08-eisa-visa"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -1349,7 +1375,7 @@
       "08-eisa-visa"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -1358,7 +1384,16 @@
       "08-eisa-visa"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
+    "access": "public"
+  },
+  {
+    "url": "https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-abi/README.md",
+    "chapters": [
+      "08-eisa-visa"
+    ],
+    "source_baseline_on": "2026-11-19",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -1368,7 +1403,7 @@
       "14-serving-vllm"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -1377,7 +1412,7 @@
       "08-eisa-visa"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -1386,7 +1421,7 @@
       "08-eisa-visa"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -1397,7 +1432,7 @@
       "sources"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -1406,7 +1441,7 @@
       "09-torch-aten"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -1415,7 +1450,7 @@
       "09-torch-aten"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -1424,7 +1459,7 @@
       "09-torch-aten"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -1434,7 +1469,7 @@
       "10-furyno5-architecture"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -1443,7 +1478,7 @@
       "09-torch-aten"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -1452,7 +1487,7 @@
       "09-torch-aten"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -1462,7 +1497,7 @@
       "18-npu-ecosystems"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -1471,7 +1506,7 @@
       "09-torch-aten"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -1480,7 +1515,7 @@
       "09-torch-aten"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -1489,7 +1524,7 @@
       "09-torch-aten"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -1499,7 +1534,7 @@
       "13-porting-fha"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -1509,7 +1544,7 @@
       "13-porting-fha"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -1522,7 +1557,7 @@
       "13-porting-fha"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -1531,7 +1566,7 @@
       "09-torch-aten"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -1540,7 +1575,7 @@
       "09-torch-aten"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -1550,7 +1585,7 @@
       "10-furyno5-architecture"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -1559,7 +1594,7 @@
       "09-torch-aten"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -1569,7 +1604,7 @@
       "10-furyno5-architecture"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -1578,7 +1613,7 @@
       "09-torch-aten"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -1587,7 +1622,7 @@
       "09-torch-aten"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -1596,7 +1631,7 @@
       "09-torch-aten"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -1605,7 +1640,7 @@
       "09-torch-aten"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -1614,7 +1649,7 @@
       "09-torch-aten"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -1623,7 +1658,7 @@
       "09-torch-aten"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -1632,7 +1667,7 @@
       "09-torch-aten"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -1642,7 +1677,7 @@
       "10-furyno5-architecture"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -1652,7 +1687,7 @@
       "glossary"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -1662,7 +1697,7 @@
       "11-furyno5-compiler"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -1671,7 +1706,7 @@
       "10-furyno5-architecture"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -1680,7 +1715,7 @@
       "10-furyno5-architecture"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -1689,7 +1724,7 @@
       "10-furyno5-architecture"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -1698,7 +1733,7 @@
       "10-furyno5-architecture"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -1707,7 +1742,7 @@
       "10-furyno5-architecture"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -1716,7 +1751,7 @@
       "10-furyno5-architecture"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -1725,7 +1760,7 @@
       "10-furyno5-architecture"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -1734,7 +1769,7 @@
       "10-furyno5-architecture"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -1743,7 +1778,7 @@
       "10-furyno5-architecture"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -1752,7 +1787,7 @@
       "10-furyno5-architecture"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -1761,7 +1796,7 @@
       "10-furyno5-architecture"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -1770,7 +1805,7 @@
       "10-furyno5-architecture"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -1779,7 +1814,7 @@
       "10-furyno5-architecture"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -1790,7 +1825,7 @@
       "19-model-optimization"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -1800,7 +1835,7 @@
       "11-furyno5-compiler"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -1809,7 +1844,7 @@
       "10-furyno5-architecture"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -1818,7 +1853,7 @@
       "10-furyno5-architecture"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -1828,7 +1863,7 @@
       "11-furyno5-compiler"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -1838,7 +1873,7 @@
       "11-furyno5-compiler"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -1847,7 +1882,7 @@
       "10-furyno5-architecture"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -1857,7 +1892,7 @@
       "11-furyno5-compiler"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -1867,7 +1902,7 @@
       "11-furyno5-compiler"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -1877,7 +1912,7 @@
       "17-debugging"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -1886,7 +1921,7 @@
       "10-furyno5-architecture"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -1895,7 +1930,7 @@
       "10-furyno5-architecture"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -1904,7 +1939,7 @@
       "10-furyno5-architecture"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -1913,7 +1948,7 @@
       "11-furyno5-compiler"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -1922,7 +1957,7 @@
       "11-furyno5-compiler"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -1932,7 +1967,7 @@
       "17-debugging"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -1941,7 +1976,7 @@
       "11-furyno5-compiler"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -1950,7 +1985,7 @@
       "11-furyno5-compiler"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -1959,7 +1994,7 @@
       "11-furyno5-compiler"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -1968,7 +2003,7 @@
       "11-furyno5-compiler"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -1977,7 +2012,7 @@
       "11-furyno5-compiler"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -1986,7 +2021,7 @@
       "11-furyno5-compiler"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -1995,7 +2030,7 @@
       "11-furyno5-compiler"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -2004,7 +2039,7 @@
       "11-furyno5-compiler"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -2013,7 +2048,7 @@
       "11-furyno5-compiler"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -2022,7 +2057,7 @@
       "11-furyno5-compiler"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -2031,7 +2066,7 @@
       "11-furyno5-compiler"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -2040,7 +2075,7 @@
       "11-furyno5-compiler"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -2049,7 +2084,7 @@
       "11-furyno5-compiler"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -2058,7 +2093,7 @@
       "11-furyno5-compiler"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -2067,7 +2102,7 @@
       "11-furyno5-compiler"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -2076,7 +2111,7 @@
       "11-furyno5-compiler"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -2085,7 +2120,7 @@
       "11-furyno5-compiler"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -2094,7 +2129,7 @@
       "11-furyno5-compiler"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -2103,7 +2138,7 @@
       "11-furyno5-compiler"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -2112,7 +2147,7 @@
       "11-furyno5-compiler"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -2121,7 +2156,7 @@
       "11-furyno5-compiler"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -2130,7 +2165,7 @@
       "11-furyno5-compiler"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -2139,7 +2174,7 @@
       "11-furyno5-compiler"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -2148,7 +2183,7 @@
       "11-furyno5-compiler"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -2158,7 +2193,7 @@
       "19-model-optimization"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -2169,7 +2204,7 @@
       "glossary"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -2179,7 +2214,7 @@
       "13-porting-fha"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -2188,7 +2223,7 @@
       "12-fxbx"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -2197,7 +2232,7 @@
       "12-fxbx"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -2206,7 +2241,7 @@
       "12-fxbx"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -2215,7 +2250,7 @@
       "12-fxbx"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -2224,7 +2259,7 @@
       "12-fxbx"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -2233,7 +2268,7 @@
       "12-fxbx"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -2242,7 +2277,7 @@
       "12-fxbx"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -2251,7 +2286,7 @@
       "12-fxbx"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -2260,7 +2295,7 @@
       "12-fxbx"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -2269,7 +2304,7 @@
       "12-fxbx"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -2278,7 +2313,7 @@
       "12-fxbx"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -2287,7 +2322,7 @@
       "12-fxbx"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -2296,7 +2331,7 @@
       "12-fxbx"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -2305,7 +2340,7 @@
       "12-fxbx"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -2314,7 +2349,7 @@
       "12-fxbx"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -2323,7 +2358,7 @@
       "12-fxbx"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -2332,7 +2367,7 @@
       "12-fxbx"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -2341,7 +2376,7 @@
       "12-fxbx"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -2350,7 +2385,7 @@
       "12-fxbx"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -2359,7 +2394,7 @@
       "12-fxbx"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -2369,7 +2404,7 @@
       "13-porting-fha"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -2378,7 +2413,7 @@
       "13-porting-fha"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -2387,7 +2422,7 @@
       "13-porting-fha"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -2397,7 +2432,7 @@
       "glossary"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -2406,7 +2441,7 @@
       "13-porting-fha"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -2415,7 +2450,7 @@
       "13-porting-fha"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -2424,7 +2459,7 @@
       "13-porting-fha"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -2433,7 +2468,7 @@
       "13-porting-fha"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -2442,7 +2477,7 @@
       "13-porting-fha"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -2451,7 +2486,7 @@
       "13-porting-fha"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -2460,7 +2495,7 @@
       "13-porting-fha"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -2469,7 +2504,7 @@
       "13-porting-fha"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -2478,7 +2513,7 @@
       "13-porting-fha"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -2488,7 +2523,7 @@
       "15-multi-npu"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -2497,7 +2532,7 @@
       "13-porting-fha"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -2506,7 +2541,7 @@
       "13-porting-fha"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -2515,7 +2550,7 @@
       "13-porting-fha"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -2524,7 +2559,7 @@
       "13-porting-fha"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -2533,7 +2568,7 @@
       "13-porting-fha"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -2542,7 +2577,7 @@
       "13-porting-fha"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -2551,7 +2586,7 @@
       "13-porting-fha"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -2560,7 +2595,7 @@
       "13-porting-fha"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -2569,7 +2604,7 @@
       "13-porting-fha"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -2578,7 +2613,7 @@
       "13-porting-fha"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -2587,7 +2622,7 @@
       "13-porting-fha"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -2596,7 +2631,7 @@
       "13-porting-fha"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -2605,7 +2640,7 @@
       "13-porting-fha"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -2614,7 +2649,7 @@
       "13-porting-fha"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -2623,7 +2658,7 @@
       "13-porting-fha"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -2632,7 +2667,7 @@
       "13-porting-fha"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -2641,7 +2676,7 @@
       "13-porting-fha"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -2650,7 +2685,7 @@
       "13-porting-fha"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -2659,7 +2694,7 @@
       "13-porting-fha"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -2668,7 +2703,7 @@
       "13-porting-fha"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -2677,7 +2712,7 @@
       "13-porting-fha"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -2686,7 +2721,7 @@
       "13-porting-fha"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -2695,7 +2730,7 @@
       "13-porting-fha"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -2704,7 +2739,7 @@
       "13-porting-fha"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -2713,7 +2748,7 @@
       "13-porting-fha"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -2722,7 +2757,7 @@
       "13-porting-fha"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -2731,7 +2766,7 @@
       "13-porting-fha"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -2740,7 +2775,7 @@
       "13-porting-fha"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -2749,7 +2784,7 @@
       "13-porting-fha"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -2758,7 +2793,7 @@
       "13-porting-fha"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -2767,7 +2802,7 @@
       "13-porting-fha"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -2776,7 +2811,7 @@
       "13-porting-fha"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -2785,7 +2820,7 @@
       "13-porting-fha"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -2794,7 +2829,7 @@
       "13-porting-fha"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -2803,7 +2838,7 @@
       "13-porting-fha"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -2812,7 +2847,7 @@
       "13-porting-fha"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -2821,7 +2856,7 @@
       "14-serving-vllm"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -2830,7 +2865,7 @@
       "14-serving-vllm"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -2839,7 +2874,7 @@
       "14-serving-vllm"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -2849,7 +2884,7 @@
       "sources"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -2858,7 +2893,7 @@
       "14-serving-vllm"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -2867,7 +2902,7 @@
       "14-serving-vllm"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -2876,7 +2911,7 @@
       "14-serving-vllm"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -2885,7 +2920,7 @@
       "14-serving-vllm"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -2894,7 +2929,7 @@
       "14-serving-vllm"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -2903,7 +2938,7 @@
       "14-serving-vllm"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -2912,7 +2947,7 @@
       "14-serving-vllm"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -2921,7 +2956,7 @@
       "14-serving-vllm"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -2931,7 +2966,7 @@
       "sources"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -2941,7 +2976,7 @@
       "sources"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -2950,7 +2985,7 @@
       "14-serving-vllm"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -2959,7 +2994,7 @@
       "14-serving-vllm"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -2968,7 +3003,7 @@
       "14-serving-vllm"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -2977,7 +3012,7 @@
       "14-serving-vllm"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -2986,7 +3021,7 @@
       "14-serving-vllm"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -2995,7 +3030,7 @@
       "14-serving-vllm"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3004,7 +3039,7 @@
       "14-serving-vllm"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3013,7 +3048,7 @@
       "14-serving-vllm"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3022,7 +3057,7 @@
       "14-serving-vllm"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3032,7 +3067,7 @@
       "glossary"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3042,7 +3077,7 @@
       "15-multi-npu"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3052,7 +3087,7 @@
       "15-multi-npu"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3061,7 +3096,7 @@
       "14-serving-vllm"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -3070,7 +3105,7 @@
       "15-multi-npu"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3081,7 +3116,7 @@
       "sources"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3090,7 +3125,7 @@
       "15-multi-npu"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3099,7 +3134,7 @@
       "15-multi-npu"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3108,7 +3143,7 @@
       "15-multi-npu"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3117,7 +3152,7 @@
       "16-furyboost"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -3126,7 +3161,7 @@
       "16-furyboost"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -3135,7 +3170,7 @@
       "16-furyboost"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -3144,7 +3179,7 @@
       "16-furyboost"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -3153,7 +3188,7 @@
       "16-furyboost"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -3162,7 +3197,7 @@
       "16-furyboost"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -3171,7 +3206,7 @@
       "16-furyboost"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -3180,7 +3215,7 @@
       "16-furyboost"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -3189,7 +3224,7 @@
       "16-furyboost"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -3199,7 +3234,7 @@
       "sources"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -3208,7 +3243,7 @@
       "16-furyboost"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -3217,7 +3252,7 @@
       "16-furyboost"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -3226,7 +3261,7 @@
       "16-furyboost"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -3235,7 +3270,7 @@
       "16-furyboost"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -3245,7 +3280,7 @@
       "sources"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -3254,7 +3289,7 @@
       "16-furyboost"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -3263,7 +3298,7 @@
       "16-furyboost"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -3272,7 +3307,7 @@
       "16-furyboost"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -3281,7 +3316,7 @@
       "17-debugging"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -3290,7 +3325,7 @@
       "17-debugging"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -3299,7 +3334,7 @@
       "17-debugging"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -3308,7 +3343,7 @@
       "17-debugging"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -3317,7 +3352,7 @@
       "17-debugging"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -3327,7 +3362,7 @@
       "sources"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3336,7 +3371,7 @@
       "18-npu-ecosystems"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3345,7 +3380,7 @@
       "18-npu-ecosystems"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3354,7 +3389,7 @@
       "18-npu-ecosystems"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3363,7 +3398,7 @@
       "18-npu-ecosystems"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3372,7 +3407,7 @@
       "18-npu-ecosystems"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3381,7 +3416,7 @@
       "18-npu-ecosystems"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3390,7 +3425,7 @@
       "18-npu-ecosystems"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3399,7 +3434,7 @@
       "18-npu-ecosystems"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3409,7 +3444,7 @@
       "19-model-optimization"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3418,7 +3453,7 @@
       "18-npu-ecosystems"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3427,7 +3462,7 @@
       "18-npu-ecosystems"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3436,7 +3471,7 @@
       "18-npu-ecosystems"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3445,7 +3480,7 @@
       "18-npu-ecosystems"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3454,7 +3489,7 @@
       "18-npu-ecosystems"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3463,7 +3498,7 @@
       "18-npu-ecosystems"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3472,7 +3507,7 @@
       "18-npu-ecosystems"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3481,7 +3516,7 @@
       "19-model-optimization"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3490,7 +3525,7 @@
       "19-model-optimization"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3499,7 +3534,7 @@
       "19-model-optimization"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3508,7 +3543,7 @@
       "19-model-optimization"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3517,7 +3552,7 @@
       "19-model-optimization"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3526,7 +3561,7 @@
       "19-model-optimization"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3535,7 +3570,7 @@
       "19-model-optimization"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3544,7 +3579,7 @@
       "19-model-optimization"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3553,7 +3588,7 @@
       "19-model-optimization"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3562,7 +3597,7 @@
       "19-model-optimization"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3571,7 +3606,7 @@
       "19-model-optimization"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3580,7 +3615,7 @@
       "19-model-optimization"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3589,7 +3624,7 @@
       "19-model-optimization"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3598,7 +3633,7 @@
       "19-model-optimization"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3607,7 +3642,7 @@
       "19-model-optimization"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3616,7 +3651,7 @@
       "19-model-optimization"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3625,7 +3660,7 @@
       "19-model-optimization"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3634,7 +3669,7 @@
       "19-model-optimization"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3643,7 +3678,7 @@
       "19-model-optimization"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3652,7 +3687,7 @@
       "19-model-optimization"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3661,7 +3696,7 @@
       "19-model-optimization"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3670,7 +3705,7 @@
       "19-model-optimization"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3679,7 +3714,7 @@
       "19-model-optimization"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3688,7 +3723,7 @@
       "19-model-optimization"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3697,7 +3732,7 @@
       "19-model-optimization"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3706,7 +3741,7 @@
       "19-model-optimization"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3715,7 +3750,7 @@
       "19-model-optimization"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3724,7 +3759,7 @@
       "19-model-optimization"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3733,7 +3768,7 @@
       "19-model-optimization"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3742,7 +3777,7 @@
       "19-model-optimization"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3751,7 +3786,7 @@
       "19-model-optimization"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3760,7 +3795,7 @@
       "19-model-optimization"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3769,7 +3804,7 @@
       "19-model-optimization"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3778,7 +3813,7 @@
       "19-model-optimization"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3787,7 +3822,7 @@
       "19-model-optimization"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3796,7 +3831,7 @@
       "19-model-optimization"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3806,7 +3841,7 @@
       "sources"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3816,7 +3851,7 @@
       "sources"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3825,7 +3860,7 @@
       "glossary"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3834,7 +3869,7 @@
       "sources"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3843,7 +3878,7 @@
       "sources"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3852,7 +3887,7 @@
       "sources"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3861,7 +3896,7 @@
       "sources"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -3870,7 +3905,7 @@
       "sources"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3879,7 +3914,7 @@
       "sources"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "repository permission required"
   },
   {
@@ -3888,7 +3923,7 @@
       "sources"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3897,7 +3932,7 @@
       "sources"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   },
   {
@@ -3906,7 +3941,7 @@
       "sources"
     ],
     "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
+    "catalog_updated_on": "2026-11-21",
     "access": "public"
   }
 ]

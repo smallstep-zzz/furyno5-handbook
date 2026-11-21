@@ -1,10 +1,8 @@
 # 다른 NPU는 PyTorch와 모델을 어떻게 지원하는가
 
-> **전체 경로에서의 위치**
->
-> 같은 모델이 다른 업체의 NPU에서는 어떤 도구를 거쳐 실행되는지 비교한다. PyTorch의 연산 전달은 [09장](09-torch-aten.md), FuryNo5의 위치는 [10장](10-furyno5-architecture.md)과 함께 본다.
+[09장](09-torch-aten.md)에서는 PyTorch 연산을 전달하는 방식을, [10장](10-furyno5-architecture.md)에서는 모델을 준비하는 FuryNo5의 역할을 보았다. AMD·Intel의 스택에서도 같은 두 질문을 해 보자. 모델은 어디서 컴파일되고, 드라이버에 도착할 때는 어떤 형태일까?
 
-C에서 같은 함수 이름을 호출해도 링크한 구현이나 함수 포인터에 따라 실행 코드가 달라진다. 컴파일러는 여러 문장을 분석해 하나의 더 효율적인 프로그램을 만들 수도 있다. PyTorch를 NPU에 연결하는 방법도 이 두 관점에서 시작하면 이해하기 쉽다. **NPU(Neural Processing Unit)가 PyTorch를 지원한다는 말에는 여러 구현 방식이 들어 있다.** 텐서의 장치 타입을 추가해 연산을 받을 수도 있고, 모델 그래프를 받아 한 덩어리로 컴파일할 수도 있으며, 특정 모델 구조의 가중치·상태·생성 루프를 연결하는 어댑터를 제공할 수도 있다. FuryNo5의 다음 기능을 설계하려면 이 경계를 나누어 비교하는 편이 유용하다.
+PyTorch를 지원하는 NPU 스택은 여러 방식으로 계산을 받는다. 한 연산씩 받을 수도 있고, 모델 그래프를 받아 컴파일할 수도 있다. 특정 LLM의 구조와 가중치를 읽는 전용 엔진을 제공하기도 한다. 어느 방식을 택했는지 알아야 ‘드라이버만 설치하면 되는가’와 ‘ATen을 구현한 것인가’에 답할 수 있다.
 
 이 장은 2026-11-19에 확인한 공식 문서와 고정 소스를 비교한다. 각 회사가 제공하는 모든 경로를 열거한 것은 아니며, 아래 예제의 SDK(Software Development Kit)와 장치는 서로 다르다. 이 비교는 실행 구조를 다루며 장치 간 성능 순위는 제시하지 않는다. PyTorch의 공통 확장 규약은 [PrivateUse1](https://docs.pytorch.org/tutorials/advanced/privateuseone.html)과 [custom compiler backend](https://docs.pytorch.org/docs/2.15/user_guide/torch_compiler/torch.compiler_custom_backends.html), 각 업체의 구현은 절별 출처를 기준으로 한다.
 
@@ -195,7 +193,7 @@ with torch.no_grad():
 
 AWS(Amazon Web Services) Neuron의 `torch_neuronx.trace` 추론 경로는 torch-xla로 HLO(High Level Operations) 표현을 만들고 `neuronx-cc`로 NEFF(Neuron Executable File Format)를 생성한다. 이 바이너리가 TorchScript `ScriptModule`에 담긴다. 여기서 비교하는 것은 **Neuron 2.31.1 문서의 traced inference 경로**이며, Neuron의 학습·다른 frontend까지 한 방식으로 일반화하지 않는다. [Tracing API](https://awsdocs-neuron.readthedocs-hosted.com/en/v2.31.1/frameworks/torch/torch-neuronx/api-reference-guide/inference/api-torch-neuronx-trace.html)
 
-이 문맥의 **trace**는 예제 입력으로 모델 연산을 추적해 컴파일하는 진입점이며, 실행 시간을 수집하는 profiler trace와 목적이 다르다. **HLO**는 행렬곱·덧셈 같은 연산을 표현하는 중간 단계다. **NEFF**는 Neuron 장치 프로그램을 담는 실행 파일 형식이고, **ScriptModule**은 저장·재적재 가능한 TorchScript 실행 객체다. `.pt`는 이 예에서 NEFF를 품은 상위 저장물이며 C 소스나 일반 CPU 실행 파일로 바뀌었다는 뜻이 아니다.
+이 문맥의 trace는 예제 입력으로 모델 연산을 추적해 컴파일하는 진입점이며, 실행 시간을 수집하는 profiler trace와 목적이 다르다. HLO는 행렬곱·덧셈 같은 연산을 표현하는 중간 단계다. **NEFF**는 Neuron 장치 프로그램을 담는 실행 파일 형식이고, **ScriptModule**은 저장·재적재 가능한 TorchScript 실행 객체다. `.pt`는 이 예에서 NEFF를 품은 상위 저장물이며 C 소스나 일반 CPU 실행 파일로 바뀌었다는 뜻이 아니다.
 
 | 단계 | 입력 | 나온 결과 | 아직 확인하지 못한 것 |
 |---|---|---|---|
@@ -220,7 +218,7 @@ prediction = restored(sample)               # 같은 입력 계약으로 실제 
 
 이 경로는 예제 입력의 shape와 dtype 조건을 고정한다. **Bucket(입력 규격 묶음)은** 서로 다른 입력 크기에 맞춰 준비한 실행 규격이다. 가령 별도 배치 1용 `[1,16]`과 배치 4용 `[4,16]` 실행물을 준비했다면 요청 수에 맞는 것을 고르는 정책이 추가로 필요하다. 위 코드가 그 두 규격을 자동으로 생성한다는 뜻은 아니다. 가변 길이를 다루는 방법으로 bucketing을 설명하며, 추론 시 아무 shape나 받아 동일 실행물을 재사용한다는 의미가 아니다. FuryNo5의 shape 계약과 버킷 문제도 같은 관점에서 읽을 수 있다. [Neuron tracing 제약](https://awsdocs-neuron.readthedocs-hosted.com/en/v2.31.1/frameworks/torch/torch-neuronx/api-reference-guide/inference/api-torch-neuronx-trace.html) · [06장](06-buckets-shapes.md)
 
-**DMA(Direct Memory Access)는** CPU가 원소마다 복사 명령을 반복하기보다 전송 장치에 메모리 이동을 맡기는 방식이다. 전송의 출발지·도착지·크기 등을 나타낸 자료가 **descriptor(전송 설명 자료)다**. **Pseudo instruction(의사 명령)은** 파일에 기록된 더 추상적인 동작 표현으로, 적재기가 실제 장치에서 필요한 명령이나 전송 설명 자료로 구체화할 수 있다.
+DMA(Direct Memory Access)는 CPU가 원소마다 복사 명령을 반복하기보다 전송 장치에 메모리 이동을 맡기는 방식이다. 전송의 출발지·도착지·크기 등을 나타낸 자료가 descriptor(전송 설명 자료)다. **Pseudo instruction(의사 명령)은** 파일에 기록된 더 추상적인 동작 표현으로, 적재기가 실제 장치에서 필요한 명령이나 전송 설명 자료로 구체화할 수 있다.
 
 또 하나 배울 점은 **바이너리 파일과 장치에 바로 복사할 원시 명령열이 항상 같은 것은 아니라는 사실**이다. Neuron Runtime 2.28 문서는 NEFF 컨테이너 안의 명령·텐서 정보 등을 읽고, 일부 pseudo instruction을 적재 시 하드웨어 명령과 DMA descriptor로 변환하는 단계를 명시한다. 이것은 Neuron의 확인된 사례다. 이 사실만으로 Furiosa EDF도 같은 pseudo instruction·patching 포맷이라고 추정하지 않는다. [Neuron Runtime 구조](https://awsdocs-neuron.readthedocs-hosted.com/en/v2.28.0/neuron-runtime/nrt-developer-guide.html) · [Furiosa EDF의 확인 범위](04-tcl-edf.md)
 
@@ -251,7 +249,7 @@ flowchart TB
 
 **Attention**은 현재 위치가 참고할 다른 위치들의 가중치를 계산해 내용을 섞는 연산이다. **Gated MLP(Multilayer Perceptron)는** 여러 선형 층으로 만든 벡터에 별도의 gate 벡터를 원소별로 곱해 통과량을 조절하는 형태다. 이들 역시 작은 산술 연산의 목록과 전체 의미를 함께 이해하는 것이 도움이 된다.
 
-이것을 FuryNo5에 옮기는 연구 가설은 “모든 ATen을 가능한 한 잘게 쪼개기”에만 집중하지 말고, **RMSNorm·Attention·gated MLP 같은 영역의 의미를 유지한 채 합법적인 TCL 또는 커스텀 커널 후보를 선택하자**는 것이다. 실제 효과는 대상 shape와 반올림·dtype·상태 조건에 따라 측정해야 한다. 외부 프로젝트의 최적화가 RNGD에서도 같은 성능을 낸다는 증거는 아니다. [19장 모델·실행 방식 최적화 연구](19-model-optimization.md)
+이것을 FuryNo5에 옮기는 연구 가설은 “모든 ATen을 가능한 한 잘게 쪼개기”에만 집중하지 말고, RMSNorm·Attention·gated MLP 같은 영역의 의미를 유지한 채 합법적인 TCL 또는 커스텀 커널 후보를 선택하자는 것이다. 실제 효과는 대상 shape와 반올림·dtype·상태 조건에 따라 측정해야 한다. 외부 프로젝트의 최적화가 RNGD에서도 같은 성능을 낸다는 증거는 아니다. [19장 모델·실행 방식 최적화 연구](19-model-optimization.md)
 
 ## 5. 모델 어댑터는 컴파일러 위에 놓이는 별도 계층이다
 
@@ -259,7 +257,7 @@ flowchart TB
 
 Optimum RBLN은 Hugging Face Transformers·Diffusers의 모델 클래스를 RBLN용 클래스로 연결한다. 조사한 소스는 모델 ID에서 처음 컴파일하는 경로와 저장된 산출물 디렉터리에서 다시 적재하는 경로를 나눈다. 컴파일러 자체와 모델별 가중치·입출력·상태 연결부의 역할이 분리되어 있다. 공개 어댑터의 존재가 의존 컴파일러의 전체 공개를 뜻하지도 않는다. [Optimum RBLN README](https://github.com/RBLN-SW/optimum-rbln/blob/370e2c98e5511373ca3f6454b444c327223822f7/README.md)
 
-FHA(Furiosa-Hug-Anything)와 비교할 지점도 여기에 있다. 모델을 찾고 작업을 준비하는 과정, 지원되지 않는 계산을 드러내고 구현하는 과정, 컴파일 산출물을 패키징하는 과정, 재현 가능한 검증과 게시 과정을 연결해야 한다. **FuryAwesome는 발견·요청·배포 정보, FuryNo5는 변환·컴파일·실행계획 생산, fxbX는 패키지 적재·실행, FHA는 작업 절차와 도구 연결**이라는 역할을 기준으로 보면 다른 생태계의 모델 어댑터와 비교하기 쉽다. 실제 자동화 범위와 포맷별 게시 조건은 [13장](13-porting-fha.md)에서 확인한다.
+FHA(Furiosa-Hug-Anything)와 비교할 지점도 여기에 있다. 모델을 찾고 작업을 준비하는 과정, 지원되지 않는 계산을 드러내고 구현하는 과정, 컴파일 산출물을 패키징하는 과정, 재현 가능한 검증과 게시 과정을 연결해야 한다. FuryAwesome는 발견·요청·배포 정보, FuryNo5는 변환·컴파일·실행계획 생산, fxbX는 패키지 적재·실행, FHA는 작업 절차와 도구 연결이라는 역할을 기준으로 보면 다른 생태계의 모델 어댑터와 비교하기 쉽다. 실제 자동화 범위와 포맷별 게시 조건은 [13장](13-porting-fha.md)에서 확인한다.
 
 ## 6. 한 표로 비교하고 FuryNo5의 다음 작업을 정한다
 

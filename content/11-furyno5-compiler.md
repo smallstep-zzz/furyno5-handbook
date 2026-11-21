@@ -1,10 +1,8 @@
 # 11. 모델이 TCL·EDF·실행계획으로 바뀌는 과정
 
-> **전체 경로에서의 위치**
->
-> 모델에서 계산의 연결을 얻고, 장치 프로그램과 실행에 필요한 설명을 만드는 단계다. 만들어진 묶음을 읽어 실행하는 과정은 [12장](12-fxbx.md)으로 이어진다.
+[10장](10-furyno5-architecture.md)의 모델을 이번에는 파일이 만들어지는 쪽에서 따라가자. 같은 입력이 캡처·연산 선택·컴파일을 거치며 어떻게 달라지는지 보고, 다음 프로세스가 읽을 실행계획까지 만든다.
 
-이 장에서는 **하나의 입력이 각 단계에서 어떤 객체나 파일이 되는지** 따라간다. 일반적인 C 빌드가 소스·object file·실행 파일을 구분하듯, FuryNo5의 준비 과정도 Python 모델, 연산 graph, TCL 소스, EDF, 실행계획을 구분해야 한다. 하나가 만들어졌다고 다음 단계까지 성공한 것은 아니다.
+예제에는 Linear 두 개와 그 사이의 ReLU가 있다. FuryNo5는 먼저 이 계산들의 연결을 얻고, 컴파일러가 받을 형태로 정리한다. 이어 장치 프로그램을 만들고 그 프로그램의 입력·출력 자리를 실행계획에 적는다. 어느 단계에서 문제가 생겼는지 알 수 있도록 각 산출물을 차례로 살펴보겠다.
 
 예제는 `Linear(8,12) → ReLU → Linear(12,8)`이다. 입력 `x`는 shape `[4,8]`, 첫 Linear 결과 `h`와 ReLU 결과 `a`는 `[4,12]`, 최종 출력 `y`는 `[4,8]`이다. shape는 축별 길이, BF16(BFloat16)은 이 예제 원소의 자료형이다. Linear는 `입력 @ weight.T + bias`, ReLU(Rectified Linear Unit)는 음수를 0으로 바꾸는 연산이다. weight·bias는 모델이 가진 parameter이며 실행 시 입력과 함께 필요하다.
 
@@ -12,13 +10,9 @@
 
 FuryNo5의 `export_model`은 이런 계산을 분석하는 생산자다. 여기서 export는 메모리의 모델을 다음 단계가 읽을 객체·파일로 내보내는 작업을 뜻한다. TCL(Tensor Contraction Language)은 계산 의미를 compiler에 전달하는 텐서 언어, EDF(Executable Device Format)는 RNGD에서 실행할 컴파일 결과다. **실행계획**은 어느 EDF에 어떤 입력·가중치·중간값을 넘길지 적은 자료구조다. 최종 패키지는 이 파일들을 실행 소비자인 fxbX에 전달한다. [계획 생산자](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/execution_plan.py)
 
-| 단계 | 앞 단계에서 받는 것 | 새로 만드는 것 | 이 단계만으로 알 수 없는 것 |
-|---|---|---|---|
-| 캡처·정규화 | 모델·예제 입력 | 계산 관계를 담은 graph | NPU 지원 여부 |
-| 바인딩·사전검사 | graph·tensor 정보 | 순서 있는 값 연결과 컴파일 요청 | compiler 성공 |
-| 컴파일 | TCL 또는 SDK(Software Development Kit) compiler 입력 | EDF bytes·진단 | 실제 출력 정확도 |
-| 계약 검사·계획 조립 | EDF·값 연결 | 실행계획과 패키지 | 장치에서의 실제 지연 |
-| 별도 소비자 검증 | 패키지·weight·새 입력 | 출력·실행 기록 | 검증하지 않은 다른 shape의 지원 |
+캡처 결과에는 계산의 연결이 들어 있다. 바인딩 단계는 그 연결을 따라 각 입력 자리를 정하고 컴파일 요청을 준비한다. 컴파일러가 EDF를 돌려주면 입출력 개수와 장치 구성 등을 검사한 뒤 실행계획을 조립한다. 이 장의 export 경로는 이렇게 만든 EDF를 패키지에 담는다.
+
+여기까지 성공해도 실제 값은 아직 계산하지 않았다. 다음 프로세스가 패키지와 가중치를 읽고 새 입력으로 실행해야 출력의 정확도와 지연시간을 알 수 있다. SDK compiler의 Runnable을 직접 저장하는 별도 경로는 [홈의 경로 비교](00-reading-map.md)와 구별해 읽는다.
 
 > **구현 기준** · FuryNo5 commit `bba9efea8201aec48150514a35d0b637d29d107e`. 아래 설명은 이 버전의 소스와 호출 계약을 기준으로 한다. 이름과 shape를 보여주는 설명 표는 실제 산출물의 모든 필드를 복제한 manifest(패키지의 파일·버전·계약 설명서)가 아니다.
 
@@ -253,9 +247,9 @@ source = (
 ).dsl  # compiler에 전달할 TCL 문자열; 행렬곱을 계산한 tensor가 아니다.
 ```
 
-`source`는 계산한 tensor가 아니라 TCL 텍스트 문자열이다. `.dsl`은 그 텍스트를 얻는 속성이다. 이후 `compile_source(source, base_contract, ...)`로 보내며, `base_contract`에는 소스 바깥에서 유지해야 하는 입력·출력·가중치 연결 설명이 들어 있다. 따라서 “TCL은 Python이니 compiler에 .py를 그대로 던진다”가 아니라, **Python eDSL(embedded Domain-Specific Language) 표현을 구체화하고 TCL 표현을 얻는 경로**가 존재한다. 다른 의미 계열은 검증된 메타데이터에서 TCL 텍스트를 직접 생성하기도 한다. 둘 모두 최종 compiler와 EDF 계약 검사를 공유한다. [단일 EDF 경로](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/tcl_edf.py#L113-L120)
+`source`는 계산한 tensor가 아니라 TCL 텍스트 문자열이다. `.dsl`은 그 텍스트를 얻는 속성이다. 이후 `compile_source(source, base_contract, ...)`로 보내며, `base_contract`에는 소스 바깥에서 유지해야 하는 입력·출력·가중치 연결 설명이 들어 있다. 따라서 “TCL은 Python이니 compiler에 .py를 그대로 던진다”가 아니라, Python eDSL(embedded Domain-Specific Language) 표현을 구체화하고 TCL 표현을 얻는 경로가 존재한다. 다른 의미 계열은 검증된 메타데이터에서 TCL 텍스트를 직접 생성하기도 한다. 둘 모두 최종 compiler와 EDF 계약 검사를 공유한다. [단일 EDF 경로](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/tcl_edf.py#L113-L120)
 
-**region(영역)은** 함께 컴파일하려는 연결된 연산 묶음이다. 예제에서 첫 Linear와 ReLU를 묶는 후보를 생각할 수 있지만 실제 producer의 선택·지원 검사를 통과해야 한다. 여러 연산을 하나의 장치 실행 단위로 결합하는 것을 fusion이라고 한다. `tcl_region.emit_region`은 제한된 SSA(Static Single Assignment) 형태를 사용한다. 각 결과는 고유 이름으로 한 번 정의되고, 사용하기 전에 입력이나 선행 결과로 존재해야 한다. 예제에서는 `h`를 덮어써 버리지 않고 `a = relu(h)`라는 별도 값으로 표현하므로 어느 연산이 어떤 값을 쓰는지 분명하다. 이 생성기의 현재 허용 범위는 BF16의 mm/bmm/linear/add/ReLU, 최대 8개 연산과 입출력 합 16개, 생성 tensor 크기 합 64 MiB(Mebibyte)다. 이 64 MiB는 **논리적인 admission 제한**이며 물리 HBM(High Bandwidth Memory) 점유 측정치가 아니다. [영역 생성기](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/tcl_region.py#L35-L107)
+region(영역)은 함께 컴파일하려는 연결된 연산 묶음이다. 예제에서 첫 Linear와 ReLU를 묶는 후보를 생각할 수 있지만 실제 producer의 선택·지원 검사를 통과해야 한다. 여러 연산을 하나의 장치 실행 단위로 결합하는 것을 fusion이라고 한다. `tcl_region.emit_region`은 제한된 SSA(Static Single Assignment) 형태를 사용한다. 각 결과는 고유 이름으로 한 번 정의되고, 사용하기 전에 입력이나 선행 결과로 존재해야 한다. 예제에서는 `h`를 덮어써 버리지 않고 `a = relu(h)`라는 별도 값으로 표현하므로 어느 연산이 어떤 값을 쓰는지 분명하다. 이 생성기의 현재 허용 범위는 BF16의 mm/bmm/linear/add/ReLU, 최대 8개 연산과 입출력 합 16개, 생성 tensor 크기 합 64 MiB(Mebibyte)다. 이 64 MiB는 논리적인 admission 제한이며 물리 HBM(High Bandwidth Memory) 점유 측정치가 아니다. [영역 생성기](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/tcl_region.py#L35-L107)
 
 ## 5. compiler 호출: 진짜 EDF를 만든다
 

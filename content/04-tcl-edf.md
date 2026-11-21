@@ -1,10 +1,8 @@
 # TCL에서 EDF로: 행렬곱의 수식이 장치 프로그램이 되는 과정
 
-> **전체 경로에서의 위치**
->
-> 계산 하나를 작성해 장치용 프로그램으로 바꾸고, 실제 숫자를 넣어 답을 확인한다. 여러 계산을 연결하는 방법은 [05장](05-graphs-fallback.md)에서 다룬다.
+컴파일러와 런타임의 역할을 구분했으니, 이번에는 직접 계산 하나를 맡겨 보자. 작은 행렬곱을 TCL로 적고 EDF를 만든 뒤 실제 입력으로 호출한다. 계산 여러 개를 잇는 일은 다음 [05장](05-graphs-fallback.md)에서 시작한다.
 
-이 장의 목표는 작은 행렬곱을 읽고, 같은 계산을 TCL(Tensor Contraction Language)로 선언한 뒤 **소스 작성 → 크기 결정 → 컴파일 → 적재 → 실행 → 정답 확인**까지 구분하는 것이다. 처음부터 NPU(Neural Processing Unit)의 명령어를 알아야 하는 것은 아니다. 먼저 CPU(Central Processing Unit)에서 무엇을 계산하려는지 분명히 하고, 그 계산을 TCL에 전달한다.
+행렬곱의 답을 CPU에서 먼저 구해 두자. 그다음 같은 수식을 TCL로 적고, 축의 길이를 정해 컴파일한다. 만들어진 EDF를 적재하고 같은 입력을 넣으면 두 결과를 비교할 수 있다. 뒤의 예제는 이 순서로 진행한다.
 
 TCL은 Python 안에서 쓰는 eDSL(embedded Domain-Specific Language, 내장형 도메인 전용 언어)이다. 여기서 도메인은 텐서 계산이다. Python 문법을 사용하지만, 커널의 목적은 Python 반복문을 바로 실행하는 것이 아니라 **컴파일러가 분석할 계산을 표현하는 것**이다. 이후 컴파일러가 EDF(Executable Device Format)라는 장치 실행 바이너리를 만든다. [공식 TCL 소개](https://furiosa.ai/blog/furiosa-sdk-2026-3-a-new-kernel-framework-and-the-models-it-unlocks), [EDF 명칭](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/quick-start/kernel-validation.md)
 
@@ -69,7 +67,7 @@ Python의 `@decorator`는 함수가 정의될 때 그 함수를 다른 처리에
 
 ### 실습 환경과 파일
 
-이 장은 **설치된 SDK로 새 커널을 만드는 실습**이다. 호환되는 `furiosa.tcl`, `furiosa.torch`, `torch`, `furiosa-tcc`가 같은 개발 환경에 있어야 하며, 실행 단계에는 정상 동작하는 RNGD와 드라이버가 필요하다. SDK 설치는 [공식 prerequisites](https://developer.furiosa.ai/v2026.4.0/en/get_started/prerequisites.html), 장치 확인은 [3장](03-driver-runtime.md)을 따른다. `kernels.py`, `emit_tcl.py`, `run_edf.py`를 새 작업 디렉터리에 만들고 **세 파일이 있는 디렉터리에서** 명령을 실행한다. 소스 파일을 읽는 eDSL 경로를 재현하도록 노트북 셀 대신 `.py` 파일을 사용한다.
+이 장은 설치된 SDK로 새 커널을 만드는 실습이다. 호환되는 `furiosa.tcl`, `furiosa.torch`, `torch`, `furiosa-tcc`가 같은 개발 환경에 있어야 하며, 실행 단계에는 정상 동작하는 RNGD와 드라이버가 필요하다. SDK 설치는 [공식 prerequisites](https://developer.furiosa.ai/v2026.4.0/en/get_started/prerequisites.html), 장치 확인은 [3장](03-driver-runtime.md)을 따른다. `kernels.py`, `emit_tcl.py`, `run_edf.py`를 새 작업 디렉터리에 만들고 세 파일이 있는 디렉터리에서 명령을 실행한다. 소스 파일을 읽는 eDSL 경로를 재현하도록 노트북 셀 대신 `.py` 파일을 사용한다.
 
 ```bash
 # Python 패키지 import, compiler 옵션, 장치 상태를 각각 확인한다.

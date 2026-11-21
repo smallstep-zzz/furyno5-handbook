@@ -1,20 +1,18 @@
 # 여러 NPU를 쓰는 설계: PE, 카드, 서버를 구분한다
 
-> **전체 경로에서의 위치**
->
-> 모델 한 번의 계산을 나눌지, 모델을 복제해 서로 다른 요청을 맡길지 선택한다. [14장](14-serving-vllm.md)의 요청 상태가 어디에 남는지와 함께 읽는다.
+요청이 늘어 장치 하나로 부족해졌다고 하자. 장치를 추가할 때는 모델을 복제해 요청을 나눌지, 한 번의 계산을 나눌지 선택해야 한다. [14장](14-serving-vllm.md)에서 보관한 요청 상태가 어디에 있어야 하는지도 함께 달라진다.
 
-장치를 두 개 쓰려면 무엇을 둘로 나눌지 먼저 정한다. 서로 다른 요청을 나눌 수도 있고, 한 요청의 큰 계산을 나눌 수도 있다. 필요한 데이터와 결과를 합치는 방법이 다르다.
+서로 다른 요청 두 개를 장치마다 하나씩 맡기면 각 장치는 자기 요청의 결과를 만든다. 반면 한 요청의 행렬곱을 두 장치로 나누면, 계산 도중 서로 데이터를 주고받거나 부분 결과를 합쳐야 할 수 있다. 장치 수는 같아도 통신 비용은 크게 달라진다.
 
 FuryNo5·fxbX의 현재 커스텀 실행계획은 한 장치의 `fusion=8, mesh=single` 조건을 검사한다. 카드를 여러 장 꽂았다고 그 계획이 자동 분산되는 것은 아니다. 이 장은 공식 Furiosa-LLM, opt-vLLM, 커스텀 실행계획의 지원 상태를 구분해 읽는다. [fxbX device 계약](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py#L132-L162) · [공식 병렬성](https://developer.furiosa.ai/v2026.4.0/en/furiosa_llm/model-parallelism.html)
 
 ## 1. 같은 숫자 8이라도 의미가 다르다
 
-먼저 자원 단위를 정리하자. **호스트(host)는** 여기서 OS(Operating System)와 CPU(Central Processing Unit), 주 메모리를 가진 서버다. **카드(card)는** 그 서버에 장착한 RNGD 장치이며, **PE(Processing Element)는** 카드 안에서 계산을 담당하는 처리 단위다. 한 RNGD 카드의 PE는 8개다. 카드의 **HBM(High Bandwidth Memory)은** 계산에 사용할 가중치·입출력·중간값을 담는 장치 메모리다. 두 서버의 메모리는 같은 주소 공간이 아니므로 원격 자료를 사용하려면 통신이 필요하다. [공식 자원 단위](https://developer.furiosa.ai/v2026.4.0/en/furiosa_llm/model-parallelism.html)
+먼저 자원 단위를 정리하자. 호스트(host)는 여기서 OS(Operating System)와 CPU(Central Processing Unit), 주 메모리를 가진 서버다. 카드(card)는 그 서버에 장착한 RNGD 장치이며, **PE(Processing Element)는** 카드 안에서 계산을 담당하는 처리 단위다. 한 RNGD 카드의 PE는 8개다. 카드의 **HBM(High Bandwidth Memory)은** 계산에 사용할 가중치·입출력·중간값을 담는 장치 메모리다. 두 서버의 메모리는 같은 주소 공간이 아니므로 원격 자료를 사용하려면 통신이 필요하다. [공식 자원 단위](https://developer.furiosa.ai/v2026.4.0/en/furiosa_llm/model-parallelism.html)
 
-**PE binding(PE 자원 연결)은** 어느 실행기나 작업에 어느 PE 집합을 사용할 수 있게 연결할지 정하는 자원 배치 문제다. OS의 CPU affinity가 실행할 코어 집합을 지정하는 것과 비교할 수 있지만, NPU 연산을 여러 PE로 나누는 방법까지 CPU thread처럼 자동 결정된다는 뜻은 아니다. **Fusion 8**은 이 실행 규격에서 PE 8개를 묶어 사용하는 설정이다. fxbX의 현재 소비자는 `fusion=8`과 `mesh=single`이라는 장치 배치 계약을 검사한다. `Single`은 SDK(Software Development Kit)의 해당 배치 설정 이름이며, “모델 복제본 8개”나 “서버 여러 대에 자동 분산”이라는 의미가 아니다. [현재 설정 검사](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py#L132-L162)
+PE binding(PE 자원 연결)은 어느 실행기나 작업에 어느 PE 집합을 사용할 수 있게 연결할지 정하는 자원 배치 문제다. OS의 CPU affinity가 실행할 코어 집합을 지정하는 것과 비교할 수 있지만, NPU 연산을 여러 PE로 나누는 방법까지 CPU thread처럼 자동 결정된다는 뜻은 아니다. Fusion 8은 이 실행 규격에서 PE 8개를 묶어 사용하는 설정이다. fxbX의 현재 소비자는 `fusion=8`과 `mesh=single`이라는 장치 배치 계약을 검사한다. `Single`은 SDK(Software Development Kit)의 해당 배치 설정 이름이며, “모델 복제본 8개”나 “서버 여러 대에 자동 분산”이라는 의미가 아니다. [현재 설정 검사](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py#L132-L162)
 
-**Tensor**는 다차원 배열이고 **shape**는 각 축 길이의 목록이다. 예를 들어 한 요청의 입력 세 값은 `[1,3]`, 두 요청의 세 값은 `[2,3]`인 행렬로 표현할 수 있다. **Layout**은 이 논리적 원소들의 실제 메모리 순서이고 **dtype**은 원소 자료형이다. 실행 그래프는 이런 배열을 받는 계산들을 연결한 순서·의존 관계다. EDF는 그 계산을 장치에서 수행할 컴파일 결과다.
+**Tensor**는 다차원 배열이고 shape는 각 축 길이의 목록이다. 예를 들어 한 요청의 입력 세 값은 `[1,3]`, 두 요청의 세 값은 `[2,3]`인 행렬로 표현할 수 있다. Layout은 이 논리적 원소들의 실제 메모리 순서이고 **dtype**은 원소 자료형이다. 실행 그래프는 이런 배열을 받는 계산들을 연결한 순서·의존 관계다. EDF는 그 계산을 장치에서 수행할 컴파일 결과다.
 
 이제 병렬성 이름을 붙이면 요청을 나누는 것은 DP(Data Parallelism), tensor 계산을 나누는 것은 TP(Tensor Parallelism), 층 구간을 나누는 것은 PP(Pipeline Parallelism)다. 아래 숫자는 어떤 API(Application Programming Interface)에 넣는지까지 함께 읽어야 한다.
 
@@ -54,9 +52,9 @@ LLM(Large Language Model)의 **KV(Key–Value) cache**는 앞 토큰의 attentio
 | 1 | `2 × [3,4]` | `[6,8]` |
 | 합치기 | 두 벡터의 원소별 합 | `[7,10]` |
 
-계산을 반으로 나눴더라도 마지막 합은 남는다. **Reduction(축약)은** 여러 값을 합·최댓값 같은 규칙으로 하나의 결과로 모으는 연산이다. 여러 참여자가 결과를 합치고 모두 같은 결과를 받으면 **all-reduce**, 각자가 가진 서로 다른 조각을 모두에게 모아 주면 **all-gather**라고 부른다. 이런 여러 장치 사이의 공동 통신 연산이 **collective**다.
+계산을 반으로 나눴더라도 마지막 합은 남는다. Reduction(축약)은 여러 값을 합·최댓값 같은 규칙으로 하나의 결과로 모으는 연산이다. 여러 참여자가 결과를 합치고 모두 같은 결과를 받으면 all-reduce, 각자가 가진 서로 다른 조각을 모두에게 모아 주면 **all-gather**라고 부른다. 이런 여러 장치 사이의 공동 통신 연산이 **collective**다.
 
-다른 분할도 가능하다. W의 열을 나누면 장치 0은 최종 출력 `[7]`, 장치 1은 `[10]`을 만든다. 뒤 연산이 전체 벡터를 요구하면 두 조각을 **concat(concatenation, 같은 축으로 이어 붙이기)해** `[7,10]`으로 모아야 한다. `[7]+[10]`을 원소별로 더해 `[17]`을 만드는 것과 다르다. 입력 축 분할은 부분 **합**을, 출력 축 분할은 서로 다른 출력 **조각**을 만들기 때문에 결합 방법도 다르다. 실제 모델은 이런 분할·모으기의 위치를 조절한다. **Activation(활성값)은** 층이 계산해 다음 층으로 넘기는 중간 tensor이고, TP는 가중치와 activation을 어떻게 나눌지도 정해야 한다. 작은 입력에서는 절약한 계산보다 통신·완료 대기의 비중이 커질 수 있다. [공식 TP 개념과 구성](https://developer.furiosa.ai/v2026.4.0/en/furiosa_llm/model-parallelism.html)
+다른 분할도 가능하다. W의 열을 나누면 장치 0은 최종 출력 `[7]`, 장치 1은 `[10]`을 만든다. 뒤 연산이 전체 벡터를 요구하면 두 조각을 concat(concatenation, 같은 축으로 이어 붙이기)해 `[7,10]`으로 모아야 한다. `[7]+[10]`을 원소별로 더해 `[17]`을 만드는 것과 다르다. 입력 축 분할은 부분 합을, 출력 축 분할은 서로 다른 출력 **조각**을 만들기 때문에 결합 방법도 다르다. 실제 모델은 이런 분할·모으기의 위치를 조절한다. **Activation(활성값)은** 층이 계산해 다음 층으로 넘기는 중간 tensor이고, TP는 가중치와 activation을 어떻게 나눌지도 정해야 한다. 작은 입력에서는 절약한 계산보다 통신·완료 대기의 비중이 커질 수 있다. [공식 TP 개념과 구성](https://developer.furiosa.ai/v2026.4.0/en/furiosa_llm/model-parallelism.html)
 
 #### 부분합 뒤에 어떤 연산이 오는지 확인한다
 
@@ -219,7 +217,7 @@ B가 같은 **공통 prefix**의 KV를 보유한다는 사실과, B가 R이 방�
 
 설명용으로 KV 512 MiB를 유효 대역폭 16 GiB/s로 전송하면 순수 전송만 `0.5/16초 = 31.25 ms`다. 목적지 할당 3 ms, 배치 변환 4 ms, 완료 확인 2 ms가 더 들면 40.25 ms다. 같은 prefix를 재계산하는 데 25 ms라면 복사보다 재계산이 빠르고, 100 ms라면 복사가 유리할 수 있다. 이 숫자는 용량·시간의 손익을 설명하는 계산이며 RNGD 연결 성능값이 아니다.
 
-여기서 **layout(메모리 배치)** 변환은 논리 값의 저장 순서를 바꾸는 일이다. 2×2 배열 `[[a,b],[c,d]]`를 `[a,b,c,d]`로 저장한 곳에서 `[a,c,b,d]` 순서를 요구하는 곳으로 옮긴다면 주소만 넘길 수는 없다. **Host staging**은 전송 도중 호스트 메모리를 임시 경유하는 단계이고, 완료 동기화는 목적지가 값을 읽어도 되는 시점까지 기다리는 단계다.
+여기서 layout(메모리 배치) 변환은 논리 값의 저장 순서를 바꾸는 일이다. 2×2 배열 `[[a,b],[c,d]]`를 `[a,b,c,d]`로 저장한 곳에서 `[a,c,b,d]` 순서를 요구하는 곳으로 옮긴다면 주소만 넘길 수는 없다. Host staging은 전송 도중 호스트 메모리를 임시 경유하는 단계이고, 완료 동기화는 목적지가 값을 읽어도 되는 시점까지 기다리는 단계다.
 
 전송 속도만 비교하지 않고 host staging, destination allocation, layout 변환, 완료 동기화를 포함한다. 공식 hierarchical prefix cache도 NPU resident cache와 host cache를 구별하며, host hit에는 NPU로의 복사가 필요하다. 여기서 **tier**는 NPU 메모리와 호스트 메모리처럼 비용·용량이 다른 저장 계층이다. 이 기능의 local 두 tier가 여러 process 간 영속 공유 저장소라는 뜻은 아니다. 외부 shared cache는 별도 connector와 배포 구성이 필요하다. [공식 hierarchical cache](https://developer.furiosa.ai/v2026.4.0/en/furiosa_llm/hierarchical-prefix-caching.html)
 

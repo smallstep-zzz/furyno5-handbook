@@ -1,10 +1,8 @@
 # 09. Torch 함수 호출이 장치의 계산으로 이어지는 과정
 
-> **전체 경로에서의 위치**
->
-> PyTorch의 덧셈 같은 호출이 어느 장치의 구현으로 전달되는지 살펴본다. FuryNo5가 이 계산을 준비하는 코드는 [10장](10-furyno5-architecture.md)에서 이어 읽는다.
+지금까지는 장치에서 실행할 계산을 보았다. 이번에는 출발점인 Python으로 돌아가 `torch.add(x, y)`가 어떻게 실행 대상을 찾는지 살펴본다. 이 과정을 알면 드라이버 지원과 PyTorch 연산 지원을 구별할 수 있다.
 
-Python에서 `torch.add(x, y)`를 호출했을 때 CPU 코드가 실행될지 NPU 코드가 실행될지는 누가 결정할까? 이 장은 **함수 이름, 함수의 호출 계약, 실제 구현, 모델 전체의 컴파일**을 나누어 답한다. C의 함수 포인터 표를 떠올려도 좋다. 호출할 계산의 이름은 같아도 인수의 장치에 따라 다른 구현을 선택할 수 있다. 다만 PyTorch는 자동 미분 같은 부가 처리도 선택하므로 실제 과정은 단순한 장치별 `switch`보다 복잡하다.
+`torch.add(x, y)`라는 이름은 더할 일을 나타낸다. 어떤 코드가 실제로 더할지는 `x`와 `y`의 장치 등 호출 조건에 따라 달라진다. PyTorch는 이런 조건을 보고 구현을 고른다. 이 선택을 이해한 다음, 연산마다 구현을 고르는 방식과 모델 전체를 컴파일하는 방식을 비교하자.
 
 NPU(Neural Processing Unit)는 신경망 계산용 장치이고, 이 책의 대상은 Furiosa의 RNGD다. **ATen(A Tensor Library)은** PyTorch가 텐서 계산을 표현하는 공통 연산 계층이다. ATen 연산은 CPU(Central Processing Unit)의 기계어도 RNGD의 장치 명령어도 아니다. `더한다`, `행렬곱을 한다`는 계산 의미를 정해 두고, 장치별 구현이 그 의미를 수행한다. [ATen의 공식 역할](https://docs.pytorch.org/cppdocs/api/aten/index.html)
 
@@ -43,7 +41,7 @@ print(z)  # 식의 예상값: tensor([22., 44.]); 원래 x와 y는 바꾸지 않
 
 `add.Tensor(Tensor self, Tensor other, *, Scalar alpha=1) -> Tensor`를 왼쪽부터 읽으면, tensor 두 개를 받고 `alpha`라는 스칼라 옵션을 가진 뒤 tensor 하나를 반환한다는 뜻이다. Python의 `*` 뒤 인수는 이름을 붙여 전달한다. 여기의 `Tensor`와 `Scalar`는 특정 하드웨어의 자료형이 아니라 호출 인수의 종류다.
 
-**overload(오버로드)는** 기본 이름이 같지만 인수 형태가 다른 함수다. `add.Tensor`는 tensor와 tensor, `add.Scalar`는 tensor와 수 하나를 더한다. `add.out`은 결과를 담을 버퍼를 호출자가 주므로 메모리 변경 계약도 다르다. **operator packet(연산 묶음)은** 이 overload들을 `aten::add`라는 기본 이름 아래 모아 놓은 것이다. [고정된 schema 선언](https://github.com/pytorch/pytorch/blob/449b1768410104d3ed79d3bcfe4ba1d65c7f22c0/aten/src/ATen/native/native_functions.yaml)
+overload(오버로드)는 기본 이름이 같지만 인수 형태가 다른 함수다. `add.Tensor`는 tensor와 tensor, `add.Scalar`는 tensor와 수 하나를 더한다. `add.out`은 결과를 담을 버퍼를 호출자가 주므로 메모리 변경 계약도 다르다. operator packet(연산 묶음)은 이 overload들을 `aten::add`라는 기본 이름 아래 모아 놓은 것이다. [고정된 schema 선언](https://github.com/pytorch/pytorch/blob/449b1768410104d3ed79d3bcfe4ba1d65c7f22c0/aten/src/ATen/native/native_functions.yaml)
 
 | 구분 | 이 예의 이름 | 익숙한 개념으로 읽으면 |
 |---|---|---|
@@ -73,7 +71,7 @@ flowchart TB
 
 **eager 실행**은 연산을 호출하는 흐름에 따라 곧바로 실행하는 방식이다. **dispatch key**는 어떤 종류의 처리를 적용할지 고르는 표식이다. 입력 tensor는 장치와 표현에 관련된 표식을 갖고, 현재 스레드는 자동 미분·자동 형변환처럼 활성화된 처리 상태를 가질 수 있다. Dispatcher는 이 정보를 함께 보고 실행할 구현을 고른다. 자동 미분·혼합 정밀도·배치 변환 같은 처리가 먼저 개입한 뒤, 다음 구현으로 다시 dispatch할 수도 있다. Autograd는 미분을 위한 계산 기록, Autocast는 정해진 정책에 따라 연산 자료형을 선택하는 처리다. 이 단계가 끝난 뒤 다음 key의 구현을 호출하는 것을 redispatch라고 한다. CPU 텐서를 주었다면 등록된 CPU 구현으로 가는 것이 정상이다. NPU 장치를 뜻하는 key를 가진 텐서라면 해당 장치 구현을 찾는다. [PyTorch 확장 노트](https://docs.pytorch.org/docs/stable/notes/extending.html)
 
-**Dispatcher가 호출될 때마다 TCL(Tensor Contraction Language)을 생성하거나 컴파일하는 것은 아니다.** TCL은 NPU에서 계산할 텐서 연산을 compiler에 설명하는 언어다. EDF(Executable Device Format)는 그 계산을 장치에서 실행하도록 컴파일한 바이너리다. Dispatcher의 역할은 구현 선택이다. 선택된 backend가 이미 준비된 커널을 실행할지, 캐시를 확인할지, 최초 호출에 컴파일할지는 backend 정책이다. FuryNo5의 명시적 준비 경로는 준비 함수에서 컴파일하고, 실행 함수에서는 준비된 callable을 사용한다. [FuryNo5 aten_runtime.py](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/aten_runtime.py#L210-L276)
+Dispatcher가 호출될 때마다 TCL(Tensor Contraction Language)을 생성하거나 컴파일하는 것은 아니다. TCL은 NPU에서 계산할 텐서 연산을 compiler에 설명하는 언어다. EDF는 그 계산을 장치에서 실행하도록 컴파일한 바이너리다. Dispatcher의 역할은 구현 선택이다. 선택된 backend가 이미 준비된 커널을 실행할지, 캐시를 확인할지, 최초 호출에 컴파일할지는 backend 정책이다. FuryNo5의 명시적 준비 경로는 준비 함수에서 컴파일하고, 실행 함수에서는 준비된 callable을 사용한다. [FuryNo5 aten_runtime.py](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/aten_runtime.py#L210-L276)
 
 또한 Python 함수 한 개와 ATen 한 개, ATen 한 개와 EDF 한 개는 일대일 관계가 아니다. 복합 함수는 여러 연산으로 분해될 수 있고, compiler는 여러 연산을 한 실행 영역으로 합칠 수 있다. `view`처럼 조건에 따라 메타데이터만 바뀌는 연산도 있다. 뒤에서 설명할 graph capture는 호출 관계를 자료구조로 얻는 과정이고, lowering은 그 표현을 특정 backend가 실행할 수 있는 더 구체적인 표현으로 바꾸는 과정이다. 둘을 분리해서 읽어야 한다. [PyTorch export](https://docs.pytorch.org/docs/stable/user_guide/torch_compiler/export.html)
 
@@ -118,7 +116,7 @@ print(torch.ops.handbook_demo.plus_one(x))  # 예상 tensor([3., 5.]); 이 줄�
 
 앞 코드에서 `lib.define`은 함수 선언을 만들고 `lib.impl`은 그 선언의 CPU·Meta 구현을 연결한다. 마지막 `torch.ops.handbook_demo.plus_one(x)`가 실제 호출이다. 새 namespace를 정의하므로 같은 이름의 정의를 여러 번 실행하지 않도록 새 Python 프로세스에서 실행한다. `lib` 객체를 보관하는 이유는 등록의 수명도 유지해야 하기 때문이다.
 
-**metadata(메타데이터)는** tensor의 값 자체가 아닌 shape·dtype·stride 같은 설명 정보다. `Meta` 구현은 실제 원소를 더하지 않고 출력이 어떤 tensor여야 하는지 알려준다. **FakeTensor**도 컴파일 준비 중 실제 장치 계산 없이 tensor 성질을 추적하기 위한 수단이다. Meta가 있다고 NPU 계산이 구현된 것은 아니다. custom operator를 `torch.compile`·export와 함께 쓰려면 실제 연산과 FakeTensor/Meta 결과의 shape·dtype·stride 계약도 맞아야 한다. 장치 구현 함수 안에서 같은 장치의 동일 연산을 그대로 다시 호출하면 재귀가 생길 수 있으므로, 실제 커널 호출 또는 올바른 redispatch 설계가 필요하다. [torch.library 2.10](https://docs.pytorch.org/docs/2.10/library.html)
+metadata(메타데이터)는 tensor의 값 자체가 아닌 shape·dtype·stride 같은 설명 정보다. `Meta` 구현은 실제 원소를 더하지 않고 출력이 어떤 tensor여야 하는지 알려준다. FakeTensor도 컴파일 준비 중 실제 장치 계산 없이 tensor 성질을 추적하기 위한 수단이다. Meta가 있다고 NPU 계산이 구현된 것은 아니다. custom operator를 `torch.compile`·export와 함께 쓰려면 실제 연산과 FakeTensor/Meta 결과의 shape·dtype·stride 계약도 맞아야 한다. 장치 구현 함수 안에서 같은 장치의 동일 연산을 그대로 다시 호출하면 재귀가 생길 수 있으므로, 실제 커널 호출 또는 올바른 redispatch 설계가 필요하다. [torch.library 2.10](https://docs.pytorch.org/docs/2.10/library.html)
 
 ## CPU 폴백은 누가 결정하는가
 
@@ -176,7 +174,7 @@ flowchart TB
 | `w2`, `b2` | 마지막 Linear의 weight·bias | `[8,12]`, `[8]` | 모델 parameter |
 | `y` | `a @ w2.T + b2` | `[4,8]` | 반환값 |
 
-그래프가 있으면 compiler는 `h`를 만드는 연산과 사용하는 연산을 함께 검토할 수 있다. 여러 node를 한 실행 단위로 묶는 **fusion(연산 결합)**, 반대로 지원되는 작은 연산으로 나누는 decomposition을 선택할 수 있다. `torch.export`의 결과인 **ExportedProgram**은 graph와 입력·출력 서명, parameter 연결, 제약을 함께 보존하는 객체다. Python 모델 자체도, 이미 만들어진 NPU 바이너리도 아니다. [export의 역할](https://docs.pytorch.org/docs/stable/user_guide/torch_compiler/export.html)
+그래프가 있으면 compiler는 `h`를 만드는 연산과 사용하는 연산을 함께 검토할 수 있다. 여러 node를 한 실행 단위로 묶는 fusion(연산 결합), 반대로 지원되는 작은 연산으로 나누는 decomposition을 선택할 수 있다. `torch.export`의 결과인 ExportedProgram은 graph와 입력·출력 서명, parameter 연결, 제약을 함께 보존하는 객체다. Python 모델 자체도, 이미 만들어진 NPU 바이너리도 아니다. [export의 역할](https://docs.pytorch.org/docs/stable/user_guide/torch_compiler/export.html)
 
 ### 대표 입력의 숫자도 그래프에 고정되는가
 
@@ -210,7 +208,7 @@ FuryNo5도 두 경로를 구분한다. `optimize`는 제한된 연산을 준비�
 
 ## ATen은 몇 개이며 어떤 종류가 있는가
 
-이번 조사에서 **PyTorch v2.10.0의 native_functions.yaml에 직접 선언된 schema는 2,666개, 기본 연산명은 1,542개**였다. 정규식 `^- func: (.+)$`로 선언을 수집하고, 괄호 앞 이름의 첫 점 이후를 overload로 분리해 집계했다. 이 숫자는 YAML의 명시적 선언 수다. 빌드 시 생성되는 variant, 설치된 확장, 등록 상태를 포함한 런타임 목록과 같다는 주장이 아니다. [집계한 파일·고정 commit](https://github.com/pytorch/pytorch/blob/449b1768410104d3ed79d3bcfe4ba1d65c7f22c0/aten/src/ATen/native/native_functions.yaml)
+이번 조사에서 PyTorch v2.10.0의 native_functions.yaml에 직접 선언된 schema는 2,666개, 기본 연산명은 1,542개였다. 정규식 `^- func: (.+)$`로 선언을 수집하고, 괄호 앞 이름의 첫 점 이후를 overload로 분리해 집계했다. 이 숫자는 YAML의 명시적 선언 수다. 빌드 시 생성되는 variant, 설치된 확장, 등록 상태를 포함한 런타임 목록과 같다는 주장이 아니다. [집계한 파일·고정 commit](https://github.com/pytorch/pytorch/blob/449b1768410104d3ed79d3bcfe4ba1d65c7f22c0/aten/src/ATen/native/native_functions.yaml)
 
 | 집계 대상 | 기준 | 수 |
 |---|---|---:|

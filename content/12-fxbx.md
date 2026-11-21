@@ -1,10 +1,8 @@
 # 12. fxbX: 다른 프로세스가 모델을 다시 실행하려면
 
-> **전체 경로에서의 위치**
->
-> 미리 만든 실행 파일을 다른 프로세스에서 읽어 실제 입력으로 실행하는 단계다. 파일을 만드는 실습은 [13장](13-porting-fha.md), 서비스 연결은 [14장](14-serving-vllm.md)에 있다.
+모델을 준비하던 프로세스를 종료하고 다른 프로세스에서 다시 실행한다고 하자. 앞 장에서 만든 파일은 남아 있지만 Python 객체와 장치 주소는 남아 있지 않다. fxbX가 무엇을 읽고 무엇을 새로 준비하는지 보면 배포에 필요한 정보가 드러난다.
 
-Python에서 모델을 만든 프로세스를 종료하면 `model` 객체, 중간 tensor, 장치 메모리 주소, 준비된 호출 객체도 함께 사라진다. 디스크에 컴파일 결과만 남겼다면 다른 프로세스는 무엇을 해야 할까? **fxbX는 저장한 실행 파일과 연결 설명을 읽고, 현재 프로세스의 가중치·입력·장치 객체를 연결해 실행하는 프로젝트**다.
+fxbX는 저장한 실행 파일과 연결 설명을 읽는 실행기다. 파일 속의 ‘첫 입력’ 자리에 이번 입력 배열을 연결하고, 필요한 가중치를 준비해 SDK로 실행을 요청한다. 저장할 수 없는 과거 프로세스의 메모리 주소는 새 장치 버퍼로 대신 준비한다.
 
 배포용 **package(패키지)는** 필요한 파일을 묶은 전달 단위다. 프로그램 설치 파일이나 아카이브를 생각하면 된다. **manifest(매니페스트)는** 묶음 안에 어떤 파일이 있고 어떤 조건에서 써야 하는지 적은 설명서다. 실행계획은 한 단계 더 구체적이다. 어떤 계산에 어떤 tensor를 넘기고 그 결과를 어디에 연결할지를 적는다. 파일 목록과 함수 호출 목록은 역할이 다르다.
 
@@ -18,7 +16,7 @@ Python에서 모델을 만든 프로세스를 종료하면 `model` 객체, 중�
 
 행렬곱 `@`는 왼쪽 행과 오른쪽 열의 대응 원소를 곱해 더한다. 첫 층의 가중치 `W[12,8]`은 출력 특징 12개 각각의 계수 8개를 담으므로, `W.T`로 축을 맞바꾼 `[8,12]`를 사용한다. 결과 `x[4,8] @ W.T[8,12]`의 shape는 `[4,12]`이고, bias `[12]`를 모든 행에 똑같이 더한다. 이 **broadcasting**을 포함한 계산이 `Linear(8,12)`의 계약이다. 두 번째 층도 같은 방식으로 12개 특징을 8개로 바꾼다. 패키지를 읽는 쪽이 weight의 행·열 의미를 바꾸거나 bias를 다른 축에 연결하면 파일이 정상이어도 잘못된 모델을 실행한다. [Linear의 계산과 weight shape](https://docs.pytorch.org/docs/2.10/generated/torch.nn.Linear.html)
 
-FuryNo5가 만드는 **EDF(Executable Device Format)는** RNGD NPU(Neural Processing Unit)에서 계산할 장치 바이너리다. 이는 Python의 모델 객체와 다르다. 실행 소비자는 파일 bytes를 해석하고 장치 자원을 준비하는 **loader(로더)를** 통해 계산 가능한 객체를 만든다. 메모리에서 객체를 파일로 저장하는 직렬화와 그 반대인 역직렬화도 이 경계에서 등장한다. [EDF 정의](https://developer.furiosa.ai/furiosa-opt/book/quick-start/kernel-validation.html), [실행 소비자](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py)
+FuryNo5가 만드는 EDF(Executable Device Format)는 RNGD NPU(Neural Processing Unit)에서 계산할 장치 바이너리다. 이는 Python의 모델 객체와 다르다. 실행 소비자는 파일 bytes를 해석하고 장치 자원을 준비하는 loader(로더)를 통해 계산 가능한 객체를 만든다. 메모리에서 객체를 파일로 저장하는 직렬화와 그 반대인 역직렬화도 이 경계에서 등장한다. [EDF 정의](https://developer.furiosa.ai/furiosa-opt/book/quick-start/kernel-validation.html), [실행 소비자](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py)
 
 | 다른 프로세스가 알아야 할 것 | 예제에서의 값 | 저장·공급하는 곳 |
 |---|---|---|

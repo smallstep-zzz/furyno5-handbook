@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="1070" viewBox="0 0 1100 1070" role="img" aria-labelledby="title desc">
+ <title id="title">컴파일 산출물과 그것을 읽는 실행기</title>
+ <desc id="desc">공식 FXB, FuryNo5 TCL export와 fxbX, FuryNo5 direct SDK compiler, 공개 furiosa-opt의 네 경로를 나누어 비교한다. 왼쪽은 준비와 컴파일, 가운데는 생성한 산출물, 오른쪽은 그것을 읽는 실행기다. 화살표는 생성 또는 입력으로 읽는 관계다. opt Image 안에 실행 코드와 연결 정보가 포함되며 EDF 다음에 별도 Image 변환을 하는 단계는 표시하지 않는다. 각 실행기는 실제 입력과 가중치도 필요하고 각 경로의 장치 제출을 거쳐 RNGD에서 실행한다.</desc>
+ <defs><marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0 0L9 4.5L0 9" stroke="#5b6c7a" fill="none" stroke-width="1.5"/></marker></defs>
+ <rect width="1100" height="1070" rx="16" fill="#f7f8fa"/>
+ <g font-family="system-ui,sans-serif" fill="#1c3446">
+  <text x="32" y="42" font-size="28" font-weight="700">같은 RNGD, 서로 다른 준비물과 실행기</text>
+  <text x="32" y="75" font-size="18" fill="#4f6474">화살표: 준비한 산출물을 만들고, 해당 실행기가 그 산출물을 읽는다.</text>
+  <g font-size="20" font-weight="700" text-anchor="middle"><text x="185" y="116">준비·컴파일</text><text x="550" y="116">전달할 산출물</text><text x="915" y="116">적재·실행</text></g>
+  <g id="official" data-route="official">
+   <rect x="22" y="135" width="1056" height="204" rx="12" fill="#edf1f5"/>
+   <text x="40" y="165" font-size="22" font-weight="700">1. 공식 Furiosa-LLM</text>
+   <g stroke-width="1.4"><rect x="40" y="185" width="290" height="104" rx="9" fill="#e5effb" stroke="#7c9fc2"/><rect x="405" y="185" width="290" height="104" rx="9" fill="#fff2d9" stroke="#b49a65"/><rect x="770" y="185" width="290" height="104" rx="9" fill="#e2f2e9" stroke="#74a68e"/></g>
+   <g text-anchor="middle" font-size="22"><text x="185" y="223">지원 모델의 FXB 빌드</text><text x="185" y="257" font-size="19">fxb build</text><text x="550" y="223">공식 FXB</text><text x="550" y="257" font-size="19">컴파일된 EDF · manifest</text><text x="915" y="223">Furiosa-LLM</text><text x="915" y="257" font-size="19">FXB + 모델 자산 적재</text></g>
+   <text x="40" y="320" font-size="18">모델 자산의 설정·tokenizer·가중치는 FXB 밖에서 함께 제공한다.</text>
+   <path d="M330 237H393" stroke="#5b6c7a" stroke-width="2" marker-end="url(#arrow)"/><path d="M695 237H758" stroke="#5b6c7a" stroke-width="2" marker-end="url(#arrow)"/>
+  </g>
+  <g id="tcl-export" data-route="tcl-export">
+   <rect x="22" y="355" width="1056" height="204" rx="12" fill="#edf1f5"/>
+   <text x="40" y="385" font-size="22" font-weight="700">2. FuryNo5 TCL export → fxbX</text>
+   <g stroke-width="1.4"><rect x="40" y="405" width="290" height="104" rx="9" fill="#e5effb" stroke="#7c9fc2"/><rect x="405" y="405" width="290" height="104" rx="9" fill="#fff2d9" stroke="#b49a65"/><rect x="770" y="405" width="290" height="104" rx="9" fill="#e2f2e9" stroke="#74a68e"/></g>
+   <g text-anchor="middle" font-size="22"><text x="185" y="443">FuryNo5의 TCL 생성</text><text x="185" y="477" font-size="19">TCC로 EDF 컴파일</text><text x="550" y="443">fxbX 실행계획 패키지</text><text x="550" y="477" font-size="19">EDF + 값 연결·입출력 설명</text><text x="915" y="443">fxbX 검사·계획 해석</text><text x="915" y="477" font-size="19">SDK 실행 객체 적재·호출</text></g>
+   <text x="40" y="540" font-size="18">계획을 읽는 주체는 fxbX다. 조건에 따라 SDK Runnable 또는 sequence로 호출한다.</text>
+   <path d="M330 457H393" stroke="#5b6c7a" stroke-width="2" marker-end="url(#arrow)"/><path d="M695 457H758" stroke="#5b6c7a" stroke-width="2" marker-end="url(#arrow)"/>
+  </g>
+  <g id="sdk-direct" data-route="sdk-direct">
+   <rect x="22" y="575" width="1056" height="204" rx="12" fill="#edf1f5"/>
+   <text x="40" y="605" font-size="22" font-weight="700">3. FuryNo5 direct → SDK compiler</text>
+   <g stroke-width="1.4"><rect x="40" y="625" width="290" height="104" rx="9" fill="#e5effb" stroke="#7c9fc2"/><rect x="405" y="625" width="290" height="104" rx="9" fill="#fff2d9" stroke="#b49a65"/><rect x="770" y="625" width="290" height="104" rx="9" fill="#e2f2e9" stroke="#74a68e"/></g>
+   <g text-anchor="middle" font-size="22"><text x="185" y="663">모델 export·정리</text><text x="185" y="697" font-size="19">SDK compiler 직접 호출</text><text x="550" y="663">SDK IR Runnable</text><text x="550" y="697" font-size="19">SDK 직렬화로 저장·복원</text><text x="915" y="663">SDK Runnable</text><text x="915" y="697" font-size="19">장치에 적재해 호출</text></g>
+   <text x="40" y="760" font-size="18">저장 파일: model.runnable. 이 SDK 형식은 serialize·deserialize로 쓰고 읽는다.</text>
+   <path d="M330 677H393" stroke="#5b6c7a" stroke-width="2" marker-end="url(#arrow)"/><path d="M695 677H758" stroke="#5b6c7a" stroke-width="2" marker-end="url(#arrow)"/>
+  </g>
+  <g id="opt" data-route="opt">
+   <rect x="22" y="795" width="1056" height="204" rx="12" fill="#edf1f5"/>
+   <text x="40" y="825" font-size="22" font-weight="700">4. 공개 furiosa-opt</text>
+   <g stroke-width="1.4"><rect x="40" y="845" width="290" height="104" rx="9" fill="#e5effb" stroke="#7c9fc2"/><rect x="405" y="845" width="290" height="104" rx="9" fill="#fff2d9" stroke="#b49a65"/><rect x="770" y="845" width="290" height="104" rx="9" fill="#e2f2e9" stroke="#74a68e"/></g>
+   <g text-anchor="middle" font-size="22"><text x="185" y="883">Rust device 함수</text><text x="185" y="917" font-size="19">furiosa-opt로 컴파일·링크</text><text x="550" y="883">compiler Image · registry</text><text x="550" y="917" font-size="19">장치 코드 + 메모리 연결 정보</text><text x="915" y="883">std launch → opt-rt</text><text x="915" y="917" font-size="19">Image 해석 · Function 적재</text></g>
+   <text x="40" y="980" font-size="18">Image 안에 실행 코드가 포함된다. 로더는 그 코드와 메모리 정보를 읽어 함수를 적재한다.</text>
+   <path d="M330 897H393" stroke="#5b6c7a" stroke-width="2" marker-end="url(#arrow)"/><path d="M695 897H758" stroke="#5b6c7a" stroke-width="2" marker-end="url(#arrow)"/>
+  </g>
+  <text x="32" y="1030" font-size="18">각 실행기는 실제 입력·가중치를 연결하고 자기 장치 제출 경로를 거쳐 RNGD에서 실행한다.</text>
+  <text x="32" y="1058" font-size="16" fill="#526778">내부 드라이버·펌웨어 호출은 생략했다. 같은 하드웨어를 써도 산출물의 상호 적재 호환성을 뜻하지 않는다.</text>
+ </g>
+</svg>

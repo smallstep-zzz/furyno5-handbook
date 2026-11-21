@@ -1,10 +1,8 @@
 # vLLM으로 서빙하기: 요청 큐에서 NPU 실행까지
 
-> **전체 경로에서의 위치**
->
-> 모델을 한 번 호출하는 데서 나아가, 여러 요청을 받고 문장을 이어 생성하는 서버를 다룬다. 요청을 여러 장치로 나누는 일은 [15장](15-multi-npu.md)으로 이어진다.
+[13장](13-porting-fha.md)의 실습은 모델 한 번의 출력을 확인했다. 서비스는 여러 사용자의 요청을 받고, 문장이 끝날 때까지 같은 요청의 상태를 이어 가야 한다. 요청 두 개를 받아 처리하는 상황에서 서버가 맡을 일을 살펴보자.
 
-웹 서버에서 요청을 받으면 보통 작업을 큐에 넣고 worker가 처리한다. LLM(Large Language Model, 대규모 언어 모델) 서버도 여기서 시작하지만, 한 요청을 **여러 번의 모델 실행에 걸쳐 계속 이어간다**는 차이가 있다. 문장 전체를 한 번에 완성하는 대신 다음 토큰을 고르고, 그 토큰을 입력에 붙여 다음 계산을 하기 때문이다. 이 장에서는 요청 두 개가 들어왔을 때 어떤 상태를 보관하고 어떤 일을 NPU(Neural Processing Unit)에 보내야 하는지부터 따라간다.
+문장을 생성하는 LLM 서버는 같은 요청으로 모델을 여러 번 호출한다. 한 번의 호출에서 다음 토큰을 고르고, 그 토큰을 다음 호출의 입력에 더하는 식이다. 따라서 서버는 요청을 큐에 넣는 것 외에, 앞서 계산한 내용과 문장 생성의 진행 상태도 보관해야 한다.
 
 다음으로 실제 서버 도구를 연결한다. 공식 `furiosa-opt-vllm`은 vLLM의 요청 관리와 Furiosa 엔진의 모델 계산을 잇는다. 임의의 fxbX 파일을 읽는 범용 실행기는 아니다.
 
@@ -24,7 +22,7 @@ FuryNo5가 만든 계획을 여기에 붙이려면 프로그램 적재뿐 아니
 
 ### Prefill과 decode는 하는 일이 다르다
 
-**Prefill(입력 문맥 처리)은** 이미 주어진 토큰들을 모델에 통과시켜 첫 출력 토큰을 준비하는 단계다. 입력의 토큰들이 모두 알려져 있어 여러 위치의 계산을 묶을 수 있다. **Decode(토큰 생성 단계)에서는** 방금 선택한 출력 토큰을 다음 입력으로 넣고 다음 토큰을 선택한다. 한 요청의 아직 생성하지 않은 토큰을 미리 알 수 없으므로 이 단계들은 순서 의존성이 있다.
+Prefill(입력 문맥 처리)은 이미 주어진 토큰들을 모델에 통과시켜 첫 출력 토큰을 준비하는 단계다. 입력의 토큰들이 모두 알려져 있어 여러 위치의 계산을 묶을 수 있다. Decode(토큰 생성 단계)에서는 방금 선택한 출력 토큰을 다음 입력으로 넣고 다음 토큰을 선택한다. 한 요청의 아직 생성하지 않은 토큰을 미리 알 수 없으므로 이 단계들은 순서 의존성이 있다.
 
 다음 토큰을 만들 때 앞 문장의 어느 위치를 얼마나 참고할지 정하는 계산이 **attention**이다. 이번에 찾는 정보를 Q, 과거 위치와 비교할 정보를 K, 그 위치에서 가져올 내용을 V라는 숫자 배열로 표현한다.
 
@@ -78,7 +76,7 @@ print(physical_block, slot_in_block)  # 7 1
 
 입력 `position=5`는 “A의 여섯 번째 토큰”이고 출력 `(7,1)`은 “물리 블록 7의 두 번째 자리”다. **Paged attention**은 이런 블록 대응을 사용해 attention의 KV를 찾아 읽는 방식이다. 블록을 배정하는 코드와 그 배치를 이해하는 계산 커널이 함께 맞아야 한다. 실제 토큰당 바이트 수와 블록 크기·배치 순서는 엔진의 계약을 따른다.
 
-반면 **bucket(컴파일 규격 묶음)은** “이 실행물은 이 정도 크기의 입력을 처리한다”는 계산 규격이다. 설명용 실행 규격이 토큰 행 1·4·8개라면 유효 행 3개를 처리할 때 4행 규격을 선택하고 1행을 padding(빈 자리 채우기)할 수 있다. 이 수는 위의 KV 블록 번호와 무관하다. **Row packing(행 모으기)은** 여러 요청의 유효 토큰 벡터를 실행 배열의 행에 배치하는 과정이고, **layout(메모리 배치)은** 그 논리적 행·열을 실제 메모리에서 어떤 순서로 저장하는지 뜻한다. 같은 shape라도 저장 순서가 다르면 엔진에 넘기는 주소 계산이 달라진다. [block·row 계약](https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/docs/engine/python.md)
+반면 bucket(컴파일 규격 묶음)은 “이 실행물은 이 정도 크기의 입력을 처리한다”는 계산 규격이다. 설명용 실행 규격이 토큰 행 1·4·8개라면 유효 행 3개를 처리할 때 4행 규격을 선택하고 1행을 padding(빈 자리 채우기)할 수 있다. 이 수는 위의 KV 블록 번호와 무관하다. Row packing(행 모으기)은 여러 요청의 유효 토큰 벡터를 실행 배열의 행에 배치하는 과정이고, **layout(메모리 배치)은** 그 논리적 행·열을 실제 메모리에서 어떤 순서로 저장하는지 뜻한다. 같은 shape라도 저장 순서가 다르면 엔진에 넘기는 주소 계산이 달라진다. [block·row 계약](https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/docs/engine/python.md)
 
 #### 모은 행을 다시 요청으로 돌려놓는다
 
@@ -310,13 +308,13 @@ if __name__ == "__main__":
 | Pipeline Parallelism(PP)·여러 node | 미지원 | admission에서 PP=1, nnodes=1 요구 |
 | Tensor Parallelism(TP) | 컴파일된 chip 수 | engine LoadOptions의 chips 선택으로 전달 |
 
-DP가 무제한 지원된다는 뜻도 아니다. **Admission(수용 검사)은** 실행 전에 요청한 구성이 지원되는지 거르는 단계다. 현재 코드는 worker를 OS 프로세스로 나누는 multiprocessing backend를 요구한다. **Dense 모델**은 일반적인 층 계산을 모든 입력에 적용하고, **MoE(Mixture of Experts)는** 입력마다 선택한 전문가 부분망을 사용한다. **Speculative decoding**은 후보 토큰을 미리 제안한 뒤 본 모델로 검증하는 방식이며, **KV offload**는 KV 일부를 장치 밖 메모리에 옮겨 용량을 확보하는 방식이다. 현재 admission은 이러한 조합에 별도 제한을 건다. 테스트 코드의 존재와 실제 환경에서의 NPU 통과는 구분해야 한다. [옵션 문서](https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/docs/serving/vllm.md) · [admission 실제 검사](https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/integrations/furiosa-opt-vllm/furiosa_opt_vllm/admission.py) · [parallelism 테스트](https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/integrations/furiosa-opt-vllm/tests/test_parallelism.py)
+DP가 무제한 지원된다는 뜻도 아니다. Admission(수용 검사)은 실행 전에 요청한 구성이 지원되는지 거르는 단계다. 현재 코드는 worker를 OS 프로세스로 나누는 multiprocessing backend를 요구한다. Dense 모델은 일반적인 층 계산을 모든 입력에 적용하고, **MoE(Mixture of Experts)는** 입력마다 선택한 전문가 부분망을 사용한다. **Speculative decoding**은 후보 토큰을 미리 제안한 뒤 본 모델로 검증하는 방식이며, **KV offload**는 KV 일부를 장치 밖 메모리에 옮겨 용량을 확보하는 방식이다. 현재 admission은 이러한 조합에 별도 제한을 건다. 테스트 코드의 존재와 실제 환경에서의 NPU 통과는 구분해야 한다. [옵션 문서](https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/docs/serving/vllm.md) · [admission 실제 검사](https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/integrations/furiosa-opt-vllm/furiosa_opt_vllm/admission.py) · [parallelism 테스트](https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/integrations/furiosa-opt-vllm/tests/test_parallelism.py)
 
 ## 7. FuryNo5·fxbX를 붙이기 위해 남은 계약
 
 다음은 **현재 구현 완료 주장이 아닌 개발 설계**다. vLLM을 재구현할 필요는 없지만, EDF를 호출하는 함수 하나만 등록해서도 충분하지 않다.
 
-왜 계약이 여러 개 필요한지는 요청 B가 요청 A의 블록을 재사용하는 경우로 확인할 수 있다. A가 끝나서 블록 7을 반납했더라도, 새 B의 유효 길이와 block table을 A의 값으로 유지하면 B가 A의 문맥을 읽게 된다. 필요한 것은 단순히 EDF를 다시 실행하는 코드가 아니라 **요청 ID, 유효 길이, 소유 블록, 완료 후 회수 시점**을 함께 갱신하는 코드다. 오류나 취소에서도 같은 규칙이 지켜져야 한다. 아래 표는 그 연결을 개발할 때의 점검 대상이다. **ABI(Application Binary Interface)는** 커널에 전달하는 인자의 순서·자료형·크기 같은 호출 계약이다. **Backpressure(유입 조절)는** 처리할 공간이 없을 때 새 요청을 무한히 받아 메모리를 소모하는 대신 대기·거절을 적용하는 방식이다. **Accepted**는 작업 접수, **completed**는 실제 완료이므로 비동기 제출의 반환만 보고 최종 성공을 응답해서는 안 된다.
+왜 계약이 여러 개 필요한지는 요청 B가 요청 A의 블록을 재사용하는 경우로 확인할 수 있다. A가 끝나서 블록 7을 반납했더라도, 새 B의 유효 길이와 block table을 A의 값으로 유지하면 B가 A의 문맥을 읽게 된다. 필요한 것은 단순히 EDF를 다시 실행하는 코드가 아니라 요청 ID, 유효 길이, 소유 블록, 완료 후 회수 시점을 함께 갱신하는 코드다. 오류나 취소에서도 같은 규칙이 지켜져야 한다. 아래 표는 그 연결을 개발할 때의 점검 대상이다. ABI(Application Binary Interface)는 커널에 전달하는 인자의 순서·자료형·크기 같은 호출 계약이다. **Backpressure(유입 조절)는** 처리할 공간이 없을 때 새 요청을 무한히 받아 메모리를 소모하는 대신 대기·거절을 적용하는 방식이다. **Accepted**는 작업 접수, **completed**는 실제 완료이므로 비동기 제출의 반환만 보고 최종 성공을 응답해서는 안 된다.
 
 
 | 연결 지점 | 추가로 정의할 내용 | 합격 증거 |
@@ -329,7 +327,7 @@ DP가 무제한 지원된다는 뜻도 아니다. **Admission(수용 검사)은*
 | scheduler | 허용 batch·bucket 선택, padding·backpressure | TTFT·TPOT·throughput과 tail latency |
 | 오류 | accepted와 completed 구별, 세션 실패 처리 | async 실패를 성공 응답으로 보고하지 않음 |
 
-TTFT(Time To First Token)는 요청 접수부터 첫 토큰까지의 시간이고, TPOT(Time Per Output Token)는 첫 토큰 이후의 평균 토큰 간격을 나타내는 지표다. 예를 들어 첫 토큰이 70 ms, 네 번째이자 마지막 토큰이 100 ms에 도착하면 TTFT는 70 ms, 이후 세 간격의 평균은 `(100−70)/3 = 10 ms`다. **Throughput(처리량)은** 단위 시간에 완료한 요청이나 유효 토큰의 수다. 묶음을 키워 처리량이 늘어도 묶음이 찰 때까지 기다리느라 TTFT가 나빠질 수 있다. **Tail latency(꼬리 지연)는** 느린 요청 쪽의 지연이며 p99는 관측 요청의 99%가 그 이하에서 끝나는 지점을 뜻한다. 이 값들은 서로 다른 목표다. 첫 연결은 한 모델·한 shape 규격·greedy·한 장치에서 시작하고, cache 관리와 batch를 단계적으로 추가하는 편이 원인 추적에 유리하다. 이는 FuryNo5의 권장 개발 순서이며 사용하는 모델과 서비스 요구에 따라 달라질 수 있다.
+TTFT(Time To First Token)는 요청 접수부터 첫 토큰까지의 시간이고, TPOT(Time Per Output Token)는 첫 토큰 이후의 평균 토큰 간격을 나타내는 지표다. 예를 들어 첫 토큰이 70 ms, 네 번째이자 마지막 토큰이 100 ms에 도착하면 TTFT는 70 ms, 이후 세 간격의 평균은 `(100−70)/3 = 10 ms`다. Throughput(처리량)은 단위 시간에 완료한 요청이나 유효 토큰의 수다. 묶음을 키워 처리량이 늘어도 묶음이 찰 때까지 기다리느라 TTFT가 나빠질 수 있다. Tail latency(꼬리 지연)는 느린 요청 쪽의 지연이며 p99는 관측 요청의 99%가 그 이하에서 끝나는 지점을 뜻한다. 이 값들은 서로 다른 목표다. 첫 연결은 한 모델·한 shape 규격·greedy·한 장치에서 시작하고, cache 관리와 batch를 단계적으로 추가하는 편이 원인 추적에 유리하다. 이는 FuryNo5의 권장 개발 순서이며 사용하는 모델과 서비스 요구에 따라 달라질 수 있다.
 
 기존 FHA(Furiosa-Hug-Anything, 포팅 과정을 조정하는 프로젝트) 조사에서도 checkpoint metadata 선검사·tensor별 적재 같은 설계는 현재 fxbX에 적용했지만, Rust preview engine과 vLLM plugin의 직접 ABI 연결은 별도 검증 과제로 남겼다. 11월 10일 기록을 최신 plugin의 기능 제한으로 그대로 인용하지 않고, **우리 프로젝트의 통합 상태를 설명하는 근거**로만 사용한다. [FHA 적용 기록](https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/docs/FURIOSA_OPT_MODELS_ADOPTION_PLAN.md)
 

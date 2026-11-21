@@ -1,12 +1,10 @@
 # 19. 모델을 다시 해석해 RNGD에 맞추는 최적화 연구
 
-> **전체 경로에서의 위치**
->
-> 실행 방법뿐 아니라 모델의 계산 표현·숫자 저장 방식·크기를 바꾸는 방법을 다룬다. 바꾼 뒤에는 [17장](17-debugging.md)의 방법으로 답과 속도를 다시 확인한다.
+[07장](07-optimization.md)에서는 준비한 계산을 실행하는 비용을 줄였다. 이번에는 모델의 계산 자체를 바꾸는 방법을 살펴본다. 같은 답을 더 적은 일로 구하는 변환과, 품질 차이를 허용해 모델을 줄이는 변환은 다른 기준으로 평가해야 한다.
 
-DB의 질의 계획에서 연산 하나를 지웠어도 전체 질의가 빨라지는지는 디스크 읽기와 다른 연산의 비용을 함께 봐야 한다. 모델 최적화도 같다. 계산할 숫자를 줄이는 방법, 같은 계산의 표현을 바꾸는 방법, 호출 사이의 메모리 이동을 줄이는 방법은 서로 다른 효과를 낸다.
+예를 들어 입력에 차례로 2와 3을 곱하는 계산은 미리 합친 6을 한 번 곱하는 형태로 바꿔 볼 수 있다. 반면 모델의 층을 없애는 방법은 계산량과 함께 결과의 품질도 바꿀 수 있다. 둘 다 작업을 줄이지만, 변경 후에 확인할 내용은 다르다.
 
-**공식 포팅보다 좋은 결과를 얻을 가능성은 있다. 다만 그 가능성을 입증하려면 모델이 계산하는 일, 컴파일러가 보는 표현, 장치에 일을 제출하는 경계를 함께 연구해야 한다.** 이 장은 이미 빠르다고 주장하는 결과 보고서가 아니다. 공개 도구로 변환 후보를 만들고, 같은 품질 조건에서 RNGD(Renegade)의 실제 이득을 판정하는 연구 계획이다. 실행 중 복사·동기화·계측의 기초는 [7장](07-optimization.md), 다른 NPU(Neural Processing Unit) 스택의 설계는 [18장](18-npu-ecosystems.md)에서 이어 읽는다.
+이 장에서는 공개 도구로 변환 후보를 만들고 RNGD에서 비교할 실험을 설계한다. 후보가 더 빠른지는 원래 모델과 같은 품질 조건으로 측정해 판단한다. 여기서 제안하는 실험은 이미 성능 향상을 확인한 결과와 구분한다.
 
 공식 Furiosa Compiler도 그래프 최적화, 연산 결합, 메모리 할당, 스케줄링, 층 사이 데이터 이동을 이미 최적화한다. 따라서 외부 도구에서 연산 하나를 지웠다는 사실만으로 공식 경로보다 빠르다고 말할 수 없다. 공식 compiler가 같은 변환을 수행했는지, 외부 변환이 유용한 패턴을 오히려 깨뜨렸는지부터 비교해야 한다. [공식 compiler의 책임](https://developer.furiosa.ai/v2026.4.1/en/overview/software_stack.html)
 
@@ -85,7 +83,7 @@ flowchart TB
 
 ### 비교표의 입력 규격을 먼저 읽는다
 
-**Tensor**는 다차원 배열, **shape**는 각 축의 길이다. 예를 들어 영상 입력 `[1,3,24,24]`는 배치 1개·색상 채널 3개·높이 24·너비 24를 뜻하는 NCHW(Number, Channel, Height, Width) 순서다. **Axis(축)는** 이 네 방향 중 하나이고, **channel(채널)은** 같은 위치에서 구별하는 특징 묶음이다. 입력에서는 RGB 세 값일 수 있고, 중간 층에서는 모델이 만든 특징 여러 개다. 이 배열에는 `1×3×24×24=1,728`개 원소가 있다. **Dtype(자료형)이** FP32(Floating Point 32-bit)면 원소당 4바이트이므로 원소 데이터는 6,912바이트다.
+**Tensor**는 다차원 배열, shape는 각 축의 길이다. 예를 들어 영상 입력 `[1,3,24,24]`는 배치 1개·색상 채널 3개·높이 24·너비 24를 뜻하는 NCHW(Number, Channel, Height, Width) 순서다. Axis(축)는 이 네 방향 중 하나이고, channel(채널)은 같은 위치에서 구별하는 특징 묶음이다. 입력에서는 RGB 세 값일 수 있고, 중간 층에서는 모델이 만든 특징 여러 개다. 이 배열에는 `1×3×24×24=1,728`개 원소가 있다. Dtype(자료형)이 FP32(Floating Point 32-bit)면 원소당 4바이트이므로 원소 데이터는 6,912바이트다.
 
 같은 ‘FP8 모델’이라도 무엇을 그 형식으로 저장했는지 봐야 한다. 모델이 반복 사용하는 **가중치**와 이번 입력에서 생기는 **중간값(activation)은** 다른 배열이다. 언어 모델이 다음 호출까지 남기는 KV Cache도 별도다.
 
@@ -134,7 +132,7 @@ flowchart TB
     F --> R["RNGD에서 별도 측정"]
 ```
 
-확인한 공개 `DeviceName` 목록과 Benchmark Studio의 장치 목록에는 RNGD가 없다. 따라서 **NetsPresso가 RNGD용 EDF(Executable Device Format)를 직접 만들거나 RNGD 성능을 측정한다고 확인하지 못했다.** 제품 전체의 향후 지원 가능성을 부정하는 말은 아니다. 현재 연구에서는 모델 변환 산출물을 받아 Furiosa 쪽에서 다시 컴파일·측정하는 경로를 가정한다. [확인한 장치 enum](https://github.com/Nota-NetsPresso/PyNetsPresso/blob/f0faa78114054f80f77e5af217e1f7df1a2c9027/netspresso/enums/device.py), [공개 Benchmark Studio](https://benchmark.netspresso.ai/), [패키지·로그인 설명](https://github.com/Nota-NetsPresso/PyNetsPresso/blob/f0faa78114054f80f77e5af217e1f7df1a2c9027/README.md)
+확인한 공개 `DeviceName` 목록과 Benchmark Studio의 장치 목록에는 RNGD가 없다. 따라서 NetsPresso가 RNGD용 EDF(Executable Device Format)를 직접 만들거나 RNGD 성능을 측정한다고 확인하지 못했다. 제품 전체의 향후 지원 가능성을 부정하는 말은 아니다. 현재 연구에서는 모델 변환 산출물을 받아 Furiosa 쪽에서 다시 컴파일·측정하는 경로를 가정한다. [확인한 장치 enum](https://github.com/Nota-NetsPresso/PyNetsPresso/blob/f0faa78114054f80f77e5af217e1f7df1a2c9027/netspresso/enums/device.py), [공개 Benchmark Studio](https://benchmark.netspresso.ai/), [패키지·로그인 설명](https://github.com/Nota-NetsPresso/PyNetsPresso/blob/f0faa78114054f80f77e5af217e1f7df1a2c9027/README.md)
 
 ## 4. 양자화의 수치 계약을 이해한 뒤 도구를 고른다
 
@@ -167,7 +165,7 @@ print(codes)     # [-4, -1, 1, 3]
 print(restored)  # [-1.0, -0.25, 0.25, 0.75]
 ```
 
-**Calibration(보정)은** 실제 사용을 대표하는 입력으로 값의 범위를 관찰하고 scale·clipping 범위를 정하는 과정이다. 작은 값만 든 보정 데이터로 정한 scale에 실제 서비스의 큰 값이 들어오면 clipping이 늘 수 있다. weight에만 scale을 둘지 activation에도 둘지, tensor 전체에 하나를 둘지 출력 채널별·몇 개 원소의 group별로 둘지도 정해야 한다. 이 단위가 **granularity(적용 단위)다**. producer와 실행 커널이 같은 단위를 해석해야 한다.
+Calibration(보정)은 실제 사용을 대표하는 입력으로 값의 범위를 관찰하고 scale·clipping 범위를 정하는 과정이다. 작은 값만 든 보정 데이터로 정한 scale에 실제 서비스의 큰 값이 들어오면 clipping이 늘 수 있다. weight에만 scale을 둘지 activation에도 둘지, tensor 전체에 하나를 둘지 출력 채널별·몇 개 원소의 group별로 둘지도 정해야 한다. 이 단위가 granularity(적용 단위)다. producer와 실행 커널이 같은 단위를 해석해야 한다.
 
 #### 보정 데이터로 scale 후보를 비교한다
 
@@ -208,7 +206,7 @@ assert isclose(results[1][1], 0.025)
 
 실제 calibration은 더 많은 대표 입력·층·채널을 다루고, min/max·percentile·오차 최소화 등 선택한 방법의 기준을 사용한다. 이 예는 그중 **후보 scale을 관측값에서 평가한다는 연결**만 보여 준다. 작은 보정 MSE가 전체 모델 정확도 보존을 보장하지도, 두 후보 중 최선이 모든 scale 중 최선임을 뜻하지도 않는다. 예를 들어 실제 입력에서 3.0이 새로 나타나면 scale 0.25에서는 최대 0.75로 복원되어 오차가 2.25가 된다. 따라서 대표 입력을 고른 이유를 남기고, 보정에 쓰지 않은 평가 입력으로 최종 품질을 확인한다. producer가 정한 scale·적용 단위를 NPU 커널이 같은 방식으로 해석할 수 있는지도 별도 계약이다. [보정과 backend를 구분하는 NNCF](https://github.com/openvinotoolkit/nncf/blob/0d605e5da7eb735aff96a14a3a771d84d90f88f8/README.md) · [TorchAO 실행 계약](https://github.com/pytorch/ao/blob/a791dcb26432500f99d40271c81ee8e2753cf99a/docs/source/workflows/inference.md)
 
-**PTQ(Post-Training Quantization)는** 학습이 끝난 모델에 적용하는 양자화이고, 대표 입력을 사용한 보정이 필요한지는 선택한 방법에 따라 다르다. **QAT(Quantization-Aware Training)는** 학습 중에도 양자화 오차의 영향을 고려해 가중치를 조정하는 방법이다. **Packing(압축 배치)은** 작은 코드를 실제 비트·메모리 순서에 맞춰 담는 작업이다. 4-bit 코드는 이론상 한 바이트에 두 개 담을 수 있지만 scale·정렬·부가정보도 필요하다. 곱한 결과를 더해 가는 **누산(accumulation)의** 자료형은 저장 형식과 별도일 수 있다. 이 모든 조건을 맞춰야 파일 크기 감소가 실행에서도 유효하다. [양자화의 backend 계약](https://github.com/pytorch/ao/blob/a791dcb26432500f99d40271c81ee8e2753cf99a/docs/source/workflows/inference.md) · [보정과 양자화 경계](https://github.com/openvinotoolkit/nncf/blob/0d605e5da7eb735aff96a14a3a771d84d90f88f8/README.md)
+**PTQ(Post-Training Quantization)는** 학습이 끝난 모델에 적용하는 양자화이고, 대표 입력을 사용한 보정이 필요한지는 선택한 방법에 따라 다르다. **QAT(Quantization-Aware Training)는** 학습 중에도 양자화 오차의 영향을 고려해 가중치를 조정하는 방법이다. Packing(압축 배치)은 작은 코드를 실제 비트·메모리 순서에 맞춰 담는 작업이다. 4-bit 코드는 이론상 한 바이트에 두 개 담을 수 있지만 scale·정렬·부가정보도 필요하다. 곱한 결과를 더해 가는 누산(accumulation)의 자료형은 저장 형식과 별도일 수 있다. 이 모든 조건을 맞춰야 파일 크기 감소가 실행에서도 유효하다. [양자화의 backend 계약](https://github.com/pytorch/ao/blob/a791dcb26432500f99d40271c81ee8e2753cf99a/docs/source/workflows/inference.md) · [보정과 양자화 경계](https://github.com/openvinotoolkit/nncf/blob/0d605e5da7eb735aff96a14a3a771d84d90f88f8/README.md)
 
 위의 균일 정수 식을 FP8·FP4 같은 부동소수점 형식의 저장 규칙과 동일시하지 않는다. 실제 형식의 지수·가수·scale·반올림·누산 계약을 확인해야 한다. 아래 도구 표의 양자화 지원도 **어떤 형식을 어느 backend에서 계산하는지**까지 읽는다.
 
@@ -238,7 +236,7 @@ NAS(Neural Architecture Search)는 층의 종류·폭·깊이 같은 신경망 �
 
 평균과 분산부터 계산해 보자. 값 `[1,5]`의 평균은 `(1+5)/2=3`이다. 평균에서의 차이는 `[−2,2]`이고, 그 제곱의 평균인 분산은 `(4+4)/2=4`다. 분산의 제곱근인 표준편차는 2다. 이 계산은 용어 설명용이며 PyTorch가 학습 중 누적 통계를 갱신하는 전체 규칙을 대신하지 않는다. 아래 예에서는 **저장된 평균이 3, 분산이 4**라고 가정한다.
 
-여기서 **합성곱(Convolution)은** 입력의 작은 영역에 계수를 곱해 더하는 계산이다. 한 위치에서 여러 종류의 결과를 만들 수 있는데 그 종류를 채널이라고 부른다. **BatchNorm**은 채널별로 평균을 빼고 표준편차로 나눈 뒤 배율과 더할 값을 적용한다. 추론에서는 저장된 평균·분산을 사용하므로 이 보정을 고정된 식으로 정리할 수 있다.
+여기서 합성곱(Convolution)은 입력의 작은 영역에 계수를 곱해 더하는 계산이다. 한 위치에서 여러 종류의 결과를 만들 수 있는데 그 종류를 채널이라고 부른다. BatchNorm은 채널별로 평균을 빼고 표준편차로 나눈 뒤 배율과 더할 값을 적용한다. 추론에서는 저장된 평균·분산을 사용하므로 이 보정을 고정된 식으로 정리할 수 있다.
 
 한 출력 채널만 보면서 convolution 결과를 `z=2x+1`로 놓자. 여기서 2는 입력에 곱하는 weight, 1은 더하는 **bias(편향)다**. 이어서 BatchNorm의 gamma를 2, beta를 0.5로 놓자. 계산을 간단하게 보이기 위해 여기서만 epsilon을 0으로 생략한다.
 
@@ -424,9 +422,9 @@ distillation은 더 자유로운 선택이다. 세 종류를 구분하는 교사
 
 **의미 보존은 공식 TCL(Tensor Contraction Language) 자체의 설계 목표이기도 하다.** Furiosa의 SDK 2026.3 설명은 contraction과 축의 의미를 유지하고, compiler가 tiling·scheduling·fusion·hardware mapping을 수행하도록 설계했다고 명시한다. 따라서 여기의 과제는 공식 스택에 없던 원리를 새로 발명하는 것이 아니다. FuryNo5가 캡처·분해·영역 분할 과정에서 그 정보를 불필요하게 잃지 않고 공식 compiler에 전달하는지 점검하는 것이다. FuryNo5 내부의 개선이 확인되어도 공식 최적화 기준선을 넘어섰다는 결론은 별도 비교가 필요하다. [TCL의 공식 설계 배경](https://furiosa.ai/blog/furiosa-sdk-2026-3-a-new-kernel-framework-and-the-models-it-unlocks)
 
-여기서 필요한 용어를 연산 하나에 붙여 보자. 행렬곱 `C[i,j] = Σ_k A[i,k]×B[k,j]`에서 `Σ_k`는 “k를 차례로 바꾸며 곱한 값을 모두 더한다”는 뜻이다. 공통 축 k를 곱셈 뒤 합으로 없애는 계산이 **contraction(축 수축)이다**. i·j·k가 각각 출력 행·출력 열·공통 입력 축이라는 의미를 알면 compiler는 이를 나누어 처리할 수 있다. **Tiling**은 큰 행렬을 작은 조각으로 나누고, **scheduling**은 그 조각의 실행·이동 순서를 정한다. **Fusion**은 이어지는 계산을 함께 실행해 중간 저장·호출을 줄이는 변환이고, **mapping**은 논리적인 축과 조각을 장치의 계산·메모리 자원에 배치하는 것이다. 어느 변환도 무조건 이득은 아니며, 함께 유지해야 할 중간값이 늘면 메모리가 더 필요할 수 있다.
+여기서 필요한 용어를 연산 하나에 붙여 보자. 행렬곱 `C[i,j] = Σ_k A[i,k]×B[k,j]`에서 `Σ_k`는 “k를 차례로 바꾸며 곱한 값을 모두 더한다”는 뜻이다. 공통 축 k를 곱셈 뒤 합으로 없애는 계산이 contraction(축 수축)이다. i·j·k가 각각 출력 행·출력 열·공통 입력 축이라는 의미를 알면 compiler는 이를 나누어 처리할 수 있다. Tiling은 큰 행렬을 작은 조각으로 나누고, **scheduling**은 그 조각의 실행·이동 순서를 정한다. **Fusion**은 이어지는 계산을 함께 실행해 중간 저장·호출을 줄이는 변환이고, **mapping**은 논리적인 축과 조각을 장치의 계산·메모리 자원에 배치하는 것이다. 어느 변환도 무조건 이득은 아니며, 함께 유지해야 할 중간값이 늘면 메모리가 더 필요할 수 있다.
 
-**RMSNorm(Root Mean Square Layer Normalization)의** 이름도 계산을 풀면 이해할 수 있다. 입력 `[3,4]`의 제곱은 `[9,16]`, 제곱의 평균은 `(9+16)/2=12.5`, 그 제곱근은 약 3.5355다. 입력을 이 값으로 나누면 약 `[0.8485,1.1314]`가 된다. 실제 연산은 작은 epsilon과 학습한 채널별 배율도 포함한다. 이러한 계산 전체가 정규화라는 사실을 표시하는 **composite(복합 연산 표시)는** 후속 compiler가 의미를 인식할 실마리다. 표시 하나가 곧 빠른 하드웨어 명령이라는 뜻은 아니다. gated MLP(Multi-Layer Perceptron)는 특징 변환의 한 경로가 다른 경로의 값을 원소별 곱으로 조절하는 구조다. 이를 일반 곱·덧셈으로만 남길지 의미 있는 묶음으로 유지할지가 연구 질문이다.
+RMSNorm(Root Mean Square Layer Normalization)의 이름도 계산을 풀면 이해할 수 있다. 입력 `[3,4]`의 제곱은 `[9,16]`, 제곱의 평균은 `(9+16)/2=12.5`, 그 제곱근은 약 3.5355다. 입력을 이 값으로 나누면 약 `[0.8485,1.1314]`가 된다. 실제 연산은 작은 epsilon과 학습한 채널별 배율도 포함한다. 이러한 계산 전체가 정규화라는 사실을 표시하는 composite(복합 연산 표시)는 후속 compiler가 의미를 인식할 실마리다. 표시 하나가 곧 빠른 하드웨어 명령이라는 뜻은 아니다. gated MLP(Multi-Layer Perceptron)는 특징 변환의 한 경로가 다른 경로의 값을 원소별 곱으로 조절하는 구조다. 이를 일반 곱·덧셈으로만 남길지 의미 있는 묶음으로 유지할지가 연구 질문이다.
 
 모든 연산을 가장 작은 ATen(A Tensor Library) primitive로 분해하면 공통 규칙으로 다루기 쉬워진다. 반대로 RMSNorm(Root Mean Square Layer Normalization), attention, gated MLP(Multi-Layer Perceptron) 같은 의미 단위를 잃으면 해당 연산을 위한 좋은 실행 경로를 찾기 어려울 수 있다. TT-XLA는 사용자 RMSNorm 패턴을 표준 Torch 연산으로 바꾸고, composite 표시를 이용해 후속 분해에서도 그 의미를 보존하는 설계를 문서화했다. 이는 **다른 backend에서 확인한 설계 사례**이며 FuryNo5에 이미 같은 최적화가 있다는 뜻은 아니다. [고정 TT-XLA 설명](https://github.com/tenstorrent/tt-xla/blob/fdc3b7773674081b8f8c0698de3400d8d899dc8f/docs/source/fusing_and_composite_ops.md), [18장](18-npu-ecosystems.md)
 
@@ -445,7 +443,7 @@ flowchart TB
 
 ### attention의 중간 행렬을 줄이되 계산 의미는 유지한다
 
-Attention은 현재 **Q(Query, 질의 벡터)와** 앞선 위치들의 **K(Key, 비교용 벡터)를** 비교하고, 비교 점수에 따라 **V(Value, 내용 벡터)들을** 섞는다. 보통 쓰는 식은 `softmax(QKᵀ / sqrt(d) + mask)V`다. `Kᵀ`는 K의 행·열을 바꾸고, d는 비교 벡터 길이이며, `sqrt(d)`로 점수 크기를 조정한다. `sqrt`는 제곱근으로, `sqrt(4)=2`다. **Mask**는 볼 수 없는 위치를 제외한다. **Softmax**는 각 점수에 지수함수 exp를 적용한 뒤 그 합으로 나누어, 양수이면서 합이 1인 가중치를 만든다.
+Attention은 현재 **Q(Query, 질의 벡터)와** 앞선 위치들의 **K(Key, 비교용 벡터)를** 비교하고, 비교 점수에 따라 V(Value, 내용 벡터)들을 섞는다. 보통 쓰는 식은 `softmax(QKᵀ / sqrt(d) + mask)V`다. `Kᵀ`는 K의 행·열을 바꾸고, d는 비교 벡터 길이이며, `sqrt(d)`로 점수 크기를 조정한다. `sqrt`는 제곱근으로, `sqrt(4)=2`다. Mask는 볼 수 없는 위치를 제외한다. **Softmax**는 각 점수에 지수함수 exp를 적용한 뒤 그 합으로 나누어, 양수이면서 합이 1인 가중치를 만든다.
 
 #### 행은 토큰 위치, 열은 벡터 성분이다
 
@@ -558,7 +556,7 @@ print(*(round(x, 6) for x in (full_output, forward, reversed_order)))
 
 ## 9. workload마다 다른 연구 가설을 세운다
 
-다음 표는 측정 결과가 아니라 **병목을 확인한 뒤 선택할 실험 후보**다. 앞에서 본 layout은 메모리 순서, fusion은 이어지는 계산의 결합, bucket은 준비한 입력 크기 규격이다. **Device-resident state(장치에 상주하는 상태)는** 호출이 끝나도 장치 메모리에 남겨 다음 호출에서 재사용하는 배열이다. 복사를 줄일 수 있는 대신 동시에 살아 있는 배열, 즉 **live memory**의 합이 커져 다른 요청이 쓸 공간을 줄일 수 있다. 이 비용을 모델 종류별로 확인한다.
+다음 표는 측정 결과가 아니라 병목을 확인한 뒤 선택할 실험 후보다. 앞에서 본 layout은 메모리 순서, fusion은 이어지는 계산의 결합, bucket은 준비한 입력 크기 규격이다. Device-resident state(장치에 상주하는 상태)는 호출이 끝나도 장치 메모리에 남겨 다음 호출에서 재사용하는 배열이다. 복사를 줄일 수 있는 대신 동시에 살아 있는 배열, 즉 live memory의 합이 커져 다른 요청이 쓸 공간을 줄일 수 있다. 이 비용을 모델 종류별로 확인한다.
 
 LLM의 **prefill**은 이미 주어진 입력 토큰들을 처리하는 단계이고, **decode**는 앞선 출력으로 다음 토큰을 하나씩 생성하는 단계다. **Encoder**는 입력을 특징 배열로 바꾸는 모델, **embedding**은 검색·비교에 쓸 벡터 표현, **reranker**는 이미 찾은 후보들의 관련도를 다시 점수화하는 모델이다. **Diffusion(확산) 모델**은 잡음 상태를 여러 단계에 걸쳐 바꾸며 결과를 생성한다. 이름이 비슷한 모델끼리도 입력 길이와 반복 횟수가 달라 병목이 달라질 수 있다.
 
@@ -614,7 +612,7 @@ layout 경계는 ‘transpose node가 가장 적은 그래프’만으로 선택
 
 1. **공식 기준선을 고정한다.** 같은 품질·입력·준비 조건에서 성공하는 모델을 선택하고 전체 시간과 trace를 남긴다.
 2. **의미 보존 변환부터 분리 실험한다.** folding, 정적 값 준비, 불필요한 layout 변환 제거가 최종 compiler 결과에도 차이를 만드는지 본다.
-3. **고수준 의미를 가진 영역을 비교한다.** 무조건 큰 TCL(Tensor Contraction Language)을 만들기보다, 분해·결합 후보의 컴파일 비용과 실제 실행을 비교한다.
+3. **고수준 의미를 가진 영역을 비교한다.** 무조건 큰 TCL을 만들기보다, 분해·결합 후보의 컴파일 비용과 실제 실행을 비교한다.
 4. **병목에 맞는 모델 변경을 하나씩 적용한다.** pruning·증류·양자화 각각의 품질과 성능을 측정한 뒤 상호작용을 실험한다. pruning 후 calibration 분포가 달라질 수 있으므로 이전 scale을 무조건 재사용하지 않는다.
 5. **실제 입력 분포와 서비스 계약으로 재평가한다.** 버킷 수, cold start, 상태 메모리, 동시성까지 포함해 채택 여부를 정한다.
 

@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="770" viewBox="0 0 1000 770" role="img" aria-labelledby="title desc">
+ <title id="title">opt의 컴파일 결과를 host 프로그램이 찾아 실행하는 과정</title>
+ <desc id="desc">컴파일러가 Rust device 함수를 중간 vISA를 거쳐 장치 코드로 바꾸고, 코드와 메모리 연결 정보를 Image에 담아 host 실행 프로그램의 registry에 연결한다. 실행할 때 registry에서 찾은 Image를 opt runtime이 해석하고 장치 구성을 확인하며 메모리를 준비해 Function을 적재한다. 각 호출에서는 실제 입력과 출력 버퍼를 연결해 제출하고 완료를 확인한다. schedule JSON은 컴파일 시 만들어 보는 별도의 분석 자료다.</desc>
+ <defs><marker id="a" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0 0L9 4.5L0 9" stroke="#526778" fill="none" stroke-width="1.5"/></marker></defs>
+ <rect width="1000" height="770" rx="16" fill="#f7f8fa"/>
+ <g font-family="system-ui,sans-serif" fill="#1c3446">
+  <text x="32" y="44" font-size="27" font-weight="700">코드를 준비하는 때와 실제 입력으로 호출하는 때</text>
+  <text x="32" y="81" font-size="18">아래 방향은 처리 순서, Image 안의 상자는 포함 관계다.</text>
+  <rect x="24" y="103" width="952" height="342" rx="12" fill="#edf1f5"/>
+  <text x="44" y="137" font-size="22" font-weight="700">빌드할 때</text>
+  <g stroke="#7c9fc2" fill="#e5effb" stroke-width="1.5"><rect x="44" y="160" width="250" height="83" rx="9"/><rect x="375" y="160" width="250" height="83" rx="9"/></g>
+  <g text-anchor="middle" font-size="21"><text x="169" y="194">Rust #[device] 함수</text><text x="169" y="223" font-size="18">계산·배치·이동을 작성</text><text x="500" y="194">furiosa-opt 컴파일</text><text x="500" y="223" font-size="18">중간 vISA → 장치 코드</text></g>
+  <path d="M294 201H363" stroke="#526778" fill="none" stroke-width="2" marker-end="url(#a)"/>
+  <path d="M500 243V273" stroke="#526778" fill="none" stroke-width="2" marker-end="url(#a)"/>
+  <rect x="716" y="160" width="240" height="83" rx="9" stroke="#9a9da9" fill="#f1eef7"/>
+  <text x="836" y="192" font-size="20" text-anchor="middle">schedule JSON</text><text x="836" y="222" font-size="17" text-anchor="middle">별도로 보는 정적 분석 자료</text>
+  <path d="M625 201H704" stroke="#526778" fill="none" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a)"/>
+  <rect x="325" y="286" width="350" height="126" rx="10" fill="#fff2d9" stroke="#b49a65" stroke-width="1.5"/>
+  <text x="500" y="318" font-size="23" text-anchor="middle" font-weight="700">Image</text>
+  <text x="500" y="350" font-size="19" text-anchor="middle">Executable: 실제 장치 코드</text>
+  <text x="500" y="382" font-size="19" text-anchor="middle">인수 slot·topology·stack 정보 등</text>
+  <text x="44" y="435" font-size="18">링크 단계에서 Image를 host 실행 프로그램의 registry에 연결한다.</text>
+  <path d="M500 445V481" stroke="#526778" fill="none" stroke-width="2" marker-end="url(#a)"/>
+  <rect x="24" y="493" width="952" height="155" rx="12" fill="#e2f2e9"/>
+  <text x="44" y="527" font-size="22" font-weight="700">실행 준비</text>
+  <text x="44" y="562" font-size="21">registry에서 함수 찾기 → Image::parse → 장치 구성 확인·메모리 준비</text>
+  <text x="44" y="596" font-size="21">→ Binder 준비 → Function::load로 장치에 적재</text>
+  <text x="44" y="629" font-size="18">Image의 설명을 현재 장치 자원에 맞추는 단계다. 아직 이번 입력의 계산 결과는 없다.</text>
+  <path d="M500 648V680" stroke="#526778" fill="none" stroke-width="2" marker-end="url(#a)"/>
+  <rect x="24" y="692" width="952" height="58" rx="12" fill="#e5effb"/>
+  <text x="44" y="729" font-size="21">각 호출: 실제 입력·출력 버퍼 연결 → 실행 제출 → 완료 확인·결과 사용</text>
+ </g>
+</svg>

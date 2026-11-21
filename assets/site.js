@@ -47,7 +47,8 @@
   prepared:{steps:['준비 단계에서 ATen 대상과 입력 조건을 확인','TCL·EDF를 준비하고 custom op 구현을 등록','복사한 FX 그래프의 target을 준비된 op로 치환','forward에서 저장된 NPU 실행 객체 호출'],note:'준비 단계와 실행 단계를 구분합니다. ATen 전체를 전역으로 교체하거나 호출 때마다 TCL을 컴파일하는 구조가 아닙니다. 10·11장의 코드 경로를 확인하세요.'},
   export:{steps:['export_model이 모델 그래프와 입력 조건을 수집','지원 영역을 나누고 TCL·EDF와 바인딩을 준비','모델 단계·텐서 연결·상태가 담긴 실행계획 생성','fxbX 실행기가 계획을 검증하고 장치 프로그램 호출'],note:'EDF가 존재하는 것과 모델의 전체 실행계획이 완성된 것은 별개의 조건입니다. 계획 스키마·SDK·topology가 맞아야 합니다. 11·12장을 참고하세요.'},
   llm:{steps:['지원 모델의 설정·가중치와 호환되는 FXB를 로드','서빙 스케줄러가 요청·KV cache·버킷을 선택','준비된 커널과 입력을 런타임에 전달','결과·sampling·다음 decode 단계를 처리'],note:'공식 Furiosa-LLM의 모델·FXB 계약입니다. 임의 fxbX 파일을 전달한다고 새 모델 아키텍처가 자동으로 등록되지는 않습니다. 03·14장을 참고하세요.'},
-  opt:{steps:['Rust device 함수에서 vISA 계산·메모리 배치를 표현','cargo furiosa-opt가 표현을 장치 실행물로 컴파일','Device Function Image를 furiosa-opt-rt에 적재','버퍼를 바인딩하고 함수를 제출한 뒤 완료 확인'],note:'vISA는 중간 표현입니다. 공식 검증 문서는 컴파일된 EDF를 설명하며, opt 실행기는 Device Function Image를 받습니다. SDK EDF와 동일 포맷·ABI인지, 교차 적재할 수 있는지는 별도 검증이 필요합니다. 04·08장을 참고하세요.'}
+  direct:{steps:['모델과 예제 입력을 export하고 그래프를 정리','SDK compiler가 SDK IR Runnable을 생성','필요하면 SDK 형식으로 저장·복원','SDK Runnable을 장치에 적재하고 실제 입력으로 호출'],note:'FuryNo5 direct_runtime의 경로입니다. 저장한 model.runnable은 SDK 직렬화이며 TCC가 만든 EDF와 구분합니다. 홈의 경로 비교와 소스 링크를 참고하세요.'},
+  opt:{steps:['Rust device 함수에서 계산·메모리 배치를 표현','컴파일러가 장치 코드와 연결 정보를 Image에 담음','host registry의 Image를 opt-rt가 읽어 Function 적재','실제 버퍼를 연결해 제출하고 완료 확인'],note:'Image 안에 장치 코드가 포함됩니다. vISA는 컴파일 중간 표현이며, 별도 EDF를 Image로 바꾸는 변환 단계를 가정하지 않습니다. 상세한 포함 관계와 적재 순서는 08장의 그림에서 볼 수 있습니다.'}
  };
  for(const lab of $$('[data-lab]')){
   const type=lab.dataset.lab;

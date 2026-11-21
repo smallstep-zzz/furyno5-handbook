@@ -1,14 +1,12 @@
 # 메모리와 DMA: 배열의 값·주소·이동을 구분하기
 
-> **전체 경로에서의 위치**
->
-> 계산에 쓸 숫자를 CPU 메모리에서 장치로 옮기고, 사용한 공간을 다시 쓰는 단계다. 누가 이 일을 준비하는지는 [03장](03-driver-runtime.md)에서 다룬다.
+[01장](01-hardware.md)에서 계산할 숫자를 정했다. 이제 그 숫자가 어디에 있고, 계산하는 곳까지 어떻게 도착하는지 살펴보자. 같은 여섯 숫자로 모양과 주소를 구별한 뒤 장치 전송으로 넓힌다.
 
-**계산할 값이 맞아도, 그 값을 읽는 주소와 사용 시점이 틀리면 결과가 틀린다.** NPU(Neural Processing Unit)를 다룰 때 메모리가 어려워지는 이유는 CPU(Central Processing Unit) 쪽 배열, 카드의 큰 메모리, 계산 가까이의 메모리가 따로 있기 때문이다. 이 장은 여섯 숫자가 든 배열에서 시작해 `reshape`, 전치, 주소 계산, 장치 전송과 버퍼 수명을 연결한다.
+예를 들어 숫자 6개를 2행 3열로 읽을 때와 3행 2열로 읽을 때는 좌표가 달라진다. 값은 같아도 읽는 순서가 바뀔 수 있다. 이 차이를 먼저 확인하면 `reshape`와 전치, 복사가 필요한 경우를 구분할 수 있다.
 
 ## 1. `reshape(2, 3)`은 무엇을 하는가
 
-먼저 숫자 여섯 개를 만든다. **Shape(형상)는** 각 축의 길이이며, 길이 6인 1차원 배열의 shape는 `(6,)`이다. `reshape`는 원소의 총수를 유지하면서 이 값을 어떤 모양으로 읽을지 바꾸는 함수다. `reshape(2, 3)`은 **2행 3열로 읽겠다**는 뜻이다. 새로 곱셈이나 덧셈을 수행하는 연산은 아니다. [NumPy reshape 계약](https://numpy.org/doc/stable/reference/generated/numpy.reshape.html)
+먼저 숫자 여섯 개를 만든다. Shape(형상)는 각 축의 길이이며, 길이 6인 1차원 배열의 shape는 `(6,)`이다. `reshape`는 원소의 총수를 유지하면서 이 값을 어떤 모양으로 읽을지 바꾸는 함수다. `reshape(2, 3)`은 2행 3열로 읽겠다는 뜻이다. 새로 곱셈이나 덧셈을 수행하는 연산은 아니다. [NumPy reshape 계약](https://numpy.org/doc/stable/reference/generated/numpy.reshape.html)
 
 ```python
 import numpy as np  # CPU에서 숫자 배열과 메모리 표현을 살펴보기 위해 사용한다.
@@ -159,7 +157,7 @@ np.testing.assert_array_equal(row_added, [[11, 12, 13], [24, 25, 26]])
 
 ## 5. DMA는 어디서 어디로 무엇을 옮기는가
 
-**DMA(Direct Memory Access)는** CPU가 원소마다 복사 명령을 반복하는 대신 전송 엔진에 데이터 이동을 맡기는 방식이다. CPU·런타임이 전송을 준비하고 완료를 관리하는 일까지 없어지지는 않는다. **호스트(host)는** NPU를 제어하는 CPU 쪽 시스템, **장치(device)는** 여기서는 RNGD다.
+DMA(Direct Memory Access)는 CPU가 원소마다 복사 명령을 반복하는 대신 전송 엔진에 데이터 이동을 맡기는 방식이다. CPU·런타임이 전송을 준비하고 완료를 관리하는 일까지 없어지지는 않는다. 호스트(host)는 NPU를 제어하는 CPU 쪽 시스템, **장치(device)는** 여기서는 RNGD다.
 
 HBM(High Bandwidth Memory)은 카드의 큰 메모리, DM(Data Memory)은 계산할 값을 준비하는 칩 내부 메모리다. **Tensor Unit**은 DM에서 읽은 값을 여러 연산 엔진을 거쳐 처리하는 칩 내부 계산 파이프라인이다. **Fetch**는 DM에서 그 계산 흐름으로 값을 읽고, **Commit**은 계산 결과를 DM에 저장한다. 아래의 서로 다른 화살표를 구분하는 것이 출발점이다.
 
@@ -214,7 +212,7 @@ Furiosa의 DMA는 출발·도착 mapping으로 이러한 주소 발생 규칙을
 
 <!-- interactive:dma -->
 
-**Tile(타일)은** 큰 배열을 나눠 한 번에 처리하는 작은 묶음이다. 겹침을 만들려면 계산 중인 타일과 다음에 복사할 타일이 서로의 데이터를 덮어쓰면 안 된다. 값을 담아 둘 메모리 영역인 **버퍼(buffer) 두 개를** 번갈아 쓰는 **double buffering(이중 버퍼링)이** 한 방법이다. 장치의 실제 엔진·메모리 경쟁과 제출 비용 때문에 모든 작업이 이 이상적 시간에 도달하는 것은 아니다. [공식 메모리 이동·스케줄 전제](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/moving-tensors/index.md)
+Tile(타일)은 큰 배열을 나눠 한 번에 처리하는 작은 묶음이다. 겹침을 만들려면 계산 중인 타일과 다음에 복사할 타일이 서로의 데이터를 덮어쓰면 안 된다. 값을 담아 둘 메모리 영역인 버퍼(buffer) 두 개를 번갈아 쓰는 **double buffering(이중 버퍼링)이** 한 방법이다. 장치의 실제 엔진·메모리 경쟁과 제출 비용 때문에 모든 작업이 이 이상적 시간에 도달하는 것은 아니다. [공식 메모리 이동·스케줄 전제](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/moving-tensors/index.md)
 
 ### 두 버퍼를 시간표에 직접 붙여 보자
 

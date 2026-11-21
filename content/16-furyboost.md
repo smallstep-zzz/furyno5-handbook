@@ -1,10 +1,8 @@
 # FuryBoost 학습 성능 분석: NPU에 올린 뒤에도 CPU보다 느린 이유
 
-> **전체 경로에서의 위치**
->
-> 트리를 학습하는 실제 실험으로 CPU 준비와 NPU 계산의 시간을 비교한다. [07장](07-optimization.md)에서 배운 전체 비용의 관점을 적용하는 사례다.
+장치 계산만 빨라져도 전체 프로그램은 여전히 느릴 수 있다. [07장](07-optimization.md)의 시간 분해를 실제 FuryBoost 학습 기록에 적용해 보자. 이 장은 신경망 추론 대신 트리를 학습하는 사례다.
 
-한 번에 큰 배열을 처리할 때 빠른 장치도, 작은 일을 수백만 번 보내고 매번 기다리면 전체 프로그램은 느릴 수 있다. 이 장은 실제 학습 기록에서 그 차이를 살펴본다.
+FuryBoost의 기록에는 NPU에서 계산을 수행한 증거와 전체 실행시간이 함께 있다. 두 기록을 같이 읽으면 장치 사용 여부만으로 성능을 판단할 수 없는 이유를 볼 수 있다. CPU가 입력을 준비하고 작은 작업을 반복 제출하는 비용도 학습시간에 들어가기 때문이다.
 
 FuryBoost는 RNGD에서 학습을 실행하고 여러 개선을 적용했지만, 기록된 HIGGS 비교에서는 멀티코어 XGBoost·LightGBM보다 느렸다. CPU 전처리, 장치 호출, 계산, 완료 대기 중 어디에 시간이 쓰였는지 나누어 다음 개선을 고른다. 사용한 자료는 커밋 `62faf49`에 저장된 2026-11-19 기록이다. [FuryBoost README](https://github.com/smallstep-zzz/FuryBoost/blob/62faf49a29cc40230ee3df271b8f91ad8488eb5d/README.md)
 
@@ -84,11 +82,11 @@ assert min(results, key=lambda item: item[1])[0] == 0.5
 
 실제 FuryBoost에서는 많은 행·후보의 통계와 gain 계산을 NPU 쪽으로 보내고, 그 결과를 받아 CPU가 최종 후보를 고르는 경계가 있다. 이 toy 계산은 그 경계를 이해하기 위한 것이다. 실제 HIGGS의 이진분류 손실·규제·대칭 트리 제약을 이 회귀 계산으로 대체한 실험은 아니다. [후보 선택과 공통 학습 순서](https://github.com/smallstep-zzz/FuryBoost/blob/62faf49a29cc40230ee3df271b8f91ad8488eb5d/furyboost/training.py)
 
-**Learning rate(학습률)는** 새 트리의 보정값을 현재 예측에 얼마나 반영할지 정하는 배율이다. 이를 0.5로 정해 새 트리 값을 절반만 더하면 예측은 `[0.5,0.5,1.5,1.5]`가 된다. 다음 트리는 이 **갱신된 예측**에서 gradient를 다시 구해야 한다. 이것이 **boosting round(트리를 하나 더하는 반복)** 사이의 순서 의존성이다. 트리 30개를 독립적인 30개 작업으로 동시에 계산할 수 없는 이유다. NPU로 옮기기 좋은 후보는 한 round 안에서 많은 행·분할 후보의 통계를 모으는 계산이다. [학습 순서의 구현](https://github.com/smallstep-zzz/FuryBoost/blob/62faf49a29cc40230ee3df271b8f91ad8488eb5d/furyboost/training.py)
+Learning rate(학습률)는 새 트리의 보정값을 현재 예측에 얼마나 반영할지 정하는 배율이다. 이를 0.5로 정해 새 트리 값을 절반만 더하면 예측은 `[0.5,0.5,1.5,1.5]`가 된다. 다음 트리는 이 갱신된 예측에서 gradient를 다시 구해야 한다. 이것이 **boosting round(트리를 하나 더하는 반복)** 사이의 순서 의존성이다. 트리 30개를 독립적인 30개 작업으로 동시에 계산할 수 없는 이유다. NPU로 옮기기 좋은 후보는 한 round 안에서 많은 행·분할 후보의 통계를 모으는 계산이다. [학습 순서의 구현](https://github.com/smallstep-zzz/FuryBoost/blob/62faf49a29cc40230ee3df271b8f91ad8488eb5d/furyboost/training.py)
 
 ### Binning과 histogram은 어떤 일을 줄이는가
 
-**Threshold(경계값)를** 모든 서로 다른 실수 값에서 시험하면 후보가 많아진다. **Binning(구간 번호화)은** 값을 몇 개의 구간으로 나누어 정수 번호로 바꾸는 전처리다. 위 네 값을 경계 0.5로 나누면 `[0,0,1,1]`이다. **Histogram(구간별 집계)은** 각 구간 또는 후보에 해당하는 행의 통계를 모은 결과다. DB의 `GROUP BY`와 `SUM(gradient), SUM(hessian), COUNT(*)`에 대응시켜 생각할 수 있다.
+**Threshold(경계값)를** 모든 서로 다른 실수 값에서 시험하면 후보가 많아진다. Binning(구간 번호화)은 값을 몇 개의 구간으로 나누어 정수 번호로 바꾸는 전처리다. 위 네 값을 경계 0.5로 나누면 `[0,0,1,1]`이다. Histogram(구간별 집계)은 각 구간 또는 후보에 해당하는 행의 통계를 모은 결과다. DB의 `GROUP BY`와 `SUM(gradient), SUM(hessian), COUNT(*)`에 대응시켜 생각할 수 있다.
 
 ```python
 # 통계 집계의 뜻을 보여 주는 순수 Python. NPU 구현이 아니다.
@@ -182,7 +180,7 @@ warm 6.573초만 원본 입력의 CPU 4.731/3.091초와 비교해 전체 성능 
 
 ## 5. 최신 dev4: 호출 수를 줄인 효과와 여전히 남은 격차
 
-후속 실험은 **tree 30개·depth 5**여서 앞 절의 5개·depth 3과 직접 이어 붙이지 않는다. dev3와 dev4를 같은 조건으로 재측정했고, 40만 행으로 예열한 뒤 1,050만 행을 학습했다. **Tile(작업 조각)은** 큰 배열을 한 번에 처리하기 좋은 부분으로 나눈 것이다. row tile 2,048은 행 2,048개씩, candidate tile 128은 분할 후보 128개씩 묶는다는 뜻이다. 둘을 함께 비교하면 논리적으로 `2,048×128=262,144`개의 선택 여부를 다룬다. 이것은 비교 자리 수이며 실제 저장 바이트 수는 자료형·표현에 달려 있다. 이 실험은 row tile 2,048, candidate tile 128, binning 16 threads, 비교 마스크 cache 한도 24,000 MiB였다. 각 버전의 전체 학습은 준비된 EDF로 한 번 측정했다. [paired 실험 조건](https://github.com/smallstep-zzz/FuryBoost/blob/62faf49a29cc40230ee3df271b8f91ad8488eb5d/reports/rngd-server3/grouped-histograms/README.md)
+후속 실험은 tree 30개·depth 5여서 앞 절의 5개·depth 3과 직접 이어 붙이지 않는다. dev3와 dev4를 같은 조건으로 재측정했고, 40만 행으로 예열한 뒤 1,050만 행을 학습했다. Tile(작업 조각)은 큰 배열을 한 번에 처리하기 좋은 부분으로 나눈 것이다. row tile 2,048은 행 2,048개씩, candidate tile 128은 분할 후보 128개씩 묶는다는 뜻이다. 둘을 함께 비교하면 논리적으로 `2,048×128=262,144`개의 선택 여부를 다룬다. 이것은 비교 자리 수이며 실제 저장 바이트 수는 자료형·표현에 달려 있다. 이 실험은 row tile 2,048, candidate tile 128, binning 16 threads, 비교 마스크 cache 한도 24,000 MiB였다. 각 버전의 전체 학습은 준비된 EDF로 한 번 측정했다. [paired 실험 조건](https://github.com/smallstep-zzz/FuryBoost/blob/62faf49a29cc40230ee3df271b8f91ad8488eb5d/reports/rngd-server3/grouped-histograms/README.md)
 
 | 동일 조건 paired 비교 | dev3 | dev4 |
 |---|---:|---:|
