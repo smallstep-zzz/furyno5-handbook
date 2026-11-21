@@ -275,6 +275,40 @@ FHA(Furiosa-Hug-Anything)와 비교할 지점도 여기에 있다. 모델을 찾
 
 이 순서는 기능이 이미 구현되었다는 뜻이 아니다. 현재 구현은 [10–13장](10-furyno5-architecture.md), 개선 후보의 평가 방법은 [19장](19-model-optimization.md)을 함께 본다.
 
+## 7. AMD·Intel의 드라이버 통합은 ATen 구현인가?
+
+Intel OpenVINO NPU 경로에서는 컴파일러 라이브러리가 드라이버 패키지에 포함되기도 한다. OpenVINO 패키지에 포함된 컴파일러를 선택하는 경로도 있다. 따라서 설치 위치가 ‘드라이버’여도, 모델 변환을 담당하는 컴파일러와 커널 드라이버의 작업 제출 역할을 구분해야 한다. 아래 비교는 **2026-11-21에 확인한 대표 추론 경로**를 기준으로 한다.
+
+| 계층 | AMD Ryzen AI 대표 경로 | Intel OpenVINO NPU 경로 | Furiosa 대표 경로 |
+|---|---|---|---|
+| 모델 입력 | ONNX Runtime에 ONNX 모델 전달 | OpenVINO 모델 변환·읽기 | SDK의 PyTorch export 또는 Furiosa-LLM 지원 모델 |
+| 컴파일 | Vitis AI EP가 지원 그래프를 장치 실행물로 변환 | NPU 플러그인이 컴파일러를 호출해 장치용 형식 생성 | TCL·SDK 컴파일로 EDF·Runnable 생성, 공식 LLM은 FXB 준비 |
+| 실행 관리 | ONNX Runtime과 EP | OpenVINO NPU 플러그인 | SDK Runnable 또는 Furiosa-LLM, 사용자 fxbX 실행계획 |
+| 장치 접근 | 해당 런타임과 XDNA 드라이버 | 사용자 공간 장치 API와 NPU 드라이버 | Furiosa 런타임과 드라이버 |
+
+AMD의 ONNX Runtime EP가 ONNX 그래프를 받는다는 사실은 ATen 디스패처의 각 연산을 AMD NPU용으로 등록했다는 증거가 아니다. ATen 구현 여부를 확인하려면 PyTorch dispatcher 등록이나 backend 코드를 별도로 봐야 한다. Intel에서도 OpenVINO로 모델을 변환해 NPU에서 실행하는 경로와 PyTorch의 연산별 장치 디스패치를 구분한다. AMD GPU의 ROCm 경로 역시 Ryzen AI NPU 경로와 다른 대상이다.
+
+위 표에서 컴파일러는 사용자 공간에서 장치 실행물을 만들고, 드라이버는 그 실행물을 제출할 때 사용된다. 모델을 처음 열 때 컴파일할 수도 있고, 미리 만든 실행물이나 캐시를 불러올 수도 있다.
+
+AMD Vitis AI EP는 지원하는 서브그래프를 선택하고 컴파일한다. CPU EP와 함께 구성하면 지원되지 않는 구간이 CPU로 배정될 수 있다. 이때 모델이 실행됐다는 사실과 NPU에서 효율적으로 실행됐다는 사실을 각각 확인해야 한다. Intel OpenVINO 역시 장치 선택·플러그인·모델 지원 범위를 확인한다. 드라이버를 설치한 뒤 임의 모델이 모두 같은 경로로 실행된다고 가정하지 않는다.
+
+[AMD Ryzen AI 배포 문서](https://ryzenai.docs.amd.com/projects/WinML/en/stable/model_deployment.html) · [ONNX Runtime Vitis AI EP](https://onnxruntime.ai/docs/execution-providers/Vitis-AI-ExecutionProvider.html) · [Intel NPU 장치·컴파일러 문서](https://docs.openvino.ai/2026/openvino-workflow/running-inference/inference-devices-and-modes/npu-device.html) · [AMD XDNA 드라이버와 사용자 공간 SHIM](https://github.com/amd/xdna-driver)
+
+### 서로 도입한다면 얻을 수 있는 것
+
+다음은 공개 실행 경로를 바탕으로 한 **설계 제안**이다. 해당 기능이 제품에 없다는 전수 조사나 업체 간 성능 비교 결과를 뜻하지 않는다.
+
+| 도입 방향 | 구체적인 제안 | 기대 효과 | 함께 해결해야 할 비용 |
+|---|---|---|---|
+| Furiosa가 그래프 런타임 통합을 넓힘 | 일반 모델을 공통 입력 형식으로 받아 지원 영역과 거절 원인을 보여 주고 컴파일·캐시·실행을 연결 | 모델별 연결 코드와 첫 실행 준비 부담 감소 | CPU/NPU 경계의 복사·동기화 비용을 포함한 영역 선택, 동적 shape와 상태 계약 |
+| Furiosa가 드라이버·컴파일러 배포를 단순화 | 앱이 호환되는 컴파일러·런타임 조합을 조회하고 캐시 유효성을 판단 | 버전 불일치와 설치 문제를 조기에 진단 | 업그레이드 시 캐시 무효화와 장치별 실행물 검증 |
+| AMD·Intel이 Furiosa식 배포 경험을 참고 | shape·정밀도·장치 구성별 실행물과 ABI·버전을 묶어 오프라인 검증 후 배포 | 서비스 시작 시 컴파일 감소, 재현성과 배포 이력 개선 | 입력 분포가 바뀌면 변형 수·저장량·갱신 비용 증가 |
+| AMD·Intel이 TCL식 메모리·융합 설계를 참고 | 모델 블록의 데이터 재사용과 전송·계산 스케줄을 한 영역에서 최적화 | 중간 텐서 저장과 작은 작업 제출 감소 가능 | 장치마다 메모리 계층과 명령이 다르므로 해당 장치용 컴파일러가 구현해야 함 |
+
+AMD와 Intel도 이미 그래프 컴파일과 캐시를 제공한다. 위 제안의 가치는 기존 기능보다 더 나은 호환성 기록, 영역 선택, 메모리 재사용을 구현했을 때 발생한다. Furiosa의 EDF나 TCL을 다른 업체의 NPU에서 바로 실행하는 것으로 해석하면 안 된다.
+
+예를 들어 CPU에서 1 ms에 끝나는 작은 연산을 NPU로 보냈는데 왕복 복사·제출이 2 ms이고 계산이 0.2 ms라면 전체는 2.2 ms가 된다. 반대로 큰 연속 영역을 한 번 전달하고 중간 결과를 장치에 유지해 전체 0.8 ms로 끝낸다면 NPU 배정의 이익이 생긴다. 이 수치는 영역 선택을 설명하기 위한 가상 예시다.
+
 ## 출처
 
 | 자료 | 확인한 범위 |

@@ -3431,6 +3431,42 @@
     "access": "public"
   },
   {
+    "url": "https://ryzenai.docs.amd.com/projects/WinML/en/stable/model_deployment.html",
+    "chapters": [
+      "18-npu-ecosystems"
+    ],
+    "source_baseline_on": "2026-11-19",
+    "catalog_updated_on": "2026-11-20",
+    "access": "public"
+  },
+  {
+    "url": "https://onnxruntime.ai/docs/execution-providers/Vitis-AI-ExecutionProvider.html",
+    "chapters": [
+      "18-npu-ecosystems"
+    ],
+    "source_baseline_on": "2026-11-19",
+    "catalog_updated_on": "2026-11-20",
+    "access": "public"
+  },
+  {
+    "url": "https://docs.openvino.ai/2026/openvino-workflow/running-inference/inference-devices-and-modes/npu-device.html",
+    "chapters": [
+      "18-npu-ecosystems"
+    ],
+    "source_baseline_on": "2026-11-19",
+    "catalog_updated_on": "2026-11-20",
+    "access": "public"
+  },
+  {
+    "url": "https://github.com/amd/xdna-driver",
+    "chapters": [
+      "18-npu-ecosystems"
+    ],
+    "source_baseline_on": "2026-11-19",
+    "catalog_updated_on": "2026-11-20",
+    "access": "public"
+  },
+  {
     "url": "https://developer.furiosa.ai/v2026.4.1/en/overview/software_stack.html",
     "chapters": [
       "19-model-optimization"
