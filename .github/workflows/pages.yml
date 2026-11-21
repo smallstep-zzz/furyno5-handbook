@@ -18,9 +18,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Validate static documentation
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install build dependencies
         run: |
-          python3 tools/check_site.py
+          sudo apt-get update
+          sudo apt-get install -y graphviz fonts-noto-cjk
+          npm install --ignore-scripts --no-audit --no-fund
+      - name: Generate public HTML from Markdown
+        run: npm run build
+      - name: Validate generated documentation
+        run: |
+          npm run check
           node --check assets/site.js
       - uses: actions/configure-pages@v5
       - name: Prepare public files
