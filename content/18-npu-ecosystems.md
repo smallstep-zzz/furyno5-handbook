@@ -294,6 +294,80 @@ AMD Vitis AI EP는 지원하는 서브그래프를 선택하고 컴파일한다.
 
 [AMD Ryzen AI 배포 문서](https://ryzenai.docs.amd.com/projects/WinML/en/stable/model_deployment.html) · [ONNX Runtime Vitis AI EP](https://onnxruntime.ai/docs/execution-providers/Vitis-AI-ExecutionProvider.html) · [Intel NPU 장치·컴파일러 문서](https://docs.openvino.ai/2026/openvino-workflow/running-inference/inference-devices-and-modes/npu-device.html) · [AMD XDNA 드라이버와 사용자 공간 SHIM](https://github.com/amd/xdna-driver)
 
+### 같은 Linear → ReLU를 코드로 따라가기
+
+![같은 Linear·ReLU 모델의 AMD·Intel·Furiosa 컴파일 및 드라이버 제출 경로](../assets/diagrams/npu-three-stacks.svg)
+
+세 예제는 입력 `[4,8]`, 가중치 `[8,8]`, bias `[8]`인 같은 모델을 사용한다. 가중치는 단위행렬, bias는 전부 1이므로 결과는 입력에 1을 더한 뒤 음수를 0으로 바꾼 값이다. 가중치와 입력이 고정돼 있어 서로 다른 환경에서도 같은 CPU 기준값을 만들 수 있다.
+
+아래 코드를 저장한 [compare_npu_stacks.py](../examples/compare_npu_stacks.py)는 각 업체의 SDK 환경에서 따로 실행한다. 지원하는 드라이버·NPU와 관련 Python 패키지가 필요하다. 편집 환경에서는 구문만 확인했고 세 장치 실행은 수행하지 않았다.
+
+```python
+model = torch.nn.Sequential(torch.nn.Linear(8, 8), torch.nn.ReLU())
+with torch.no_grad():
+    model[0].weight.copy_(torch.eye(8))
+    model[0].bias.fill_(1)
+model.eval().requires_grad_(False)
+x = torch.arange(-16, 16, dtype=torch.float32).reshape(4, 8)
+reference = model(x)  # [4,8], CPU 기준값
+```
+
+**AMD** — Ryzen AI 1.6 개발용 BF16 컴파일 경로를 기준으로, STX/KRK 이상에서 해당 SDK의 BF16 설정 파일을 지정한다. 공통 스크립트의 `export` 실행으로 만든 `tiny-linear.onnx`를 입력으로 사용한다. 배포 전용 EP에서 이미 준비된 실행물이 필요한 경우 개발 환경에서 먼저 준비한다.
+
+```python
+# model과 x는 위 공통 예제에서 준비한다.
+torch.onnx.export(model, (x,), "tiny-linear.onnx",
+                  input_names=["x"], output_names=["y"],
+                  opset_version=17, dynamo=False)
+# 여기까지는 모델 교환 형식 생성이다.
+session = ort.InferenceSession(
+    "tiny-linear.onnx",
+    providers=["VitisAIExecutionProvider"],
+    provider_options=[{"config_file": "vai_ep_config.json"}],
+)  # 지원 영역의 장치 컴파일 또는 호환 캐시 로드
+actual = session.run(["y"], {"x": x.numpy()})[0]
+```
+
+AMD 경로에서 PyTorch 연산은 ONNX 내보내기 시 그래프 의미로 변환된다. 이 모델은 Gemm·Relu 같은 ONNX 연산으로 표현될 수 있으며, 실행 중에는 ORT와 EP가 그 그래프를 처리한다. 다운로드 스크립트는 ORT 프로파일의 실행 provider도 출력한다. CPU 구간이 있거나 Vitis AI 실행을 관측하지 못하면 SDK Analyzer에서 영역 배정을 확인한다. 세션 생성 성공만으로 전체 모델의 NPU 배정을 판정하지 않는다. [AMD 1.6 컴파일·배포와 BF16 설정](https://ryzenai.docs.amd.com/en/1.6/modelrun.html)
+
+**Intel** — OpenVINO를 설치하고 호환되는 Intel NPU가 있는 환경에서 다음 순서로 실행한다.
+
+```python
+import openvino as ov
+core = ov.Core()
+ir = ov.convert_model(model, example_input=x)  # 모델 표현 변환
+compiled = core.compile_model(ir, "NPU")     # 장치 컴파일
+actual = compiled([x.numpy()])[compiled.output(0)]
+print(compiled.get_property("EXECUTION_DEVICES"))
+```
+
+PyTorch 연산 의미를 받아 OpenVINO IR로 옮기는 부분과 NPU용 실행물을 만드는 부분이 두 호출로 드러난다. NPU 플러그인이 선택한 컴파일러는 드라이버 패키지 또는 OpenVINO 패키지에서 제공될 수 있다. 커널 드라이버에 도착할 때는 장치 실행 요청과 버퍼가 준비된 상태다. [PyTorch 변환](https://docs.openvino.ai/2025/openvino-workflow/model-preparation/convert-model-pytorch.html) · [Intel NPU 컴파일러](https://docs.openvino.ai/2026/openvino-workflow/running-inference/inference-devices-and-modes/npu-device.html)
+
+**Furiosa** — 이 예제는 FuryNo5의 직접 실행 도우미로 SDK의 파라미터 바인딩을 준비한다.
+
+```python
+from tclmachine import prepare_model_direct
+with prepare_model_direct(
+    model, (x,), artifact_root="./tiny-furiosa", device="furiosa:0"
+) as prepared:
+    actual, = prepared(x)
+    torch.testing.assert_close(actual, model(x), atol=0.02, rtol=0.02)
+```
+
+도우미 내부에서 `torch.export.export`로 ATen 그래프와 가중치 연결을 얻고, `ft.compiler.compile`이 SDK Runnable을 만든다. 활성화할 때 `ft.Runnable(compiled).to(device)`로 프로그램을 올린다. 입력 바인딩에 맞춰 호출한 뒤 CPU 출력을 반환한다. 이 예제는 SDK 직접 실행 경로이며, 공식 LLM FXB의 버킷·KV Cache 스케줄러 경로는 [14장](14-serving-vllm.md)에서 다룬다.
+
+```bash
+# 공통 파일을 각 SDK 환경으로 복사한 뒤 실행한다.
+python compare_npu_stacks.py export
+python compare_npu_stacks.py amd --amd-config /path/to/vai_ep_config.json
+python compare_npu_stacks.py intel
+python compare_npu_stacks.py furiosa
+```
+
+API의 역할을 비교하기 위한 작은 모델이다. AMD BF16 컴파일과 Intel·Furiosa의 내부 정밀도 선택이 같다고 가정하지 않으며, 스크립트는 모든 경로에서 CPU 기준값과 허용 오차를 검사한다. 크기가 작아 전송·제출 비용이 계산보다 커질 수 있어 업체별 성능 순위에 쓰지 않는다.
+
+**ATen과 드라이버를 연결해서 읽기** — PyTorch의 ATen은 모델 연산 의미를 표현하거나 장치 구현을 고르는 계층이다. 그래프 변환 경로에서는 그 의미를 컴파일러가 받아 다른 IR과 장치 프로그램으로 내린다. 런타임은 프로그램·버퍼·실행 의존성을 드라이버에 제출한다. 따라서 이 세 코드에서 드라이버가 `aten.linear`를 직접 받아 Python 연산을 해석한다고 읽으면 실행 경로를 잘못 이해하게 된다.
+
 ### 서로 도입한다면 얻을 수 있는 것
 
 다음은 공개 실행 경로를 바탕으로 한 **설계 제안**이다. 해당 기능이 제품에 없다는 전수 조사나 업체 간 성능 비교 결과를 뜻하지 않는다.

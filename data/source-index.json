@@ -3467,6 +3467,24 @@
     "access": "public"
   },
   {
+    "url": "https://ryzenai.docs.amd.com/en/1.6/modelrun.html",
+    "chapters": [
+      "18-npu-ecosystems"
+    ],
+    "source_baseline_on": "2026-11-19",
+    "catalog_updated_on": "2026-11-20",
+    "access": "public"
+  },
+  {
+    "url": "https://docs.openvino.ai/2025/openvino-workflow/model-preparation/convert-model-pytorch.html",
+    "chapters": [
+      "18-npu-ecosystems"
+    ],
+    "source_baseline_on": "2026-11-19",
+    "catalog_updated_on": "2026-11-20",
+    "access": "public"
+  },
+  {
     "url": "https://developer.furiosa.ai/v2026.4.1/en/overview/software_stack.html",
     "chapters": [
       "19-model-optimization"
