@@ -1,5 +1,11 @@
 # 최적화: 같은 계산을 같은 범위로 재고 큰 비용부터 줄이기
 
+> **전체 경로에서의 위치**
+>
+> 정확한 실행·측정 → **병목 선택과 변경** → 같은 조건의 재측정
+>
+> 계층을 새로 추가하는 장이 아니라 전체 경로의 비용을 줄이는 장이다. 컴파일·적재·전송·제출·연산을 나누어 어느 경계를 바꿀지 정한다. 저수준 스케줄은 [08장](08-eisa-visa.md), 모델 구조를 바꾸는 방법은 [19장](19-model-optimization.md)에서 이어간다.
+
 CPU(Central Processing Unit) 함수의 앞뒤에 타이머를 놓으면 경과 시간을 잴 수 있다. 그러나 NPU(Neural Processing Unit) 호출은 **일을 제출한 뒤 CPU로 먼저 돌아올 수 있다.** 이때 함수가 돌아온 시간만 재면 장치 계산이 끝나기 전까지의 일부 시간만 측정하게 된다. 또한 첫 호출에는 컴파일·파일 읽기·가중치 적재가 포함될 수 있어 반복 호출과 같은 조건이 아니다.
 
 따라서 첫 최적화 작업은 코드 변경보다 **어디서부터 어디까지 재는지 정하는 일**이다. 여기서는 한 요청의 시간을 나누고, 실제 fxbX 호출을 계측한 다음, 데이터 이동·저장 배치·연산 결합을 비교하는 순서로 진행한다.
@@ -17,6 +23,8 @@ flowchart TB
     E --> F["완료 대기 · D2H · 후처리"]
     G["따뜻한 반복 요청"] --> D
 ```
+
+위 그림은 모델을 새로 캡처·컴파일하는 준비 경로다. 이미 만든 FXB·fxbX를 적재하는 경우에는 해당 준비를 반복하지 않고 파일 검사·장치 적재부터 시작한다.
 
 H2D(Host to Device)는 호스트에서 장치로, D2H(Device to Host)는 장치에서 호스트로 데이터를 옮기는 것이다. **Host**는 장치를 제어하는 CPU 측 프로세스이며, **wall time**은 실제 시계로 잰 시작부터 완료까지의 시간이다. “모델이 198초 걸린다”는 관측은 초기 적재인지, 첫 compile인지, 요청 지연인지부터 나눠야 한다. 이 그림의 항목은 계측 구간이며, 비동기 overlap이 있으면 단순 합이 실제 wall time과 일치하지 않을 수 있다.
 
@@ -55,61 +63,40 @@ H2D(Host to Device)는 호스트에서 장치로, D2H(Device to Host)는 장치�
 
 ## 2. 실제 측정 코드: 완료된 CPU 출력을 기준으로 잰다
 
-다음 스크립트는 5장의 `small-mlp.fxbx`와 **동일한 시드·구조·가중치**를 사용한다. 패키지의 입력 형상은 `(4,8)`이고 출력도 `(4,8)`인, 호출 사이에 상태를 유지하지 않는 작은 MLP(Multi-Layer Perceptron)다. 호환 SDK(Software Development Kit), FuryNo5·fxbX 설치와 RNGD가 필요하다. 이 원고를 작성한 환경에서는 NPU로 실행하지 않았다.
+다음 스크립트는 5장의 `small-mlp.fxbx`와 **동일한 시드·구조·가중치**를 사용한다. 패키지의 입력 형상은 `(4,8)`이고 출력도 `(4,8)`인, 호출 사이에 상태를 유지하지 않는 작은 MLP(Multi-Layer Perceptron)다. 호환 SDK(Software Development Kit), FuryNo5·fxbX 설치와 RNGD가 필요하다.
 
 `output_device="cpu"`를 명시하여 호출자에게 돌아온 결과를 CPU에서 읽을 수 있는 범위까지 잰다. 따라서 이 예의 측정값은 **CPU 입력 → 실행 → CPU 출력의 요청 시간**이며, 순수 장치 커널 시간으로 부르면 안 된다. fxbX의 해당 실행계획 경로가 이 인수를 지원한다. [ExecutionFXB.predict 구현](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py)
 
 실습 파일: [benchmark_mlp.py](../examples/benchmark_mlp.py). 5장에서 만든 패키지가 있는 작업 디렉터리에서 실행한다.
 
+전체 파일은 동일 가중치 준비, 최초 적재·호출, 예열, 반복 측정, 수치 비교를 각각 수행한다. 본문에서는 **이미 적재한 세션에서 반복 요청의 완료 시간을 재는 부분**에 집중한다. `session`, `x`, `reference`는 앞서 설명한 패키지·입력·CPU 기준값으로 준비한 값이다.
+
 ```python
-# benchmark_mlp.py — 5장에서 만든 small-mlp.fxbx와 같은 디렉터리에서 실행한다.
-from math import ceil
-from statistics import median
 from time import perf_counter_ns
 import torch
-from fxbx import GraphFXB
 
+# GraphFXB 세션을 연 with 블록 안에서 실행하는 발췌다.
+for _ in range(10):
+    session.predict((x,), output_device="cpu")  # 예열은 측정에서 제외
 
-def main():
-    torch.manual_seed(42)  # 5장 예제와 같은 외부 가중치·입력을 재생성한다.
-    model = torch.nn.Sequential(
-        torch.nn.Linear(8, 12), torch.nn.ReLU(), torch.nn.Linear(12, 8)
-    ).bfloat16().eval().requires_grad_(False)
-    x = torch.randn(4, 8, dtype=torch.bfloat16)  # 입력 계약: shape (4,8), BF16(BFloat16)
-    with torch.inference_mode():
-        reference = model(x)                  # CPU 정답 계산은 측정 구간 밖이다.
-        prepare_start = perf_counter_ns()
-        with GraphFXB("./small-mlp.fxbx", weights=model.state_dict()) as session:
-            prepare_ms = (perf_counter_ns() - prepare_start) / 1e6
+elapsed_ms = []
+for _ in range(100):
+    started = perf_counter_ns()
+    last, = session.predict((x,), output_device="cpu")
+    elapsed_ms.append((perf_counter_ns() - started) / 1e6)
+torch.testing.assert_close(last, reference, atol=0.02, rtol=0.02)
+```
 
-            first_start = perf_counter_ns()
-            first, = session.predict((x,), output_device="cpu")
-            first_ms = (perf_counter_ns() - first_start) / 1e6
-            torch.testing.assert_close(first, reference, atol=0.02, rtol=0.02)
+호출이 CPU 출력을 돌려준 뒤 시간을 기록한다. 정답 비교는 측정 반복문 밖에 둔다. 수집한 100개 값으로 중앙값과 p95를 계산한다.
 
-            # 첫 호출의 지연 준비·캐시 영향을 반복 측정과 구분하기 위해 예열한다.
-            for _ in range(10):
-                session.predict((x,), output_device="cpu")
+```python
+from math import ceil
+from statistics import median
 
-            elapsed_ms = []
-            for _ in range(100):
-                started = perf_counter_ns()
-                last, = session.predict((x,), output_device="cpu")
-                elapsed_ms.append((perf_counter_ns() - started) / 1e6)
-            # 정답 비교 비용은 timed 구간에 넣지 않는다.
-            torch.testing.assert_close(last, reference, atol=0.02, rtol=0.02)
-
-    ordered = sorted(elapsed_ms)
-    # p95는 정렬된 측정값 중 95% 위치를 선택하는 nearest-rank 정의를 사용한다.
-    p95_ms = ordered[ceil(0.95 * len(ordered)) - 1]
-    print({"scope": "CPU input to CPU output, warm, sequential",
-           "session_prepare_ms": prepare_ms, "first_call_ms": first_ms,
-           "median_ms": median(ordered), "p95_ms": p95_ms,
-           "samples": len(ordered)})
-
-
-if __name__ == "__main__":
-    main()
+ordered = sorted(elapsed_ms)
+p95_ms = ordered[ceil(0.95 * len(ordered)) - 1]
+print({"median_ms": median(ordered), "p95_ms": p95_ms,
+       "samples": len(ordered)})
 ```
 
 ```bash
@@ -120,7 +107,6 @@ python benchmark_mlp.py
 **지연시간(latency)은** 요청 한 개가 끝날 때까지의 시간이고, **처리량(throughput)은** 초당 끝낸 요청·토큰 수다. 위 코드는 요청을 하나씩 실행하므로 동시 요청이 있는 서버의 처리량·대기열·p95를 측정하지 않는다. p95는 여기서 측정한 100개 완료 시간의 높은 쪽 꼬리를 보는 값일 뿐 운영 환경 전체의 보장이 아니다. 모델 구조나 가중치를 바꿨다면 새 계약과 패키지를 사용한다. 상태가 있는 모델에는 이 반복 코드를 그대로 적용하지 말고 요청별 초기 상태·reset 정책을 정해야 한다.
 
 ## 3. 첫 비교: 요청마다 적재하는가, 같은 객체를 재사용하는가
-
 
 
 다음 두 함수는 같은 package와 요청을 사용한다. 호환 fxbX 설치본에서 기존에 생성한 package와 외부 weights를 전달하는 코드다.
@@ -223,7 +209,6 @@ flowchart TB
 FuryNo5의 작은 BF16 영역 생성기는 원래 연산마다 있던 반올림 경계를 남긴다. 중간 write 경계를 없애면 단순한 수학적 결합도 원본과 다른 수치를 만들 수 있기 때문이다. 영역 admission 상한과 compiler ABI 검사를 통과한 경우에만 결합 후보를 사용하고, 거절되면 개별 NPU 경로를 유지한다. [tcl_region.py](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/tcl_region.py) · [영역 검증](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/NATIVE_REGION_VALIDATION.md)
 
 
-
 ### 중간 반올림을 없애면 값도 바뀔 수 있다
 
 실수 수학에서 `256+1+1`은 258이다. 그러나 BF16은 모든 정수를 이 구간에서 구분하지 못하므로 연산마다 저장 형식으로 반올림하는 경우와 마지막에 한 번 반올림하는 경우가 달라질 수 있다.
@@ -251,7 +236,6 @@ assert one_round.item() == 258.0
 ```
 
 이 CPU 예는 모든 결합 커널이 틀린다는 뜻이 아니라, **원본이 요구하는 반올림 경계를 보존할지 결정해야 한다**는 뜻이다. FuryNo5의 작은 BF16 영역 생성기가 그 경계를 남기는 이유도 여기에 있다. 큰 결합 영역은 동시에 살아 있는 중간값, 즉 working set을 늘릴 수 있어 메모리와 컴파일 시간도 같이 확인한다.
-
 
 ## 6. 보존된 실측: 작은 영역의 개선을 전체로 다시 확인한다
 
@@ -286,7 +270,7 @@ Packed는 원소 수를 버리는 압축이 아니라 **같은 두 계산의 가
 
 각 항목은 **30개 측정 구간(measurement block)이다**. 이 block은 위의 모델 block과 다른 말이다. 한 측정 구간 동안 두-block 모델 전체를 여러 번 호출하고, 총 경과시간을 완료한 모델 호출 수로 나누어 한 호출의 평균을 계산했다. baseline의 6,390회는 `30구간×구간당 213회`이며, 모델이 30층 또는 6,390층이라는 뜻이 아니다. 비교 순서를 구간마다 회전시켰고, 초기 pilot으로 구간당 반복 수를 골랐기 때문에 세 후보의 총 호출 수가 다르다.
 
-이 시간은 resident 입력을 사용하고 Python dispatch와 stream 완료를 포함하며, compile·load·정적 packing·H2D·profiling·D2H를 제외했다. 전체 개선은 **4.18%로** 보고서의 5% 배포 기준에 못 미쳐 baseline을 유지했다. 이 표는 이번 집필에서 새로 측정한 결과가 아니다. 보존된 raw block JSON을 재집계해 수치를 확인했다. [실험 설명](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/RUNTIME_SELECTION.md) · [원시 측정 block](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/validation/runtime-selection-20261108/repeated_blocks.json) · [영역 선택 기록](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/validation/runtime-selection-20261108/decision.json)
+이 시간은 resident 입력을 사용하고 Python dispatch와 stream 완료를 포함하며, compile·load·정적 packing·H2D·profiling·D2H를 제외했다. 전체 개선은 **4.18%로** 보고서의 5% 배포 기준에 못 미쳐 baseline을 유지했다. 이 표는 저장소의 기존 실측이며 raw block JSON을 집계한 값이다. [실험 설명](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/RUNTIME_SELECTION.md) · [원시 측정 block](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/validation/runtime-selection-20261108/repeated_blocks.json) · [영역 선택 기록](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/validation/runtime-selection-20261108/decision.json)
 
 교훈은 “분할은 항상 나쁘다”가 아니다. 이 조건에서는 해당 분할이 느렸고, 지역적 최적화의 이득도 전체 기준에는 부족했다. 다른 shape·메모리 한계·입출력 API에서는 다시 비교해야 한다.
 
@@ -332,6 +316,25 @@ Packed는 원소 수를 버리는 압축이 아니라 **같은 두 계산의 가
 ```
 
 이 식도 서비스 정책을 생각하기 위한 모델이다. 재시작·cache hit·동시 실행·에너지 비용은 필요에 맞게 추가한다. FuryNo5는 반복 계약의 cache, 제한된 병렬 compile, 정확한 recipe replay로 불필요한 재컴파일을 줄인다. speculative fusion이 거절되어도 성공한 개별 EDF를 버릴 필요가 없도록 증거를 보존한다. [컴파일 품질](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/COMPILE_QUALITY.md)
+
+### EDF의 경계는 파일 크기보다 값의 흐름으로 정한다
+
+`Linear → bias → ReLU`처럼 같은 shape 조건에서 연속으로 쓰고 중간값을 다른 곳에서 재사용하지 않는 구간은 함께 컴파일할 후보가 된다. 제출 횟수와 중간값 저장을 줄일 기회가 있기 때문이다. 반대로 여러 분기가 공유하는 값, 서로 다른 버킷 조건, 크게 달라지는 작업 크기는 경계를 나눌 후보가 된다. **TCL 함수 몇 개 또는 EDF 몇 MB라는 공통 기준은 없다.** 실제 컴파일 결과와 실행 비용으로 선택한다.
+
+| 나눌지 묶을지 판단할 상황 | 먼저 비교할 후보 | 함께 확인할 비용 |
+|---|---|---|
+| 작은 계산이 연속되고 중간값을 다음 계산만 소비 | 연속 구간을 묶기 | launch·중간 materialization 감소, 수치 의미와 반올림 보존 |
+| 큰 중간값이 여러 분기에서 재사용 | 공유 경계 유지와 분기별 결합 | 중복 계산·복사, 마지막 사용까지의 버퍼 수명 |
+| 일부 구간만 입력 길이에 민감 | 길이별 구간과 공통 구간 분리 | 실행물 재사용, 경계 layout 변환·바인딩 비용 |
+| 큰 영역의 컴파일이 메모리 한도에 도달 | 의미가 닫힌 구간으로 단계적 분할 | host RSS, compile 시간, EDF 호출·장치 메모리 증가 |
+
+너무 잘게 나누면 실행기 bookkeeping·제출·동기화가 늘고, 영역 사이 값을 저장하거나 배치를 바꿔야 할 수 있다. 같은 작은 EDF를 재사용해 고유 파일 수는 줄었어도 **호출 수**가 많으면 느릴 수 있다. 너무 크게 묶으면 중간값의 수명과 working set이 커지거나 컴파일 탐색이 무거워질 수 있다. 어느 변화가 실제로 발생했는지는 trace와 컴파일 기록으로 확인한다.
+
+### TCC의 메모리 부족과 NPU 메모리 부족을 구분한다
+
+TCC 컴파일 과정에서 **호스트 RAM**을 많이 사용해 작업이 실패할 수 있다. 이는 실행 중 HBM 할당 실패와 다른 단계의 문제다. 종료됐다는 이유만으로 해당 TCL이 영구적으로 미지원이라고 판정하지 않는다. compiler 로그, 종료 상태와 OS·컨테이너의 OOM 기록을 함께 확인한다. OOM(Out of Memory)은 사용 가능한 메모리 한도를 넘은 상태다.
+
+먼저 동일 recipe를 worker 하나로 재현해 한 작업 자체의 최대 RSS를 잰다. worker를 늘리면 각 compiler 프로세스의 메모리가 겹칠 수 있으므로 CPU 코어 수만큼 병렬 실행하는 것이 항상 유리하지 않다. 단일 작업도 한도를 넘으면 큰 영역을 값의 의존 관계가 분명한 구간으로 나누어 다시 비교한다. 입력·정밀도를 바꿔 문제를 숨기지 말고, 분할 전후의 compile 시간·host RSS·warm 지연·peak HBM을 같은 표에 남긴다. [재현 recipe와 제한된 compiler 실행](11-furyno5-compiler.md), [작업 하나를 재현하는 실습](17-debugging.md)
 
 ## 10. 컴파일러 추정과 장치 실측을 구분한다
 

@@ -1,5 +1,11 @@
 # 17. 실패와 비효율을 재현 가능한 증거로 바꾸기
 
+> **전체 경로에서의 위치**
+>
+> 환경·입력·실행 기록 → **단계별 원인 분리** → 재현과 재측정
+>
+> 전체 스택에서 실패·지연·수치 차이를 좁히는 장이다. 문제가 발생한 경계의 입력과 출력을 고정해 한 번에 한 원인만 확인한다. 비용을 줄일 변경 선택은 [07장](07-optimization.md), 모델 변환의 품질 검증은 [19장](19-model-optimization.md)과 연결된다.
+
 일반 프로그램도 소스 파싱 실패, 링크 실패, 실행 중 예외, 잘못된 결과, 느린 실행을 구분해 디버깅한다. NPU(Neural Processing Unit) 프로그램도 마찬가지다. 다만 모델 변환·장치 컴파일·패키지 적재라는 경계가 더 있다. **“안 된다”를 최초 실패 단계, 정확한 입력 계약, 산출물, 실행 증거로 나누면 고칠 파일이 보인다.** 이 장은 모델 전체를 매번 다시 돌리기보다, 현재 문제를 증명하는 최소 경로를 만드는 실습이다. 소스 기준은 FuryNo5 commit `bba9efea8201aec48150514a35d0b637d29d107e`이며, 명령을 실행할 환경의 SDK(Software Development Kit) 버전을 먼저 기록한다.
 
 ## 먼저 어느 층에서 실패했는지 구분한다
@@ -124,7 +130,6 @@ def tensor_contract(x):
 
 `export_model(..., preflight_only=True)` 결과의 `operator-inventory.json`에는 metadata admission, 직접 규칙/계약 gap, 선행 binding dependency가 나뉘어 있다. 첫 `transpose` 결과를 만들지 못해 그 뒤 100개 node를 연결하지 못했다면, 101개 TCL을 새로 작성해야 한다는 뜻이 아니다.
 
-
 빌드 시스템에서 공통 헤더 하나가 없어 여러 파일의 컴파일이 실패하는 상황과 비슷하다. 모델의 graph는 연산을 정점, 값 전달을 간선으로 하는 의존 그래프다. **Node(노드)는** 연산 한 단위다. 다음 표에서 진짜로 먼저 고칠 곳은 n1이다.
 
 | 노드 | 필요한 앞 결과 | 상태를 해석하는 방법 |
@@ -244,7 +249,6 @@ for row in rank_hotspots(plan, events, entry="forward", limit=5):
 현재 함수는 상태 갱신이 있는 entry나 불완전한 timing coverage를 제한하고, CPU route가 관측되면 순위를 만들지 않는다. 결과의 `task_us`는 end-to-end latency 예측치가 아니다. [hotspot 구현](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/profile_hotspots.py)
 
 가장 느린 kernel key를 찾았다면 `compile-requests.json`의 같은 key로 의미 계열과 shape를 연결한다. 이후 TCL source, layout, 크기, 반복 횟수, 입출력 이동을 검토한다. 이름이 같은 EDF가 여러 입력에서 호출될 수 있으므로 단일 이벤트를 전체 모델 병목으로 일반화하지 않는다.
-
 
 ### Task 시간의 합이 요청 지연이 아닌 이유
 
@@ -379,7 +383,6 @@ for independent in (True, False):
 
 원본 CPU 결과 → 정규화 CPU 결과 → 각 EDF의 NPU 결과 → 최종 package 결과 순서로 비교한다. 원본과 정규화 CPU가 이미 다르면 물리 NPU kernel부터 수정할 이유가 없다.
 
-
 왜 절대·상대 허용오차를 함께 쓰는지도 작은 숫자로 볼 수 있다. `atol=0.001`, `rtol=0.0001`이면 한 원소의 허용 범위는 `0.001 + 0.0001×|기준값|`이다.
 
 | 기준값 | 실제값 | 절대 차이 | 허용 범위 | 판정 |
@@ -420,7 +423,6 @@ TCL 기반 문제는 먼저 보존된 TCL·compiler 로그·EDF trace로 좁힌�
 
 FuryNo5의 `official_tools.capabilities()`는 설치된 `furiosa-tcc --help`에서 `--evaluate-tcl` 등 지원 옵션을 확인한다. 지원하는 경우의 cycle estimate와 NPU task 측정치를 구분해서 보존한다. eISA와 opt 도구의 구체적인 재현·schedule viewer 절차는 08장을 따른다. [capability probe](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/official_tools.py#L13-L24) · [공식 도구 안내](https://developer.furiosa.ai/furiosa-opt/book/quick-start/setup-and-tooling.html)
 
-
 **Schedule(스케줄)은** 어떤 계산·메모리 이동을 언제, 어느 자원에서 수행할지 정한 순서다. 정적 schedule viewer는 compiler가 배치한 계획을 보여주고, profiler trace는 실제 실행에서 관측한 사건을 보여준다. 예를 들어 정적 계획에 계산 사이 빈칸이 있으면 의존성이나 자원 충돌을 조사할 수 있지만, 실제 서버의 요청 큐 대기시간을 그 정적 그림에서 읽을 수는 없다.
 
 이미 `furiosa-opt` 방식으로 빌드되는 Rust 프로젝트에 `constant_add_kernel` 함수가 준비되어 있고 호환 도구가 설치되어 있다면, 다음은 해당 함수의 계획을 꺼내는 실제 명령이다. 임의 EDF 파일을 입력하는 명령이 아니다.
@@ -443,7 +445,7 @@ furiosa-schedule-viewer --host 127.0.0.1 --port 9254
 - 실행한 검사, 통과한 범위, 아직 모르는 범위.
 - 다음 실험 하나와 성공·실패를 가르는 고정 조건.
 
-**문서 검증 상태:** 이 핸드북의 보조 스크립트는 정적 구문과 합성 진단 입력으로 확인한다. 기록된 과거 RNGD 결과는 원본 증거와 날짜를 붙인다. 이번 집필 환경에서 새 NPU 수치·성능 검증을 수행한 것은 아니다.
+보조 스크립트의 정적 구문 검사와 합성 진단 입력 검사는 실제 장치 검증과 구분한다. RNGD 결과를 보고할 때는 원본 trace·환경·날짜를 함께 남긴다.
 
 ## 출처
 

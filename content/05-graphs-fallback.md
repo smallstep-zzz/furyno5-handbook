@@ -1,5 +1,11 @@
 # 실행그래프와 폴백: 계산의 연결을 누가 알고 있는가
 
+> **전체 경로에서의 위치**
+>
+> 모델의 값 연결 + EDF → **실행계획 구성·적재** → 순서 있는 호출
+>
+> 04장의 단일 프로그램 위에서 모델 전체의 입력·가중치·중간값을 연결한다. 실행계획은 연결을, EDF는 해당 프로그램의 실행을 맡는다. 입력 크기에 따라 계획과 프로그램을 고르는 문제는 [06장](06-buckets-shapes.md), 실제 패키지 로더는 [12장](12-fxbx.md)에서 다룬다.
+
 함수 두 개가 있다고 해서 프로그램 하나가 정해지지는 않는다. `add`와 `relu`라는 함수를 가진 CPU(Central Processing Unit) 라이브러리에도 **무엇을 먼저 호출하고 결과를 어디에 넘길지** 정한 코드가 필요하다. NPU(Neural Processing Unit)의 컴파일된 커널도 같다. EDF(Executable Device Format)는 장치에서 실행할 컴파일 결과이고, 여러 EDF 사이의 연결은 별도의 실행계획이 담당할 수 있다.
 
 이 장에서는 두 연산을 연결하는 예로 그래프를 이해한 뒤, 그래프를 저장했을 때 줄어드는 작업과 실제 `export_model()`·`GraphFXB` 호출을 살펴본다. 마지막에는 EDF가 없을 때 발생하는 오류와 CPU 폴백을 구분한다.
@@ -79,7 +85,6 @@ flowchart TB
 ```
 
 상태(state)는 다음 호출에도 남기는 값이다. 예를 들어 언어 모델의 KV(Key–Value) cache는 이전 토큰에서 계산한 attention 정보를 보관한다. 매 호출의 출력만 연결하는 모델과 이 상태를 갱신하는 모델은 실행계획의 요구사항이 다르다.
-
 
 ## 3. 저장된 그래프가 없을 때 무엇을 만들 수 있는가
 
@@ -304,72 +309,41 @@ FuryNo5를 검증할 때는 다음 네 항목을 연결해 본다.
 
 [observe_execution.py](../examples/observe_execution.py)를 내려받아 앞 실습에서 만든 package와 함께 사용한다.
 
-```python
-# observe_execution.py — 앞의 small-mlp.fxbx를 새 프로세스에서 한 번 관찰한다.
-import json
-import os
-from pathlib import Path
-import sys
+아래는 전체 파일에서 **준비와 한 번의 관찰 호출**만 꺼낸 예다. 추적 경로는 기존 기록을 덮어쓰지 않는 새 이름으로 지정한다.
 
-# SDK/fxbX를 불러오기 전에 설정한다. 각 step의 이름을 trace에 남기는 경로를 고른다.
-os.environ["FXBX_TRACE_STEPS"] = "1"
+```python
+import os
+os.environ["FXBX_TRACE_STEPS"] = "1"  # SDK import 전에 설정
 import torch
 from fxbx import GraphFXB
-from fxbex.execution_fxb import read_execution_plan
 from furiosa.torch.profiler import Profiler
 
-def main(package_path, trace_path):
-    trace_path = Path(trace_path)
-    if trace_path.exists():
-        raise FileExistsError("Use a new trace path to preserve the previous observation")
-    plan = read_execution_plan(package_path)
-    entry = plan["entries"]["forward"]
-    expected = {
-        f"execution_plan::forward::{i}::{step['kernel']}"
-        for i, step in enumerate(entry["steps"])
-    }
-    # 입력 없는 '정적 값 준비'로 계획에 명시된 단계만 계산 Task의 필수 대상에서 뺀다.
-    prepared = {
-        f"execution_plan::forward::{i}::{step['kernel']}"
-        for i, step in enumerate(entry["steps"])
-        if not step["inputs"] and
-        plan["kernels"][step["kernel"]].get("execution_kind") == "static_value_preparation"
-    }
-    required = expected - prepared
-    if not required:
-        raise RuntimeError("This example requires at least one NPU compute step")
+torch.manual_seed(42)                 # 5절 생산자와 같은 가중치·입력을 만든다.
+model = torch.nn.Sequential(
+    torch.nn.Linear(8, 12), torch.nn.ReLU(), torch.nn.Linear(12, 8)
+).bfloat16().eval().requires_grad_(False)
+x = torch.randn(4, 8, dtype=torch.bfloat16)
+with GraphFXB("./small-mlp.fxbx", weights=model.state_dict()) as session:
+    # 이 consumer는 load 때 CPU fallback을 끈다. 적재 실패는 예외로 남는다.
+    with Profiler("./small-mlp-trace-001.json"):
+        actual, = session.predict((x,), output_device="cpu")
+torch.testing.assert_close(actual, model(x), atol=0.02, rtol=0.02)
+```
 
-    torch.manual_seed(42)                 # 5절 생산자와 같은 가중치·입력을 만든다.
-    model = torch.nn.Sequential(
-        torch.nn.Linear(8, 12), torch.nn.ReLU(), torch.nn.Linear(12, 8)
-    ).bfloat16().eval().requires_grad_(False)
-    x = torch.randn(4, 8, dtype=torch.bfloat16)
-    with GraphFXB(package_path, weights=model.state_dict()) as session:
-        # 이 consumer는 load 때 CPU fallback을 끈다. 적재 실패는 예외로 남는다.
-        with Profiler(str(trace_path)):
-            actual, = session.predict((x,), output_device="cpu")
-    torch.testing.assert_close(actual, model(x), atol=0.02, rtol=0.02)
+여기까지는 trace 생성과 출력 비교다. NPU 실행을 판정하려면 계획이 요구한 step과 실제 Task를 대조해야 한다. 전체 파일은 `static_value_preparation` 단계를 분리하고, 누락·예상 밖 Task·CPU 경로가 있으면 실패 처리한다. 그중 필드 읽기 부분은 다음과 같다. `trace_path`는 생성한 JSON 경로다.
 
-    # 공식 profiler와 고정 worker에서 확인한 필드만 읽는다. 누락되면 실패한다.
-    events = json.loads(trace_path.read_text())["traceEvents"]
-    names = [event.get("name", "") for event in events]
-    host_spans = {name for name in names if name.startswith("execution_plan::")}
-    task_steps = {
-        name.split("::Task::", 1)[1] for name in names
-        if "::Task::execution_plan::" in name
-    }
-    cpu_routes = sum("run_by_cpu" in name for name in names)
-    for name in sorted(expected):
-        print(name, "host=", name in host_spans, "NPU Task=", name in task_steps)
-    print("cpu_routes:", cpu_routes, "trace:", trace_path)
-    missing = sorted(required - task_steps)
-    if cpu_routes or host_spans != expected or missing or not task_steps <= expected:
-        raise RuntimeError(f"Execution evidence incomplete; missing NPU steps={missing}")
-    # 한 번의 호출·이 collector 범위의 관측이다. 전체 모델 지원의 인증이 아니다.
-    print("numerical comparison passed; NPU tasks observed for required steps")
+```python
+import json
+from pathlib import Path
 
-if __name__ == "__main__":
-    main(sys.argv[1], sys.argv[2])
+trace_path = Path("./small-mlp-trace-001.json")
+events = json.loads(trace_path.read_text())["traceEvents"]
+names = [event.get("name", "") for event in events]
+task_steps = {
+    name.split("::Task::", 1)[1] for name in names
+    if "::Task::execution_plan::" in name
+}
+print(sorted(task_steps))
 ```
 
 ```bash
@@ -379,7 +353,7 @@ python observe_execution.py ./small-mlp.fxbx ./small-mlp-trace-001.json
 
 예를 들어 한 행에서 `host=True, NPU Task=False`이면 제출 구간은 보였지만 필요한 장치 Task는 확인되지 않은 상태다. 원인을 조사하기 전에는 이를 NPU 실행 성공이나 CPU 폴백 성공으로 해석하지 않는다. Task 하나와 ATen 연산 하나가 일대일 대응한다는 뜻도 아니다. 커널 하나에서 Task가 여러 개 나올 수 있으므로 이 예는 단순 Task 개수 대신 **필요한 step 이름의 포함 여부**를 본다.
 
-이 추적 모드는 step별 기록을 위해 준비된 sequence 재생 경로를 끈다. 따라서 출력의 실행 여부를 확인하는 용도로 쓰고 성능 비교에는 같은 조건의 별도 무추적 측정을 사용한다. 이 코드는 고정 소스와 대조한 재현 절차이며, 이번 문서 수정 환경에서 `small-mlp-trace-001.json`이나 NPU 성공 결과를 생성한 것은 아니다.
+이 추적 모드는 step별 기록을 위해 준비된 sequence 재생 경로를 끈다. 따라서 출력의 실행 여부를 확인하는 용도로 쓰고 성능 비교에는 같은 조건의 별도 무추적 측정을 사용한다. 실제 trace는 이 명령을 실행한 환경에서 생성·확인해야 한다.
 
 ## 출처
 

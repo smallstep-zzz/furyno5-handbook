@@ -1,5 +1,11 @@
 # vLLM으로 서빙하기: 요청 큐에서 NPU 실행까지
 
+> **전체 경로에서의 위치**
+>
+> 요청 → **서빙 스케줄러·KV 상태·모델 실행 연결** → 응답
+>
+> 12장의 실행기를 서비스 안에 넣을 때 필요한 상위 계층이다. 준비된 프로그램만으로 배칭·토큰 상태·sampling이 해결되지는 않는다. 공식 Furiosa-LLM과 opt-vLLM을 구분하고, 여러 장치로 확장하는 문제는 [15장](15-multi-npu.md)에서 다룬다.
+
 웹 서버에서 요청을 받으면 보통 작업을 큐에 넣고 worker가 처리한다. LLM(Large Language Model, 대규모 언어 모델) 서버도 여기서 시작하지만, 한 요청을 **여러 번의 모델 실행에 걸쳐 계속 이어간다**는 차이가 있다. 문장 전체를 한 번에 완성하는 대신 다음 토큰을 고르고, 그 토큰을 입력에 붙여 다음 계산을 하기 때문이다. 이 장에서는 요청 두 개가 들어왔을 때 어떤 상태를 보관하고 어떤 일을 NPU(Neural Processing Unit)에 보내야 하는지부터 따라간다.
 
 그다음 실제 도구를 연결한다. **공식 furiosa-opt-vllm은 vLLM의 요청 관리와 Furiosa 엔진을 연결하는 서빙 경로이며, 임의의 fxbX 파일을 읽는 범용 loader는 아니다.** loader는 파일에서 실행 객체를 만드는 적재기다. 여기서 EDF는 장치에서 계산할 컴파일 결과 파일이고, 실행 계획은 어떤 EDF를 어떤 입출력·순서로 호출할지 적은 규격이다. FuryNo5가 만든 실행 계획을 이 서버에 연결하려면 파일 적재뿐 아니라 요청별 상태와 입출력 계약도 맞춰야 한다. 조회 기준은 2026-11-19, `furiosa-opt-models c982976`이다. [공식 저장소](https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/README.md) · [엔진 구조](https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/docs/design/architecture.md)
@@ -144,7 +150,6 @@ furiosa = "furiosa_opt_vllm:register"
 
 `platform.py`는 지원하지 않는 옵션을 초기에 검사하고 `FuriosaWorker`를 선택한다. `worker.py`는 엔진·모델을 적재하고 cache 용량·실행을 연결한다. `generation/sequence.py`는 scheduler output을 요청으로 묶고, `generation/__init__.py`와 `selection.py`는 device argmax와 host sampling을 구분한다. 디바이스가 처리한 결과를 vLLM이 이해하는 token·logprob·request 순서로 바꾸는 코드가 integration의 핵심이다. [platform](https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/integrations/furiosa-opt-vllm/furiosa_opt_vllm/platform.py) · [worker](https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/integrations/furiosa-opt-vllm/furiosa_opt_vllm/worker.py) · [generation](https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/integrations/furiosa-opt-vllm/furiosa_opt_vllm/generation/__init__.py)
 
-
 한 번의 실행 뒤 모델이 세 후보 토큰에 `[4.0, 2.0, -1.0]`을 냈다고 하자. 이 점수 배열이 **logits(정규화 전 점수)다**. **Argmax**는 가장 큰 점수의 위치를 고르는 연산이므로 첫 후보를 선택한다. 이것을 매번 적용하는 생성 정책이 **greedy decoding(최고 점수 선택)이다**. **Sampling(확률 추출)은** 점수를 확률로 변환한 뒤 그 분포에서 선택하므로, logits가 같아도 선택 결과가 달라질 수 있다. logprob는 선택 확률의 로그값이다.
 
 그래서 플러그인은 “NPU가 토큰 ID 하나를 돌려줄지, 후보별 logits를 호스트로 돌려줄지”도 구분한다. host sampling이 있다는 이유만으로 모델 전체가 CPU로 fallback했다고 판단하면 안 된다. 모델의 큰 행렬 계산과 출력 선택 정책은 서로 다른 일이다. [출력 선택 구현](https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/integrations/furiosa-opt-vllm/furiosa_opt_vllm/selection.py)
@@ -285,14 +290,13 @@ if __name__ == "__main__":
 | Pipeline Parallelism(PP)·여러 node | 미지원 | admission에서 PP=1, nnodes=1 요구 |
 | Tensor Parallelism(TP) | 컴파일된 chip 수 | engine LoadOptions의 chips 선택으로 전달 |
 
-DP가 무제한 지원된다는 뜻도 아니다. **Admission(수용 검사)은** 실행 전에 요청한 구성이 지원되는지 거르는 단계다. 현재 코드는 worker를 OS 프로세스로 나누는 multiprocessing backend를 요구한다. **Dense 모델**은 일반적인 층 계산을 모든 입력에 적용하고, **MoE(Mixture of Experts)는** 입력마다 선택한 전문가 부분망을 사용한다. **Speculative decoding**은 후보 토큰을 미리 제안한 뒤 본 모델로 검증하는 방식이며, **KV offload**는 KV 일부를 장치 밖 메모리에 옮겨 용량을 확보하는 방식이다. 현재 admission은 이러한 조합에 별도 제한을 건다. 테스트 파일이 존재한다는 사실을 이번 편집 환경의 실제 NPU 통과 결과로 바꾸어 쓰지 않는다. [옵션 문서](https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/docs/serving/vllm.md) · [admission 실제 검사](https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/integrations/furiosa-opt-vllm/furiosa_opt_vllm/admission.py) · [parallelism 테스트](https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/integrations/furiosa-opt-vllm/tests/test_parallelism.py)
+DP가 무제한 지원된다는 뜻도 아니다. **Admission(수용 검사)은** 실행 전에 요청한 구성이 지원되는지 거르는 단계다. 현재 코드는 worker를 OS 프로세스로 나누는 multiprocessing backend를 요구한다. **Dense 모델**은 일반적인 층 계산을 모든 입력에 적용하고, **MoE(Mixture of Experts)는** 입력마다 선택한 전문가 부분망을 사용한다. **Speculative decoding**은 후보 토큰을 미리 제안한 뒤 본 모델로 검증하는 방식이며, **KV offload**는 KV 일부를 장치 밖 메모리에 옮겨 용량을 확보하는 방식이다. 현재 admission은 이러한 조합에 별도 제한을 건다. 테스트 코드의 존재와 실제 환경에서의 NPU 통과는 구분해야 한다. [옵션 문서](https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/docs/serving/vllm.md) · [admission 실제 검사](https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/integrations/furiosa-opt-vllm/furiosa_opt_vllm/admission.py) · [parallelism 테스트](https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/integrations/furiosa-opt-vllm/tests/test_parallelism.py)
 
 ## 7. FuryNo5·fxbX를 붙이기 위해 남은 계약
 
 다음은 **현재 구현 완료 주장이 아닌 개발 설계**다. vLLM을 재구현할 필요는 없지만, EDF를 호출하는 함수 하나만 등록해서도 충분하지 않다.
 
 왜 계약이 여러 개 필요한지는 요청 B가 요청 A의 블록을 재사용하는 경우로 확인할 수 있다. A가 끝나서 블록 7을 반납했더라도, 새 B의 유효 길이와 block table을 A의 값으로 유지하면 B가 A의 문맥을 읽게 된다. 필요한 것은 단순히 EDF를 다시 실행하는 코드가 아니라 **요청 ID, 유효 길이, 소유 블록, 완료 후 회수 시점**을 함께 갱신하는 코드다. 오류나 취소에서도 같은 규칙이 지켜져야 한다. 아래 표는 그 연결을 개발할 때의 점검 대상이다. **ABI(Application Binary Interface)는** 커널에 전달하는 인자의 순서·자료형·크기 같은 호출 계약이다. **Backpressure(유입 조절)는** 처리할 공간이 없을 때 새 요청을 무한히 받아 메모리를 소모하는 대신 대기·거절을 적용하는 방식이다. **Accepted**는 작업 접수, **completed**는 실제 완료이므로 비동기 제출의 반환만 보고 최종 성공을 응답해서는 안 된다.
-
 
 
 | 연결 지점 | 추가로 정의할 내용 | 합격 증거 |

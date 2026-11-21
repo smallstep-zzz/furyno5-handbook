@@ -1,10 +1,15 @@
 <!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="NetsPresso와 공개 도구, 의미 보존 변환과 모델 압축을 RNGD의 실측 기준으로 평가합니다."><meta name="color-scheme" content="dark"><meta name="theme-color" content="#111417"><title>모델과 실행 방식을 함께 최적화하기 · FuryNo5 개발 핸드북</title><link rel="icon" href="../assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="../assets/site.css?v=e91cad038c9a"><script defer src="../assets/site.js?v=aeae33420bbb"></script></head>
-<body data-root="../" data-chapter="19-model-optimization" data-search-version="383c81c45fbc"><a class="skip" href="#content">본문으로 이동</a><header class="topbar"><button class="menu-toggle" type="button" aria-label="전체 목차 열기" aria-controls="sidebar" aria-expanded="false">☰</button><a class="brand" href="../index.html"><span class="brand-mark">Nº5</span>FuryNo5<small>DEVELOPER HANDBOOK</small></a><div class="top-actions"><a class="top-link" href="../sources.html">출처와 버전</a><button class="search-open" type="button" aria-label="핸드북 전체 검색"><span>전체 문서 검색</span><kbd>⌘ K</kbd></button></div></header><div class="progress" aria-hidden="true"></div><div class="mobile-shade"></div><aside class="sidebar" id="sidebar" aria-label="전체 목차"><nav><div class="nav-caption">시작하기</div><a class="nav-link"  href="../index.html"><span class="num">00</span><span>전체 지도와 읽는 방법</span></a><div class="nav-caption">I. 디바이스를 이해하기</div><a class="nav-link"  href="../chapter/01-hardware.html"><span class="num">01</span><span>RNGD · TCP · PE</span></a><a class="nav-link"  href="../chapter/02-memory-dma.html"><span class="num">02</span><span>메모리 · DMA · 배치</span></a><a class="nav-link"  href="../chapter/03-driver-runtime.html"><span class="num">03</span><span>드라이버와 공식 런타임</span></a><div class="nav-caption">II. 프로그램을 만들고 실행하기</div><a class="nav-link"  href="../chapter/04-tcl-edf.html"><span class="num">04</span><span>TCL 작성 · 컴파일 · 실행</span></a><a class="nav-link"  href="../chapter/05-graphs-fallback.html"><span class="num">05</span><span>실행그래프 · 오류 · 폴백</span></a><a class="nav-link"  href="../chapter/06-buckets-shapes.html"><span class="num">06</span><span>Shape · 버킷 · 컴파일 비용</span></a><a class="nav-link"  href="../chapter/07-optimization.html"><span class="num">07</span><span>최적화의 축과 우선순위</span></a><a class="nav-link"  href="../chapter/08-eisa-visa.html"><span class="num">08</span><span>eISA · vISA · furiosa-opt</span></a><div class="nav-caption">III. FuryNo5를 해부하기</div><a class="nav-link"  href="../chapter/09-torch-aten.html"><span class="num">09</span><span>PyTorch · ATen · 등록</span></a><a class="nav-link"  href="../chapter/10-furyno5-architecture.html"><span class="num">10</span><span>FuryNo5 구조와 지원 범위</span></a><a class="nav-link"  href="../chapter/11-furyno5-compiler.html"><span class="num">11</span><span>FuryNo5 컴파일과 캐시</span></a><div class="nav-caption">IV. 모델 포팅과 서빙</div><a class="nav-link"  href="../chapter/12-fxbx.html"><span class="num">12</span><span>fxbX 포맷과 실행계획</span></a><a class="nav-link"  href="../chapter/13-porting-fha.html"><span class="num">13</span><span>포팅 · FHA · FuryAwesome</span></a><a class="nav-link"  href="../chapter/14-serving-vllm.html"><span class="num">14</span><span>vLLM · 서빙 브리지</span></a><a class="nav-link"  href="../chapter/15-multi-npu.html"><span class="num">15</span><span>PE · 여러 카드 · 여러 서버</span></a><div class="nav-caption">V. 검증과 다음 개발</div><a class="nav-link"  href="../chapter/16-furyboost.html"><span class="num">16</span><span>FuryBoost 실측과 남은 과제</span></a><a class="nav-link"  href="../chapter/17-debugging.html"><span class="num">17</span><span>측정 · 추적 · 실패 재현</span></a><div class="nav-caption">VI. 생태계 비교와 최적화 연구</div><a class="nav-link"  href="../chapter/18-npu-ecosystems.html"><span class="num">18</span><span>다른 NPU의 지원 방식</span></a><a class="nav-link active" aria-current="page" href="../chapter/19-model-optimization.html"><span class="num">19</span><span>모델 사전 최적화 · 연구</span></a><div class="nav-caption">참고와 검증</div><a class="nav-link"  href="../glossary.html"><span class="num">·</span><span>약어와 용어 사전</span></a><a class="nav-link"  href="../sources.html"><span class="num">·</span><span>출처 · 버전 · 접근 범위</span></a><a class="nav-link"  href="../review.html"><span class="num">·</span><span>검토 기록과 미해결 질문</span></a><a class="nav-link"  href="../reader-review.html"><span class="num">·</span><span>학습 점검과 보완 기록</span></a></nav><div class="side-foot">비공식 개발 핸드북 · 2026.11.20<br>공식 SDK와 프로젝트 구현을 구분합니다.<br><a href="https://github.com/smallstep-zzz/furyno5-handbook">원고와 변경 이력 ↗</a></div></aside><div class="shell"><main class="page" id="content"><div class="eyebrow">VI. 생태계 비교와 최적화 연구 / CHAPTER 19</div><h1>모델과 실행 방식을 함께 최적화하기</h1><p class="dek">NetsPresso와 공개 도구, 의미 보존 변환과 모델 압축을 RNGD의 실측 기준으로 평가합니다.</p><div class="page-meta"><span>독자 검토 2026.11.20</span><span>SDK 2026.4 계열 / 버전별 표기</span><span class="readtime">약 47분</span><span><a href="https://github.com/smallstep-zzz/furyno5-handbook/blob/main/content/19-model-optimization.md">원고</a></span></div><details class="mobile-toc"><summary>이 장의 목차</summary><div><a class="" href="#1-같은-계산을-빠르게-하는-연구와-모델을-줄이는-연구">1. 같은 계산을 빠르게 하는 연구와 모델을 줄이는 연구</a><a class="minor" href="#계산량을-절반으로-줄여도-시간이-절반이-되지-않는-예">계산량을 절반으로 줄여도 시간이 절반이 되지 않는 예</a><a class="" href="#흔한-실수와-이해하고-바꿨을-때의-차이">흔한 실수와 이해하고 바꿨을 때의 차이</a><a class="minor" href="#실측으로-보는-작은-호출의-비용">실측으로 보는 작은 호출의 비용</a><a class="minor" href="#숫자가-좋아-보여도-놓치기-쉬운-것">숫자가 좋아 보여도 놓치기 쉬운 것</a><a class="" href="#2-먼저-공식-기준선을-재현-가능하게-만든다">2. 먼저 공식 기준선을 재현 가능하게 만든다</a><a class="minor" href="#비교표의-입력-규격을-먼저-읽는다">비교표의 입력 규격을 먼저 읽는다</a><a class="" href="#3-netspresso는-무엇이-공개되어-있는가">3. NetsPresso는 무엇이 공개되어 있는가</a><a class="" href="#4-양자화의-수치-계약을-이해한-뒤-도구를-고른다">4. 양자화의 수치 계약을 이해한 뒤 도구를 고른다</a><a class="minor" href="#숫자를-작게-저장한다는-뜻">숫자를 작게 저장한다는 뜻</a><a class="minor" href="#변환-산출물이-어느-실행기에서-쓰이는가">변환 산출물이 어느 실행기에서 쓰이는가</a><a class="" href="#5-작은-실습-추론용-conv-bn-folding">5. 작은 실습: 추론용 Conv–BN folding</a><a class="" href="#6-onnx-단순화는-별도-후보로-보관한다">6. ONNX 단순화는 별도 후보로 보관한다</a><a class="" href="#7-구조를-줄일-때는-하드웨어가-좋아하는-크기도-다시-찾는다">7. 구조를 줄일 때는 하드웨어가 좋아하는 크기도 다시 찾는다</a><a class="minor" href="#중간-채널-하나를-지우면-다음-층도-바뀐다">중간 채널 하나를 지우면 다음 층도 바뀐다</a><a class="minor" href="#논리-차원이-작아져도-실제-작업-묶음은-그대로일-수-있다">논리 차원이 작아져도 실제 작업 묶음은 그대로일 수 있다</a><a class="" href="#8-고수준-의미를-보존하는-것도-최적화다">8. 고수준 의미를 보존하는 것도 최적화다</a><a class="minor" href="#attention의-중간-행렬을-줄이되-계산-의미는-유지한다">attention의 중간 행렬을 줄이되 계산 의미는 유지한다</a><a class="" href="#9-workload마다-다른-연구-가설을-세운다">9. workload마다 다른 연구 가설을 세운다</a><a class="minor" href="#공식-compiler가-좋아도-남는-입력-실행-경계의-선택">공식 compiler가 좋아도 남는 입력·실행 경계의 선택</a><a class="" href="#10-furyno5에서-제안하는-연구-순서">10. FuryNo5에서 제안하는 연구 순서</a><a class="" href="#출처">출처</a></div></details><noscript><p class="noscript">본문과 그림은 JavaScript 없이 읽을 수 있습니다. 검색과 조절 실험에는 JavaScript가 필요합니다.</p></noscript><article class="article"><p>DB의 질의 계획에서 연산 하나를 지웠어도 전체 질의가 빨라지는지는 디스크 읽기와 다른 연산의 비용을 함께 봐야 한다. 모델 최적화도 같다. 계산할 숫자를 줄이는 방법, 같은 계산의 표현을 바꾸는 방법, 호출 사이의 메모리 이동을 줄이는 방법은 서로 다른 효과를 낸다.</p>
+<body data-root="../" data-chapter="19-model-optimization" data-search-version="88347b0735e9"><a class="skip" href="#content">본문으로 이동</a><header class="topbar"><button class="menu-toggle" type="button" aria-label="전체 목차 열기" aria-controls="sidebar" aria-expanded="false">☰</button><a class="brand" href="../index.html"><span class="brand-mark">Nº5</span>FuryNo5<small>DEVELOPER HANDBOOK</small></a><div class="top-actions"><a class="top-link" href="../sources.html">출처와 버전</a><button class="search-open" type="button" aria-label="핸드북 전체 검색"><span>전체 문서 검색</span><kbd>⌘ K</kbd></button></div></header><div class="progress" aria-hidden="true"></div><div class="mobile-shade"></div><aside class="sidebar" id="sidebar" aria-label="전체 목차"><nav><div class="nav-caption">시작하기</div><a class="nav-link"  href="../index.html"><span class="num">00</span><span>전체 지도와 읽는 방법</span></a><div class="nav-caption">I. 디바이스를 이해하기</div><a class="nav-link"  href="../chapter/01-hardware.html"><span class="num">01</span><span>RNGD · TCP · PE</span></a><a class="nav-link"  href="../chapter/02-memory-dma.html"><span class="num">02</span><span>메모리 · DMA · 배치</span></a><a class="nav-link"  href="../chapter/03-driver-runtime.html"><span class="num">03</span><span>드라이버와 공식 런타임</span></a><div class="nav-caption">II. 프로그램을 만들고 실행하기</div><a class="nav-link"  href="../chapter/04-tcl-edf.html"><span class="num">04</span><span>TCL 작성 · 컴파일 · 실행</span></a><a class="nav-link"  href="../chapter/05-graphs-fallback.html"><span class="num">05</span><span>실행그래프 · 오류 · 폴백</span></a><a class="nav-link"  href="../chapter/06-buckets-shapes.html"><span class="num">06</span><span>Shape · 버킷 · 컴파일 비용</span></a><a class="nav-link"  href="../chapter/07-optimization.html"><span class="num">07</span><span>최적화의 축과 우선순위</span></a><a class="nav-link"  href="../chapter/08-eisa-visa.html"><span class="num">08</span><span>eISA · vISA · furiosa-opt</span></a><div class="nav-caption">III. FuryNo5를 해부하기</div><a class="nav-link"  href="../chapter/09-torch-aten.html"><span class="num">09</span><span>PyTorch · ATen · 등록</span></a><a class="nav-link"  href="../chapter/10-furyno5-architecture.html"><span class="num">10</span><span>FuryNo5 구조와 지원 범위</span></a><a class="nav-link"  href="../chapter/11-furyno5-compiler.html"><span class="num">11</span><span>FuryNo5 컴파일과 캐시</span></a><div class="nav-caption">IV. 모델 포팅과 서빙</div><a class="nav-link"  href="../chapter/12-fxbx.html"><span class="num">12</span><span>fxbX 포맷과 실행계획</span></a><a class="nav-link"  href="../chapter/13-porting-fha.html"><span class="num">13</span><span>포팅 · FHA · FuryAwesome</span></a><a class="nav-link"  href="../chapter/14-serving-vllm.html"><span class="num">14</span><span>vLLM · 서빙 브리지</span></a><a class="nav-link"  href="../chapter/15-multi-npu.html"><span class="num">15</span><span>PE · 여러 카드 · 여러 서버</span></a><div class="nav-caption">V. 검증과 다음 개발</div><a class="nav-link"  href="../chapter/16-furyboost.html"><span class="num">16</span><span>FuryBoost 학습 성능</span></a><a class="nav-link"  href="../chapter/17-debugging.html"><span class="num">17</span><span>측정 · 추적 · 실패 재현</span></a><div class="nav-caption">VI. 생태계 비교와 최적화 연구</div><a class="nav-link"  href="../chapter/18-npu-ecosystems.html"><span class="num">18</span><span>다른 NPU의 지원 방식</span></a><a class="nav-link active" aria-current="page" href="../chapter/19-model-optimization.html"><span class="num">19</span><span>모델 사전 최적화 · 연구</span></a><div class="nav-caption">참고와 검증</div><a class="nav-link"  href="../glossary.html"><span class="num">·</span><span>약어와 용어 사전</span></a><a class="nav-link"  href="../sources.html"><span class="num">·</span><span>출처 · 버전 · 접근 범위</span></a><a class="nav-link"  href="../review.html"><span class="num">·</span><span>실행 전 확인사항</span></a><a class="nav-link"  href="../reader-review.html"><span class="num">·</span><span>핵심 질문과 해설</span></a></nav><div class="side-foot">비공식 개발 핸드북<br>공식 SDK와 프로젝트 구현을 구분합니다.<br><a href="https://github.com/smallstep-zzz/furyno5-handbook">원고와 변경 이력 ↗</a></div></aside><div class="shell"><main class="page" id="content"><div class="eyebrow">VI. 생태계 비교와 최적화 연구 / CHAPTER 19</div><h1>모델과 실행 방식을 함께 최적화하기</h1><p class="dek">NetsPresso와 공개 도구, 의미 보존 변환과 모델 압축을 RNGD의 실측 기준으로 평가합니다.</p><div class="page-meta"><span>SDK 2026.4 계열 / 버전별 표기</span><span class="readtime">약 47분</span><span><a href="https://github.com/smallstep-zzz/furyno5-handbook/blob/main/content/19-model-optimization.md">원고</a></span></div><details class="mobile-toc"><summary>이 장의 목차</summary><div><a class="" href="#1-같은-계산을-빠르게-하는-연구와-모델을-줄이는-연구">1. 같은 계산을 빠르게 하는 연구와 모델을 줄이는 연구</a><a class="minor" href="#계산량을-절반으로-줄여도-시간이-절반이-되지-않는-예">계산량을 절반으로 줄여도 시간이 절반이 되지 않는 예</a><a class="" href="#흔한-실수와-이해하고-바꿨을-때의-차이">흔한 실수와 이해하고 바꿨을 때의 차이</a><a class="minor" href="#실측으로-보는-작은-호출의-비용">실측으로 보는 작은 호출의 비용</a><a class="minor" href="#숫자가-좋아-보여도-놓치기-쉬운-것">숫자가 좋아 보여도 놓치기 쉬운 것</a><a class="" href="#2-먼저-공식-기준선을-재현-가능하게-만든다">2. 먼저 공식 기준선을 재현 가능하게 만든다</a><a class="minor" href="#비교표의-입력-규격을-먼저-읽는다">비교표의 입력 규격을 먼저 읽는다</a><a class="" href="#3-netspresso는-무엇이-공개되어-있는가">3. NetsPresso는 무엇이 공개되어 있는가</a><a class="" href="#4-양자화의-수치-계약을-이해한-뒤-도구를-고른다">4. 양자화의 수치 계약을 이해한 뒤 도구를 고른다</a><a class="minor" href="#숫자를-작게-저장한다는-뜻">숫자를 작게 저장한다는 뜻</a><a class="minor" href="#변환-산출물이-어느-실행기에서-쓰이는가">변환 산출물이 어느 실행기에서 쓰이는가</a><a class="" href="#5-작은-실습-추론용-conv-bn-folding">5. 작은 실습: 추론용 Conv–BN folding</a><a class="" href="#6-onnx-단순화는-별도-후보로-보관한다">6. ONNX 단순화는 별도 후보로 보관한다</a><a class="" href="#7-구조를-줄일-때는-하드웨어가-좋아하는-크기도-다시-찾는다">7. 구조를 줄일 때는 하드웨어가 좋아하는 크기도 다시 찾는다</a><a class="minor" href="#중간-채널-하나를-지우면-다음-층도-바뀐다">중간 채널 하나를 지우면 다음 층도 바뀐다</a><a class="minor" href="#논리-차원이-작아져도-실제-작업-묶음은-그대로일-수-있다">논리 차원이 작아져도 실제 작업 묶음은 그대로일 수 있다</a><a class="" href="#8-고수준-의미를-보존하는-것도-최적화다">8. 고수준 의미를 보존하는 것도 최적화다</a><a class="minor" href="#attention의-중간-행렬을-줄이되-계산-의미는-유지한다">attention의 중간 행렬을 줄이되 계산 의미는 유지한다</a><a class="" href="#9-workload마다-다른-연구-가설을-세운다">9. workload마다 다른 연구 가설을 세운다</a><a class="minor" href="#공식-compiler가-좋아도-남는-입력-실행-경계의-선택">공식 compiler가 좋아도 남는 입력·실행 경계의 선택</a><a class="" href="#10-furyno5에서-제안하는-연구-순서">10. FuryNo5에서 제안하는 연구 순서</a><a class="" href="#출처">출처</a></div></details><noscript><p class="noscript">본문과 그림은 JavaScript 없이 읽을 수 있습니다. 검색과 조절 실험에는 JavaScript가 필요합니다.</p></noscript><article class="article"><blockquote>
+<p><strong>전체 경로에서의 위치</strong></p>
+<p>기준 모델·품질 기준 → <strong>계산 표현·정밀도·구조 변환</strong> → 재컴파일·검증</p>
+<p>07장의 실행 경로 최적화보다 앞단인 모델 표현을 바꾼다. 같은 함수를 보존하는 변환과 품질 평가가 필요한 압축을 나누어 다룬다. 변환 후에는 <a href="../chapter/11-furyno5-compiler.html">11장</a>의 컴파일과 <a href="../chapter/17-debugging.html">17장</a>의 수치·성능 확인을 다시 거친다.</p>
+</blockquote>
+<p>DB의 질의 계획에서 연산 하나를 지웠어도 전체 질의가 빨라지는지는 디스크 읽기와 다른 연산의 비용을 함께 봐야 한다. 모델 최적화도 같다. 계산할 숫자를 줄이는 방법, 같은 계산의 표현을 바꾸는 방법, 호출 사이의 메모리 이동을 줄이는 방법은 서로 다른 효과를 낸다.</p>
 <p><strong>공식 포팅보다 좋은 결과를 얻을 가능성은 있다. 다만 그 가능성을 입증하려면 모델이 계산하는 일, 컴파일러가 보는 표현, 장치에 일을 제출하는 경계를 함께 연구해야 한다.</strong> 이 장은 이미 빠르다고 주장하는 결과 보고서가 아니다. 공개 도구로 변환 후보를 만들고, 같은 품질 조건에서 RNGD(Renegade)의 실제 이득을 판정하는 연구 계획이다. 실행 중 복사·동기화·계측의 기초는 <a href="../chapter/07-optimization.html">7장</a>, 다른 NPU(Neural Processing Unit) 스택의 설계는 <a href="../chapter/18-npu-ecosystems.html">18장</a>에서 이어 읽는다.</p>
 <p>공식 Furiosa Compiler도 그래프 최적화, 연산 결합, 메모리 할당, 스케줄링, 층 사이 데이터 이동을 이미 최적화한다. 따라서 외부 도구에서 연산 하나를 지웠다는 사실만으로 공식 경로보다 빠르다고 말할 수 없다. 공식 compiler가 같은 변환을 수행했는지, 외부 변환이 유용한 패턴을 오히려 깨뜨렸는지부터 비교해야 한다. <a href="https://developer.furiosa.ai/v2026.4.1/en/overview/software_stack.html">공식 compiler의 책임</a></p>
 <blockquote>
-<p><strong>조사·검증 기준</strong> · 소스·문헌 기준일은 2026-11-19, 독자 재검토일은 2026-11-20(한국 시간)이다. 예제의 API(Application Programming Interface)는 문서·소스와 대조했다. PyTorch·ONNX 같은 별도 도구나 Furiosa SDK(Software Development Kit)·RNGD 환경이 필요한 변환·장치 예제는 이번 편집에서 실행하지 않았다. 새로 추가한 순수 Python의 scale 후보 비교와 attention 계산·누적 예제는 CPU에서 실행해 수치를 검산했다. 이 장에는 새 NPU 성능 측정값이 없다. 표의 RNGD 적용 순서는 FuryNo5의 연구 제안이며 공식 지원표가 아니다.</p>
+<p><strong>조사·검증 기준</strong> · 소스·문헌 기준일은 2026-11-19다. 순수 Python 예제는 수식을, PyTorch·ONNX 예제는 변환을 확인한다. NPU 적용에는 호환 SDK와 RNGD에서의 별도 수치·성능 검증이 필요하다. 표의 RNGD 적용 순서는 FuryNo5의 연구 제안이며 공식 지원표가 아니다.</p>
 </blockquote>
 <h2 id="1-같은-계산을-빠르게-하는-연구와-모델을-줄이는-연구"><a class="heading-anchor" href="#1-같은-계산을-빠르게-하는-연구와-모델을-줄이는-연구">1. 같은 계산을 빠르게 하는 연구와 모델을 줄이는 연구</a></h2>
 <p>두 연구는 합격 기준이 다르다. 첫째는 같은 모델의 계산 의미를 보존하면서 표현을 바꾸는 것이다. 앞 계산의 출력에 적용하는 상수 배율·덧셈을 앞 계산의 계수로 흡수하는 <strong>folding(계수 접기)</strong>, 불필요한 변환 제거, 입력에 따라 바뀌지 않는 부분의 사전 계산이 여기에 속한다. 뒤의 Conv–BN(Convolution–Batch Normalization) 실습에서 숫자로 확인한다. 둘째는 모델 자체를 바꾸는 것이다. <strong>Pruning(가지치기)은</strong> 가중치나 채널·층 일부를 제거하고, <strong>distillation(지식 증류)은</strong> 큰 교사 모델의 출력을 이용해 작은 학생 모델을 학습시키며, <strong>quantization(양자화)은</strong> 숫자를 더 적은 표현값으로 근사한다. 이 경우 원본과 모든 출력이 같아야 한다는 기준을 사용할 수 없고, 사전에 정한 실제 작업의 품질 한도를 만족해야 한다. <a href="https://docs.pytorch.org/docs/2.10/generated/torch.nn.utils.fusion.fuse_conv_bn_eval.html">추론용 folding 조건</a>, <a href="https://openaccess.thecvf.com/content/CVPR2023/html/Fang_DepGraph_Towards_Any_Structural_Pruning_CVPR_2023_paper.html">구조적 pruning</a>, <a href="https://arxiv.org/abs/1503.02531">지식 증류</a></p>
@@ -95,7 +100,7 @@
 </tr>
 </tbody></table>
 </div><h3 id="실측으로-보는-작은-호출의-비용"><a class="heading-anchor" href="#실측으로-보는-작은-호출의-비용">실측으로 보는 작은 호출의 비용</a></h3>
-<p>기존 <strong>2026-11-17 RF-DETR Seg Nano 연구 기록</strong>은 RNGD, furiosa-torch 2026.4.0, FP32, 312×312, batch 1 조건이다. 같은 장치에서 번갈아 측정했고 출력이 기존 경로와 비트 단위로 같았다고 기록돼 있다. 아래는 당시 기록의 일부이며 이번 편집에서 재측정하지 않았다.</p>
+<p>기존 <strong>2026-11-17 RF-DETR Seg Nano 연구 기록</strong>은 RNGD, furiosa-torch 2026.4.0, FP32, 312×312, batch 1 조건이다. 같은 장치에서 번갈아 측정했고 출력이 기존 경로와 비트 단위로 같았다고 기록돼 있다. 아래는 당시 기록의 일부다.</p>
 <div class="table-wrap"><table>
 <thead>
 <tr>
@@ -415,42 +420,38 @@ assert isclose(results[1][1], 0.025)
 </div><p>이를 한 번에 쓰면 <code>2×(2x+1−3)/2+0.5 = 2x−1.5</code>다. 새 weight는 2, 새 bias는 −1.5이고 x=3에서 똑같이 4.5가 나온다. 이처럼 뒤 연산을 앞 계수에 흡수하는 것이 folding이다. 실제 연산은 작은 양수 <strong>epsilon</strong>을 분모의 제곱근 안에 더해 분산이 0에 가까울 때를 처리한다.</p>
 <p>일반 식에서는 출력 채널마다 <code>a = gamma / sqrt(variance + epsilon)</code>를 만들고 <code>W_new=a×W</code>, <code>b_new=a×(b−mean)+beta</code>로 바꾼다. <code>sqrt</code>는 제곱근이고, 식의 곱은 해당 출력 채널의 모든 convolution 가중치에 같은 배율을 적용한다는 뜻이다. 학습 모드에서는 입력 batch에 따라 통계가 달라지므로 이 고정 계수 변환을 그대로 사용할 수 없다. <a href="https://github.com/pytorch/pytorch/blob/449b1768410104d3ed79d3bcfe4ba1d65c7f22c0/torch/nn/utils/fusion.py#L20-L53">PyTorch 2.10 구현</a></p>
 <p>다음은 CPU(Central Processing Unit) 예제이며 <a href="../examples/fold_conv_bn.py">fold_conv_bn.py</a>로 내려받을 수 있다. PyTorch 2.10 API에 맞췄다. 합성 입력으로 running statistics를 채우는 부분은 실습 준비이며 실제 모델을 학습하거나 제품 품질을 검증하는 과정은 아니다.</p>
-<div class="codebox"><div class="codebar"><span>python</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-python">import torch
-from torch import nn
-from torch.nn.utils.fusion import fuse_conv_bn_eval
+<p>아래는 <a href="../examples/fold_conv_bn.py">fold_conv_bn.py</a>의 <code>main()</code>을 세 단계로 나눈 발췌다. 전체 파일에서 <code>torch</code>, <code>nn</code>, <code>fuse_conv_bn_eval</code>을 import한다. 먼저 실습용 모델의 통계를 준비하고 평가 모드로 고정한다.</p>
+<div class="codebox"><div class="codebar"><span>python</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-python">torch.manual_seed(7)
+original = nn.Sequential(
+    nn.Conv2d(3, 8, kernel_size=3, padding=1, bias=False),  # 입력 채널 3 → 출력 채널 8
+    nn.BatchNorm2d(8),  # 출력의 8개 채널마다 통계·gamma·beta를 가진다.
+)
 
-def main():
-    torch.manual_seed(7)
-    original = nn.Sequential(
-        nn.Conv2d(3, 8, kernel_size=3, padding=1, bias=False),  # 입력 채널 3 → 출력 채널 8
-        nn.BatchNorm2d(8),  # 출력의 8개 채널마다 통계·gamma·beta를 가진다.
-    )
-
-    # 합성 실습용 statistics. 실제 모델에서는 학습된 buffer를 사용한다.
-    original.train()  # 이 모드에서 아래 입력들이 BN의 누적 통계를 갱신한다.
-    with torch.no_grad():  # 역전파 기록만 끈다. train 모드의 통계 갱신은 계속된다.
-        for _ in range(8):
-            original(torch.randn(4, 3, 24, 24))  # N,C,H,W = 이미지 4개, 채널 3, 높이·너비 24
-    original.eval().requires_grad_(False)  # 통계를 고정하고 추론용 가중치로 준비한다.
-    folded = fuse_conv_bn_eval(original[0], original[1])  # Conv+BN을 새 Conv 계수로 접는다.
-    folded.eval().requires_grad_(False)
-
-    max_error = 0.0
-    with torch.inference_mode():
-        for shape in [(1, 3, 24, 24), (3, 3, 19, 27)]:  # batch·공간 크기를 달리해 확인
-            for scale in [0.1, 1.0, 5.0]:
-                x = scale * torch.randn(shape)
-                expected, actual = original(x), folded(x)  # 두 결과 shape는 모두 [N,8,H,W]
-                torch.testing.assert_close(
-                    actual, expected, rtol=1e-5, atol=1e-5  # 절대오차+기준값 비례 오차 한도
-                )
-                max_error = max(
-                    max_error, (actual - expected).abs().max().item()
-                )
-    print({&quot;torch&quot;: torch.__version__, &quot;max_abs_error&quot;: max_error})
-
-if __name__ == &quot;__main__&quot;:
-    main()
+# 합성 실습용 statistics. 실제 모델에서는 학습된 buffer를 사용한다.
+original.train()  # 이 모드에서 아래 입력들이 BN의 누적 통계를 갱신한다.
+with torch.no_grad():  # 역전파 기록만 끈다. train 모드의 통계 갱신은 계속된다.
+    for _ in range(8):
+        original(torch.randn(4, 3, 24, 24))  # N,C,H,W = 이미지 4개, 채널 3, 높이·너비 24
+original.eval().requires_grad_(False)  # 통계를 고정하고 추론용 가중치로 준비한다.
+</code></pre></div>
+<p>이제 원래 Conv와 BN을 하나의 Conv로 접는다. 원본 <code>original</code>은 비교용으로 보관하고 <code>folded</code>를 새 후보로 사용한다.</p>
+<div class="codebox"><div class="codebar"><span>python</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-python">folded = fuse_conv_bn_eval(original[0], original[1])  # Conv+BN을 새 Conv 계수로 접는다.
+folded.eval().requires_grad_(False)
+</code></pre></div>
+<p>마지막으로 크기와 입력 값의 범위를 바꿔 두 모델을 비교한다. 이 비교가 끝난 뒤에 NPU 컴파일·성능 비교로 넘어간다.</p>
+<div class="codebox"><div class="codebar"><span>python</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-python">max_error = 0.0
+with torch.inference_mode():
+    for shape in [(1, 3, 24, 24), (3, 3, 19, 27)]:  # batch·공간 크기를 달리해 확인
+        for scale in [0.1, 1.0, 5.0]:
+            x = scale * torch.randn(shape)
+            expected, actual = original(x), folded(x)  # 두 결과 shape는 모두 [N,8,H,W]
+            torch.testing.assert_close(
+                actual, expected, rtol=1e-5, atol=1e-5  # 절대오차+기준값 비례 오차 한도
+            )
+            max_error = max(
+                max_error, (actual - expected).abs().max().item()
+            )
+print({&quot;torch&quot;: torch.__version__, &quot;max_abs_error&quot;: max_error})
 </code></pre></div>
 <div class="codebox"><div class="codebar"><span>bash</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-bash">python -m pip show torch
 python fold_conv_bn.py
@@ -461,6 +462,7 @@ python fold_conv_bn.py
 <p><strong>상수 접기(constant folding)도</strong> 작은 식으로 이해할 수 있다. 그래프가 <code>c=2+3; y=x*c</code>이고 2와 3이 실행 중 변하지 않으면 준비 단계에서 c=5를 계산해 <code>y=x*5</code>만 남길 수 있다. 입력 <code>[1,2]</code>의 출력은 둘 다 <code>[5,10]</code>이다. 하지만 c가 외부 입력으로 바뀔 수 있다면 이를 5로 고정하는 것은 다른 함수다.</p>
 <p>ONNX의 <strong>initializer</strong>는 이름을 붙여 그래프에 저장한 tensor 값이다. 보통 가중치·상수에 사용한다. <strong>Opset</strong>은 연산 의미의 버전, <strong>domain</strong>은 표준 연산인지 업체별 확장인지 구분하는 이름 공간이다. 형식 검사 통과, 몇 입력의 값 비교 통과, 대상 compiler가 그 연산을 지원한다는 사실은 서로 다른 검사다.</p>
 <p>아래는 <strong>외부 데이터 파일이 없는 작은 정적 FP32 입력 모델</strong>을 <code>input.onnx</code>로 준비한 경우의 출발점이다. <a href="../examples/simplify_onnx_candidate.py">simplify_onnx_candidate.py</a>로 내려받을 수 있다. 임의의 LLM 전체를 처리하는 스크립트가 아니다. graph optimization pass를 끄고 shape 추론과 상수 접기를 먼저 살펴본다. 더 공격적인 pass는 다음 실험에서 하나씩 켠다. ONNX, ONNX Simplifier, 비교 실행에 필요한 ONNX Runtime을 호환되는 별도 환경에 설치하고 버전을 기록한다.</p>
+<p>첫 단계는 입력 파일의 형식과 정적 FP32 계약을 검사하는 것이다. 원본을 수정하지 않는다.</p>
 <div class="codebox"><div class="codebar"><span>python</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-python">from importlib.metadata import version
 from pathlib import Path
 import onnx
@@ -478,8 +480,9 @@ for value in model.graph.input:
     if any(not d.HasField(&quot;dim_value&quot;) or d.dim_value &lt;= 0
            for d in tensor.shape.dim):
         raise ValueError(&quot;Keep dynamic-shape experiments separate&quot;)
-
-output = Path(&quot;candidate-constant-folded.onnx&quot;)
+</code></pre></div>
+<p>검사한 같은 <code>model</code>을 단순화하고 다른 파일에 저장한다. 표본 비교가 실패하면 후보를 저장하지 않는다. 아래 코드는 앞 코드와 같은 파일에서 이어진다.</p>
+<div class="codebox"><div class="codebar"><span>python</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-python">output = Path(&quot;candidate-constant-folded.onnx&quot;)
 if output.exists():
     raise FileExistsError(output)
 candidate, checked = simplify(
@@ -756,24 +759,8 @@ print(tuple(hidden.shape), tuple(output.shape))  # (1, 3) (1, 2)
 </div><p>재조정 배율은 외워야 할 별도 규칙이 아니다. 이전 점수 s에 대해 <code>exp(s−새m)=exp(s−옛m)×exp(옛m−새m)</code>이므로, 이전에 모아 둔 <strong>합 전체</strong>에 <code>exp(옛m−새m)</code>를 곱하면 모든 항이 새 기준으로 바뀐다. 위 예에서 이 단계를 생략하고 <code>l=1+1, o=20+10</code>으로 합치면 결과는 15가 되어 틀린다. 현재 최대값·합·가중합이라는 작은 상태로 정확한 정규화 의미를 유지하는 것이 핵심이다.</p>
 <h4 id="cpu에서-shape와-두-처리-순서를-확인한다"><a class="heading-anchor" href="#cpu에서-shape와-두-처리-순서를-확인한다">CPU에서 shape와 두 처리 순서를 확인한다</a></h4>
 <p><a href="../examples/attention_contract_demo.py">attention_contract_demo.py</a>는 앞의 한 질의·한 내용 성분 예를 실행하는 완전한 순수 Python이다. 첫 부분은 2차원 행렬의 축을 유지하고, 뒤 부분은 같은 한 행을 조각별로 읽어 결과를 비교한다. 실제 FlashAttention이나 RNGD 커널 구현이 아니며 mask·여러 head·반올림 계약을 모두 구현하지 않는다.</p>
-<div class="codebox"><div class="codebar"><span>python</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-python">from math import exp, isclose, sqrt
-
-def transpose(matrix):
-    return [list(column) for column in zip(*matrix)]  # [행,열] → [열,행]
-
-def matmul(left, right):
-    assert len(left[0]) == len(right)  # 곱하며 더할 축의 길이가 같아야 한다.
-    columns = transpose(right)
-    return [
-        [sum(a * b for a, b in zip(row, column)) for column in columns]
-        for row in left
-    ]
-
-def softmax_row(scores):
-    maximum = max(scores)
-    positive = [exp(score - maximum) for score in scores]  # 모든 항에 같은 기준 사용
-    total = sum(positive)
-    return [value / total for value in positive]  # key 축 전체의 가중치 합을 1로 만듦
+<p>배열 곱과 softmax의 보조 함수는 <a href="../examples/attention_contract_demo.py">attention_contract_demo.py</a>에 있다. 먼저 그 파일의 <code>matmul</code>·<code>transpose</code>·<code>softmax_row</code>를 사용해 전체 행렬 방식의 기준값을 만든다.</p>
+<div class="codebox"><div class="codebar"><span>python</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-python">from math import sqrt
 
 q = [[1.0]]  # [Lq=1,d=1]
 k = [[1.0], [0.0]]  # [Lk=2,d=1]
@@ -782,6 +769,9 @@ raw_scores = matmul(q, transpose(k))  # [1,1] @ [1,2] → [1,2]
 scores = [[value / sqrt(len(q[0])) for value in row] for row in raw_scores]
 weights = [softmax_row(row) for row in scores]  # 질의마다 key 축으로 정규화
 full_output = matmul(weights, v)[0][0]  # [1,2] @ [2,1] → [1,1]의 한 값
+</code></pre></div>
+<p>다음 함수는 한 질의 행을 조각씩 누적한다. 새 최대값을 만날 때 <strong>이미 누적한 분모와 분자 모두</strong> 같은 기준으로 환산하는 두 줄에 주목하자.</p>
+<div class="codebox"><div class="codebar"><span>python</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-python">from math import exp
 
 def online_one_row(score_values):
     maximum, total, weighted = float(&quot;-inf&quot;), 0.0, 0.0
@@ -795,6 +785,9 @@ def online_one_row(score_values):
     if total == 0.0:
         raise ValueError(&quot;이 예제에는 최소 한 key가 필요합니다.&quot;)
     return weighted / total
+</code></pre></div>
+<p>두 계산에 같은 점수·값을 넣고 순서도 뒤집어 비교한다. 앞 코드에 이어 실행하면 세 출력이 모두 약 <code>12.689414</code>다.</p>
+<div class="codebox"><div class="codebar"><span>python</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-python">from math import isclose
 
 pairs = list(zip(scores[0], [row[0] for row in v]))
 forward = online_one_row(pairs)  # 점수 1 다음 0: 최대값 유지
@@ -1004,4 +997,4 @@ print(outputs.tolist())  # [[7.0, 10.0], [15.0, 22.0]]
 </tr>
 </tbody></table>
 </div><p>GitHub 링크는 확인한 commit에 고정했다. 개발 branch의 최신 snapshot이 모든 설치 환경에 적합한 배포판이라는 뜻은 아니다. FuryNo5 소스 링크에는 저장소 열람 권한이 필요할 수 있다.</p>
-</article><nav class="next-prev" aria-label="이전과 다음 장"><a href="../chapter/18-npu-ecosystems.html"><small>← 이전 장</small><b>다른 NPU의 PyTorch 지원 방식</b></a><a href="../glossary.html"><small>다음 장 →</small><b>용어 사전</b></a></nav><footer class="footer">FuryNo5 개발 핸드북 · 비공식 자료<br>공식 문서와 소스의 권리는 각 프로젝트에 있습니다. 코드 인용은 출처와 함께 표시합니다.<br><a href="../reader-review.html">학습 점검</a> · <a href="../review.html">검토 기록과 남은 질문</a> · <a href="../sources.html">출처와 버전</a> · <a href="../glossary.html">용어 사전</a></footer></main></div><aside class="right-toc" aria-label="이 장의 목차"><h2>이 장에서 다루는 내용</h2><a class="" href="#1-같은-계산을-빠르게-하는-연구와-모델을-줄이는-연구">1. 같은 계산을 빠르게 하는 연구와 모델을 줄이는 연구</a><a class="minor" href="#계산량을-절반으로-줄여도-시간이-절반이-되지-않는-예">계산량을 절반으로 줄여도 시간이 절반이 되지 않는 예</a><a class="" href="#흔한-실수와-이해하고-바꿨을-때의-차이">흔한 실수와 이해하고 바꿨을 때의 차이</a><a class="minor" href="#실측으로-보는-작은-호출의-비용">실측으로 보는 작은 호출의 비용</a><a class="minor" href="#숫자가-좋아-보여도-놓치기-쉬운-것">숫자가 좋아 보여도 놓치기 쉬운 것</a><a class="" href="#2-먼저-공식-기준선을-재현-가능하게-만든다">2. 먼저 공식 기준선을 재현 가능하게 만든다</a><a class="minor" href="#비교표의-입력-규격을-먼저-읽는다">비교표의 입력 규격을 먼저 읽는다</a><a class="" href="#3-netspresso는-무엇이-공개되어-있는가">3. NetsPresso는 무엇이 공개되어 있는가</a><a class="" href="#4-양자화의-수치-계약을-이해한-뒤-도구를-고른다">4. 양자화의 수치 계약을 이해한 뒤 도구를 고른다</a><a class="minor" href="#숫자를-작게-저장한다는-뜻">숫자를 작게 저장한다는 뜻</a><a class="minor" href="#변환-산출물이-어느-실행기에서-쓰이는가">변환 산출물이 어느 실행기에서 쓰이는가</a><a class="" href="#5-작은-실습-추론용-conv-bn-folding">5. 작은 실습: 추론용 Conv–BN folding</a><a class="" href="#6-onnx-단순화는-별도-후보로-보관한다">6. ONNX 단순화는 별도 후보로 보관한다</a><a class="" href="#7-구조를-줄일-때는-하드웨어가-좋아하는-크기도-다시-찾는다">7. 구조를 줄일 때는 하드웨어가 좋아하는 크기도 다시 찾는다</a><a class="minor" href="#중간-채널-하나를-지우면-다음-층도-바뀐다">중간 채널 하나를 지우면 다음 층도 바뀐다</a><a class="minor" href="#논리-차원이-작아져도-실제-작업-묶음은-그대로일-수-있다">논리 차원이 작아져도 실제 작업 묶음은 그대로일 수 있다</a><a class="" href="#8-고수준-의미를-보존하는-것도-최적화다">8. 고수준 의미를 보존하는 것도 최적화다</a><a class="minor" href="#attention의-중간-행렬을-줄이되-계산-의미는-유지한다">attention의 중간 행렬을 줄이되 계산 의미는 유지한다</a><a class="" href="#9-workload마다-다른-연구-가설을-세운다">9. workload마다 다른 연구 가설을 세운다</a><a class="minor" href="#공식-compiler가-좋아도-남는-입력-실행-경계의-선택">공식 compiler가 좋아도 남는 입력·실행 경계의 선택</a><a class="" href="#10-furyno5에서-제안하는-연구-순서">10. FuryNo5에서 제안하는 연구 순서</a><a class="" href="#출처">출처</a></aside><dialog class="search-dialog" aria-label="문서 검색"><div class="search-head"><input type="search" aria-label="검색어" placeholder="DMA, EDF, 폴백, 버킷…" autocomplete="off"><button class="close-search" type="button">닫기</button></div><div class="search-status" role="status">용어나 함수 이름을 입력하세요.</div><div class="search-results"></div></dialog></body></html>
+</article><nav class="next-prev" aria-label="이전과 다음 장"><a href="../chapter/18-npu-ecosystems.html"><small>← 이전 장</small><b>다른 NPU의 PyTorch 지원 방식</b></a><a href="../glossary.html"><small>다음 장 →</small><b>용어 사전</b></a></nav><footer class="footer">FuryNo5 개발 핸드북 · 비공식 자료<br>공식 문서와 소스의 권리는 각 프로젝트에 있습니다. 코드 인용은 출처와 함께 표시합니다.<br><a href="../reader-review.html">핵심 질문과 해설</a> · <a href="../review.html">실행 전 확인사항</a> · <a href="../sources.html">출처와 버전</a> · <a href="../glossary.html">용어 사전</a></footer></main></div><aside class="right-toc" aria-label="이 장의 목차"><h2>이 장에서 다루는 내용</h2><a class="" href="#1-같은-계산을-빠르게-하는-연구와-모델을-줄이는-연구">1. 같은 계산을 빠르게 하는 연구와 모델을 줄이는 연구</a><a class="minor" href="#계산량을-절반으로-줄여도-시간이-절반이-되지-않는-예">계산량을 절반으로 줄여도 시간이 절반이 되지 않는 예</a><a class="" href="#흔한-실수와-이해하고-바꿨을-때의-차이">흔한 실수와 이해하고 바꿨을 때의 차이</a><a class="minor" href="#실측으로-보는-작은-호출의-비용">실측으로 보는 작은 호출의 비용</a><a class="minor" href="#숫자가-좋아-보여도-놓치기-쉬운-것">숫자가 좋아 보여도 놓치기 쉬운 것</a><a class="" href="#2-먼저-공식-기준선을-재현-가능하게-만든다">2. 먼저 공식 기준선을 재현 가능하게 만든다</a><a class="minor" href="#비교표의-입력-규격을-먼저-읽는다">비교표의 입력 규격을 먼저 읽는다</a><a class="" href="#3-netspresso는-무엇이-공개되어-있는가">3. NetsPresso는 무엇이 공개되어 있는가</a><a class="" href="#4-양자화의-수치-계약을-이해한-뒤-도구를-고른다">4. 양자화의 수치 계약을 이해한 뒤 도구를 고른다</a><a class="minor" href="#숫자를-작게-저장한다는-뜻">숫자를 작게 저장한다는 뜻</a><a class="minor" href="#변환-산출물이-어느-실행기에서-쓰이는가">변환 산출물이 어느 실행기에서 쓰이는가</a><a class="" href="#5-작은-실습-추론용-conv-bn-folding">5. 작은 실습: 추론용 Conv–BN folding</a><a class="" href="#6-onnx-단순화는-별도-후보로-보관한다">6. ONNX 단순화는 별도 후보로 보관한다</a><a class="" href="#7-구조를-줄일-때는-하드웨어가-좋아하는-크기도-다시-찾는다">7. 구조를 줄일 때는 하드웨어가 좋아하는 크기도 다시 찾는다</a><a class="minor" href="#중간-채널-하나를-지우면-다음-층도-바뀐다">중간 채널 하나를 지우면 다음 층도 바뀐다</a><a class="minor" href="#논리-차원이-작아져도-실제-작업-묶음은-그대로일-수-있다">논리 차원이 작아져도 실제 작업 묶음은 그대로일 수 있다</a><a class="" href="#8-고수준-의미를-보존하는-것도-최적화다">8. 고수준 의미를 보존하는 것도 최적화다</a><a class="minor" href="#attention의-중간-행렬을-줄이되-계산-의미는-유지한다">attention의 중간 행렬을 줄이되 계산 의미는 유지한다</a><a class="" href="#9-workload마다-다른-연구-가설을-세운다">9. workload마다 다른 연구 가설을 세운다</a><a class="minor" href="#공식-compiler가-좋아도-남는-입력-실행-경계의-선택">공식 compiler가 좋아도 남는 입력·실행 경계의 선택</a><a class="" href="#10-furyno5에서-제안하는-연구-순서">10. FuryNo5에서 제안하는 연구 순서</a><a class="" href="#출처">출처</a></aside><dialog class="search-dialog" aria-label="문서 검색"><div class="search-head"><input type="search" aria-label="검색어" placeholder="DMA, EDF, 폴백, 버킷…" autocomplete="off"><button class="close-search" type="button">닫기</button></div><div class="search-status" role="status">용어나 함수 이름을 입력하세요.</div><div class="search-results"></div></dialog></body></html>

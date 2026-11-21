@@ -1,5 +1,11 @@
 # Shape와 버킷: 길이가 바뀌는 입력을 준비된 프로그램에 맞추기
 
+> **전체 경로에서의 위치**
+>
+> 요청의 shape·상태 → **호환 버킷·프로그램 선택** → 실행계획 호출
+>
+> 입력이 바뀌어도 준비한 실행물을 재사용할 조건을 다룬다. 버킷은 실행할 계산의 입력 규격이며 KV Cache는 이전 토큰의 상태다. 선택 비용과 패딩 비용은 [07장](07-optimization.md), 여러 요청의 배칭은 [14장](14-serving-vllm.md)과 연결된다.
+
 길이 8의 C 배열을 처리하도록 준비한 함수를 생각해 보자. 이번 입력은 길이 5이고 다음 입력은 길이 11이다. 함수가 임의 길이를 받을 수 없다면, 입력을 담을 공간과 처리 범위를 어떻게 맞출지 정해야 한다. NPU(Neural Processing Unit)에서도 어떤 형상으로 컴파일된 프로그램을 재사용할 것인지가 중요한 문제가 된다.
 
 **버킷(bucket)은** 자주 등장하는 입력 조건을 몇 가지 준비된 실행 조건으로 묶는 방법이다. 예를 들어 길이 8·16의 실행물을 준비하고, 길이 5는 8 버킷에, 길이 11은 16 버킷에 배정한다. 버킷은 소프트웨어의 선택 단위다. PE(Processing Element) 안에 ‘버킷’이라는 하드웨어 저장소가 있는 것은 아니다. 공식 FXB(Furiosa Executable Bundle)도 준비된 커널과 입출력 시그니처를 제공하며, 런타임은 실제 요청에 맞는 조건을 사용한다. [공식 FXB 문서](https://developer.furiosa.ai/v2026.4.0/en/furiosa_llm/fxb.html)
@@ -189,7 +195,7 @@ fxb show ./qwen3-8b.fxb
 fxb inspect ./qwen3-8b.fxb
 ```
 
-위 CLI(Command-Line Interface)는 조회 시점의 [2026.4 계열 FXB 문서](https://developer.furiosa.ai/v2026.4.0/en/furiosa_llm/fxb.html)에 근거한다. 이번 작성 환경에서는 실행하지 않았다. `/v2026.4.0/` URL도 후속 2026.4.1 내용이 보이므로 설치된 2026.4.0의 도움말과 대조해야 한다. 컴파일하지 않는 `--dry-run`도 설정·가중치 메타데이터를 조회하기 위한 다운로드가 발생할 수 있으므로 '아무 작업도 하지 않는다'는 뜻은 아니다.
+위 CLI(Command-Line Interface)는 조회 시점의 [2026.4 계열 FXB 문서](https://developer.furiosa.ai/v2026.4.0/en/furiosa_llm/fxb.html)에 근거한다. 실제 실행에는 호환 SDK와 해당 모델 자산이 필요하다. `/v2026.4.0/` URL도 후속 2026.4.1 내용이 보이므로 설치된 2026.4.0의 도움말과 대조해야 한다. 컴파일하지 않는 `--dry-run`도 설정·가중치 메타데이터를 조회하기 위한 다운로드가 발생할 수 있으므로 '아무 작업도 하지 않는다'는 뜻은 아니다.
 
 `--max-model-len`도 시점을 구분한다. 빌드에서는 준비할 프로그램 범위에 영향을 주고, 서빙에서는 이미 있는 FXB의 범위를 확장하지 않은 채 수용할 문맥 길이를 제한한다. 실제 수용 한도는 모델 설정, FXB 범위, KV 메모리 등과 함께 결정된다. [공식 성능 설정](https://developer.furiosa.ai/v2026.4.0/en/furiosa_llm/performance-optimization.html).
 
@@ -202,9 +208,7 @@ fxb inspect ./qwen3-8b.fxb
 공식 Furiosa-LLM의 profile-guided decode batching은 실측 비용을 이용해 배치와 버킷 선택을 조정한다. 별도로 overlap scheduling은 NPU가 현재 batch를 실행하는 동안 CPU(Central Processing Unit)가 다음 batch를 준비한다. 이는 커널 자체를 빠르게 만드는 기능과 다르다. 새 요청이 이미 준비된 batch에 참여하지 못해 TTFT가 늘 수 있고, 지원하지 않는 모델·기능 조합도 있다. [성능 최적화](https://developer.furiosa.ai/v2026.4.0/en/furiosa_llm/performance-optimization.html), [Overlap Scheduling](https://developer.furiosa.ai/v2026.4.0/en/furiosa_llm/overlap-scheduling.html).
 
 
-
 Overlap(겹침)의 의미도 계산을 생략하는 것이 아니다. 예를 들어 현재 NPU 작업 중에 CPU가 다음 요청들의 입력 버퍼와 KV 할당을 준비해 두는 것이다. 다음 토큰의 실제 값이 필요한 부분은 앞 작업의 결과를 받은 뒤 채운다. 이처럼 준비와 계산을 겹쳐 빈 시간을 줄일 수 있지만, 이미 준비된 배치에 새 요청이 곧바로 참여하지 못할 수 있다. [Overlap Scheduling의 실행 순서](https://developer.furiosa.ai/v2026.4.0/en/furiosa_llm/overlap-scheduling.html)
-
 
 ## 9. FuryNo5가 재사용 전에 확인할 실행계약
 
@@ -228,7 +232,6 @@ FuryNo5 개발자의 관점에서 재사용 키에는 적어도 무엇을 계산
 여기서 우선순위는 FuryNo5의 해석이다. 처음 포팅할 때는 가장 작은 검증 가능한 입력으로 정확한 실행을 확보한다. 그다음 실제 수요가 큰 shape를 추가한다. 최종적으로 긴 문맥과 높은 동시성까지 확장한다. 이 순서가 모델의 모든 동작을 작은 shape 하나로 검증할 수 있다는 뜻은 아니다. 경계 길이·마스크·상태 전이를 별도 테스트해야 한다.
 
 p50은 측정값의 가운데 수준, p95는 95%의 요청이 그 이하에서 끝나는 수준이다. 평균이 좋아져도 일부 긴 요청의 대기가 늘면 p95가 악화될 수 있다. 작은 입력의 정확성을 먼저 잡는 순서는 개발을 시작하기 위한 지침이며, 실제 배포에는 지원 범위의 경계·마스크·상태 전이까지 확인해야 한다.
-
 
 ## 출처
 

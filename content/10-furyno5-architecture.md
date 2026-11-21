@@ -1,10 +1,16 @@
 # 10. 작은 모델 하나로 읽는 FuryNo5의 구조
 
+> **전체 경로에서의 위치**
+>
+> PyTorch 모델 → **FuryNo5의 준비·생산 경로** → SDK 또는 fxbX 소비자
+>
+> 앞에서 배운 계층을 프로젝트의 파일·함수와 대응시킨다. 이 장은 호출 관계를, [11장](11-furyno5-compiler.md)은 컴파일 단계의 내부를 설명한다. 파일을 읽어 실행하는 쪽은 [12장](12-fxbx.md)이다.
+
 Python 모델을 NPU(Neural Processing Unit)에서 실행하려면 `forward()`의 계산을 장치용 프로그램으로 만들고, 그 프로그램에 입력·가중치를 연결해야 한다. **FuryNo5는 이 준비를 맡는 생산자(producer)다**. 실제 RNGD 코드 생성은 Furiosa의 compiler에 맡기고, 만들어진 파일을 읽어 실행하는 소비자(consumer)는 SDK(Software Development Kit) 런타임이나 fxbX다. C 소스를 컴파일한 뒤 별도 실행기가 바이너리를 적재하는 흐름과 비슷하지만, 여기서는 여러 텐서 프로그램의 연결 계획도 함께 필요하다.
 
 먼저 작은 모델이 어떤 자료구조와 파일로 바뀌는지 따라가자. 그다음 실제 파일·함수와 지원 범위를 읽으면, “후보를 만들었다”, “컴파일했다”, “NPU에서 정답을 확인했다”가 서로 다른 결과라는 점도 자연스럽게 드러난다. FuryNo5는 모든 ATen(A Tensor Library) 연산을 완성한 범용 backend가 아니며 README도 전체 모델 자동 이식 완료를 주장하지 않는다. [프로젝트의 현재 범위](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/README.md)
 
-> **코드와 검증 기준** · FuryNo5 commit `bba9efea8201aec48150514a35d0b637d29d107e`를 2026-11-19에 확인했다. 소스 링크는 비공개 저장소 열람 권한이 필요할 수 있다. 이 장은 구현을 읽어 설명하며 집필 환경에서 새 NPU 실행·수치·성능 검증을 하지 않았다.
+> **코드와 검증 기준** · FuryNo5 commit `bba9efea8201aec48150514a35d0b637d29d107e`를 2026-11-19에 확인했다. 소스 링크는 비공개 저장소 열람 권한이 필요할 수 있다. 지원 여부는 아래의 등록·컴파일·수치·장치 검증 범위를 나누어 읽는다.
 
 ## 공통 예제: 8개 특징을 받아 8개 값을 돌려주는 모델
 
@@ -115,7 +121,7 @@ library.impl(name, meta, 'Meta')  # 계산 없이 출력 shape·dtype만 설명�
 
 ### Product를 준비하고 한 번 실행하기
 
-앞의 `Product`를 실제 callable로 만드는 완성 예제는 [run_prepared_product.py](../examples/run_prepared_product.py)다. 호환 SDK(Software Development Kit), FuryNo5와 NPU가 필요하다. **고정 소스의 호출 계약을 대조한 예제이며, 이번 문서 수정에서 이 shape의 EDF 컴파일이나 NPU 수치 검증을 실행하지 않았다.** 사전 규칙을 통과하는 입력이라는 사실과 설치된 compiler의 성공은 별도다.
+앞의 `Product`를 실제 callable로 만드는 완성 예제는 [run_prepared_product.py](../examples/run_prepared_product.py)다. 호환 SDK(Software Development Kit), FuryNo5와 NPU가 필요하다. **이 shape의 실제 지원 여부는 컴파일과 장치 수치 비교로 확인해야 한다.** 사전 규칙을 통과하는 입력이라는 사실과 설치된 compiler의 성공은 별도다.
 
 ```python
 import torch

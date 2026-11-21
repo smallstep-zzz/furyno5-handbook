@@ -5,7 +5,8 @@
       "00-reading-map",
       "03-driver-runtime",
       "glossary",
-      "sources"
+      "sources",
+      "review"
     ],
     "source_baseline_on": "2026-11-19",
     "catalog_updated_on": "2026-11-20",
@@ -32,7 +33,8 @@
       "06-buckets-shapes",
       "12-fxbx",
       "glossary",
-      "sources"
+      "sources",
+      "review"
     ],
     "source_baseline_on": "2026-11-19",
     "catalog_updated_on": "2026-11-20",
@@ -390,8 +392,7 @@
       "04-tcl-edf",
       "08-eisa-visa",
       "glossary",
-      "sources",
-      "review"
+      "sources"
     ],
     "source_baseline_on": "2026-11-19",
     "catalog_updated_on": "2026-11-20",
@@ -3913,33 +3914,6 @@
     "url": "https://github.com/tenstorrent/tt-xla/tree/fdc3b7773674081b8f8c0698de3400d8d899dc8f",
     "chapters": [
       "sources"
-    ],
-    "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
-    "access": "public"
-  },
-  {
-    "url": "https://github.com/smallstep-zzz/furyno5-handbook/tree/c0c116c68d3266ce162e69aa3e027da1851ddce4",
-    "chapters": [
-      "review"
-    ],
-    "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
-    "access": "public"
-  },
-  {
-    "url": "https://github.com/smallstep-zzz/furyno5-handbook/tree/542947bf6fbc17baae65dcd8aa0d56e21a443735",
-    "chapters": [
-      "reader-review"
-    ],
-    "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
-    "access": "public"
-  },
-  {
-    "url": "https://github.com/smallstep-zzz/furyno5-handbook/tree/542947bf6fbc17baae65dcd8aa0d56e21a443735/content",
-    "chapters": [
-      "reader-review"
     ],
     "source_baseline_on": "2026-11-19",
     "catalog_updated_on": "2026-11-20",

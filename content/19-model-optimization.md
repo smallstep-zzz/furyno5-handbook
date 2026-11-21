@@ -1,12 +1,18 @@
 # 19. 모델을 다시 해석해 RNGD에 맞추는 최적화 연구
 
+> **전체 경로에서의 위치**
+>
+> 기준 모델·품질 기준 → **계산 표현·정밀도·구조 변환** → 재컴파일·검증
+>
+> 07장의 실행 경로 최적화보다 앞단인 모델 표현을 바꾼다. 같은 함수를 보존하는 변환과 품질 평가가 필요한 압축을 나누어 다룬다. 변환 후에는 [11장](11-furyno5-compiler.md)의 컴파일과 [17장](17-debugging.md)의 수치·성능 확인을 다시 거친다.
+
 DB의 질의 계획에서 연산 하나를 지웠어도 전체 질의가 빨라지는지는 디스크 읽기와 다른 연산의 비용을 함께 봐야 한다. 모델 최적화도 같다. 계산할 숫자를 줄이는 방법, 같은 계산의 표현을 바꾸는 방법, 호출 사이의 메모리 이동을 줄이는 방법은 서로 다른 효과를 낸다.
 
 **공식 포팅보다 좋은 결과를 얻을 가능성은 있다. 다만 그 가능성을 입증하려면 모델이 계산하는 일, 컴파일러가 보는 표현, 장치에 일을 제출하는 경계를 함께 연구해야 한다.** 이 장은 이미 빠르다고 주장하는 결과 보고서가 아니다. 공개 도구로 변환 후보를 만들고, 같은 품질 조건에서 RNGD(Renegade)의 실제 이득을 판정하는 연구 계획이다. 실행 중 복사·동기화·계측의 기초는 [7장](07-optimization.md), 다른 NPU(Neural Processing Unit) 스택의 설계는 [18장](18-npu-ecosystems.md)에서 이어 읽는다.
 
 공식 Furiosa Compiler도 그래프 최적화, 연산 결합, 메모리 할당, 스케줄링, 층 사이 데이터 이동을 이미 최적화한다. 따라서 외부 도구에서 연산 하나를 지웠다는 사실만으로 공식 경로보다 빠르다고 말할 수 없다. 공식 compiler가 같은 변환을 수행했는지, 외부 변환이 유용한 패턴을 오히려 깨뜨렸는지부터 비교해야 한다. [공식 compiler의 책임](https://developer.furiosa.ai/v2026.4.1/en/overview/software_stack.html)
 
-> **조사·검증 기준** · 소스·문헌 기준일은 2026-11-19, 독자 재검토일은 2026-11-20(한국 시간)이다. 예제의 API(Application Programming Interface)는 문서·소스와 대조했다. PyTorch·ONNX 같은 별도 도구나 Furiosa SDK(Software Development Kit)·RNGD 환경이 필요한 변환·장치 예제는 이번 편집에서 실행하지 않았다. 새로 추가한 순수 Python의 scale 후보 비교와 attention 계산·누적 예제는 CPU에서 실행해 수치를 검산했다. 이 장에는 새 NPU 성능 측정값이 없다. 표의 RNGD 적용 순서는 FuryNo5의 연구 제안이며 공식 지원표가 아니다.
+> **조사·검증 기준** · 소스·문헌 기준일은 2026-11-19다. 순수 Python 예제는 수식을, PyTorch·ONNX 예제는 변환을 확인한다. NPU 적용에는 호환 SDK와 RNGD에서의 별도 수치·성능 검증이 필요하다. 표의 RNGD 적용 순서는 FuryNo5의 연구 제안이며 공식 지원표가 아니다.
 
 ## 1. 같은 계산을 빠르게 하는 연구와 모델을 줄이는 연구
 
@@ -32,7 +38,6 @@ flowchart TB
     M --> D["채택 또는 보류"]
 ```
 
-
 ### 계산량을 절반으로 줄여도 시간이 절반이 되지 않는 예
 
 설명용 요청 하나가 계산 30 ms, 메모리 이동 40 ms, 제출·대기 30 ms를 차례로 수행해 총 100 ms 걸린다고 하자. 계산만 절반인 15 ms로 줄이면 전체는 85 ms다. 절약한 것은 15 ms이며 50 ms가 아니다. 반대로 반복 복사를 20 ms 줄이면 계산을 바꾸지 않아도 전체 80 ms가 된다. 실제 실행은 일부 구간이 겹칠 수 있으므로 이 단순 합산은 원리 설명용이다.
@@ -56,7 +61,7 @@ flowchart TB
 
 ### 실측으로 보는 작은 호출의 비용
 
-기존 **2026-11-17 RF-DETR Seg Nano 연구 기록**은 RNGD, furiosa-torch 2026.4.0, FP32, 312×312, batch 1 조건이다. 같은 장치에서 번갈아 측정했고 출력이 기존 경로와 비트 단위로 같았다고 기록돼 있다. 아래는 당시 기록의 일부이며 이번 편집에서 재측정하지 않았다.
+기존 **2026-11-17 RF-DETR Seg Nano 연구 기록**은 RNGD, furiosa-torch 2026.4.0, FP32, 312×312, batch 1 조건이다. 같은 장치에서 번갈아 측정했고 출력이 기존 경로와 비트 단위로 같았다고 기록돼 있다. 아래는 당시 기록의 일부다.
 
 | 변경 | 변경 전 | 변경 후 | 해석 |
 |---|---:|---:|---|
@@ -75,7 +80,6 @@ flowchart TB
 같은 입력에서 빨라진 후보를 찾은 뒤에는 실제 입력 길이와 배치 분포로 다시 측정한다. 예를 들어 짧은 문장에서 유리한 작은 버킷 집합은 긴 요청에서 재컴파일 또는 큰 padding을 유발할 수 있다. 배포 결정에는 전체 응답 시간, 품질, 메모리, 준비 비용을 함께 넣는다.
 
 ## 2. 먼저 공식 기준선을 재현 가능하게 만든다
-
 
 ### 비교표의 입력 규격을 먼저 읽는다
 
@@ -206,7 +210,6 @@ assert isclose(results[1][1], 0.025)
 
 ### 변환 산출물이 어느 실행기에서 쓰이는가
 
-
 가장 현실적인 첫 후보는 **변환 뒤에도 일반적인 PyTorch 모델과 weight로 남는 방법**이다. 이 핸드북에서 확인한 FuryNo5의 `export_model`은 PyTorch 모델 또는 `ExportedProgram`에서 출발한다. 아래 ONNX 도구의 결과를 이 함수에 그대로 넣는 연결은 구현된 것으로 확인하지 않았다. ONNX 후보를 실제로 사용할 때는 선택한 importer의 opset·domain·dtype 지원을 확인하거나, 검증한 변환을 PyTorch 쪽에 적용해야 한다. [FuryNo5 capture 경계](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/graph_capture.py#L188-L195)
 
 | 도구와 고정 GitHub 소스 | 주된 변환 | 보존 조건과 검증 | 재학습 | RNGD에서의 판단 |
@@ -246,43 +249,46 @@ NAS(Neural Architecture Search)는 층의 종류·폭·깊이 같은 신경망 �
 
 다음은 CPU(Central Processing Unit) 예제이며 [fold_conv_bn.py](../examples/fold_conv_bn.py)로 내려받을 수 있다. PyTorch 2.10 API에 맞췄다. 합성 입력으로 running statistics를 채우는 부분은 실습 준비이며 실제 모델을 학습하거나 제품 품질을 검증하는 과정은 아니다.
 
+아래는 [fold_conv_bn.py](../examples/fold_conv_bn.py)의 `main()`을 세 단계로 나눈 발췌다. 전체 파일에서 `torch`, `nn`, `fuse_conv_bn_eval`을 import한다. 먼저 실습용 모델의 통계를 준비하고 평가 모드로 고정한다.
+
 ```python
-import torch
-from torch import nn
-from torch.nn.utils.fusion import fuse_conv_bn_eval
+torch.manual_seed(7)
+original = nn.Sequential(
+    nn.Conv2d(3, 8, kernel_size=3, padding=1, bias=False),  # 입력 채널 3 → 출력 채널 8
+    nn.BatchNorm2d(8),  # 출력의 8개 채널마다 통계·gamma·beta를 가진다.
+)
 
-def main():
-    torch.manual_seed(7)
-    original = nn.Sequential(
-        nn.Conv2d(3, 8, kernel_size=3, padding=1, bias=False),  # 입력 채널 3 → 출력 채널 8
-        nn.BatchNorm2d(8),  # 출력의 8개 채널마다 통계·gamma·beta를 가진다.
-    )
+# 합성 실습용 statistics. 실제 모델에서는 학습된 buffer를 사용한다.
+original.train()  # 이 모드에서 아래 입력들이 BN의 누적 통계를 갱신한다.
+with torch.no_grad():  # 역전파 기록만 끈다. train 모드의 통계 갱신은 계속된다.
+    for _ in range(8):
+        original(torch.randn(4, 3, 24, 24))  # N,C,H,W = 이미지 4개, 채널 3, 높이·너비 24
+original.eval().requires_grad_(False)  # 통계를 고정하고 추론용 가중치로 준비한다.
+```
 
-    # 합성 실습용 statistics. 실제 모델에서는 학습된 buffer를 사용한다.
-    original.train()  # 이 모드에서 아래 입력들이 BN의 누적 통계를 갱신한다.
-    with torch.no_grad():  # 역전파 기록만 끈다. train 모드의 통계 갱신은 계속된다.
-        for _ in range(8):
-            original(torch.randn(4, 3, 24, 24))  # N,C,H,W = 이미지 4개, 채널 3, 높이·너비 24
-    original.eval().requires_grad_(False)  # 통계를 고정하고 추론용 가중치로 준비한다.
-    folded = fuse_conv_bn_eval(original[0], original[1])  # Conv+BN을 새 Conv 계수로 접는다.
-    folded.eval().requires_grad_(False)
+이제 원래 Conv와 BN을 하나의 Conv로 접는다. 원본 `original`은 비교용으로 보관하고 `folded`를 새 후보로 사용한다.
 
-    max_error = 0.0
-    with torch.inference_mode():
-        for shape in [(1, 3, 24, 24), (3, 3, 19, 27)]:  # batch·공간 크기를 달리해 확인
-            for scale in [0.1, 1.0, 5.0]:
-                x = scale * torch.randn(shape)
-                expected, actual = original(x), folded(x)  # 두 결과 shape는 모두 [N,8,H,W]
-                torch.testing.assert_close(
-                    actual, expected, rtol=1e-5, atol=1e-5  # 절대오차+기준값 비례 오차 한도
-                )
-                max_error = max(
-                    max_error, (actual - expected).abs().max().item()
-                )
-    print({"torch": torch.__version__, "max_abs_error": max_error})
+```python
+folded = fuse_conv_bn_eval(original[0], original[1])  # Conv+BN을 새 Conv 계수로 접는다.
+folded.eval().requires_grad_(False)
+```
 
-if __name__ == "__main__":
-    main()
+마지막으로 크기와 입력 값의 범위를 바꿔 두 모델을 비교한다. 이 비교가 끝난 뒤에 NPU 컴파일·성능 비교로 넘어간다.
+
+```python
+max_error = 0.0
+with torch.inference_mode():
+    for shape in [(1, 3, 24, 24), (3, 3, 19, 27)]:  # batch·공간 크기를 달리해 확인
+        for scale in [0.1, 1.0, 5.0]:
+            x = scale * torch.randn(shape)
+            expected, actual = original(x), folded(x)  # 두 결과 shape는 모두 [N,8,H,W]
+            torch.testing.assert_close(
+                actual, expected, rtol=1e-5, atol=1e-5  # 절대오차+기준값 비례 오차 한도
+            )
+            max_error = max(
+                max_error, (actual - expected).abs().max().item()
+            )
+print({"torch": torch.__version__, "max_abs_error": max_error})
 ```
 
 ```bash
@@ -296,12 +302,13 @@ python fold_conv_bn.py
 
 ONNX Optimizer는 사용자가 선택한 pass를 순서대로 적용한다. ONNX Simplifier는 shape 추론·graph optimization·constant folding을 결합한다. node 수 감소와 numerical check 통과는 유용한 증거지만, 모든 입력에서의 의미 보존이나 RNGD 가속을 자동으로 증명하지는 않는다. [Optimizer 동작](https://github.com/onnx/optimizer/blob/149a316813a9eca37755c0597c070c83f050db39/README.md#L13-L22), [Simplifier API](https://github.com/onnxsim/onnxsim/blob/8b35932256e84743db1de14051e8aa717acbd4ec/onnxsim/onnx_simplifier.py#L8916-L8989)
 
-
 **상수 접기(constant folding)도** 작은 식으로 이해할 수 있다. 그래프가 `c=2+3; y=x*c`이고 2와 3이 실행 중 변하지 않으면 준비 단계에서 c=5를 계산해 `y=x*5`만 남길 수 있다. 입력 `[1,2]`의 출력은 둘 다 `[5,10]`이다. 하지만 c가 외부 입력으로 바뀔 수 있다면 이를 5로 고정하는 것은 다른 함수다.
 
 ONNX의 **initializer**는 이름을 붙여 그래프에 저장한 tensor 값이다. 보통 가중치·상수에 사용한다. **Opset**은 연산 의미의 버전, **domain**은 표준 연산인지 업체별 확장인지 구분하는 이름 공간이다. 형식 검사 통과, 몇 입력의 값 비교 통과, 대상 compiler가 그 연산을 지원한다는 사실은 서로 다른 검사다.
 
 아래는 **외부 데이터 파일이 없는 작은 정적 FP32 입력 모델**을 `input.onnx`로 준비한 경우의 출발점이다. [simplify_onnx_candidate.py](../examples/simplify_onnx_candidate.py)로 내려받을 수 있다. 임의의 LLM 전체를 처리하는 스크립트가 아니다. graph optimization pass를 끄고 shape 추론과 상수 접기를 먼저 살펴본다. 더 공격적인 pass는 다음 실험에서 하나씩 켠다. ONNX, ONNX Simplifier, 비교 실행에 필요한 ONNX Runtime을 호환되는 별도 환경에 설치하고 버전을 기록한다.
+
+첫 단계는 입력 파일의 형식과 정적 FP32 계약을 검사하는 것이다. 원본을 수정하지 않는다.
 
 ```python
 from importlib.metadata import version
@@ -321,7 +328,11 @@ for value in model.graph.input:
     if any(not d.HasField("dim_value") or d.dim_value <= 0
            for d in tensor.shape.dim):
         raise ValueError("Keep dynamic-shape experiments separate")
+```
 
+검사한 같은 `model`을 단순화하고 다른 파일에 저장한다. 표본 비교가 실패하면 후보를 저장하지 않는다. 아래 코드는 앞 코드와 같은 파일에서 이어진다.
+
+```python
 output = Path("candidate-constant-folded.onnx")
 if output.exists():
     raise FileExistsError(output)
@@ -342,7 +353,6 @@ print({"before_nodes": len(model.graph.node),
 ## 7. 구조를 줄일 때는 하드웨어가 좋아하는 크기도 다시 찾는다
 
 구조적 pruning은 weight를 0으로 표시하는 것과 다르다. 채널이나 hidden dimension을 실제로 제거하면 뒤따르는 연산의 텐서 크기도 바뀐다. DepGraph는 연동된 층을 함께 줄이기 위한 의존 관계를 만든다. 반면 mask만 적용한 dense 텐서는 shape가 그대로일 수 있으므로, 별도의 sparse 실행 지원을 확인하지 않은 상태에서 계산량 감소를 주장하지 않는다. [DepGraph의 문제 정의](https://openaccess.thecvf.com/content/CVPR2023/html/Fang_DepGraph_Towards_Any_Structural_Pruning_CVPR_2023_paper.html)
-
 
 ### 중간 채널 하나를 지우면 다음 층도 바뀐다
 
@@ -403,7 +413,6 @@ distillation은 더 자유로운 선택이다. 세 종류를 구분하는 교사
 ## 8. 고수준 의미를 보존하는 것도 최적화다
 
 **의미 보존은 공식 TCL(Tensor Contraction Language) 자체의 설계 목표이기도 하다.** Furiosa의 SDK 2026.3 설명은 contraction과 축의 의미를 유지하고, compiler가 tiling·scheduling·fusion·hardware mapping을 수행하도록 설계했다고 명시한다. 따라서 여기의 과제는 공식 스택에 없던 원리를 새로 발명하는 것이 아니다. FuryNo5가 캡처·분해·영역 분할 과정에서 그 정보를 불필요하게 잃지 않고 공식 compiler에 전달하는지 점검하는 것이다. FuryNo5 내부의 개선이 확인되어도 공식 최적화 기준선을 넘어섰다는 결론은 별도 비교가 필요하다. [TCL의 공식 설계 배경](https://furiosa.ai/blog/furiosa-sdk-2026-3-a-new-kernel-framework-and-the-models-it-unlocks)
-
 
 여기서 필요한 용어를 연산 하나에 붙여 보자. 행렬곱 `C[i,j] = Σ_k A[i,k]×B[k,j]`에서 `Σ_k`는 “k를 차례로 바꾸며 곱한 값을 모두 더한다”는 뜻이다. 공통 축 k를 곱셈 뒤 합으로 없애는 계산이 **contraction(축 수축)이다**. i·j·k가 각각 출력 행·출력 열·공통 입력 축이라는 의미를 알면 compiler는 이를 나누어 처리할 수 있다. **Tiling**은 큰 행렬을 작은 조각으로 나누고, **scheduling**은 그 조각의 실행·이동 순서를 정한다. **Fusion**은 이어지는 계산을 함께 실행해 중간 저장·호출을 줄이는 변환이고, **mapping**은 논리적인 축과 조각을 장치의 계산·메모리 자원에 배치하는 것이다. 어느 변환도 무조건 이득은 아니며, 함께 유지해야 할 중간값이 늘면 메모리가 더 필요할 수 있다.
 
@@ -486,25 +495,10 @@ Attention은 현재 **Q(Query, 질의 벡터)와** 앞선 위치들의 **K(Key, 
 
 [attention_contract_demo.py](../examples/attention_contract_demo.py)는 앞의 한 질의·한 내용 성분 예를 실행하는 완전한 순수 Python이다. 첫 부분은 2차원 행렬의 축을 유지하고, 뒤 부분은 같은 한 행을 조각별로 읽어 결과를 비교한다. 실제 FlashAttention이나 RNGD 커널 구현이 아니며 mask·여러 head·반올림 계약을 모두 구현하지 않는다.
 
+배열 곱과 softmax의 보조 함수는 [attention_contract_demo.py](../examples/attention_contract_demo.py)에 있다. 먼저 그 파일의 `matmul`·`transpose`·`softmax_row`를 사용해 전체 행렬 방식의 기준값을 만든다.
+
 ```python
-from math import exp, isclose, sqrt
-
-def transpose(matrix):
-    return [list(column) for column in zip(*matrix)]  # [행,열] → [열,행]
-
-def matmul(left, right):
-    assert len(left[0]) == len(right)  # 곱하며 더할 축의 길이가 같아야 한다.
-    columns = transpose(right)
-    return [
-        [sum(a * b for a, b in zip(row, column)) for column in columns]
-        for row in left
-    ]
-
-def softmax_row(scores):
-    maximum = max(scores)
-    positive = [exp(score - maximum) for score in scores]  # 모든 항에 같은 기준 사용
-    total = sum(positive)
-    return [value / total for value in positive]  # key 축 전체의 가중치 합을 1로 만듦
+from math import sqrt
 
 q = [[1.0]]  # [Lq=1,d=1]
 k = [[1.0], [0.0]]  # [Lk=2,d=1]
@@ -513,6 +507,12 @@ raw_scores = matmul(q, transpose(k))  # [1,1] @ [1,2] → [1,2]
 scores = [[value / sqrt(len(q[0])) for value in row] for row in raw_scores]
 weights = [softmax_row(row) for row in scores]  # 질의마다 key 축으로 정규화
 full_output = matmul(weights, v)[0][0]  # [1,2] @ [2,1] → [1,1]의 한 값
+```
+
+다음 함수는 한 질의 행을 조각씩 누적한다. 새 최대값을 만날 때 **이미 누적한 분모와 분자 모두** 같은 기준으로 환산하는 두 줄에 주목하자.
+
+```python
+from math import exp
 
 def online_one_row(score_values):
     maximum, total, weighted = float("-inf"), 0.0, 0.0
@@ -526,6 +526,12 @@ def online_one_row(score_values):
     if total == 0.0:
         raise ValueError("이 예제에는 최소 한 key가 필요합니다.")
     return weighted / total
+```
+
+두 계산에 같은 점수·값을 넣고 순서도 뒤집어 비교한다. 앞 코드에 이어 실행하면 세 출력이 모두 약 `12.689414`다.
+
+```python
+from math import isclose
 
 pairs = list(zip(scores[0], [row[0] for row in v]))
 forward = online_one_row(pairs)  # 점수 1 다음 0: 최대값 유지

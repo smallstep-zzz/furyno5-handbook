@@ -1,10 +1,16 @@
 # 09. Torch 함수 호출이 장치의 계산으로 이어지는 과정
 
+> **전체 경로에서의 위치**
+>
+> PyTorch 호출 → **ATen schema·Dispatcher 또는 캡처 그래프** → 백엔드
+>
+> 모델 코드가 하위 구현에 계산을 요구하는 입구다. eager 호출의 구현 선택과 그래프 전체의 컴파일을 나누어 읽는다. FuryNo5가 사용하는 실제 준비·변환 경로는 [10장](10-furyno5-architecture.md)과 [11장](11-furyno5-compiler.md)에 있다.
+
 Python에서 `torch.add(x, y)`를 호출했을 때 CPU 코드가 실행될지 NPU 코드가 실행될지는 누가 결정할까? 이 장은 **함수 이름, 함수의 호출 계약, 실제 구현, 모델 전체의 컴파일**을 나누어 답한다. C의 함수 포인터 표를 떠올려도 좋다. 호출할 계산의 이름은 같아도 인수의 장치에 따라 다른 구현을 선택할 수 있다. 다만 PyTorch는 자동 미분 같은 부가 처리도 선택하므로 실제 과정은 단순한 장치별 `switch`보다 복잡하다.
 
 NPU(Neural Processing Unit)는 신경망 계산용 장치이고, 이 책의 대상은 Furiosa의 RNGD다. **ATen(A Tensor Library)은** PyTorch가 텐서 계산을 표현하는 공통 연산 계층이다. ATen 연산은 CPU(Central Processing Unit)의 기계어도 RNGD의 장치 명령어도 아니다. `더한다`, `행렬곱을 한다`는 계산 의미를 정해 두고, 장치별 구현이 그 의미를 수행한다. [ATen의 공식 역할](https://docs.pytorch.org/cppdocs/api/aten/index.html)
 
-> **확인 범위** · API(Application Programming Interface)는 PyTorch 공식 자료를, 개수는 v2.10.0 고정 소스와 저장된 Torch 2.10.0+cpu / furiosa-torch 2026.4.0 기록을 사용한다. 아래 예제는 호출 구조를 설명하기 위한 코드이며 이번 집필 환경에는 PyTorch와 RNGD가 없어 실행하지 않았다. 수치가 적힌 주석은 식에서 예상되는 값이다.
+> **확인 범위** · API(Application Programming Interface)는 PyTorch 공식 자료를, 개수는 v2.10.0 고정 소스와 저장된 Torch 2.10.0+cpu / furiosa-torch 2026.4.0 기록을 사용한다. 아래 코드는 호출 구조를 설명한다. 실행에는 해당 PyTorch 버전이 필요하다. 수치가 적힌 주석은 식에서 예상되는 값이다.
 
 ## 먼저 두 개의 작은 배열을 더해 보자
 
@@ -46,7 +52,6 @@ print(z)  # 식의 예상값: tensor([22., 44.]); 원래 x와 y는 바꾸지 않
 | NPU 실행 프로그램 | 해당 backend가 준비한 EDF(Executable Device Format) 등 | 장치가 실행할 컴파일 결과 |
 
 여기서 **kernel(커널)은** 계산을 수행하는 구현 단위라는 뜻이다. 운영체제 커널과 같은 말이 아니다. CPU backend에서는 C++ 함수일 수 있고, NPU backend에서는 준비된 장치 프로그램을 호출하는 함수일 수 있다. 하나의 ATen 연산을 지원한다는 말은 schema의 의미와 메모리 계약을 지키는 구현이 있다는 뜻이다. 이름만 같은 함수를 등록하는 것으로 끝나지 않는다.
-
 
 
 ## eager 실행에서 Dispatcher가 고르는 것

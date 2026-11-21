@@ -4,7 +4,7 @@
     "title": "이 책을 읽는 방법",
     "short": "전체 지도와 읽는 방법",
     "part": "시작하기",
-    "summary": "무엇을 구현했고, 무엇을 검증했는가. 코드와 근거를 따라가는 개발자의 지도.",
+    "summary": "모델의 계산이 컴파일·적재·실행·서빙으로 이어지는 전체 경로를 살펴봅니다.",
     "output": "index.html"
   },
   {
@@ -58,7 +58,7 @@
   },
   {
     "id": "08-eisa-visa",
-    "title": "eISA 질문에서 vISA 실습으로",
+    "title": "저수준 프로그래밍: vISA와 furiosa-opt",
     "short": "eISA · vISA · furiosa-opt",
     "part": "II. 프로그램을 만들고 실행하기",
     "summary": "공개된 저수준 프로그래밍 경로와 정적 스케줄 분석 도구를 살펴봅니다."
@@ -114,8 +114,8 @@
   },
   {
     "id": "16-furyboost",
-    "title": "FuryBoost 실험 회고",
-    "short": "FuryBoost 실측과 남은 과제",
+    "title": "FuryBoost 학습 성능 분석",
+    "short": "FuryBoost 학습 성능",
     "part": "V. 검증과 다음 개발",
     "summary": "CPU 기준선보다 느렸던 결과를 준비 비용, 연산, 정확도로 나누어 해석합니다."
   },
@@ -131,7 +131,7 @@
     "title": "다른 NPU의 PyTorch 지원 방식",
     "short": "다른 NPU의 지원 방식",
     "part": "VI. 생태계 비교와 최적화 연구",
-    "summary": "Ascend, Rebellions, AWS Neuron, Tenstorrent의 연산·그래프·모델 통합을 비교합니다."
+    "summary": "AMD·Intel·Ascend·Rebellions·AWS Neuron·Tenstorrent의 연산·그래프·모델 진입점을 비교합니다."
   },
   {
     "id": "19-model-optimization",
@@ -158,18 +158,18 @@
   },
   {
     "id": "review",
-    "title": "이번 개편의 회고",
-    "short": "검토 기록과 미해결 질문",
+    "title": "실행 전 확인사항과 지원 범위",
+    "short": "실행 전 확인사항",
     "part": "참고와 검증",
-    "summary": "기존 문서에서 바뀐 주장, 미확인 경계, 이후 갱신할 항목을 남깁니다.",
+    "summary": "실행 경로별 준비물, 입력 계약, 지원 경계와 검증 단계를 확인합니다.",
     "output": "review.html"
   },
   {
     "id": "reader-review",
-    "title": "학습 점검과 보완 기록",
-    "short": "학습 점검과 보완 기록",
+    "title": "핵심 질문과 해설",
+    "short": "핵심 질문과 해설",
     "part": "참고와 검증",
-    "summary": "각 장의 핵심 질문과 보충 설명을 찾아 학습한 내용을 확인합니다.",
+    "summary": "계산·메모리·컴파일·서빙의 핵심을 질문과 해설로 확인합니다.",
     "output": "reader-review.html"
   }
 ]

@@ -1,5 +1,11 @@
 # 여러 NPU를 쓰는 설계: PE, 카드, 서버를 구분한다
 
+> **전체 경로에서의 위치**
+>
+> 요청·모델 분할 → **복제·통신·장치별 상태** → 여러 NPU의 결과
+>
+> 한 장치 실행 위에 분산 책임을 더한다. PE 결합, 모델 병렬, 요청 복제는 나누는 대상이 다르다. [14장](14-serving-vllm.md)의 요청 상태가 어디에 놓이는지 확인하고 [17장](17-debugging.md)의 방법으로 확장 비용을 측정한다.
+
 웹 서버의 worker를 두 개로 늘릴 때 먼저 확인하는 것은 작업이 독립적인지, 공유 상태가 있는지, 메모리가 두 배 필요한지다. NPU(Neural Processing Unit)를 늘릴 때도 같은 질문에서 시작한다. **서로 다른 요청을 나누는 방법, 한 행렬 계산을 나누는 방법, 모델의 층을 나누는 방법은 비용과 필요한 구현이 다르다.** 이 장은 작은 계산과 시간표로 그 차이를 먼저 확인한다. FuryNo5·fxbX의 현재 커스텀 실행 계획은 한 장치의 fusion 8·Single 계약을 검사한다. 여러 카드를 꽂았다는 이유로 그 계획이 자동 분산되지는 않는다. 공식 Furiosa-LLM의 병렬성, 최신 opt-vLLM의 병렬성, 우리 프로젝트의 구현 상태도 서로 구분한다. [fxbX device 계약](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py#L132-L162) · [공식 병렬성](https://developer.furiosa.ai/v2026.4.0/en/furiosa_llm/model-parallelism.html)
 
 ## 1. 같은 숫자 8이라도 의미가 다르다
@@ -143,7 +149,6 @@ opt-vLLM의 문서 일부는 DP=1로 남아 있지만 실제 `admission.py`와 `
 요청을 “지금 utilization이 가장 낮은 장치”에만 보내면 이미 적재된 가중치와 prefix cache를 버릴 수 있다. 필요한 모델이 없는 빈 장치는 수 초 이상의 적재를 시작할 수도 있지만, 약간 바쁜 장치에는 같은 모델과 앞부분 KV가 준비돼 있을 수 있다. 여기서 적재 시간의 크기는 모델·시스템 실측에 따라 달라지며 고정 상수로 간주하지 않는다.
 
 공식 Furiosa-LLM의 DP router는 prefix locality와 active token load를 함께 평가한다. 이 정보는 replica별 가상 cache 기록을 이용하며 **라우팅 자체가 replica 간 KV를 옮기지는 않는다.** 한 process 내부 DP routing과 여러 server pod(배포한 서버 실행 단위) 사이 routing은 다른 계층이다. [공식 routing](https://developer.furiosa.ai/v2026.4.0/en/furiosa_llm/data-parallel-routing.html)
-
 
 숫자로 판단해 보자. 아래 시간은 모두 **라우팅 원리 설명용 예측값**이고 실제 서버의 측정치가 아니다. 요청의 출력 길이는 같다고 가정한다.
 

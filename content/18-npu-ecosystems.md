@@ -1,8 +1,14 @@
 # 다른 NPU는 PyTorch와 모델을 어떻게 지원하는가
 
+> **전체 경로에서의 위치**
+>
+> 같은 모델 → **업체별 프레임워크·컴파일러·런타임** → 각 NPU
+>
+> 09장의 연산·그래프 입구와 03장의 드라이버 경계를 다른 생태계에 대입한다. 공통 예제의 계산은 고정하고 어디서 컴파일되는지 비교한다. 이 비교를 FuryNo5의 구현 선택에 적용할 때는 [10장](10-furyno5-architecture.md)의 지원 범위를 함께 본다.
+
 C에서 같은 함수 이름을 호출해도 링크한 구현이나 함수 포인터에 따라 실행 코드가 달라진다. 컴파일러는 여러 문장을 분석해 하나의 더 효율적인 프로그램을 만들 수도 있다. PyTorch를 NPU에 연결하는 방법도 이 두 관점에서 시작하면 이해하기 쉽다. **NPU(Neural Processing Unit)가 PyTorch를 지원한다는 말에는 여러 구현 방식이 들어 있다.** 텐서의 장치 타입을 추가해 연산을 받을 수도 있고, 모델 그래프를 받아 한 덩어리로 컴파일할 수도 있으며, 특정 모델 구조의 가중치·상태·생성 루프를 연결하는 어댑터를 제공할 수도 있다. FuryNo5의 다음 기능을 설계하려면 이 경계를 나누어 비교하는 편이 유용하다.
 
-이 장은 2026-11-19에 확인한 공식 문서와 고정 소스를 비교한다. 각 회사가 제공하는 모든 경로를 열거한 것은 아니며, 아래 예제의 SDK(Software Development Kit)와 장치는 서로 다르다. 이번 문서 작업에서 이들 장비의 성능을 새로 측정하지 않았다. PyTorch의 공통 확장 규약은 [PrivateUse1](https://docs.pytorch.org/tutorials/advanced/privateuseone.html)과 [custom compiler backend](https://docs.pytorch.org/docs/2.15/user_guide/torch_compiler/torch.compiler_custom_backends.html), 각 업체의 구현은 절별 출처를 기준으로 한다.
+이 장은 2026-11-19에 확인한 공식 문서와 고정 소스를 비교한다. 각 회사가 제공하는 모든 경로를 열거한 것은 아니며, 아래 예제의 SDK(Software Development Kit)와 장치는 서로 다르다. 이 비교는 실행 구조를 다루며 장치 간 성능 순위는 제시하지 않는다. PyTorch의 공통 확장 규약은 [PrivateUse1](https://docs.pytorch.org/tutorials/advanced/privateuseone.html)과 [custom compiler backend](https://docs.pytorch.org/docs/2.15/user_guide/torch_compiler/torch.compiler_custom_backends.html), 각 업체의 구현은 절별 출처를 기준으로 한다.
 
 ## 1. 지원이라는 말을 네 개의 계약으로 나눈다
 
@@ -42,7 +48,6 @@ flowchart TB
 
 외부 하드웨어가 PyTorch 안의 연산 호출을 받으려면 자기 구현을 선택할 자리가 필요하다. PyTorch의 `PrivateUse1`은 그 목적으로 예약된 **디스패치 키**다. 여기서 키는 암호 키가 아니라 구현 선택에 사용하는 식별자다. 구현자는 `TORCH_LIBRARY_IMPL(aten, PrivateUse1, ...)`로 장치 연산을 등록할 수 있다. 여기에 장치 선택, 난수 생성기, 직렬화, 메모리·복사 같은 기반도 필요하다. 연산 함수를 등록했다고 전체 장치 backend가 완성되는 것은 아니다. [공식 backend 통합 설명](https://docs.pytorch.org/tutorials/advanced/privateuseone.html)
 
-
 함수 포인터 표에 비유하면 다음과 같다. 아래 함수명은 역할을 설명하기 위한 가상 이름이며 PyTorch의 실제 C++ symbol은 아니다.
 
 | 호출 연산 | 선택된 backend | 호출할 구현의 개념 |
@@ -62,7 +67,7 @@ Ascend의 **TorchNPU**는 연산과 장치 자원을 `PrivateUse1`로 통합하�
 행렬곱은 왼쪽의 한 행과 오른쪽의 한 열을 원소별로 곱해 더한다. 예를 들어 `[1,2] @ [[1,2],[3,4]]`의 첫 출력은 `1×1+2×3=7`, 둘째는 `1×2+2×4=10`이다. 아래 큰 예에서도 같은 규칙을 쓴다. 왼쪽 `[16,32]`와 오른쪽 `[32,64]`의 공통 차원 32를 곱해 합치므로 결과는 `[16,64]`다. 16·32·64는 배열 크기이며 PE 개수가 아니다.
 
 ```python
-# Ascend 전용 예제. 이 문서 환경에서 장치 실행하지 않았다.
+# Ascend 전용 예제. 호환 장치와 TorchNPU 설치가 필요하다.
 import torch
 import torch_npu  # Ascend 장치 연산과 Python 연결을 준비한다.
 
@@ -78,7 +83,6 @@ FuryNo5에 대한 해석은 이렇다. 장치 tensor의 일반 연산 호환성�
 ## 3. 방식 B: 그래프를 받아 장치 프로그램으로 컴파일한다
 
 `torch.compile`의 custom backend는 기본적으로 **FX `GraphModule`과 예제 입력을 받아, 같은 호출 계약을 갖는 실행 함수를 반환**한다. 반환 함수가 실제 장치 컴파일러와 런타임을 호출해야 NPU 가속이 생긴다. 다음 코드는 그 경계만 확인하는 CPU(Central Processing Unit) 실습이다. [PyTorch custom backend 규약](https://docs.pytorch.org/docs/2.15/user_guide/torch_compiler/torch.compiler_custom_backends.html)
-
 
 여기서 `GraphModule`은 “그래프와 그것을 실행하는 Python 함수를 함께 가진 객체”다. backend는 예제 입력을 보고 지원 크기·자료형을 정하며, 변환한 그래프를 실행할 callable을 반환한다. 반환 함수는 **넘겨받은 그래프의 인수·출력 계약**을 지켜야 한다. 원래 모델에 `x` 하나만 있었어도 그래프의 인수에는 가중치·buffer가 별도로 들어올 수 있으므로 원래 Python 함수 시그니처를 추측하면 안 된다.
 
@@ -187,7 +191,6 @@ with torch.no_grad():
 
 AWS(Amazon Web Services) Neuron의 `torch_neuronx.trace` 추론 경로는 torch-xla로 HLO(High Level Operations) 표현을 만들고 `neuronx-cc`로 NEFF(Neuron Executable File Format)를 생성한다. 이 바이너리가 TorchScript `ScriptModule`에 담긴다. 여기서 비교하는 것은 **Neuron 2.31.1 문서의 traced inference 경로**이며, Neuron의 학습·다른 frontend까지 한 방식으로 일반화하지 않는다. [Tracing API](https://awsdocs-neuron.readthedocs-hosted.com/en/v2.31.1/frameworks/torch/torch-neuronx/api-reference-guide/inference/api-torch-neuronx-trace.html)
 
-
 이 문맥의 **trace**는 예제 입력으로 모델 연산을 추적해 컴파일하는 진입점이며, 실행 시간을 수집하는 profiler trace와 목적이 다르다. **HLO**는 행렬곱·덧셈 같은 연산을 표현하는 중간 단계다. **NEFF**는 Neuron 장치 프로그램을 담는 실행 파일 형식이고, **ScriptModule**은 저장·재적재 가능한 TorchScript 실행 객체다. `.pt`는 이 예에서 NEFF를 품은 상위 저장물이며 C 소스나 일반 CPU 실행 파일로 바뀌었다는 뜻이 아니다.
 
 | 단계 | 입력 | 나온 결과 | 아직 확인하지 못한 것 |
@@ -220,7 +223,6 @@ prediction = restored(sample)               # 같은 입력 계약으로 실제 
 ## 4. Tenstorrent: 공통 IR과 고수준 의미를 함께 보존한다
 
 **Frontend(입력 처리부)는** PyTorch 같은 사용자 프로그램을 compiler가 이해하는 표현으로 바꾸고, runtime interface는 컴파일 결과를 장치에 적재·실행하는 호출 경계를 제공한다. TT-XLA는 PJRT(Portable JAX Runtime) 인터페이스를 통해 PyTorch/XLA·JAX의 StableHLO 그래프를 TT-MLIR 컴파일러로 전달한다. StableHLO는 HLO 연산을 주고받기 위한 중간 표현이고, MLIR(Multi-Level Intermediate Representation)은 여러 수준의 표현을 다루는 컴파일러 기반이다. **Lowering**은 이런 고수준 연산을 장치가 처리할 더 구체적인 연산·배치로 바꾸는 과정이다. TTNN은 Tenstorrent의 장치 연산 라이브러리 이름이다. 조회한 공식 저장소는 PyTorch의 주 frontend로 TT-XLA를 안내하고 **TT-Torch를 deprecated**로 표시한다. 따라서 과거 `tt-torch` 소개를 최신 권장 경로로 복사하지 않았다. [고정 README](https://github.com/tenstorrent/tt-xla/blob/fdc3b7773674081b8f8c0698de3400d8d899dc8f/README.md)
-
 
 ### RMSNorm을 기본 산술에서 다시 묶는 이유
 
@@ -300,7 +302,7 @@ AMD Vitis AI EP는 지원하는 서브그래프를 선택하고 컴파일한다.
 
 세 예제는 입력 `[4,8]`, 가중치 `[8,8]`, bias `[8]`인 같은 모델을 사용한다. 가중치는 단위행렬, bias는 전부 1이므로 결과는 입력에 1을 더한 뒤 음수를 0으로 바꾼 값이다. 가중치와 입력이 고정돼 있어 서로 다른 환경에서도 같은 CPU 기준값을 만들 수 있다.
 
-아래 코드를 저장한 [compare_npu_stacks.py](../examples/compare_npu_stacks.py)는 각 업체의 SDK 환경에서 따로 실행한다. 지원하는 드라이버·NPU와 관련 Python 패키지가 필요하다. 편집 환경에서는 구문만 확인했고 세 장치 실행은 수행하지 않았다.
+아래 코드를 저장한 [compare_npu_stacks.py](../examples/compare_npu_stacks.py)는 각 업체의 SDK 환경에서 따로 실행한다. 지원하는 드라이버·NPU와 관련 Python 패키지가 필요하다. 세 장치의 속도를 비교하는 벤치마크가 아니라 같은 계산의 진입점을 확인하는 실습이다.
 
 ```python
 model = torch.nn.Sequential(torch.nn.Linear(8, 8), torch.nn.ReLU())

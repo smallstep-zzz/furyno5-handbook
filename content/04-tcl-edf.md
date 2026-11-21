@@ -1,5 +1,11 @@
 # TCL에서 EDF로: 행렬곱의 수식이 장치 프로그램이 되는 과정
 
+> **전체 경로에서의 위치**
+>
+> 행렬곱 표현 → **TCL 생성·TCC 컴파일·EDF 적재** → SDK 실행
+>
+> 입력 두 개와 출력 하나인 커널을 끝까지 따라간다. 계산 소스, EDF bytes, 실행 객체, 실제 tensor는 서로 다른 대상이다. 여러 커널의 연결을 모델로 확장하는 단계는 [05장](05-graphs-fallback.md)에 있다.
+
 이 장의 목표는 작은 행렬곱을 읽고, 같은 계산을 TCL(Tensor Contraction Language)로 선언한 뒤 **소스 작성 → 크기 결정 → 컴파일 → 적재 → 실행 → 정답 확인**까지 구분하는 것이다. 처음부터 NPU(Neural Processing Unit)의 명령어를 알아야 하는 것은 아니다. 먼저 CPU(Central Processing Unit)에서 무엇을 계산하려는지 분명히 하고, 그 계산을 TCL에 전달한다.
 
 TCL은 Python 안에서 쓰는 eDSL(embedded Domain-Specific Language, 내장형 도메인 전용 언어)이다. 여기서 도메인은 텐서 계산이다. Python 문법을 사용하지만, 커널의 목적은 Python 반복문을 바로 실행하는 것이 아니라 **컴파일러가 분석할 계산을 표현하는 것**이다. 이후 컴파일러가 EDF(Executable Device Format)라는 장치 실행 바이너리를 만든다. [공식 TCL 소개](https://furiosa.ai/blog/furiosa-sdk-2026-3-a-new-kernel-framework-and-the-models-it-unlocks), [EDF 명칭](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/quick-start/kernel-validation.md)
@@ -136,7 +142,6 @@ FuryNo5의 `export_single_aten()`도 커널을 선택한 뒤 `specialize_kernel 
 | `matmul.tc`의 TCL 텍스트 | 컴파일된 `matmul.edf` |
 | 계산의 선언 | 장치 적재·실행·완료 결과 |
 
-
 ## 4. 컴파일러가 EDF를 생성한다
 
 ```bash
@@ -228,7 +233,11 @@ if len(ir.input_dram_shapes) != 2 or len(ir.output_dram_shapes) != 1:
     raise RuntimeError("Unexpected EDF input/output arity")
 print("ABI input shapes:", ir.input_dram_shapes)
 print("ABI output shapes:", ir.output_dram_shapes)
+```
 
+앞 코드는 EDF를 읽고 인수 개수와 PE 구성을 검사한다. 아직 계산은 하지 않았다. 이어서 같은 `ir`로 실행 객체를 만들고 두 입력을 장치에 준비한다.
+
+```python
 # 실제 장치에서 호출할 객체를 만든다. 같은 객체를 반복 호출에 재사용할 수 있다.
 program = sdk.Runnable(ir).to("furiosa:0")
 # 컴파일 때 정한 shape와 dtype에 맞춘다. 출력의 각 원소는 1을 128번 더한 128이다.
@@ -237,6 +246,11 @@ right = torch.ones((128, 64), dtype=torch.bfloat16)
 # CPU 텐서의 값을 장치 텐서로 준비한다. 전송 비용은 계산 비용과 따로 본다.
 left_device = left.to("furiosa:0")
 right_device = right.to("furiosa:0")
+```
+
+마지막으로 입력 두 개를 선언 순서대로 전달하고 CPU로 회수한 결과를 비교한다. 아래 코드는 위 코드와 같은 파일에서 이어진다.
+
+```python
 with torch.inference_mode():
     # 입력 두 개를 선언 순서대로 전달한다. 실제 계산 결과의 shape는 (32,64)다.
     value = program(left_device, right_device)

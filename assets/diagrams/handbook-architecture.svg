@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="660" viewBox="0 0 1000 660" role="img" aria-labelledby="title desc">
+  <title id="title">FuryNo5의 준비와 반복 요청 경로</title>
+  <desc id="desc">준비 단계에서 모델과 대표 입력은 FuryNo5 및 컴파일러를 거쳐 EDF와 실행계획으로 저장된다. 적재 단계에서 fxbX와 SDK가 실행 객체를 준비한다. 반복 요청은 입력과 상태를 연결해 SDK를 통해 제출되며 드라이버와 펌웨어를 거친 NPU 작업의 완료 결과를 받는다. 각 단계는 실제 내부 호출 수가 아닌 역할을 나타낸다.</desc>
+  <defs><marker id="arrow" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0 0L9 4.5L0 9" fill="none" stroke="#536779" stroke-width="1.6"/></marker></defs>
+  <rect width="1000" height="660" rx="14" fill="#f7f8fa"/>
+  <g font-family="system-ui, sans-serif" fill="#182e42">
+    <text x="32" y="39" font-size="23" font-weight="700">FuryNo5 export → fxbX: 준비와 요청을 나누어 읽기</text>
+    <rect x="24" y="60" width="952" height="148" rx="12" fill="#e9f1fb"/>
+    <text x="42" y="89" font-size="17" font-weight="700">1. 준비 · 모델과 입력 계약이 바뀌면 다시 확인</text>
+    <g fill="#fff" stroke="#6288af" stroke-width="1.5">
+      <rect x="44" y="108" width="252" height="76" rx="9"/>
+      <rect x="366" y="108" width="260" height="76" rx="9"/>
+      <rect x="696" y="108" width="252" height="76" rx="9"/>
+    </g>
+    <g text-anchor="middle" font-size="18">
+      <text x="170" y="139">모델 · 가중치 · 대표 입력</text><text x="170" y="165" font-size="14">계산 의미와 shape·dtype</text>
+      <text x="496" y="139">FuryNo5 + compiler</text><text x="496" y="165" font-size="14">캡처 · 바인딩 · TCL → EDF</text>
+      <text x="822" y="139">패키지 + 외부 가중치</text><text x="822" y="165" font-size="14">EDF · 값 연결 · 입출력 계약</text>
+    </g>
+    <rect x="24" y="224" width="952" height="137" rx="12" fill="#eeeaf8"/>
+    <text x="42" y="253" font-size="17" font-weight="700">2. 적재 · 실행 자원 준비</text>
+    <g fill="#fff" stroke="#8a79af" stroke-width="1.5"><rect x="44" y="273" width="414" height="64" rx="9"/><rect x="532" y="273" width="416" height="64" rx="9"/></g>
+    <g text-anchor="middle" font-size="18"><text x="251" y="300">fxbX 로더</text><text x="251" y="323" font-size="14">형식·해시·계획·가중치 계약 검사</text><text x="740" y="300">SDK 실행 객체 · 버퍼 · 상태</text><text x="740" y="323" font-size="14">컴파일 산출물을 적재하고 반복 호출에 재사용</text></g>
+    <rect x="24" y="378" width="952" height="251" rx="12" fill="#e8f3ee"/>
+    <text x="42" y="408" font-size="17" font-weight="700">3. 반복 요청 · 이번 입력으로 호출</text>
+    <g fill="#fff" stroke="#508a70" stroke-width="1.5"><rect x="44" y="428" width="252" height="67" rx="9"/><rect x="366" y="428" width="260" height="67" rx="9"/><rect x="696" y="428" width="252" height="67" rx="9"/><rect x="366" y="540" width="582" height="64" rx="9"/></g>
+    <g text-anchor="middle" font-size="18"><text x="170" y="455">이번 입력 · 요청 상태</text><text x="170" y="479" font-size="14">shape 선택 · 값 바인딩</text><text x="496" y="455">계획 실행 · SDK 제출</text><text x="496" y="479" font-size="14">프로그램 간 의존 관계 유지</text><text x="822" y="455">드라이버 · 펌웨어 · NPU</text><text x="822" y="479" font-size="14">메모리 이동 · 계산 · 완료</text><text x="657" y="567">완료된 결과 · 갱신된 상태</text><text x="657" y="591" font-size="14">필요한 D2H와 후처리 후 호출자에게 반환</text></g>
+    <g fill="none" stroke="#536779" stroke-width="2" marker-end="url(#arrow)"><path d="M296 146H356"/><path d="M626 146H686"/><path d="M948 184H963V216H400V263"/><path d="M458 305H522"/><path d="M740 337V370H496V418"/><path d="M296 462H356"/><path d="M626 462H686"/><path d="M822 495V530"/></g>
+    <text x="42" y="649" font-size="13" fill="#526170">역할 연결도 · 내부 호출 수나 실행시간을 나타내지 않음 · DMA의 메모리별 경로는 02장 참고</text>
+  </g>
+</svg>

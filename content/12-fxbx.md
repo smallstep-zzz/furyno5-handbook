@@ -1,5 +1,11 @@
 # 12. fxbX: 다른 프로세스가 모델을 다시 실행하려면
 
+> **전체 경로에서의 위치**
+>
+> 패키지 + 동일 가중치 → **형식 판별·계약 검사·적재** → 반복 호출
+>
+> FuryNo5가 만든 실행물을 다음 프로세스에서 사용하는 소비자 경로다. 파일 형식 판별과 모델 실행 가능 여부는 다른 검사다. 생산부터 새 프로세스 검증까지의 실습은 [13장](13-porting-fha.md), 요청 서비스 연결은 [14장](14-serving-vllm.md)에 있다.
+
 Python에서 모델을 만든 프로세스를 종료하면 `model` 객체, 중간 tensor, 장치 메모리 주소, 준비된 호출 객체도 함께 사라진다. 디스크에 컴파일 결과만 남겼다면 다른 프로세스는 무엇을 해야 할까? **fxbX는 저장한 실행 파일과 연결 설명을 읽고, 현재 프로세스의 가중치·입력·장치 객체를 연결해 실행하는 프로젝트**다.
 
 배포용 **package(패키지)는** 필요한 파일을 묶은 전달 단위다. 프로그램 설치 파일이나 아카이브를 생각하면 된다. **manifest(매니페스트)는** 묶음 안에 어떤 파일이 있고 어떤 조건에서 써야 하는지 적은 설명서다. 실행계획은 한 단계 더 구체적이다. 어떤 계산에 어떤 tensor를 넘기고 그 결과를 어디에 연결할지를 적는다. 파일 목록과 함수 호출 목록은 역할이 다르다.
@@ -140,64 +146,22 @@ flowchart TB
 
 [identify_fxb.py](../examples/identify_fxb.py)는 이 분기를 관찰하는 완성된 표준 Python 예제다. `python identify_fxb.py model.fxbx`로 실행한다. Torch와 SDK를 import하지 않으며, 패키지 내용을 디스크에 풀거나 NPU를 열지 않는다. **표식을 읽어 검사기를 고르는 코드이지, 내부 해시·ABI·장치 실행까지 승인하는 검사기는 아니다.**
 
+전체 스크립트는 중복 ZIP 항목, JSON 크기와 객체 형식을 먼저 검사한다. 다음은 그 검사 후 **실행계획 표식을 읽는 부분만 발췌**한 것이다. `archive`는 열린 ZIP 객체이고 `read_object`는 전체 파일에 정의된 크기 제한 JSON reader다.
+
 ```python
-import argparse
-import json
-import zipfile
-
-def read_object(archive, name, limit):
-    info = archive.getinfo(name)  # 없으면 여기에서 중단; 임의로 형식을 추측하지 않는다.
-    if info.file_size > limit:
-        raise ValueError(f"JSON size limit exceeded: {name}")
-    value = json.loads(archive.read(name))
-    if not isinstance(value, dict):
-        raise ValueError(f"Expected JSON object: {name}")
-    return value
-
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("package")  # 처음 받은 .fxb/.fxbx/.fxbex 파일 경로
-    path = parser.parse_args().package
-    with zipfile.ZipFile(path) as archive:
-        names = archive.namelist()
-        if len(names) != len(set(names)):
-            raise ValueError("Duplicate archive members")
-        print("members:", names[:12], "count=", len(names))
-        manifest = read_object(archive, "manifest.json", 4 * 1024**2)
-        print("manifest markers:", {key: manifest.get(key) for key in
-                                    ("format", "schema_version", "format_version")})
-
-        if (manifest.get("format") == "FXB_EX"
-                and type(manifest.get("schema_version")) is int
-                and manifest["schema_version"] == 1):
-            print("reader: 초기 FXB_EX용 fxbx inspect / validate --integrity-only")
-            return
-        if manifest.get("format_version") != 2:
-            print("reader: 이 예제에서 판별하지 않는 형식; 생산자 계약을 확인하세요.")
-            return
-        if "fxbex.provenance.json" not in names:
-            print("native v2 표식만 확인: 커스텀 실행계획이나 공식 모델 지원은 아직 모릅니다.")
-            return
-
-        # 고정 소비자와 같은 상한: 계획 64 MiB + 그 밖의 producer 정보 4 MiB.
-        producer = read_object(archive, "fxbex.provenance.json", 68 * 1024**2)
-        plan = producer.get("execution_plan")
-        graph = producer.get("graph_plan")
-        if producer.get("producer") != "fxbex":
-            print("reader: 알 수 없는 producer")
-        elif isinstance(plan, dict) and plan.get("schema") in (
+producer = read_object(archive, "fxbex.provenance.json", 68 * 1024**2)
+plan = producer.get("execution_plan")
+if (producer.get("producer") == "fxbex"
+        and isinstance(plan, dict)
+        and plan.get("schema") in (
             "tclmachine.execution-plan.v1", "tclmachine.execution-plan.v2",
-        ):
-            print("plan schema:", plan["schema"])
-            print("reader: fxbex.execution_fxb.read_execution_plan(path)")
-        elif isinstance(graph, dict) and graph.get("schema") == "fxbex.graph-plan.v1":
-            print("reader: fxbex.graph_fxb.read_graph_plan(path); 이전 단일 EDF graph 경로")
-        else:
-            print("reader: 지원하는 커스텀 계획 표식을 찾지 못했습니다.")
-
-if __name__ == "__main__":
-    main()
+        )):
+    print("reader: fxbex.execution_fxb.read_execution_plan(path)")
+else:
+    print("이 분기에서 실행계획 형식으로 확인하지 못했습니다.")
 ```
+
+이 발췌는 전체 형식 판별기가 아니다. 초기 `FXB_EX`, native v2만 있는 파일, 이전 단일 EDF graph 형식의 분기는 [전체 파일](../examples/identify_fxb.py)에 있다. 형식 표식을 확인한 후에도 실제 reader의 무결성·계약 검사를 거쳐야 한다.
 
 `fxbex.graph-plan.v1`은 native 컨테이너를 쓰던 단일 EDF 경로의 별도 표식이다. 초기 `FXB_EX`와 같지도, 다중 EDF `execution_plan`과 같지도 않다. 위 분기에서 native v2만 보였다는 이유로 “공식 Furiosa-LLM이 이 모델을 실행할 수 있다”고 판단하면 안 된다. `GraphFXB.__new__`도 이름이나 architecture 문자열 대신 producer 안의 `execution_plan` 존재로 새 소비자를 고르며, 실제 유효성은 이후 reader가 엄격히 검사한다. [실제 라우팅](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/graph_fxb.py#L134-L152) · [이전 단일 EDF graph reader](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/graph_fxb.py#L98-L124)
 

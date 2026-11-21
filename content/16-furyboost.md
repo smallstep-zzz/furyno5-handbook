@@ -1,6 +1,12 @@
-# FuryBoost 회고: NPU에 올린 뒤에도 CPU보다 느린 이유
+# FuryBoost 학습 성능 분석: NPU에 올린 뒤에도 CPU보다 느린 이유
 
-큰 배열의 합계를 빠르게 구하는 장치가 있어도, 작은 합계 요청을 수백만 번 보내고 매번 완료를 기다리면 프로그램 전체는 느릴 수 있다. DB(Database)에서 행마다 원격 질의를 보내는 경우와, 데이터를 묶어 한 번에 집계하는 경우를 떠올리면 된다. **FuryBoost는 RNGD에서 학습을 실행했고 여러 구조 개선도 했지만, 기록된 HIGGS 비교에서는 멀티코어 XGBoost·LightGBM보다 느렸다.** 이 결과는 숨길 실패가 아니라 다음 최적화의 출발점이다. 전체 비용을 CPU(Central Processing Unit) 전처리, host 호출, EDF(컴파일된 장치 실행 파일) 실행, 동기화, 반복 상태로 나눠 보면 “큰 배열의 곱과 합을 잘 처리하는 장치”와 “빠른 tree boosting 학습기” 사이에 무엇이 남는지 알 수 있다. 이 장은 커밋 `62faf49`에 저장된 2026-11-19 측정기록을 재검토했다. **이번 핸드북 작업에서 새 NPU 시험을 수행한 것은 아니다.** [FuryBoost README](https://github.com/smallstep-zzz/FuryBoost/blob/62faf49a29cc40230ee3df271b8f91ad8488eb5d/README.md)
+> **전체 경로에서의 위치**
+>
+> 학습 데이터 → **binning·histogram·분할 선택** → 트리 모델
+>
+> 추론 중심의 앞 장과 달리 트리 학습을 사례로 비용을 분석한다. CPU 준비, NPU 작업, 반복 호출의 크기를 나누어 [07장](07-optimization.md)의 최적화 원칙을 적용하고 [17장](17-debugging.md)의 재현 기록과 연결한다.
+
+큰 배열의 합계를 빠르게 구하는 장치가 있어도, 작은 합계 요청을 수백만 번 보내고 매번 완료를 기다리면 프로그램 전체는 느릴 수 있다. DB(Database)에서 행마다 원격 질의를 보내는 경우와, 데이터를 묶어 한 번에 집계하는 경우를 떠올리면 된다. **FuryBoost는 RNGD에서 학습을 실행했고 여러 구조 개선도 했지만, 기록된 HIGGS 비교에서는 멀티코어 XGBoost·LightGBM보다 느렸다.** 이 결과에서 다음 최적화의 병목을 찾을 수 있다. 전체 비용을 CPU(Central Processing Unit) 전처리, host 호출, EDF(컴파일된 장치 실행 파일) 실행, 동기화, 반복 상태로 나눠 보면 “큰 배열의 곱과 합을 잘 처리하는 장치”와 “빠른 tree boosting 학습기” 사이에 무엇이 남는지 알 수 있다. 이 장은 커밋 `62faf49`에 저장된 2026-11-19 측정기록을 재검토했다. [FuryBoost README](https://github.com/smallstep-zzz/FuryBoost/blob/62faf49a29cc40230ee3df271b8f91ad8488eb5d/README.md)
 
 ## 1. 무엇을 만들었는가
 
@@ -129,7 +135,6 @@ HIGGS는 앞 1,050만 행을 학습하고 마지막 50만 행을 평가한 기�
 
 초기 비교는 tree 5개, 최대 depth 3, 최대 16 bins다. FuryBoost는 대칭 트리, XGBoost는 CPU hist, LightGBM은 leaf 제한과 column-wise histogram 설정을 사용했다. **따라서 시간·AUC·loss를 함께 보는 실용 비교이지, 동일 수학 연산만 바꾼 하드웨어 대결은 아니다.** AUC(Area Under the ROC(Receiver Operating Characteristic) Curve)는 분류 threshold 전체에서 양성과 음성의 순위 구별을 요약하며, accuracy와 다른 지표다.
 
-
 표를 읽기 전에 지표의 방향을 정하자. **Accuracy(정확도)는** 정해진 판정 기준으로 맞힌 비율, **AUC**는 양성 표본에 음성보다 높은 점수를 주는 순위 구별 능력, **log loss(로그 손실)는** 정답에 얼마나 높은 확률을 줬는지 평가하는 손실이며 작을수록 좋다. 예를 들어 실제 양성에 0.9, 실제 음성에 0.8을 출력하면 순위는 맞지만 기준 0.5에서 둘 다 양성으로 판정하므로 정확도는 50%다. 이 두 표본의 순위 AUC는 1이 된다. 따라서 한 지표만 읽어 모델이 더 좋다고 결론 내리지 않는다. 이 두 표본은 지표 설명용이며 아래 HIGGS 평가값과 무관하다.
 
 ## 3. 5개 트리·깊이 3: 원본 입력 전체 학습
@@ -162,7 +167,6 @@ RNGD 전체 24.306초 중 binning은 약 14.667초였다. 뒤의 16-thread 개�
 [준비 데이터 측정 JSON](https://github.com/smallstep-zzz/FuryBoost/blob/62faf49a29cc40230ee3df271b8f91ad8488eb5d/reports/rngd-server3/higgs-dev2/parallel/prepared16.json)
 
 warm 6.573초만 원본 입력의 CPU 4.731/3.091초와 비교해 전체 성능 결론을 내리면 안 된다. 비용의 범위가 다르다. 그래도 전처리를 충분히 줄인 뒤에도 남는 NPU 호출·동기화 비용이 상당하다는 다음 조사 지점을 보여준다.
-
 
 이 시점의 문제를 작은 비용 모형으로 보자. **설명용으로** 한 작업의 장치 계산이 4 μs, 호스트 제출·완료 확인이 6 μs이고 서로 겹치지 않는다고 하자. 작업 10,000개를 따로 실행하면 `10,000×(4+6)=100,000 μs`, 즉 100 ms다. 계산 10개를 한 호출로 묶어 계산 비용은 그대로 40 μs, 제출 비용은 6 μs라고 가정하면 `1,000×(40+6)=46 ms`가 된다. 컴파일 결과가 cache에 있어도 매 호출의 제출 비용은 남는다는 뜻이다.
 

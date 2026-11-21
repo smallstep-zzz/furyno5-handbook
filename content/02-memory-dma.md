@@ -1,5 +1,11 @@
 # 메모리와 DMA: 배열의 값·주소·이동을 구분하기
 
+> **전체 경로에서의 위치**
+>
+> 호스트 배열 → **DMA와 장치 메모리** → 연산 입력·결과
+>
+> 01장에서 본 계산 자원에 데이터를 공급하는 경로다. 값의 의미, 주소 배치, 전송 완료와 버퍼 수명을 구분한다. [03장](03-driver-runtime.md)은 누가 이 전송을 요청하는지, [08장](08-eisa-visa.md)은 저수준 코드에서 어떻게 표현하는지 다룬다.
+
 **계산할 값이 맞아도, 그 값을 읽는 주소와 사용 시점이 틀리면 결과가 틀린다.** NPU(Neural Processing Unit)를 다룰 때 메모리가 어려워지는 이유는 CPU(Central Processing Unit) 쪽 배열, 카드의 큰 메모리, 계산 가까이의 메모리가 따로 있기 때문이다. 이 장은 여섯 숫자가 든 배열에서 시작해 `reshape`, 전치, 주소 계산, 장치 전송과 버퍼 수명을 연결한다.
 
 ## 1. `reshape(2, 3)`은 무엇을 하는가
@@ -285,7 +291,7 @@ flowchart TB
 
 GiB(Gibibyte)는 `2³⁰`바이트, GB(Gigabyte)는 십진 표기에서는 `10⁹`바이트다. 제품의 `48 GB`와 도구의 용량 표시는 단위와 집계 범위를 함께 읽는다. 두 숫자를 단순히 서로의 환산값이라고 가정하지 않는다.
 
-공개 opt runtime의 `capacity()`는 관리하는 메모리 종류의 할당 가능 범위를, `usage()`는 사용 상태를 확인하는 지점이다. 아래는 **NPU와 호환된 opt runtime이 있는 환경에서 실행하는 Rust 예제**다. 이 핸드북 편집 환경에서는 장치 실행하지 않았다. [Device·allocator API](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-rt/src/device/mod.rs)
+공개 opt runtime의 `capacity()`는 관리하는 메모리 종류의 할당 가능 범위를, `usage()`는 사용 상태를 확인하는 지점이다. 아래는 **NPU와 호환된 opt runtime이 있는 환경에서 실행하는 Rust 예제**다. [Device·allocator API](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-rt/src/device/mod.rs)
 
 ```rust
 use furiosa_opt_rt::{Device, Result, Topology, memory::Kind};

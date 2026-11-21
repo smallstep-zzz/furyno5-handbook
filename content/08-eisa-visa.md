@@ -1,10 +1,16 @@
-# eISA 확인과 vISA 실전: 배열의 원소를 장치 위치에 연결하기
+# 저수준 프로그래밍: vISA와 furiosa-opt
+
+> **전체 경로에서의 위치**
+>
+> Rust device 함수·mapping → **furiosa-opt 컴파일** → Image → opt-rt 실행
+>
+> 공개 저수준 경로에서 메모리 배치와 계산 흐름을 표현한다. [04장의 TCL·SDK 경로](04-tcl-edf.md)와는 API와 적재 형식을 구분한다. 먼저 원소 하나의 위치를 따라간 뒤 컴파일·실행·스케줄 관찰로 넓힌다.
 
 CPU(Central Processing Unit)에서 C의 2차원 배열을 사용하여 `a[row][col]`을 읽으면, 결국 한 저장 공간 안의 어느 위치를 읽을지 정해야 한다. NPU(Neural Processing Unit)에서도 같은 문제가 있지만, 값이 여러 chip·PE·slice의 메모리에 나뉘고 여러 차례에 걸쳐 계산 경로로 전달될 수 있다. **Mapping(매핑)은** 이 논리 좌표와 실제 저장·처리 위치의 관계를 표현한다.
 
 이 장은 먼저 2×3 배열의 주소 계산부터 시작한다. 그 다음 공식 `constant_add` 예제의 2,048개 정수 중 **37번 원소 하나가 어느 위치에 있고 어떻게 38이 되는지** 따라간다. 계산식 `x+1`은 간단하게 유지하고, 메모리와 실행 경로를 읽는 데 집중한다.
 
-> **명칭과 버전** · ISA(Instruction Set Architecture)는 명령어 집합 구조다. 공개 프로그래밍 문서의 이름은 **vISA(Virtual Instruction Set Architecture)다**. 요청에 나온 eISA의 공식 풀네임과 독립적인 공개 실행 API(Application Programming Interface)는 이번 조사에서 확인하지 못했으므로 두 이름을 같다고 단정하지 않는다. 이 장은 `furiosa-opt` commit `3d43bc9d20f324af60e3006c3f1541938d7f5097`과 `furiosa-opt-std = "0.10"` template을 기준으로 한다. [공식 소개](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/introduction.md), [template 의존성](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/base-template/Cargo.toml.liquid)
+> **명칭과 버전** · ISA(Instruction Set Architecture)는 명령어 집합 구조다. 공개 프로그래밍 문서의 이름은 **vISA(Virtual Instruction Set Architecture)다**. eISA라는 명칭을 이 공개 API의 동의어로 사용하지 않는다. 이 장에서 사용하는 코드와 도구는 vISA 경로다. 이 장은 `furiosa-opt` commit `3d43bc9d20f324af60e3006c3f1541938d7f5097`과 `furiosa-opt-std = "0.10"` template을 기준으로 한다. [공식 소개](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/introduction.md), [template 의존성](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/base-template/Cargo.toml.liquid)
 
 ## 1. 같은 행렬을 두 저장 순서로 표현한다
 
@@ -359,7 +365,7 @@ furiosa-schedule-viewer --host 127.0.0.1 --port 9254
 
 이 책은 확인한 고정 소스와 현재 페이지 본문에 있는 `--dump-visa`, `--dump-schedule`을 실습에 사용한다. 검색 색인이나 다른 버전에서 보이는 IR 단계·추가 dump 옵션을 현재 설치본에서 쓸 수 있다고 가정하지 않는다. 정확한 내부 pass 순서는 공개된 구현과 compiler 진단이 증명하는 범위까지만 설명한다. [해당 커밋의 CLI 명세](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/tools/kernel-optimizer.md)
 
-**`MIR → vISA → LIR → EDF`라는 구체적 전개를 이 고정 소스에서 직접 검증했다고 쓰지는 않는다.** 검색 색인에는 이 설명이 나타났지만 실제로 대조한 페이지 본문·고정 문서에는 같은 단계표가 없었다. 공개 `cargo-furiosa-opt`의 driver 진입점도 실제 translator 대신 바이너리 설치 안내를 출력하는 stub이고, 일부 lowering은 별도 prebuilt 라이브러리를 연결한다. 이는 그 단계가 존재하지 않는다는 결론이 아니라, **이번 문서에서 근거를 확보한 범위의 한계**다. 추후 동일 버전의 공식 원문·진단 산출물을 확보하면 세부 단계표를 갱신할 수 있다. [driver 진입점](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/cargo-furiosa-opt/src/driver.rs) · [lowering 라이브러리 연결](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-lower/build.rs)
+공개 driver 진입점은 실제 translator 대신 바이너리 설치 안내를 출력하는 stub이며, 일부 lowering은 별도 prebuilt 라이브러리를 연결한다. 따라서 내부 pass의 정확한 순서를 이 소스만으로 복원할 수는 없다. 여기서는 공개된 vISA·컴파일 이미지·런타임 경계를 사용한다. [driver 진입점](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/cargo-furiosa-opt/src/driver.rs) · [lowering 라이브러리 연결](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-lower/build.rs)
 
 ## 9. 작은 구간부터 실험하는 네 가지 사례
 
@@ -422,13 +428,11 @@ table
 
 이렇게 I·P·Domain·index의 메모리 배치를 정했을 때 position 3이 “행 3”이 된다. 숫자 3만으로 임의 tensor의 행을 알아내는 API는 아니다. Scatter는 같은 인덱스 관계를 반대로 사용해 `destination[position[d],p] = updates[d,p]`로 기록한다. [공식 gather·scatter 예제](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/moving-tensors/dma-engine.md#gather-and-scatter)
 
-
 ### C. 앞 출력과 뒤 입력의 배치를 맞추기
 
 두 커널이 서로 다른 layout을 기대하면 중간 변환이 필요할 수 있다. vISA에서 입력·출력 mapping을 직접 비교해, 앞 커널의 commit 배치를 다음 커널의 fetch가 원하는 배치에 맞추는 실험을 할 수 있다. 다만 view의 이름만 바꿔 값을 잘못 해석하는 것을 최적화라고 부르면 안 된다. DMA로 새 값 배치를 만드는 경우와 실제 이동 없는 reshape의 성립 조건을 구분한다. [Moving Tensors](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/moving-tensors/index.md)
 
 1절의 행 우선 버퍼 `[0,1,2,10,11,12]`와 열 우선 버퍼 `[0,10,1,11,2,12]`를 떠올리면 된다. 앞 커널이 다음 커널의 요구 순서로 결과를 직접 기록할 수 있다면 별도 변환을 줄일 후보가 된다. 반면 출력 이름이나 축 annotation만 바꾸고 원소 위치를 유지하면 다른 행렬을 읽는 오류가 된다. 출력 배치 변경이 앞 커널을 더 느리게 하는지도 전체 시간에 포함한다.
-
 
 ### D. TCL의 느린 영역을 vISA로 재현하기
 
