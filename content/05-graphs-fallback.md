@@ -2,9 +2,7 @@
 
 > **전체 경로에서의 위치**
 >
-> 모델의 값 연결 + EDF → **실행계획 구성·적재** → 순서 있는 호출
->
-> 04장의 단일 프로그램 위에서 모델 전체의 입력·가중치·중간값을 연결한다. 실행계획은 연결을, EDF는 해당 프로그램의 실행을 맡는다. 입력 크기에 따라 계획과 프로그램을 고르는 문제는 [06장](06-buckets-shapes.md), 실제 패키지 로더는 [12장](12-fxbx.md)에서 다룬다.
+> 첫 계산의 답을 다음 계산의 입력으로 보내 모델 하나를 실행하는 단계다. 그 연결을 파일에 담아 전달하는 방법은 [12장](12-fxbx.md)으로 이어진다.
 
 함수 두 개가 있다고 해서 프로그램 하나가 정해지지는 않는다. `add`와 `relu`라는 함수를 가진 CPU(Central Processing Unit) 라이브러리에도 **무엇을 먼저 호출하고 결과를 어디에 넘길지** 정한 코드가 필요하다. NPU(Neural Processing Unit)의 컴파일된 커널도 같다. EDF(Executable Device Format)는 장치에서 실행할 컴파일 결과이고, 여러 EDF 사이의 연결은 별도의 실행계획이 담당할 수 있다.
 
@@ -90,15 +88,21 @@ flowchart TB
 
 ### 모델 코드와 예제 입력이 있다
 
-모델을 캡처하고 컴파일하는 **앞단**이 그래프를 만들 수 있다. FuryNo5의 `prepare_model_direct()`는 모델을 export하고, 필요한 정규화를 적용하고, 공식 SDK compiler를 호출해 `Runnable`을 만든다. 이 작업은 명시적인 준비 단계다. 첫 호출에서 `.activate()`가 지연 실행될 수 있지만, 이 사실을 `EDF 목록에서 모델 그래프를 추론한다`는 뜻으로 바꾸면 안 된다. [직접 준비 구현](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/direct_runtime.py)
+‘덧셈 뒤에 ReLU를 한다’는 모델 코드와 예제 입력이 있다면, 준비 단계가 그 호출 순서와 값 연결을 기록할 수 있다. 이것이 **그래프 캡처**다.
+
+FuryNo5의 `prepare_model_direct()`는 모델을 export하고 표현을 정리한 뒤 SDK compiler로 실행 객체를 준비한다. `.activate()` 일부 작업이 첫 호출로 미뤄질 수 있어도, EDF 목록만 보고 원래 모델을 알아내는 것과는 다르다. [직접 준비 구현](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/direct_runtime.py)
 
 ### EDF와 연결 계약이 있다
 
-로더는 이미 정해진 인수 순서와 커널 연결을 장치 객체로 **구체화**한다. 파일 안의 선언적 계획과 현재 프로세스의 실행 객체는 다르므로, 계획이 저장되어 있어도 주소·버퍼·가중치 바인딩·완료 상태는 실행 시 준비해야 한다. [공유 실행계획 계약](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/fxbx-producer/EXECUTION_PLAN.md)
+실행계획에 ‘덧셈의 답을 ReLU 입력으로 쓴다’고 적혀 있다면 로더는 그 지시를 읽어 실행 객체를 만든다. **로더(loader)는** 파일에서 필요한 내용을 읽어 사용할 수 있게 준비하는 코드다.
+
+계획에는 현재 프로세스의 실제 입력 주소까지 영구 저장할 수 없으므로, 이번에 쓸 가중치·입력 버퍼·장치 객체를 연결하는 일은 남는다. 파일을 읽는 단계와 이번 입력으로 실행하는 단계를 구분해야 한다. [공유 실행계획 계약](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/fxbx-producer/EXECUTION_PLAN.md)
 
 ### EDF 파일만 여러 개 있다
 
-각 EDF의 입출력 개수·물리 형상만으로 원래 모델의 연결을 유일하게 복원할 수는 없다. 같은 shape의 값이라도 residual 입력인지 bias인지 이전 층의 출력인지 의미가 다르다. 이는 정보가 부족한 문제다. 연결 메타데이터, 모델 코드 또는 해당 구조를 아는 adapter가 필요하다.
+크기가 같은 배열 두 개가 있어도 어느 것이 입력이고 어느 것이 보정값인지는 크기만으로 알 수 없다. 같은 이유로 EDF 파일들의 입출력 크기만 보고 모델의 연결을 하나로 결정할 수는 없다.
+
+어느 출력이 다음 프로그램의 어느 입력으로 가는지 적은 설명, 모델 코드, 또는 그 모델 구조를 아는 어댑터가 더 필요하다. 정보가 없는 부분을 런타임이 자동으로 추측해 주는 것으로 이해하면 안 된다.
 
 ```mermaid
 flowchart TB
@@ -177,7 +181,9 @@ if __name__ == "__main__":
 python build_and_run.py
 ```
 
-컴파일러는 여러 커널을 처리할 때 `multiprocessing.get_context('spawn')`를 사용한다. 따라서 `compile_workers=4`인 이 독립 스크립트에서 `if __name__ == "__main__"` 보호를 빼면 자식 프로세스의 import가 빌드를 다시 시작할 수 있다. 노트북에 그대로 붙이기보다 파일로 실행한다. API 의미는 [사용자 프로젝트의 실제 예제](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/examples/native_execution_plan.py)와 [계획 exporter](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/execution_plan.py)를 확인했다. 이 핸드북 작성 환경에서는 NPU로 실행하지 않았다. namespace `tclmachine`은 저장소가 유지하는 실제 import 이름이다.
+이 컴파일 경로는 여러 작업을 자식 프로세스에서 실행한다. 새 프로세스가 스크립트를 불러올 때 파일의 맨 위 코드가 다시 실행될 수 있다. 그래서 파일 아래의 `if __name__ == "__main__":` 안에서 빌드를 시작한다.
+
+이 보호가 없으면 자식 프로세스도 다시 전체 빌드를 시작할 수 있다. 실습은 노트북 셀에 조각별로 붙이기보다 제공한 파일로 실행한다. `compile_workers=4`는 CPU 컴파일 작업 수이며 NPU 수가 아니다. [사용자 프로젝트의 실제 예제](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/examples/native_execution_plan.py) · [계획 exporter](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/execution_plan.py)
 
 가중치는 `model.state_dict()`로 별도 전달한다. 이 예제는 동일한 프로세스에 모델이 있어 바로 넘기지만, 실제 배포에서는 모델 코드가 없어도 읽을 수 있는 호환 checkpoint와 가중치 이름 계약을 함께 보존해야 한다. `0.02` 오차는 작은 BF16 예제를 위한 값이며 모든 모델의 합격 기준이 아니다. 재실행에는 새 출력 디렉터리를 사용해 실험 결과를 분리한다.
 
@@ -296,7 +302,11 @@ FuryNo5를 검증할 때는 다음 네 항목을 연결해 본다.
 
 ### 방금 실행한 step을 공식 profiler 기록과 대조한다
 
-**Trace는** 실행 중에 관측한 사건의 목록이다. 이 경로의 공식 `furiosa.torch.profiler.Profiler`는 JSON 파일에 `traceEvents`를 기록한다. 호스트의 `RecordFunction` 구간 이름과 NPU의 Task 이름은 다른 사건이다. fxbX는 `FXBX_TRACE_STEPS=1`일 때 각 step에 `execution_plan::forward::단계번호::커널ID`라는 이름을 붙이고 `propagate=True`로 전달한다. 고정 소스의 검증 worker는 Task 이름의 `::Task::` 뒤에서 이 이름을 찾아 대응을 확인한다. [step 이름을 붙이는 consumer](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py#L598-L648), [공식 profiler 호출·필드 판독의 실제 예](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/verified_worker.py#L21-L101)
+호스트에서 함수를 호출한 것과 NPU가 실제 계산한 것은 서로 다른 사건이다. 두 사건의 이름과 시간을 남긴 목록이 **trace**다.
+
+이 경로의 `Profiler`는 JSON 파일의 `traceEvents`에 사건을 기록한다. fxbX에서 `FXBX_TRACE_STEPS=1`을 쓰면 각 단계에 `execution_plan::forward::단계번호::커널ID`라는 이름을 붙인다. 검증 코드는 장치 Task 기록에도 그 이름이 전달되었는지 찾는다.
+
+아래 예에서는 ‘호출했다고 기록한 단계’와 ‘장치에서 실행했다고 기록한 단계’를 대조하는 데 집중한다. 단순히 이름 하나가 보였다는 이유로 모델 전체가 NPU에서 실행됐다고 판단하지 않는다. [step 이름을 붙이는 consumer](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py#L598-L648) · [공식 profiler 호출·필드 판독의 실제 예](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/verified_worker.py#L21-L101)
 
 | 기록에서 확인할 것 | 확인되는 범위 |
 |---|---|

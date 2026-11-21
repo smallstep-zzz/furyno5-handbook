@@ -2,9 +2,7 @@
 
 > **전체 경로에서의 위치**
 >
-> 같은 모델 → **업체별 프레임워크·컴파일러·런타임** → 각 NPU
->
-> 09장의 연산·그래프 입구와 03장의 드라이버 경계를 다른 생태계에 대입한다. 공통 예제의 계산은 고정하고 어디서 컴파일되는지 비교한다. 이 비교를 FuryNo5의 구현 선택에 적용할 때는 [10장](10-furyno5-architecture.md)의 지원 범위를 함께 본다.
+> 같은 모델이 다른 업체의 NPU에서는 어떤 도구를 거쳐 실행되는지 비교한다. PyTorch의 연산 전달은 [09장](09-torch-aten.md), FuryNo5의 위치는 [10장](10-furyno5-architecture.md)과 함께 본다.
 
 C에서 같은 함수 이름을 호출해도 링크한 구현이나 함수 포인터에 따라 실행 코드가 달라진다. 컴파일러는 여러 문장을 분석해 하나의 더 효율적인 프로그램을 만들 수도 있다. PyTorch를 NPU에 연결하는 방법도 이 두 관점에서 시작하면 이해하기 쉽다. **NPU(Neural Processing Unit)가 PyTorch를 지원한다는 말에는 여러 구현 방식이 들어 있다.** 텐서의 장치 타입을 추가해 연산을 받을 수도 있고, 모델 그래프를 받아 한 덩어리로 컴파일할 수도 있으며, 특정 모델 구조의 가중치·상태·생성 루프를 연결하는 어댑터를 제공할 수도 있다. FuryNo5의 다음 기능을 설계하려면 이 경계를 나누어 비교하는 편이 유용하다.
 
@@ -12,7 +10,9 @@ C에서 같은 함수 이름을 호출해도 링크한 구현이나 함수 포�
 
 ## 1. 지원이라는 말을 네 개의 계약으로 나눈다
 
-**Tensor(텐서)는** 계산할 다차원 배열이다. 저장소 주소 외에 shape(축별 길이), dtype(원소 자료형), stride(축마다 한 칸 움직일 때 건너뛸 원소 수), device(어느 장치의 저장소인지)를 가진다고 생각하면 된다. 예를 들어 연속 저장된 2×3 배열은 shape `[2,3]`, stride `[3,1]`이므로 다음 행으로 가려면 원소 세 개, 다음 열로 가려면 한 개를 이동한다. 실제 저장 순서를 **layout(배치)이라고** 한다.
+같은 `[1,2]` 배열을 더하는 코드도 CPU와 NPU에서 실행하는 길이 다를 수 있다. 업체가 ‘PyTorch를 지원한다’고 할 때는 어느 지점에서 계산을 받는지부터 확인해야 한다.
+
+연산 하나씩 받을 수도 있고, 모델의 여러 계산을 연결한 그래프를 한 번에 받아 컴파일할 수도 있다. 특정 모델의 가중치·입력·상태를 아는 별도 실행기를 제공하는 방식도 있다. 아래 네 가지 구분은 이 진입점과 책임을 비교하기 위한 것이다.
 
 **Backend**는 같은 상위 연산을 실제로 수행하는 구현 쪽이다. 한 연산씩 적절한 backend 함수를 고르는 것을 **dispatch(디스패치)라고** 한다. 반면 **계산 그래프**는 연산을 정점, 값 전달을 간선으로 기록한 프로그램이다. Python 코드 `y=x*2+3`을 `입력→곱하기→더하기→출력`으로 적으면 실행 전에 전체 관계를 분석할 수 있다. 컴파일 중 쓰는 이런 표현이 IR(Intermediate Representation, 중간 표현)이다.
 
@@ -46,7 +46,9 @@ flowchart TB
 
 ## 2. 방식 A: PyTorch 장치로 들어간다
 
-외부 하드웨어가 PyTorch 안의 연산 호출을 받으려면 자기 구현을 선택할 자리가 필요하다. PyTorch의 `PrivateUse1`은 그 목적으로 예약된 **디스패치 키**다. 여기서 키는 암호 키가 아니라 구현 선택에 사용하는 식별자다. 구현자는 `TORCH_LIBRARY_IMPL(aten, PrivateUse1, ...)`로 장치 연산을 등록할 수 있다. 여기에 장치 선택, 난수 생성기, 직렬화, 메모리·복사 같은 기반도 필요하다. 연산 함수를 등록했다고 전체 장치 backend가 완성되는 것은 아니다. [공식 backend 통합 설명](https://docs.pytorch.org/tutorials/advanced/privateuseone.html)
+PyTorch가 덧셈을 실행할 때 ‘이 tensor는 어느 장치에 있나’를 보고 구현을 고를 자리가 필요하다. 외부 장치를 연결하도록 예약해 둔 구분자가 **PrivateUse1**이다. 암호 키가 아니라 구현 선택에 쓰는 이름이다.
+
+개발자는 `TORCH_LIBRARY_IMPL(aten, PrivateUse1, ...)`로 해당 장치의 연산 함수를 등록할 수 있다. 하지만 이 등록 외에도 저장 공간 할당·복사·완료 처리가 필요하다. 연산 함수를 몇 개 등록하는 것과 PyTorch 장치 전체를 완성하는 것은 다르다. [공식 backend 통합 설명](https://docs.pytorch.org/tutorials/advanced/privateuseone.html)
 
 함수 포인터 표에 비유하면 다음과 같다. 아래 함수명은 역할을 설명하기 위한 가상 이름이며 PyTorch의 실제 C++ symbol은 아니다.
 
@@ -82,7 +84,9 @@ FuryNo5에 대한 해석은 이렇다. 장치 tensor의 일반 연산 호환성�
 
 ## 3. 방식 B: 그래프를 받아 장치 프로그램으로 컴파일한다
 
-`torch.compile`의 custom backend는 기본적으로 **FX `GraphModule`과 예제 입력을 받아, 같은 호출 계약을 갖는 실행 함수를 반환**한다. 반환 함수가 실제 장치 컴파일러와 런타임을 호출해야 NPU 가속이 생긴다. 다음 코드는 그 경계만 확인하는 CPU(Central Processing Unit) 실습이다. [PyTorch custom backend 규약](https://docs.pytorch.org/docs/2.15/user_guide/torch_compiler/torch.compiler_custom_backends.html)
+다른 방식은 연산을 하나씩 받지 않고 연결된 계산을 한꺼번에 받는 것이다. `torch.compile`의 custom backend는 이런 그래프와 예제 입력을 받아 **나중에 실제 입력으로 호출할 함수**를 돌려준다.
+
+그 반환 함수가 NPU 프로그램을 호출해야 장치 실행이 생긴다. 그냥 CPU 함수를 돌려주면 계산 결과는 맞아도 NPU 가속은 없다. 아래 코드는 이 전달 관계만 CPU에서 확인하는 예제다. [PyTorch custom backend 규약](https://docs.pytorch.org/docs/2.15/user_guide/torch_compiler/torch.compiler_custom_backends.html)
 
 여기서 `GraphModule`은 “그래프와 그것을 실행하는 Python 함수를 함께 가진 객체”다. backend는 예제 입력을 보고 지원 크기·자료형을 정하며, 변환한 그래프를 실행할 callable을 반환한다. 반환 함수는 **넘겨받은 그래프의 인수·출력 계약**을 지켜야 한다. 원래 모델에 `x` 하나만 있었어도 그래프의 인수에는 가중치·buffer가 별도로 들어올 수 있으므로 원래 Python 함수 시그니처를 추측하면 안 된다.
 
@@ -218,11 +222,13 @@ prediction = restored(sample)               # 같은 입력 계약으로 실제 
 
 **DMA(Direct Memory Access)는** CPU가 원소마다 복사 명령을 반복하기보다 전송 장치에 메모리 이동을 맡기는 방식이다. 전송의 출발지·도착지·크기 등을 나타낸 자료가 **descriptor(전송 설명 자료)다**. **Pseudo instruction(의사 명령)은** 파일에 기록된 더 추상적인 동작 표현으로, 적재기가 실제 장치에서 필요한 명령이나 전송 설명 자료로 구체화할 수 있다.
 
-또 하나 배울 점은 **바이너리 파일과 장치에 바로 복사할 원시 명령열이 항상 같은 것은 아니라는 사실**이다. Neuron Runtime 2.28 문서는 NEFF 컨테이너 안의 명령·텐서 정보 등을 읽고, 일부 pseudo instruction을 적재 시 하드웨어 명령과 DMA(Direct Memory Access) descriptor로 변환하는 단계를 명시한다. 이것은 Neuron의 확인된 사례다. 이 사실만으로 Furiosa EDF도 같은 pseudo instruction·patching 포맷이라고 추정하지 않는다. [Neuron Runtime 구조](https://awsdocs-neuron.readthedocs-hosted.com/en/v2.28.0/neuron-runtime/nrt-developer-guide.html) · [Furiosa EDF의 확인 범위](04-tcl-edf.md)
+또 하나 배울 점은 **바이너리 파일과 장치에 바로 복사할 원시 명령열이 항상 같은 것은 아니라는 사실**이다. Neuron Runtime 2.28 문서는 NEFF 컨테이너 안의 명령·텐서 정보 등을 읽고, 일부 pseudo instruction을 적재 시 하드웨어 명령과 DMA descriptor로 변환하는 단계를 명시한다. 이것은 Neuron의 확인된 사례다. 이 사실만으로 Furiosa EDF도 같은 pseudo instruction·patching 포맷이라고 추정하지 않는다. [Neuron Runtime 구조](https://awsdocs-neuron.readthedocs-hosted.com/en/v2.28.0/neuron-runtime/nrt-developer-guide.html) · [Furiosa EDF의 확인 범위](04-tcl-edf.md)
 
 ## 4. Tenstorrent: 공통 IR과 고수준 의미를 함께 보존한다
 
-**Frontend(입력 처리부)는** PyTorch 같은 사용자 프로그램을 compiler가 이해하는 표현으로 바꾸고, runtime interface는 컴파일 결과를 장치에 적재·실행하는 호출 경계를 제공한다. TT-XLA는 PJRT(Portable JAX Runtime) 인터페이스를 통해 PyTorch/XLA·JAX의 StableHLO 그래프를 TT-MLIR 컴파일러로 전달한다. StableHLO는 HLO 연산을 주고받기 위한 중간 표현이고, MLIR(Multi-Level Intermediate Representation)은 여러 수준의 표현을 다루는 컴파일러 기반이다. **Lowering**은 이런 고수준 연산을 장치가 처리할 더 구체적인 연산·배치로 바꾸는 과정이다. TTNN은 Tenstorrent의 장치 연산 라이브러리 이름이다. 조회한 공식 저장소는 PyTorch의 주 frontend로 TT-XLA를 안내하고 **TT-Torch를 deprecated**로 표시한다. 따라서 과거 `tt-torch` 소개를 최신 권장 경로로 복사하지 않았다. [고정 README](https://github.com/tenstorrent/tt-xla/blob/fdc3b7773674081b8f8c0698de3400d8d899dc8f/README.md)
+여러 도구가 같은 계산을 주고받으려면 서로 읽을 표현과 호출 방법이 필요하다. **Frontend**는 사용자 모델을 컴파일러 쪽 표현으로 바꾸는 입력 처리부이고, **런타임 인터페이스**는 준비한 결과를 호출하는 경계다.
+
+TT-XLA에서는 PJRT라는 연결 인터페이스와 StableHLO라는 계산 표현이 이 사이에 쓰인다. 받은 표현은 TT-MLIR 컴파일러 쪽으로 전달된다. 처음에는 약어를 모두 외우기보다 ‘모델을 받는 쪽 → 계산 표현 → 장치 컴파일러 → 실행’의 위치를 구분하면 된다. [고정 README](https://github.com/tenstorrent/tt-xla/blob/fdc3b7773674081b8f8c0698de3400d8d899dc8f/README.md)
 
 ### RMSNorm을 기본 산술에서 다시 묶는 이유
 
@@ -279,7 +285,9 @@ FHA(Furiosa-Hug-Anything)와 비교할 지점도 여기에 있다. 모델을 찾
 
 ## 7. AMD·Intel의 드라이버 통합은 ATen 구현인가?
 
-Intel OpenVINO NPU 경로에서는 컴파일러 라이브러리가 드라이버 패키지에 포함되기도 한다. OpenVINO 패키지에 포함된 컴파일러를 선택하는 경로도 있다. 따라서 설치 위치가 ‘드라이버’여도, 모델 변환을 담당하는 컴파일러와 커널 드라이버의 작업 제출 역할을 구분해야 한다. 아래 비교는 **2026-11-21에 확인한 대표 추론 경로**를 기준으로 한다.
+‘드라이버를 설치하니 모델이 실행됐다’고 해도 모델을 이해하는 일과 장치에 작업을 넣는 일은 구분해야 한다. **컴파일러**는 모델의 계산을 장치 프로그램으로 바꾸고, **커널 드라이버**는 운영체제를 통해 장치에 접근하고 작업을 제출하는 역할을 한다.
+
+Intel OpenVINO NPU 경로에서는 컴파일러 라이브러리를 드라이버 패키지에 포함해 제공하는 경우도 있고, OpenVINO 패키지의 컴파일러를 사용하는 경로도 있다. 설치 묶음이 같아 보여도 역할이 합쳐진 것은 아니다. 아래는 2026-11-21에 확인한 대표 추론 경로를 비교한다.
 
 | 계층 | AMD Ryzen AI 대표 경로 | Intel OpenVINO NPU 경로 | Furiosa 대표 경로 |
 |---|---|---|---|

@@ -2,9 +2,7 @@
 
 > **전체 경로에서의 위치**
 >
-> 모델·대표 입력 → **캡처·바인딩·컴파일·계획 조립** → 패키지
->
-> 생산자가 무엇을 입력받아 무엇을 저장하는지 순서대로 다룬다. 사전검사 보고서와 컴파일 산출물, 장치 검증 결과를 구분한다. 만들어진 패키지를 소비자가 적재하는 과정은 [12장](12-fxbx.md)으로 이어진다.
+> 모델에서 계산의 연결을 얻고, 장치 프로그램과 실행에 필요한 설명을 만드는 단계다. 만들어진 묶음을 읽어 실행하는 과정은 [12장](12-fxbx.md)으로 이어진다.
 
 이 장에서는 **하나의 입력이 각 단계에서 어떤 객체나 파일이 되는지** 따라간다. 일반적인 C 빌드가 소스·object file·실행 파일을 구분하듯, FuryNo5의 준비 과정도 Python 모델, 연산 graph, TCL 소스, EDF, 실행계획을 구분해야 한다. 하나가 만들어졌다고 다음 단계까지 성공한 것은 아니다.
 
@@ -26,7 +24,11 @@ FuryNo5의 `export_model`은 이런 계산을 분석하는 생산자다. 여기�
 
 ## 1. 캡처: Python 모델을 추론 그래프로 고정한다
 
-**캡처(capture)는** Python 함수의 계산을 “입력 node → 연산 node → 출력 node” 관계로 얻는 작업이다. PyTorch의 **FX graph**는 이 관계를 보관하는 자료구조이고, **ExportedProgram**은 graph에 입력·출력 서명과 parameter 연결·제약을 함께 담는 객체다. 최종 숫자를 저장하는 작업과 다르다. 출발점은 `tclmachine.export_model`이고 실질 구현은 `tplmachine/execution_plan.py`다. 먼저 `graph_capture.capture_for_export`가 `torch.no_grad()` 아래에서 `torch.export.export(..., strict=False)`를 호출한다. 이미 `ExportedProgram`이면 다시 모델을 실행해 캡처하지 않고 정규화로 간다. [capture_for_export](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/graph_capture.py#L188-L195)
+모델이 `덧셈 → ReLU` 순서로 계산한다면, 준비 단계는 덧셈 결과가 ReLU로 전달된다는 관계를 얻어야 한다. Python 코드를 분석해 이런 계산 연결을 자료구조로 만드는 일이 **캡처(capture)다**.
+
+PyTorch의 FX graph가 계산의 점과 연결을 담고, `ExportedProgram`은 여기에 입력·출력 조건과 가중치 연결 등도 함께 담는다. 지금 한 번 나온 숫자 답을 저장하는 일과는 다르다.
+
+FuryNo5의 `tclmachine.export_model`이 이 준비를 시작한다. 실제 소스의 `capture_for_export`는 `torch.export.export(..., strict=False)`를 호출한 뒤 다음 단계가 사용할 형태로 정리한다. [capture_for_export](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/graph_capture.py#L188-L195)
 
 아래는 `capture_for_export` **함수 몸체에 설명 주석을 추가한 발췌**다. `model`은 호출자가 준 module, `inputs`는 예제 tensor 목록, `normalize_exported`는 같은 파일에 정의된 정규화 함수다. 완성된 독립 스크립트가 아니므로 이 발췌만 실행하지 않는다.
 
@@ -48,7 +50,9 @@ return normalize_exported(exported, preserve_layer_norm=preserve_layer_norm)
 
 ## 2. 바인딩과 사전검사: 값이 무엇인지 먼저 확정한다
 
-**바인딩(binding)은** graph의 빈 입력 자리에 실제 어떤 값이 들어가는지 연결하는 작업이다. 사용자의 `x`, 첫 weight, 마지막 weight는 모두 tensor이지만 역할이 다르다. 함수 포인터를 호출하기 전에 인수 목록을 올바른 순서로 구성하듯, compiler와 실행기가 같은 순서를 사용해야 한다. 이 예제의 사용자 인수는 `x` 하나이므로 `(x,)`로 전달한다. `tuple(x)`는 행들을 여러 인수로 분리할 수 있어 같은 뜻이 아니다.
+함수 `multiply(x, weight)`를 호출하려면 첫 자리에 이번 입력을, 둘째 자리에 곱할 가중치를 넣어야 한다. 그래프에도 같은 연결이 필요하다. 어느 인수 자리에 어느 값을 넣을지 정하는 일이 **바인딩(binding)이다**.
+
+크기가 같아도 사용자 입력과 모델 가중치는 역할이 다르다. 아래 표는 이 모델의 값이 어디서 오는지 나눈다. 입력 하나를 담은 tuple은 `(x,)`로 만든다. `tuple(x)`는 배열의 행들을 여러 인수로 나눌 수 있어 같은 뜻이 아니다.
 
 | 값 | 공급 경로 | 현재 예제의 검사 정보 |
 |---|---|---|
@@ -60,7 +64,11 @@ return normalize_exported(exported, preserve_layer_norm=preserve_layer_norm)
 
 stride는 축별로 다음 원소까지 건너뛰는 저장소 원소 수다. contiguous는 정해진 축 순서로 빈틈없이 저장된 상태다. 예제 입력의 논리 데이터 크기는 `4 × 8 × 2 = 64 bytes`지만 이것이 장치 할당 크기까지 64 bytes라는 뜻은 아니다. 물리 배치·정렬은 컴파일 결과의 계약으로 확인해야 한다.
 
-`bind_exported`는 평평한 tensor tuple인 사용자 입력과, export에서 분리된 parameter·buffer를 연결한다. **buffer**는 학습 대상 parameter와 별도로 모델 상태에 등록한 tensor다. 비영속 buffer는 `exported.constants`에서 읽지만, 임의의 상수나 Python 상태를 모두 바인딩하는 것은 아니다. 그 밖의 입력 종류는 별도 binder가 필요하다는 오류를 낸다. 이 경로의 tensor는 CPU에 있고 contiguous하며 양의 정적 차원을 가져야 한다. 이렇게 컴파일 결과와 호출자가 합의하는 인수 순서·자료형·배치의 계약을 ABI(Application Binary Interface)라고 한다. shape가 같아도 인수 순서나 stride가 다르면 같은 ABI가 아니다. 정적 상태를 사용하는 모델은 실행계획의 `state_inputs`와 `state_updates`로 명시하며, 일반 사용자 입력과 구분한다. [바인딩 구현](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/edf_export.py#L33-L109) · [계획 옵션](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/execution_plan.py#L355-L408)
+모델에는 사용자 입력, 가중치, 실행 사이에 보관할 배열이 함께 있을 수 있다. 학습으로 조정하는 parameter와 별도로 모델에 등록한 배열을 **buffer**라고 부른다. 입력 목록을 연결할 때 이 역할을 구분해야 한다.
+
+`bind_exported`는 사용자 입력 tuple과 export에서 분리된 parameter·buffer를 연결한다. 비영속 buffer는 `exported.constants`에서 읽는다. 임의의 Python 상태를 모두 자동 연결하는 것은 아니며, 지원하지 않는 입력 종류는 별도 처리가 필요하다는 오류를 낸다.
+
+이 경로의 tensor는 CPU에 있고 연속으로 저장되어야 하며, 길이가 양의 정적 값이어야 한다. ‘같은 shape’만으로 통과하는 것이 아니라 저장 순서와 인수 순서도 맞춰야 한다. 상태를 쓰는 모델은 실행계획의 `state_inputs`·`state_updates`로 이전 값과 다음 값을 명시한다. [바인딩 구현](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/edf_export.py#L33-L109) · [계획 옵션](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/execution_plan.py#L355-L408)
 
 다음은 **preflight(사전검사)** 호출이다. 컴파일할 입력을 받아 의미 규칙과 바인딩이 갖추어졌는지 먼저 점검한다. 새 작업 디렉터리에서 실행하는 예이며 호환되는 FuryNo5·fxbX 설치가 필요하다. 성공하더라도 반환값은 수치 출력이 아니라 진단 보고서다.
 
@@ -153,7 +161,9 @@ if __name__ == "__main__":
 
 ## 3. 의미 계열을 선택한다
 
-**의미 계열**은 같은 계산 원리를 공유하는 연산 묶음이다. pointwise는 원소별 계산, reduction은 여러 원소를 한 축을 따라 모으는 계산, contraction은 행렬곱처럼 곱한 뒤 축약하는 계산이다. `compiler_registry.py`는 모델 이름 대신 이 계열을 컴파일 함수에 연결한다. registry는 Python dictionary 형태의 등록표다. 아래는 실제 등록표에 설명 주석을 추가한 발췌다.
+배열의 각 칸에 1을 더하는 계산과, 한 행의 숫자를 모두 더해 하나로 만드는 계산은 처리 방법이 다르다. FuryNo5는 이런 계산 종류를 나눠 담당 컴파일 함수에 연결한다. 같은 원리를 공유하는 묶음을 이 장에서는 **의미 계열**이라고 부른다.
+
+pointwise는 각 칸을 독립적으로 처리하고, reduction은 여러 칸을 합·최댓값 등으로 모은다. contraction은 행렬곱처럼 대응값을 곱한 뒤 더한다. `compiler_registry.py`의 registry는 이 종류와 함수를 연결한 Python 등록표다.
 
 ```python
 # compiler_registry.py: 의미 계열 → (불러올 module, 호출할 함수)의 등록표 일부
@@ -249,7 +259,7 @@ source = (
 
 ## 5. compiler 호출: 진짜 EDF를 만든다
 
-`compile_source`는 `furiosa-tcc --version`과 Torch·SDK(Software Development Kit) package 버전을 기록한다. 현재 producer의 기본 target은 `renegade-8pe`이고, 공식 compiler cache는 끈 채 FuryNo5 자신의 검증된 산출물 cache를 관리한다. `--no-compiler-cache`가 곧 “재사용 없음”을 뜻하지는 않는다. [compile_source](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/tcl_compiler.py#L158-L234)
+`compile_source`는 `furiosa-tcc --version`과 Torch·SDK package 버전을 기록한다. 현재 producer의 기본 target은 `renegade-8pe`이고, 공식 compiler cache는 끈 채 FuryNo5 자신의 검증된 산출물 cache를 관리한다. `--no-compiler-cache`가 곧 “재사용 없음”을 뜻하지는 않는다. [compile_source](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/tcl_compiler.py#L158-L234)
 
 subprocess는 Python 안의 함수 호출이 아니라 운영체제가 실행하는 별도 compiler 프로세스다. 아래의 `flags`는 target·cache 옵션 목록, `attempt`는 이번 시도의 파일을 보관할 경로 객체다. 명령 목록의 각 원소가 실제 실행 파일의 인수가 된다. 다음은 설명 주석을 추가한 발췌다.
 
@@ -274,7 +284,9 @@ compiler에 넘긴 `source.tc`, 표준 출력·오류를 보관한 `compile.log`
 
 ## 6. EDF가 생긴 뒤에도 ABI를 검사한다
 
-함수 선언과 다른 인수 순서로 동적 라이브러리 함수를 호출하면 잘못된 값을 읽는 것처럼, EDF도 실제 바이너리의 호출 계약과 계획이 맞아야 한다. **역직렬화(deserialization)는** 저장한 bytes를 SDK가 해석 가능한 실행 표현으로 되돌리는 작업이다. `tcl_compiler._verify_abi`는 공식 `sdk.ir.Runnable.from_serialized_edf`로 EDF bytes를 읽는다. 실제 입출력 개수와 `expected_num_fusion == 8`을 검사하고 shape 표현을 기록한다. 여기의 fusion 8은 8개 PE(Processing Element, 장치의 처리 단위)를 묶는 장치 실행 설정이다. 앞 절에서 여러 연산을 묶는 graph fusion과 같은 숫자가 아니며 NPU 카드 8개라는 뜻도 아니다.
+컴파일러가 ‘입력 두 개와 출력 하나’를 받는 EDF를 만들었는데 실행계획이 입력 하나만 전달하면 호출이 맞지 않는다. 파일 생성 뒤에도 인수의 개수와 장치 구성을 검사해야 하는 이유다. 이런 바이너리 호출 규약이 **ABI**다.
+
+`_verify_abi`는 `sdk.ir.Runnable.from_serialized_edf`로 EDF를 해석해 입출력 개수와 `expected_num_fusion`을 확인한다. 저장한 바이트를 SDK 객체로 되돌리는 일이 **역직렬화(deserialization)다**. 이때 실제 NPU 계산까지 실행한 것은 아니다.
 
 아래의 `raw`는 EDF 파일 bytes, `sdk`는 `furiosa.torch`다. 반환하는 `runnable`은 ABI를 조회할 수 있는 SDK 내부 실행 표현이며 여기에서 사용자 입력 `x`를 계산하지 않는다.
 
@@ -352,7 +364,9 @@ print("state updates:", entry["state_updates"])  # 다음 호출에 남길 상�
 
 ## 9. 최적화가 들어가는 자리와 실패 시 처리
 
-닫힌 영역은 필요한 외부 입력과 밖으로 내보낼 출력이 명확한 연산 묶음이다. FuryNo5는 의미가 맞는 작은 닫힌 영역을 결합하고, 명시적 layout(축 순서와 데이터 배치) 변경 경계를 생성하며, 반복 shape의 EDF를 재사용한다. compiler는 그 결과를 받아 물리 타일링과 schedule을 결정한다. producer의 영역 분할과 compiler의 장치 타일링은 같은 최적화가 아니다. [영역 검증 문서](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/NATIVE_REGION_VALIDATION.md)
+`a=add(x,b)` 다음에 `y=relu(a)`를 계산한다고 하자. 이 둘을 한 묶음으로 보려면 바깥에서 필요한 x·b와 바깥으로 내보낼 y가 분명해야 한다. 이런 입출력이 명확한 계산 묶음이 **닫힌 영역**이다.
+
+FuryNo5는 어떤 연산들을 이런 영역으로 묶을지 정한다. 장치 컴파일러는 그 안의 큰 배열을 몇 개씩 처리하고 어디에 배치할지 더 구체적으로 정한다. 모델에서 묶음을 고르는 일과 장치 작업 조각을 고르는 일은 서로 다른 선택이다. [영역 검증 문서](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/NATIVE_REGION_VALIDATION.md)
 
 선택적 fusion의 컴파일이나 ABI 확인이 실패하면 기존 개별 **NPU** 계획으로 돌아가는 경로가 있다. 이것은 CPU fallback이 아니다. 개별 커널도 실패하면 오류가 유지된다. 일부 결정적 실패에는 bounded split retry, 즉 정해진 한도 안에서 영역을 더 작게 나누어 다시 컴파일하는 경로가 있지만, 임의의 미지원 연산을 항상 해결하는 만능 분할기는 아니다. [fusion 실패 처리](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/execution_plan.py#L1211-L1226) · [분할 재시도](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/execution_plan.py#L331-L353)
 

@@ -2,11 +2,11 @@
 
 > **전체 경로에서의 위치**
 >
-> 요청·모델 분할 → **복제·통신·장치별 상태** → 여러 NPU의 결과
->
-> 한 장치 실행 위에 분산 책임을 더한다. PE 결합, 모델 병렬, 요청 복제는 나누는 대상이 다르다. [14장](14-serving-vllm.md)의 요청 상태가 어디에 놓이는지 확인하고 [17장](17-debugging.md)의 방법으로 확장 비용을 측정한다.
+> 모델 한 번의 계산을 나눌지, 모델을 복제해 서로 다른 요청을 맡길지 선택한다. [14장](14-serving-vllm.md)의 요청 상태가 어디에 남는지와 함께 읽는다.
 
-웹 서버의 worker를 두 개로 늘릴 때 먼저 확인하는 것은 작업이 독립적인지, 공유 상태가 있는지, 메모리가 두 배 필요한지다. NPU(Neural Processing Unit)를 늘릴 때도 같은 질문에서 시작한다. **서로 다른 요청을 나누는 방법, 한 행렬 계산을 나누는 방법, 모델의 층을 나누는 방법은 비용과 필요한 구현이 다르다.** 이 장은 작은 계산과 시간표로 그 차이를 먼저 확인한다. FuryNo5·fxbX의 현재 커스텀 실행 계획은 한 장치의 fusion 8·Single 계약을 검사한다. 여러 카드를 꽂았다는 이유로 그 계획이 자동 분산되지는 않는다. 공식 Furiosa-LLM의 병렬성, 최신 opt-vLLM의 병렬성, 우리 프로젝트의 구현 상태도 서로 구분한다. [fxbX device 계약](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py#L132-L162) · [공식 병렬성](https://developer.furiosa.ai/v2026.4.0/en/furiosa_llm/model-parallelism.html)
+장치를 두 개 쓰려면 무엇을 둘로 나눌지 먼저 정한다. 서로 다른 요청을 나눌 수도 있고, 한 요청의 큰 계산을 나눌 수도 있다. 필요한 데이터와 결과를 합치는 방법이 다르다.
+
+FuryNo5·fxbX의 현재 커스텀 실행계획은 한 장치의 `fusion=8, mesh=single` 조건을 검사한다. 카드를 여러 장 꽂았다고 그 계획이 자동 분산되는 것은 아니다. 이 장은 공식 Furiosa-LLM, opt-vLLM, 커스텀 실행계획의 지원 상태를 구분해 읽는다. [fxbX device 계약](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py#L132-L162) · [공식 병렬성](https://developer.furiosa.ai/v2026.4.0/en/furiosa_llm/model-parallelism.html)
 
 ## 1. 같은 숫자 8이라도 의미가 다르다
 
@@ -20,11 +20,11 @@
 
 | 용어 또는 옵션 | 의미 | 혼동하면 생기는 문제 |
 |---|---|---|
-| 한 RNGD 카드의 8 PE(Processing Element) | 카드 안의 처리 단위 | 독립 카드 8장으로 잘못 계산 |
+| 한 RNGD 카드의 8 PE | 카드 안의 처리 단위 | 독립 카드 8장으로 잘못 계산 |
 | `set_fusion(8)` | 그 실행 규격의 PE 사용 계약 | 모델 복제본 8개를 만든다고 오해 |
 | Furiosa-LLM `tensor_parallel_size` | TP(Tensor Parallelism) group의 PE 수 | 카드 수를 넣어 잘못 컴파일 |
 | opt-vLLM `tensor_parallel_size` | 현 plugin에서 engine의 chip 수 선택으로 전달 | 공식 LLM의 PE 단위 설정을 복사 |
-| 여러 호스트 | 네트워크로 연결한 별도 OS·메모리 공간 | 한 호스트의 HBM(High Bandwidth Memory)처럼 취급 |
+| 여러 호스트 | 네트워크로 연결한 별도 OS·메모리 공간 | 한 호스트의 HBM처럼 취급 |
 
 공식 LLM은 TP를 FXB 컴파일 시 결정하고, serve에서 임의로 바꾸지 않는다. 공식 예에서 카드 네 장은 PE 32개이며 TP 8·PP(Pipeline Parallelism) 4·DP(Data Parallelism) 1 또는 TP 8·PP 2·DP 2로 나눈다. 이 조합을 opt-vLLM에 그대로 복사하면 안 된다. opt plugin은 `LoadOptions.chips(tensor_parallel_size)`로 연결한다. [공식 단위 설명](https://developer.furiosa.ai/v2026.4.0/en/furiosa_llm/model-parallelism.html) · [opt admission의 chips 연결](https://github.com/furiosa-ai/furiosa-opt-models/blob/c982976100d18d7a9641d5a8c22b89cec4544049/integrations/furiosa-opt-vllm/furiosa_opt_vllm/admission.py#L541-L558)
 
@@ -120,7 +120,9 @@ flowchart TB
 
 ## 3. 현재 구현 상태를 분리한다
 
-아래 표의 **dense 모델**은 일반적인 층 계산을 전체 입력에 적용하는 모델이고, **MoE(Mixture of Experts)는** 입력마다 선택한 전문가 부분망을 쓰는 구조다. **Context parallelism**은 긴 입력 문맥의 위치 축을 나누는 병렬성이다. **Speculative decoding**은 다음 토큰 후보들을 미리 제안하고 본 모델로 검증하는 방식, **KV offload**는 KV를 장치 밖 메모리로 옮겨 장치 용량을 확보하는 방식이다. 각각 필요한 상태와 통신이 달라 DP 구현이 있다는 사실만으로 모든 조합을 지원하지 않는다.
+아래 지원 표에는 계산 구조에 따른 제한도 나온다. **Dense 모델**은 각 층의 일반 계산을 모든 입력에 적용한다. **MoE 모델**은 여러 부분망 중 입력에 맞는 일부를 골라 사용한다. 사용하는 부분과 필요한 통신이 달라 실행 경로의 지원 여부도 따로 확인해야 한다.
+
+긴 문장의 토큰 위치를 나눠 처리하는 방식은 context parallelism이다. 다음 토큰 후보를 먼저 제안해 본 모델로 확인하는 방식은 speculative decoding이다. 아래 표에서는 이런 옵션이 어느 실행기에 구현되어 있는지를 구분한다.
 
 | 경로 | 확인된 범위 | 이 핸드북에서 완료로 취급하지 않는 것 |
 |---|---|---|
@@ -146,7 +148,9 @@ opt-vLLM의 문서 일부는 DP=1로 남아 있지만 실제 `admission.py`와 `
 
 ## 5. cache가 있는 서버를 고르는 방법
 
-요청을 “지금 utilization이 가장 낮은 장치”에만 보내면 이미 적재된 가중치와 prefix cache를 버릴 수 있다. 필요한 모델이 없는 빈 장치는 수 초 이상의 적재를 시작할 수도 있지만, 약간 바쁜 장치에는 같은 모델과 앞부분 KV가 준비돼 있을 수 있다. 여기서 적재 시간의 크기는 모델·시스템 실측에 따라 달라지며 고정 상수로 간주하지 않는다.
+새 요청을 어느 장치로 보낼지 고를 때 현재 사용률만 보면 놓치는 비용이 있다. 비어 있는 장치에는 모델부터 올려야 하고, 약간 바쁜 장치에는 같은 모델과 재사용할 앞부분 KV가 이미 있을 수 있다.
+
+어느 쪽이 빠른지는 대기시간과 준비·복원 시간을 비교해야 한다. 새 요청의 첫 배정과, 이미 KV를 쌓은 요청을 다른 장치로 옮기는 결정도 구분한다. 필요한 상태를 옮기는 시간이 추가되기 때문이다.
 
 공식 Furiosa-LLM의 DP router는 prefix locality와 active token load를 함께 평가한다. 이 정보는 replica별 가상 cache 기록을 이용하며 **라우팅 자체가 replica 간 KV를 옮기지는 않는다.** 한 process 내부 DP routing과 여러 server pod(배포한 서버 실행 단위) 사이 routing은 다른 계층이다. [공식 routing](https://developer.furiosa.ai/v2026.4.0/en/furiosa_llm/data-parallel-routing.html)
 
@@ -207,7 +211,9 @@ B가 같은 **공통 prefix**의 KV를 보유한다는 사실과, B가 R이 방�
 
 ## 6. KV를 옮길지 다시 계산할지
 
-KV를 다른 카드나 서버에 복사하면 prefill을 줄일 수 있지만, **serialization(전송할 바이트 표현으로 직렬화)**·전송·재배치 비용이 든다. 일반적인 손익 조건은 다음과 같다.
+앞 토큰을 처리해 만든 KV를 다른 장치로 옮기면 그 부분의 재계산을 아낄 수 있다. 대신 전송할 형태로 준비하고, 네트워크나 장치 연결로 옮기고, 새 위치에 맞춰 놓는 시간이 든다.
+
+예를 들어 다시 계산하면 20ms, 옮겨 복원하면 5ms인 같은 상황에서는 옮기는 쪽에 이득이 있다. 반대로 전송이 30ms라면 재계산이 나을 수 있다. 이 숫자는 설명용이며 실제 모델·연결의 시간은 측정해야 한다. 아래 식은 이런 비교 기준이다.
 
 **복원 총시간 < 같은 prefix를 재계산하는 시간**
 
@@ -249,7 +255,9 @@ fxbX에 같은 기능을 추가하려면 다음 항목이 필요하다.
 
 ## 8. 무엇을 측정해야 확장이 성공한 것인가
 
-최소한 1·2·4장 조건에서 total throughput(전체 처리량), TTFT(Time To First Token), TPOT(Time Per Output Token), p95/p99 요청 지연, card별 memory, 통신 시간, cache hit·restore bytes를 기록한다. 모델·input distribution·동시성·정확도 기준은 고정한다. 같은 결과를 더 빨리 냈는지와 단순히 batch를 키워 더 오래 기다리게 했는지 구분한다.
+먼저 NPU 한 장에서 처리량과 요청 시간을 기록하고, 같은 입력 분포로 두 장·네 장을 비교한다. **처리량**은 초당 끝낸 요청이나 토큰 수다. 요청 시간은 첫 토큰까지의 TTFT와 이후 토큰 사이의 TPOT를 나누어 본다.
+
+평균뿐 아니라 늦게 끝나는 요청의 p95·p99도 기록한다. 모델과 동시 요청 조건이 같은지, 장치마다 메모리와 일이 고르게 배정되는지, 통신·KV 복원에 얼마가 드는지도 함께 확인한다. 장치가 늘었다는 이유만으로 각 요청이 같은 비율로 빨라지지는 않는다.
 
 평균만 보면 일부 요청의 긴 대기가 숨겨진다. p95/p99는 관측 요청 중 각각 95%/99%가 그 이하에 완료되는 지연 경계다. TTFT는 요청 접수부터 첫 토큰까지, TPOT는 첫 토큰 뒤의 토큰 간격을 본다. 요청을 큰 batch로 만들기 위해 기다린 시간이 처리량과 함께 늘지 않았는지 확인한다.
 

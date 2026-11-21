@@ -2,9 +2,7 @@
 
 > **전체 경로에서의 위치**
 >
-> 모델·입력 계약 → **진단·변환·생산·별도 검증** → 배포할 자산
->
-> FuryAwesome은 발견·공유, FHA는 작업 연결, FuryNo5는 생산, fxbX는 소비를 맡는다. 먼저 작은 모델 하나를 파일로 전달해 검증한다. 단일 모델 호출에 요청·상태 관리를 붙이는 단계는 [14장](14-serving-vllm.md)이다.
+> 기존 모델을 준비하고, 파일을 만든 뒤 별도 프로세스에서 같은 답이 나오는지 확인한다. 그 모델에 여러 사용자의 요청을 연결하는 단계는 [14장](14-serving-vllm.md)이다.
 
 Python에서 모델을 실행할 때는 모델 클래스, 가중치, 입력 tensor가 같은 프로세스에 있다. NPU(Neural Processing Unit)로 옮겨 다른 프로세스에서 실행하려면 이 정보를 분리해서 전달해야 한다. **포팅(porting)은** 파일 확장자를 바꾸는 작업이 아니라, 원래 계산의 의미를 보존하면서 대상 장치가 받아들이는 연산·입출력·실행 순서로 바꾸고 검증하는 작업이다.
 
@@ -23,6 +21,8 @@ EDF는 장치에서 수행할 계산을 담은 산출물이다. **실행 계획*
 이 장의 예제는 조회한 커밋의 API(Application Programming Interface)에 맞춰 작성했다. FuryAwesome은 `c668ecb`, FHA는 `8fc675f`를 2026-11-19에 다시 확인했다. 장치 실습에는 이 소스와 호환되는 SDK와 RNGD가 필요하다. FuryNo5와 FHA 소스 링크는 저장소 접근 권한이 필요하다.
 
 ## 1. 네 도구가 맡는 책임
+
+이미 있는 모델을 NPU에서 실행하는 작업을 **포팅(porting)이라고** 부른다. 먼저 원본 모델과 입력을 준비하고, 실행 파일을 만든 뒤, 그 파일을 다시 읽어 같은 답이 나오는지 확인한다. 모델을 목록에서 찾는 일과 장치 프로그램을 만드는 일, 실제 호출하는 일은 서로 다른 도구가 맡을 수 있다.
 
 | 도구 | 실제 책임 | 다음 단계에 전달하는 것 |
 |---|---|---|
@@ -96,9 +96,9 @@ python -m forge_fxbex requests --cached --model 'hf:OWNER/MODEL'
 
 ### 크기뿐 아니라 자료형과 저장 순서도 계약이다
 
-**dtype(data type)은** 각 원소의 저장·계산 자료형이다. 이 예제의 BF16(Bfloat16)은 16비트 부동소수점이므로 FP32(Float32) 값을 바꾸면 반올림이 생길 수 있다. **stride**는 각 축의 인덱스가 1 증가할 때 저장 공간에서 몇 원소 이동하는지 나타낸다. 일반적인 연속 배열 `x[4,8]`은 stride `[8,1]`이다. **contiguous**는 요구하는 순서대로 원소가 연속해 놓인 상태다. 같은 숫자와 shape를 갖더라도 전치로 얻은 view는 stride가 다를 수 있다. 따라서 shape만 같다고 같은 커널 입력 계약이라고 판단하지 않는다.
+**dtype(data type)은** 각 원소의 저장·계산 자료형이다. 이 예제의 BF16은 16비트 부동소수점이므로 FP32(Float32) 값을 바꾸면 반올림이 생길 수 있다. **stride**는 각 축의 인덱스가 1 증가할 때 저장 공간에서 몇 원소 이동하는지 나타낸다. 일반적인 연속 배열 `x[4,8]`은 stride `[8,1]`이다. **contiguous**는 요구하는 순서대로 원소가 연속해 놓인 상태다. 같은 숫자와 shape를 갖더라도 전치로 얻은 view는 stride가 다를 수 있다. 따라서 shape만 같다고 같은 커널 입력 계약이라고 판단하지 않는다.
 
-포팅 계약에는 원본 모델 revision, configuration, 실제 입력 shape·dtype·stride, 전후처리, mask 의미, 가변 길이 정책, 상태 변화가 들어간다. 예를 들어 같은 `aten.mm`이라도 BF16(Bfloat16) contiguous 행렬과 FP32(Float32) 비연속 view는 같은 시험이 아니다. 연산 이름이 같아도 크기·배치·메모리 계약이 달라지면 기존 EDF를 사용할 수 있는지 다시 판단해야 한다. [FHA feature 정의](https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/docs/AUTOMATED_PORTING.md) · [FuryNo5 입력 검사](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/execution_plan.py)
+포팅 계약에는 원본 모델 revision, configuration, 실제 입력 shape·dtype·stride, 전후처리, mask 의미, 가변 길이 정책, 상태 변화가 들어간다. 예를 들어 같은 `aten.mm`이라도 BF16 contiguous 행렬과 FP32 비연속 view는 같은 시험이 아니다. 연산 이름이 같아도 크기·배치·메모리 계약이 달라지면 기존 EDF를 사용할 수 있는지 다시 판단해야 한다. [FHA feature 정의](https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/docs/AUTOMATED_PORTING.md) · [FuryNo5 입력 검사](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/execution_plan.py)
 
 | 먼저 고정할 항목 | 예 | 왜 필요한가 |
 |---|---|---|
@@ -111,7 +111,7 @@ python -m forge_fxbex requests --cached --model 'hf:OWNER/MODEL'
 
 ## 4. 준비: 서로 맞는 소스를 설치한다
 
-공식 SDK(Software Development Kit)와 드라이버가 동작하는 Linux 환경에서 각 프로젝트의 호환 버전을 맞춘다. `pip install fxbx`가 최신 GitHub의 모든 기능을 포함한다고 가정하지 않는다. 아래는 이미 내려받은 세 checkout을 같은 SDK Python에 연결하는 **개발 환경 예**다. 의존성 설치를 생략하므로 필요한 SDK와 Python 패키지는 사전에 준비해야 한다. [FHA 설치 안내](https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/README.md) · [fxbX 패키지 설정](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/pyproject.toml)
+공식 SDK와 드라이버가 동작하는 Linux 환경에서 각 프로젝트의 호환 버전을 맞춘다. `pip install fxbx`가 최신 GitHub의 모든 기능을 포함한다고 가정하지 않는다. 아래는 이미 내려받은 세 checkout을 같은 SDK Python에 연결하는 **개발 환경 예**다. 의존성 설치를 생략하므로 필요한 SDK와 Python 패키지는 사전에 준비해야 한다. [FHA 설치 안내](https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/README.md) · [fxbX 패키지 설정](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/pyproject.toml)
 
 ```bash
 # -e는 checkout의 코드를 연결한다. --no-deps는 이미 준비한 SDK 의존성 설치를 생략한다.
@@ -128,7 +128,11 @@ SDK의 Python 환경과 CLI가 사용하는 Python이 다르면 import 성공과
 
 ## 5. 작은 모델을 생성하고 새 프로세스에서 실행한다
 
-다음은 저장소의 `examples/native_execution_plan.py`를 바탕으로 파일 전달과 두 입력 검증을 드러낸 학습용 예제다. 같은 SDK와 RNGD가 준비된 환경에서 실행한다. 모델은 MLP(Multilayer Perceptron), 즉 여러 선형 층과 비선형 함수를 이어 놓은 구조다. 먼저 파일을 만드는 `tiny_port.py`, 다음으로 파일만 받아 실행하는 `verify_tiny.py`를 작성한다. [FuryNo5 원래 예제](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/examples/native_execution_plan.py) · [export_model 옵션](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/execution_plan.py#L355-L381)
+이 실습은 파일을 만드는 프로그램과 그 파일을 받아 실행하는 프로그램을 나눈다. 첫 프로그램이 끝난 뒤에도 둘째 프로그램이 같은 가중치와 입력으로 같은 답을 얻는지 확인하는 것이 목적이다.
+
+작은 모델은 Linear 층 두 개 사이에 음수를 0으로 바꾸는 ReLU를 둔다. Linear는 입력을 곱하고 더해 새 값들을 만드는 층이다. 이런 층을 이어 놓은 신경망을 MLP라고 부른다.
+
+`tiny_port.py`가 패키지·가중치·비교 사례를 저장하고 `verify_tiny.py`가 세 파일을 읽는다. 같은 SDK와 RNGD가 준비된 환경에서 실행하며, 소스의 `native_execution_plan.py`를 바탕으로 구성한 예다. [FuryNo5 원래 예제](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/examples/native_execution_plan.py) · [export_model 옵션](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/execution_plan.py#L355-L381)
 
 실습 파일: [tiny_port.py](../examples/porting/tiny_port.py), [verify_tiny.py](../examples/porting/verify_tiny.py). 같은 작업 디렉터리에 두고 아래 순서로 실행한다.
 
@@ -252,7 +256,7 @@ flowchart TB
 
 ## 6. FHA를 경유해 같은 역할을 호출한다
 
-**bridge**는 한 라이브러리의 호출을 다른 라이브러리의 API(Application Programming Interface)로 연결하는 얇은 함수다. C 함수가 다른 동적 라이브러리의 함수를 호출하는 것과 비슷하다. FHA의 bridge는 모델과 옵션을 받아 FuryNo5에 전달하고 보고서를 돌려준다. 여기서 `model`은 앞 절의 Torch module, `output`은 출력 경로, `options`는 입력 예시·동시 작업 수 등의 keyword 인자 사전이다. 다음은 `forge_fxbex/native.py` 함수 내부에서 **설명 주석을 추가한 발췌**이며 주변 함수 정의와 옵션 정규화는 생략했다.
+**bridge**는 한 라이브러리의 호출을 다른 라이브러리의 API로 연결하는 얇은 함수다. C 함수가 다른 동적 라이브러리의 함수를 호출하는 것과 비슷하다. FHA의 bridge는 모델과 옵션을 받아 FuryNo5에 전달하고 보고서를 돌려준다. 여기서 `model`은 앞 절의 Torch module, `output`은 출력 경로, `options`는 입력 예시·동시 작업 수 등의 keyword 인자 사전이다. 다음은 `forge_fxbex/native.py` 함수 내부에서 **설명 주석을 추가한 발췌**이며 주변 함수 정의와 옵션 정규화는 생략했다.
 
 ```python
 # 함수 내부: 실제 패키지 생산자를 다른 이름 export로 import한다.
@@ -345,7 +349,9 @@ python -m forge_fxbex.native inspect ./repacked.fxb
 
 ## 7. 실제 모델로 확장할 때는 경계를 찾는다
 
-전체 모델이 막히면 operator 이름 목록만 수집하는 것보다 실패하는 **정확한 특징**을 뽑는다. 입력 tensor의 shape·dtype·stride, scalar attribute, alias·mutation, mask, 원본 layer 위치를 보관한다. 같은 특징이 여러 layer에 반복되면 한 번의 공통 구현과 검증으로 연결하되, 서로 다른 shape를 같은 성공으로 묶지 않는다. [특징 추출·중복 제거 절차](https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/docs/AUTOMATED_PORTING.md)
+전체 모델이 막히면 처음 실패한 작은 계산을 먼저 떼어 낸다. 예를 들어 ‘전치한 배열을 더할 때 실패한다’면 입력 크기, 숫자 형식, 메모리 읽기 간격과 실제 값을 남긴다. 단순히 ‘add 미지원’이라고 적는 것보다 재현하기 쉽다.
+
+같은 문제가 여러 층에서 반복된다면 공통 구현 하나로 해결할 기회가 있다. 하지만 크기가 같아도 원본 배열을 직접 바꾸는지, 같은 저장 공간을 공유하는지, 일부 위치를 제외하는 마스크가 있는지는 다를 수 있다. 실패 조건을 구별해 보관해야 한다. [특징 추출·중복 제거 절차](https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/docs/AUTOMATED_PORTING.md)
 
 예를 들어 `torch.mm(a, b)`가 실패했다고 하자. `a[2,3] @ b[3,2]`는 수학적으로 정의되지만, 지원 규칙이 BF16 연속 배열만 허용하면 FP32 입력이나 전치 view는 다른 계약이다. 다음 표처럼 **값의 의미**, **장치에 건네는 규격**, **실패 단계**를 분리해야 수정 지점이 드러난다.
 
@@ -398,7 +404,9 @@ skill은 **FuryNo5가 패키지와 실행 계약을 만들고, FHA가 준비·�
 
 ## 9. 완료의 정의를 보고서에 남긴다
 
-정적 모델에서는 입출력 변경, 반복 호출, 새 프로세스 재적재가 핵심이다. **상태 모델**은 이전 호출에서 만든 값을 다음 호출에 다시 사용하는 모델이다. 언어 모델의 KV(Key–Value) cache는 앞 토큰의 attention용 key·value tensor를 보관하는 예다. 이런 모델에서는 두 요청의 상태가 섞이지 않는지, reset이 원래 의미를 복구하는지, prefill(입력 토큰들을 처음 처리하는 단계)과 decode(다음 토큰을 순차 생성하는 단계)가 같은 상태 규격을 쓰는지까지 필요하다. 입력 길이 하나가 통과했다고 모델 configuration의 전체 문맥 길이가 검증된 것은 아니다. [요청 상태 처리](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py) · [FHA native 전환 경계](https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/docs/NATIVE_FXB_TRANSITION.md)
+한 번 답이 맞았다고 포팅을 끝내지는 않는다. 입력 값을 바꿔 다시 호출하고, 프로그램을 종료한 뒤 파일을 새 프로세스에서 읽어도 같은 답이 나오는지 확인한다.
+
+호출 사이에 이전 결과를 보관하는 모델은 한 가지 확인이 더 필요하다. 언어 모델의 KV Cache처럼 앞 토큰 정보를 유지할 때, 요청 A의 상태를 요청 B가 쓰지 않는지와 초기화가 올바른지 본다. 속도를 재려고 준비한 실행이 상태를 먼저 바꿔 버릴 수도 있다. [요청 상태 처리](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py) · [FHA native 전환 경계](https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/docs/NATIVE_FXB_TRANSITION.md)
 
 보고서에는 다음을 별도로 기록한다.
 
@@ -454,7 +462,7 @@ python -m forge_fxbex publish ./verified-model.fxbex \
 
 마지막 명령은 인증된 HF 계정과 FuryAwesome 쓰기 권한을 사용해 실제 공개 게시를 수행하며 대화형 확인을 거친다. 이미 같은 패키지와 범위의 게시가 승인된 자동화에서만 `--yes`로 대화형 확인을 생략한다. 이 옵션은 파일 해시와 라이선스 검토 조건을 없애지 않는다. `--no-catalog`는 HF 업로드를 유지하면서 FuryAwesome 갱신만 제외한다. 새 바이트를 기존 릴리스에 덮어쓰지 않고, 실패한 목적지는 `.publication-state.json`의 완료 기록을 이용해 재시도한다. [게시·재시도 구현](https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/forge_fxbex/publish.py#L195-L288)
 
-현재 코드에서 OpenFury Hub는 기본적으로 FuryAwesome을 읽는 뷰어로 취급한다. 오래된 Hub API(Application Programming Interface) 등록은 `OPENFURY_LEGACY_HUB_API=1`로 명시한 경우에만 사용하는 호환 경로다. 같은 commit의 `docs/PUBLISHING.md`에는 이전 Hub API 흐름도 남아 있으므로, 이 장의 기본 공유 경로는 실제 코드에 맞춰 **HF 파일 배포 + FuryAwesome 메타데이터**로 설명한다. [현재 기본 동작](https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/forge_fxbex/publish.py#L214-L218)
+현재 코드에서 OpenFury Hub는 기본적으로 FuryAwesome을 읽는 뷰어로 취급한다. 오래된 Hub API 등록은 `OPENFURY_LEGACY_HUB_API=1`로 명시한 경우에만 사용하는 호환 경로다. 같은 commit의 `docs/PUBLISHING.md`에는 이전 Hub API 흐름도 남아 있으므로, 이 장의 기본 공유 경로는 실제 코드에 맞춰 **HF 파일 배포 + FuryAwesome 메타데이터**로 설명한다. [현재 기본 동작](https://github.com/smallstep-zzz/Furiosa-Hug-Anything/blob/8fc675f488763bef7c779ee037e8393ddd9f856a/forge_fxbex/publish.py#L214-L218)
 
 ### 실행 계획 패키지의 카탈로그 등록
 

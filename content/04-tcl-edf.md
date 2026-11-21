@@ -2,9 +2,7 @@
 
 > **전체 경로에서의 위치**
 >
-> 행렬곱 표현 → **TCL 생성·TCC 컴파일·EDF 적재** → SDK 실행
->
-> 입력 두 개와 출력 하나인 커널을 끝까지 따라간다. 계산 소스, EDF bytes, 실행 객체, 실제 tensor는 서로 다른 대상이다. 여러 커널의 연결을 모델로 확장하는 단계는 [05장](05-graphs-fallback.md)에 있다.
+> 계산 하나를 작성해 장치용 프로그램으로 바꾸고, 실제 숫자를 넣어 답을 확인한다. 여러 계산을 연결하는 방법은 [05장](05-graphs-fallback.md)에서 다룬다.
 
 이 장의 목표는 작은 행렬곱을 읽고, 같은 계산을 TCL(Tensor Contraction Language)로 선언한 뒤 **소스 작성 → 크기 결정 → 컴파일 → 적재 → 실행 → 정답 확인**까지 구분하는 것이다. 처음부터 NPU(Neural Processing Unit)의 명령어를 알아야 하는 것은 아니다. 먼저 CPU(Central Processing Unit)에서 무엇을 계산하려는지 분명히 하고, 그 계산을 TCL에 전달한다.
 
@@ -108,13 +106,19 @@ def matmul_smoke(
     return bf16_dot(left, right, [M, N]) # 출력: M행 N열, K는 축약됨
 ```
 
-`M,K,N`은 TCL이 해석할 상징 축이다. 상징적이라는 말은 아직 32·128·64 같은 실제 길이를 대입하지 않았다는 뜻이다. `from __future__ import annotations`는 Python이 annotation을 즉시 일반 값으로 평가하지 않도록 하는 이 예제의 전제다. 함수 본문과 annotation은 TCL 경로에서 해석되므로, 일반 Python 함수처럼 그대로 호출해 값을 얻는 예로 취급하지 않는다. 이 예제의 지연 annotation을 임의로 제거하거나, 같은 이름의 Python 정수로 바꿔 넣지 않는다. 커널을 구체적인 형상으로 만드는 단계에서 축 크기를 전달한다. `to=[M,N]`은 출력 축을 지정하며 `K`가 축약된다. 마지막 typecast는 출력 저장 형식을 BF16으로 정한다. BF16 입출력이라고 해서 모든 중간 단계가 반드시 BF16인 것은 아니다.
+위 코드의 M·K·N은 아직 정하지 않은 길이의 이름이다. 나중에 M=32, K=128, N=64를 넣으면 입력과 출력의 크기가 확정된다. 출력에 M·N만 남긴다는 `to=[M,N]`은 K 방향으로 곱한 값들을 더하라는 뜻이다.
+
+`from __future__ import annotations`는 Python이 이 길이 이름을 즉시 일반 변수로 계산하지 않도록 한다. 따라서 이 줄을 지우거나 M·K·N을 임의의 Python 정수로 바꾸지 않는다. TCL이 해석할 표기다.
+
+마지막 typecast는 결과를 BF16 형식으로 저장한다는 뜻이다. 입출력이 BF16이라고 중간 계산도 모두 같은 형식이라고 단정할 수는 없다.
 
 공식 개발자 소개 페이지는 `tcl.bf16[M,K]` 및 `out=`처럼 다른 시기의 짧은 표기도 보여준다. 이 핸드북의 실습은 **FuryNo5 소스에서 확인한 `tcl.Tensor[...]` 및 `to=` 경로**를 사용한다. API 표기를 서로 섞지 말고 설치된 SDK에 맞춘다. [공식 개발자 페이지](https://furiosa.ai/developers)
 
 ## 3. 축의 길이를 정하고 TCL 텍스트를 저장한다
 
-IR(Intermediate Representation, 중간 표현)은 컴파일러가 계산의 입력·출력·연산·축을 검사하기 좋은 형태로 적은 프로그램이다. **특수화(specialization)는** 추상적인 축 M·K·N에 실제 길이를 대입해 구체적인 한 커널을 만드는 과정이다. 여기서는 특수화한 TCL 커널의 `.dsl`을 파일로 내보낸다. 다음 스크립트는 커널이 정의된 파일과 같은 디렉터리에 둔다.
+앞 코드에는 M·K·N이라는 길이 이름만 있었다. 이제 `{"M":32,"K":128,"N":64}`를 넣어 ‘왼쪽 32×128, 오른쪽 128×64, 출력 32×64’인 한 가지 프로그램을 준비한다. 이렇게 실제 길이를 대입하는 일이 **특수화(specialization)다**.
+
+처음의 2×3 행렬은 손으로 답을 확인하는 예였고, 여기서는 소스·컴파일·실행을 잇는 실습 크기를 사용한다. 작은 배열 예와 같은 행렬곱 규칙이 적용된다. 다음 스크립트는 아직 입력 숫자를 계산하지 않고 TCL 텍스트를 파일에 저장한다.
 
 ```python
 # emit_tcl.py — NPU 실행을 하지 않고 TCL 소스를 생성한다.
@@ -210,7 +214,9 @@ flowchart TB
 | `sdk.MeshKind.Single()` | SDK의 mesh 구성 선택값. mesh는 실행 자원을 구성하는 방식에 관한 별도 항목 | 이 consumer가 확인한 조합은 `fusion=8, mesh=single`이다. |
 | `"furiosa:0"` | 실행 객체와 tensor를 보낼 SDK의 논리 장치 식별자 | 실행 객체와 두 입력을 모두 같은 식별자로 보낸다. |
 
-이 표에서 `8`은 커널 8개나 사용자 요청 8개가 아니고, `0`은 PE 번호가 아니다. `Single`의 모든 내부 배치 규칙이나 논리 장치 번호와 물리 카드 번호의 일반 대응까지 공개 계약으로 확인한 것은 아니다. 따라서 여기서는 이름을 해석해 다른 조합을 만들지 않고, producer와 consumer가 검사한 동일 조합을 유지한다. fxbX의 해당 구현도 장치 식별자 `furiosa:0`과 계획의 `{'fusion': 8, 'mesh': 'single'}`을 제한 조건으로 검사한다. [EDF의 fusion 검사](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/tcl_compiler.py#L112-L134), [fxbX 장치 구성 계약](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py#L158-L161), [지원 장치 식별자와 적재](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py#L307-L422)
+이 실습의 `8`은 장치 안에서 함께 사용할 PE 수이고, `furiosa:0`의 0은 실행 대상을 가리키는 논리 장치 번호다. 커널 여덟 개를 만들거나 PE 0 하나만 쓴다는 뜻이 아니다.
+
+현재 fxbX 소비자는 `fusion=8, mesh=single`과 `furiosa:0` 조합을 검사한다. 예제를 바꿀 때는 이 조건을 먼저 확인한다. Single의 내부 배치나 논리 장치 번호와 실제 카드 번호의 일반 대응을 이름만 보고 추정하지 않는다. [EDF의 fusion 검사](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/tcl_compiler.py#L112-L134) · [fxbX 장치 구성 계약](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py#L158-L161) · [지원 장치 식별자와 적재](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py#L307-L422)
 
 ```python
 # run_edf.py — NPU와 호환 SDK가 필요하다.

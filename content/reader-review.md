@@ -1,13 +1,40 @@
 # 핵심 질문과 해설
 
-모델의 계산부터 장치 실행과 서빙까지, 각 장의 핵심을 질문으로 확인한다. 답을 먼저 생각해 본 뒤 항목을 펼쳐 해설과 관련 절을 읽어 보자. 코드의 실행 환경과 검증 범위는 [실행 전 확인사항](review.md)에 모았다.
+각 질문은 작은 예부터 시작한다. 처음 읽는 항목도 그 자리에서 뜻을 따라갈 수 있도록 필요한 배경을 함께 설명한다. 더 긴 코드와 구현은 항목 끝의 연결 장에서 이어 읽을 수 있다.
 
 ## 계산과 메모리
 
 <details class="reader-review-item">
 <summary>모델·커널·학습·추론은 서로 무엇이 다른가?</summary>
 
-모델은 입력에서 출력을 만드는 계산 규칙과 그 규칙의 가중치·bias를 함께 가리킨다. x는 요청마다 달라질 입력이고 W와 b는 일반 추론에서 재사용하는 매개변수다. y=ReLU(xW+b)를 한 번 계산하는 것은 추론, 정답과 비교해 W·b를 조정하는 것은 학습이다. 장치 함수인 커널은 곱셈·덧셈·ReLU를 각각 나누거나 묶을 수 있으므로 수학 기호 수만으로 커널 수를 정할 수 없다.
+다음 세 쌍을 보자. 왼쪽은 넣은 숫자이고 오른쪽은 원하는 답이다.
+
+| 넣은 숫자 | 원하는 답 |
+|---:|---:|
+| 1 | 3 |
+| 2 | 5 |
+| 3 | 7 |
+
+이 예에는 ‘넣은 숫자에 2를 곱하고 1을 더한다’는 규칙이 맞는다.
+
+```python
+def model(number):
+    return number * 2 + 1
+
+print(model(4))  # 9
+```
+
+여기서 **모델(model)은** 이 계산 방법과 계산에 사용하는 숫자 2와 1을 함께 말한다. 실제 모델은 훨씬 많은 계산과 숫자를 사용하지만, 입력을 받아 결과를 만든다는 점은 같다.
+
+예제의 답을 보고 ‘얼마를 곱하고 얼마를 더해야 할까’를 찾아 조정하는 과정이 **학습(training)이다**.
+
+이미 찾은 2와 1을 사용해 새 입력 4의 답 9를 구하는 것은 **추론(inference)이다**.
+
+곱하는 수를 **가중치(weight)**, 더하는 수를 **바이어스(bias)라고** 부른다. 처음에는 두 수의 역할만 구분하면 된다.
+
+![예제의 정답으로 규칙을 찾는 학습과 새 입력에 규칙을 사용하는 추론](assets/diagrams/model-basics.svg)
+
+**커널(kernel)은** 장치가 실행하는 계산 함수다. 이 모델을 NPU에서 실행할 때 곱셈과 덧셈을 한 커널로 처리할 수도, 두 커널로 나눌 수도 있다. 모델은 ‘어떤 결과를 구하는가’, 커널은 ‘장치에서 어떤 작업 단위로 처리하는가’를 설명한다.
 
 **이어서 읽기:** [이 책을 읽는 방법](00-reading-map.md) — 모델·커널·추론을 함수 하나로 구별해 보자
 
@@ -16,7 +43,15 @@
 <details class="reader-review-item">
 <summary>ATen·TCL·EDF·FXB·Runnable은 각각 어떤 종류의 것인가?</summary>
 
-ATen은 계산 이름과 호출 계약을 제공하는 PyTorch 연산 계층, TCL은 커널 표현 언어다. 컴파일러가 그 표현에서 EDF bytes를 만들고 FXB/fxbX는 실행물과 설명을 묶는다. Runnable은 파일 이름이나 소스 언어가 아니라 적재한 프로그램·장치 자원을 사용해 호출할 SDK 객체다. 따라서 소스 작성, 컴파일 산출물의 보관·전달, 실행 시 적재·호출을 구분할 수 있다. 동일한 EDF 이름도 SDK와 opt의 바이너리 ABI·상호 적재를 보장하지 않는다고 본문에서 제한한다.
+숫자 두 배열을 더하는 프로그램을 NPU에서 실행한다고 생각해 보자. 다음 이름들은 같은 것의 다른 이름이 아니라, 준비와 실행의 서로 다른 단계다.
+
+- **ATen**: PyTorch가 ‘이 두 배열을 더하라’고 요청할 때 사용하는 연산 계층이다.
+- **TCL**: 그 계산을 컴파일러에 설명하는 언어다. 개발자는 계산할 축과 연산을 적는다.
+- **EDF**: 컴파일러가 계산 설명을 NPU용으로 바꾼 결과다. 파일로 저장할 수 있다.
+- **FXB·fxbX**: 실행물과 관련 설명을 전달하기 위한 묶음이다. fxbX는 비공식 프로젝트다.
+- **Runnable**: 프로그램이 실행 중에 사용하는 SDK 객체다. 준비된 계산에 실제 입력을 넣어 호출한다.
+
+‘계산을 적기 → 컴파일 결과를 저장하기 → 읽어 실행하기’ 순서로 놓으면 각 이름의 자리가 보인다. 같은 EDF라는 명칭만으로 서로 다른 실행기의 파일 호환성까지 보장되지는 않는다.
 
 **이어서 읽기:** [이 책을 읽는 방법](00-reading-map.md) — 같은 NPU로 가는 서로 다른 길
 
@@ -25,7 +60,11 @@ ATen은 계산 이름과 호출 계약을 제공하는 PyTorch 연산 계층, TC
 <details class="reader-review-item">
 <summary>M·N·K로 나눌 때 어떤 입력이 중복되고 부분합은 몇 개 생기는가?</summary>
 
-서로 저장소를 공유하지 않는 두 작업이라는 교육용 조건에서 M 분할은 A를 3+3=6개, W를 6+6=12개 준비한다. N 분할은 A를 6+6=12개, W를 3+3=6개 준비한다. K를 앞 두 항과 마지막 항으로 나누면 A·W 각각 4+2=6개를 준비하지만 각 작업이 같은 2×2 출력의 부분합을 만들어 총 8개 중간 값이 생긴다. [[1,2],[4,5]]와 [[3,3],[6,6]]을 같은 좌표끼리 더해 최종 4개 출력을 얻는다. 이는 실제 RNGD 전송 바이트 예측이 아니다.
+행렬곱의 출력은 숫자가 들어가는 표다. **M은 출력의 행 수, N은 출력의 열 수, K는 출력 한 칸을 만들 때 곱해서 더하는 항의 수**다.
+
+행을 나누면 두 작업은 다른 행의 답을 만든다. 대신 같은 가중치 표가 양쪽에 필요하다. 열을 나누면 다른 열의 답을 만들지만 같은 입력 행이 양쪽에 필요하다.
+
+K를 나누면 상황이 다르다. 한 칸의 답이 `1+3=4`인데 한 작업은 1, 다른 작업은 3까지만 계산한 것이다. 두 값을 더해야 4가 된다. 이처럼 아직 완성되지 않은 합을 **부분합**이라고 한다. 나누는 축에 따라 입력의 중복과 결과를 합치는 일이 달라진다.
 
 **이어서 읽기:** [RNGD 하드웨어](01-hardware.md) — 두 작업에 어떤 값을 각각 준비해야 하는가
 
@@ -34,7 +73,11 @@ ATen은 계산 이름과 호출 계약을 제공하는 PyTorch 연산 계층, TC
 <details class="reader-review-item">
 <summary>논리 행의 숫자 세 개와 32바이트 flit은 어떻게 연결되는가?</summary>
 
-FP32는 원소당 4바이트여서 32바이트 flit에 같은 형식의 값 8개, BF16은 2바이트여서 16개가 들어간다. 논리 shape (2,3)는 6개 원소의 좌표만 말하며, 어느 값을 묶고 패딩·반복을 어떻게 배치할지는 정하지 않는다. 따라서 행 하나가 반드시 flit 하나가 되는 것도 아니고 shape만으로 실제 전송 횟수를 확정할 수도 없다.
+행에 숫자가 세 개 있다는 것은 배열을 읽는 모양이다. 장치가 한 번에 옮기는 묶음의 크기는 별도로 정해진다. 이 문맥에서 **flit은 32바이트 크기의 전달 단위**다.
+
+숫자 하나를 4바이트에 저장하는 FP32라면 `32÷4=8`개, 2바이트에 저장하는 BF16이라면 `32÷2=16`개가 들어간다. 따라서 ‘행에 세 개니까 flit 하나를 꽉 채운다’고 말할 수 없다.
+
+남는 자리를 어떻게 취급하고 어느 값들을 함께 보낼지는 실제 배치 규칙으로 정한다. 배열의 행·열 수만 알아서는 전송 횟수까지 알 수 없다.
 
 **이어서 읽기:** [RNGD 하드웨어](01-hardware.md) — 공식 도식의 엔진 이름을 여기에서 해석하자
 
@@ -43,7 +86,11 @@ FP32는 원소당 4바이트여서 32바이트 flit에 같은 형식의 값 8개
 <details class="reader-review-item">
 <summary>행렬곱을 마친 뒤 Vector·Cast·Transpose는 언제 필요한가?</summary>
 
-순수 A@W의 첫 행은 [4,5]이며 bias 덧셈이나 ReLU를 수학적으로 요구하지 않는다. b=[-5,-2]를 더하는 모델은 [-1,3]을 만들고 ReLU가 [0,3]으로 바꾼다. 두 모델 모두 최종 자료형·배치 계약에 맞게 저장해야 하지만, 엔진 상자가 그림에 있다는 사실만으로 cast·transpose·덧셈이 항상 수행됐다고 말할 수 없다. 수학적 요구를 정한 뒤 실제 엔진 배치는 컴파일 결과로 확인한다.
+행렬곱의 답이 `[4,5]`라면 거기서 계산을 끝내는 모델도 있다. 다른 모델은 각 값에 보정값 `[-5,-2]`를 더해 `[-1,3]`을 만들고, 음수를 0으로 바꿔 `[0,3]`을 만든다. 마지막 처리를 **ReLU**라고 한다.
+
+**Vector**는 이런 원소별 계산 등을 처리하는 하드웨어, **Cast**는 숫자의 저장 형식을 바꾸는 처리, **Transpose**는 축이나 묶음의 순서를 바꾸는 처리와 관련된다.
+
+그림에 이 블록들이 있다고 매번 모두 값을 바꾼다는 뜻은 아니다. 모델이 요구하는 계산과 다음 단계가 받을 데이터 형식에 따라 필요한 처리가 달라진다.
 
 **이어서 읽기:** [RNGD 하드웨어](01-hardware.md) — 공식 도식의 엔진 이름을 여기에서 해석하자
 
@@ -52,7 +99,11 @@ FP32는 원소당 4바이트여서 32바이트 flit에 같은 형식의 값 8개
 <details class="reader-review-item">
 <summary>view 한 칸을 수정하면 원본과 복사본에는 무엇이 보이는가?</summary>
 
-xt=x.T이므로 xt[0,1]은 x[1,0]과 같은 주소의 값 4를 읽는다. xt[0,1]=40을 수행하면 x[1,0]도 40으로 보이지만 packed[0,1]은 별도 저장소에 미리 복사한 값 4를 유지한다. 예제는 old_value를 저장하고 마지막에 x[1,0]을 복구해 뒤 예제의 원본 배열을 유지한다. alias는 같은 데이터를 가리키는 관계이지 객체 이름이 같다는 뜻이 아니다.
+원본이 `[[1,2,3],[4,5,6]]`이라고 하자. 전치한 배열은 `[[1,4],[2,5],[3,6]]`처럼 읽힌다. 이때 새로 값을 복사하지 않고 **같은 저장 공간을 다른 순서로 읽는 view**를 만들 수 있다.
+
+그 view에서 첫 행의 두 번째 값 4를 40으로 바꾸면 원본의 4도 40이 된다. 두 이름으로 같은 위치를 가리키기 때문이다. 반면 전치한 값을 별도 공간에 복사해 두었다면 복사본의 4는 그대로다.
+
+같은 저장 공간을 가리키는 관계를 **alias**라고 한다. 값이 같은 복사본과는 구분해야 한다.
 
 **이어서 읽기:** [메모리와 DMA](02-memory-dma.md) — 3. stride를 보면 주소 계산이 보인다
 
@@ -61,7 +112,11 @@ xt=x.T이므로 xt[0,1]은 x[1,0]과 같은 주소의 값 4를 읽는다. xt[0,1
 <details class="reader-review-item">
 <summary>각 열에 더하는 값과 각 행에 더하는 값을 어떻게 표현하는가?</summary>
 
-broadcasting은 오른쪽 축부터 비교하므로 (2,3)+(2,)는 마지막 길이 3과 2가 서로 다르고 어느 쪽도 1이 아니어서 실패한다. [10,20]을 (2,1)로 해석하면 행 길이 2는 일치하고 열 방향 길이 1을 3칸에 반복 적용한다. 첫 행은 [11,12,13], 둘째 행은 [24,25,26]이다. 이 reshape는 원소 순서를 바꾸는 전치 대체가 아니라 반복할 축의 위치를 나타낸다.
+두 행 `[[1,2,3],[4,5,6]]`에 열별 보정값 `[10,20,30]`을 더하면 `[[11,22,33],[14,25,36]]`이 된다. 같은 세 값을 각 행에 반복 적용한다. 이 반복 적용 규칙이 **broadcasting**이다.
+
+행별로 10과 20을 더하려면 `[[10],[20]]`처럼 각 행에 값 하나가 있다는 모양을 알려준다. 결과는 `[[11,12,13],[24,25,26]]`이다. NumPy에서는 길이 2인 배열에 `reshape(2,1)`을 적용해 이 모양을 만든다.
+
+`[10,20]`만 전달하면 열의 길이 3과 맞지 않는다. ‘무엇을 반복할 것인가’를 배열 모양으로 표현하는 것이 핵심이다.
 
 **이어서 읽기:** [메모리와 DMA](02-memory-dma.md) — 같은 작은 값을 여러 행에 더할 때: broadcasting
 
@@ -70,7 +125,11 @@ broadcasting은 오른쪽 축부터 비교하므로 (2,3)+(2,)는 마지막 길�
 <details class="reader-review-item">
 <summary>두 버퍼를 번갈아 쓰면 언제 덮어쓰기를 피할 수 있는가?</summary>
 
-타일 1은 장치 버퍼0을 0~3ms에 채우고 3~8ms에 읽는다. 타일2는 별도 버퍼1을 5~8ms에 채워 겹친다. 버퍼0을 타일3에 다시 쓸 때는 타일1의 마지막 입력 읽기가 끝나야 하며, 표에서는 8ms에 끝난 뒤 10~13ms에 새 DMA가 쓴다. 네 계산의 완료는 8,13,18,23ms다. 비동기 DMA 제출 함수가 반환됐다는 사실만으로 이전 계산의 마지막 읽기 완료를 알 수 없다. 호스트 업로드 원본은 DMA의 마지막 읽기, 장치 입력 버퍼는 계산의 마지막 읽기라는 서로 다른 수명을 따른다.
+버퍼는 데이터를 담아 둔 메모리 공간이다. 입력 A를 버퍼 0에서 읽어 계산하는 동안, 다음 입력 B는 버퍼 1에 넣을 수 있다.
+
+다음 입력 C를 버퍼 0에 넣기 전에는 **A를 계산하는 작업이 그 버퍼를 더 이상 읽지 않는지** 확인해야 한다. A의 마지막 읽기가 8ms에 끝났다면 C를 10ms에 쓰는 것은 이 조건을 만족한다. 7ms에 덮어쓰면 A와 C의 값이 섞일 수 있다.
+
+전송 요청 함수가 돌아온 시각과 데이터 사용이 끝난 시각은 다를 수 있다. 호스트 원본은 업로드가 읽는 동안, 장치 입력은 계산이 읽는 동안 각각 유지해야 한다.
 
 **이어서 읽기:** [메모리와 DMA](02-memory-dma.md) — 두 버퍼를 시간표에 직접 붙여 보자
 
@@ -79,7 +138,11 @@ broadcasting은 오른쪽 축부터 비교하므로 (2,3)+(2,)는 마지막 길�
 <details class="reader-review-item">
 <summary>체크포인트와 실행 바이너리는 어떻게 다르고, TRF·VRF의 file은 무엇인가?</summary>
 
-가중치는 계산에 쓰는 수치이고 모델에는 계산 구조도 필요하므로, 체크포인트 가중치 파일 자체가 실행할 NPU 바이너리는 아니다. 별도 외부 weight 계약을 쓰는 경로에서는 실행물과 그 수치를 올바르게 연결해야 한다. 모든 형식이 반드시 weight를 분리한다고 일반화하지 않는다. TRF와 VRF의 file은 디스크 파일이 아니라 계산 가까이에서 값을 보관·재사용하는 하드웨어 레지스터 저장소다.
+학습으로 찾은 수치들을 저장한 파일을 **체크포인트(checkpoint)라고** 부른다. ‘2를 곱하고 1을 더한다’는 모델이라면 2와 1 같은 값에 해당한다. 이 수치를 어느 계산에 사용할지 정한 모델 구조도 필요하다.
+
+NPU 실행 바이너리는 그 계산을 장치가 실행하도록 컴파일한 결과다. 수치를 저장한 파일과 역할이 다르며, 실행 경로에 따라 가중치를 바이너리 밖에서 따로 전달하기도 한다.
+
+TRF·VRF의 **Register File**에서 file은 디스크 파일이 아니다. 계산 가까이에서 값을 잠시 보관하는 하드웨어 레지스터들의 묶음이다.
 
 **이어서 읽기:** [용어 사전](glossary.md) — 모델을 구성하고 실행하는 기초 / 장치와 메모리
 
@@ -90,7 +153,11 @@ broadcasting은 오른쪽 축부터 비교하므로 (2,3)+(2,)는 마지막 길�
 <details class="reader-review-item">
 <summary>x+1이 IR이 되면 무엇이 생기며 lowering은 무엇을 더하는가?</summary>
 
-입력 %x(shape [4], int32), 상수 %one=1, 원소별 덧셈 %y, return %y로 값과 의존성을 표현한다. 더 낮은 표현에서는 x[0:2]·x[2:4] 타일, 임시 입력·출력 버퍼, 입력 이동→덧셈→쓰기의 완료 의존성을 추가한다. % 이름은 값 ID이며 주소가 아니다. 본문의 표기는 교육용 IR이고 실제 Furiosa 문법·pass 출력이 아니다.
+`x=[3,7]`의 각 값에 1을 더하고 싶다고 하자. 컴파일러도 먼저 ‘입력 x가 있고, 상수 1이 있고, 둘을 더한 결과를 반환한다’는 관계를 표현한다. 이런 컴파일러용 표현을 **IR(중간 표현)이라고** 한다.
+
+그다음 실제 장치에서 처리할 만큼 구체적으로 바꾼다. 예를 들어 입력을 몇 개씩 가져올지, 임시 결과를 어디에 둘지, 읽기가 끝난 뒤 언제 덧셈을 시작할지 정한다. 이처럼 장치 실행에 가까운 표현으로 내리는 과정을 **lowering**이라고 한다.
+
+계산의 답은 같게 유지하면서 실행 방법을 구체화하는 것이다. 본문의 `%x` 같은 이름은 값을 구별하는 표식이며 메모리 주소 자체가 아니다.
 
 **이어서 읽기:** [드라이버부터 런타임까지](03-driver-runtime.md) — 2. 컴파일러: 수식만으로는 정해지지 않은 일을 정한다
 
@@ -99,7 +166,11 @@ broadcasting은 오른쪽 축부터 비교하므로 (2,3)+(2,)는 마지막 길�
 <details class="reader-review-item">
 <summary>8 PE, Single mesh, furiosa:0의 8·Single·0은 무엇을 고르는가?</summary>
 
-renegade-8pe는 EDF를 만들 compiler target이고, set_fusion(8)은 SDK에 요청하는 PE 결합 수이므로 복원된 expected_num_fusion=8과 맞춘다. MeshKind.Single은 별도의 mesh 구성 선택이며 이 소비자가 확인한 조합은 fusion=8, mesh=single이다. furiosa:0은 논리 장치 ID이며 PE 0을 뜻하지 않는다. target이나 구성을 바꾸면 EDF의 fusion·입출력 ABI, consumer가 수용하는 구성, 실행 객체와 입력의 장치 일치를 다시 확인한다. Single의 내부 토폴로지와 논리 ID→물리 카드의 일반 대응은 공개 확인 범위 밖이라고 본문이 제한한다.
+한 RNGD에는 **PE라는 처리 단위가 8개** 있다. 이 실습은 그 8개를 묶어 쓰는 프로그램을 만든다.
+
+`renegade-8pe`는 컴파일 대상, `set_fusion(8)`은 실행할 때 요청하는 PE 묶음 설정이다. 두 설정이 맞아야 한다. 여기의 fusion은 여러 수학 연산을 하나로 합친다는 뜻과 구분한다.
+
+`MeshKind.Single()`은 SDK의 자원 구성 선택값이다. 이 예제와 소비자가 받아들이는 조합은 `fusion=8, mesh=single`이다. `furiosa:0`은 실행 객체와 입력을 보낼 논리 장치 이름이다. PE 0 하나를 뜻하지 않는다. 다른 구성을 쓰려면 프로그램과 소비자 양쪽의 지원 조건부터 확인한다.
 
 **이어서 읽기:** [TCL에서 EDF까지](04-tcl-edf.md) — 5. EDF를 적재하고 실제 데이터를 넣어 실행한다 / `8`, `Single`, `0`은 서로 다른 설정이다
 
@@ -108,7 +179,11 @@ renegade-8pe는 EDF를 만들 compiler target이고, set_fusion(8)은 SDK에 요
 <details class="reader-review-item">
 <summary>실제 실행계획 파일에서 값의 생산자와 소비자를 어떻게 읽는가?</summary>
 
-inspect_execution_plan.py로 read_execution_plan(package)의 entries.forward.steps를 순회한다. step.kernel은 plan.kernels의 EDF member를 고르고, step.outputs에 기록한 값 ID를 뒤 step.inputs에서 다시 읽으면 생산자→소비자 연결이다. plan.tensors[value_id]가 shape·dtype·stride·역할을, entry.outputs가 반환 값을 준다. origin 표로 호출 입력·parameter·state·앞 step 출력을 구별한다. 같은 shape라도 다른 ID로 바꾸면 다른 값의 의존성이 되어 프로그램 의미가 바뀐다. 구체적인 ID와 step 수는 해당 package의 관찰 결과이며, 본문은 새로 관측하지 않은 출력 이름을 꾸며 넣지 않는다.
+덧셈이 만든 결과에 `sum1`이라는 이름을 붙였다고 하자. 다음 ReLU 단계의 입력에도 `sum1`이 적혀 있다면 ‘덧셈 결과를 ReLU가 받는다’는 뜻이다. 이 이름을 **값 ID**라고 한다.
+
+실제 파일에서는 각 단계의 `outputs`와 다음 단계의 `inputs`에서 같은 ID를 찾는다. `kernel`은 그 단계에서 사용할 프로그램을 고르고, tensor 설명은 그 값의 크기와 자료형을 알려준다.
+
+크기가 같은 값도 서로 바꿔 넣으면 다른 계산이 된다. 따라서 크기뿐 아니라 이름의 연결을 따라 읽는다. `inspect_execution_plan.py`는 완성된 패키지에서 이 내용을 읽어 주며, 모델을 실행하지는 않는다.
 
 **이어서 읽기:** [실행그래프와 실패 경계](05-graphs-fallback.md) — 5. 실행계획과 EDF를 함께 만들고 전달한다 / 저장한 package에서 실제 값 ID를 따라 읽기
 
@@ -117,7 +192,11 @@ inspect_execution_plan.py로 read_execution_plan(package)의 entries.forward.ste
 <details class="reader-review-item">
 <summary>절대·상대 허용오차는 값 0과 100에 어떤 차이를 허용하는가?</summary>
 
-각 원소에 abs(actual−expected) ≤ atol + rtol×abs(expected)를 적용한다. atol=rtol=0.02에서 expected=0이면 허용 차이는 0.02, expected=100이면 2.02다. 0 근처에서는 상대항이 0 또는 매우 작아 절대 허용량의 역할이 커진다. 이 값은 작은 BF16 예제의 판정 설정이며 모든 모델의 품질 기준이 아니다. 수치 일치와 NPU 실행 증거도 별도다.
+컴퓨터 계산은 숫자 저장 방식 때문에 기준 답과 조금 다를 수 있다. **허용오차**는 그 차이를 어디까지 받아들일지 정한 기준이다.
+
+절대 허용오차 0.02는 값의 크기에 관계없이 차이 0.02를 허용한다. 상대 허용오차 0.02는 기준값의 2%를 추가로 허용한다. 둘을 함께 쓰면 기준값 0에서 허용 차이는 0.02, 기준값 100에서는 `0.02+100×0.02=2.02`다.
+
+따라서 0 근처의 값과 큰 값에 미치는 영향이 다르다. 이 숫자는 작은 BF16 실습의 설정이다. 실제 모델에서는 출력의 의미와 품질 요구에 맞게 정해야 한다.
 
 **이어서 읽기:** [실행그래프와 실패 경계](05-graphs-fallback.md) — 5. 실행계획과 EDF를 함께 만들고 전달한다 / `atol=0.02, rtol=0.02`가 허용하는 차이
 
@@ -126,7 +205,11 @@ inspect_execution_plan.py로 read_execution_plan(package)의 entries.forward.ste
 <details class="reader-review-item">
 <summary>어느 trace 파일의 어떤 이름을 봐야 NPU Task 증거인가?</summary>
 
-앞서 만든 작은 MLP package에 observe_execution.py를 실행하고 small-mlp-trace-001.json의 traceEvents[].name을 본다. execution_plan::… 호스트 구간과 ::Task::execution_plan::… 장치 Task를 구별하며, 각 필수 계산 step 이름이 Task에 나타나야 한다. 정적 값 준비는 명시된 조건에서만 제외하고 run_by_cpu 기록도 검사한다. host=True, NPU Task=False이면 수치가 맞아도 해당 장치 실행 증거는 미확인으로 기록한다. 정적 schedule·SMI·단순 Task 개수는 이를 대신하지 않는다. step 추적은 sequence 경로를 바꾸므로 별도 무추적 성능 측정과 구분한다.
+출력이 맞아도 CPU가 계산했을 수 있다. NPU 실행을 확인하려면 **실행 중 어느 작업이 어느 장치에서 수행됐는지 남긴 기록**이 필요하다. 이 기록을 trace라고 한다.
+
+`observe_execution.py`는 앞 실습의 패키지를 한 번 실행하고 JSON 기록을 만든다. `execution_plan::…`은 호스트에서 해당 단계를 호출한 구간이고, `::Task::execution_plan::…`은 그 이름이 전달된 장치 작업이다.
+
+계획에서 필요한 계산 단계마다 대응하는 장치 기록이 있는지 확인한다. 호스트 기록만 있으면 NPU 실행을 확인한 것이 아니다. 전체 스크립트는 누락된 단계와 `run_by_cpu` 표식도 검사한다. 추적을 켜면 실행 경로에 비용이 더해질 수 있어 속도 측정은 따로 한다.
 
 **이어서 읽기:** [실행그래프와 실패 경계](05-graphs-fallback.md) — 7. CPU 사용과 NPU 계산의 증거를 따로 확인한다 / 방금 실행한 step을 공식 profiler 기록과 대조한다
 
@@ -135,7 +218,11 @@ inspect_execution_plan.py로 read_execution_plan(package)의 entries.forward.ste
 <details class="reader-review-item">
 <summary>준비한 버킷에 들어가지 않는 길이는 어떻게 처리하는가?</summary>
 
-입력 17은 후보 [8,16]이면 담을 버킷이 없어 명시적 초과 정책 또는 ValueError가 필요하다. 후보 [8,16,128]이면 가장 작은 호환 버킷 128을 고르고 패딩은 111이다. 120→128인 표의 행은 별도 후보 [128,256,512,1024]를 사용한다. 준비된 후보 집합이 다르므로 같은 표에 17의 거절과 120의 수용이 공존한다.
+길이 8과 16을 처리하는 프로그램만 준비했다고 하자. 입력 길이가 5라면 8칸짜리에 담을 수 있지만 17은 둘 중 어느 쪽에도 들어가지 않는다.
+
+이 경우에는 더 큰 프로그램을 준비하거나, 입력을 지원하지 않는다고 알려야 한다. 입력을 몰래 잘라 답을 바꾸면 안 된다.
+
+128칸짜리도 준비했다면 17을 넣을 수 있지만 111칸이 남는다. 이처럼 준비한 입력 크기의 집합을 **버킷 집합**이라고 한다. 수용할 수 있는 길이와 남는 공간이 그 집합에 따라 바뀐다.
 
 **이어서 읽기:** [Shape와 버킷 설계](06-buckets-shapes.md) — 1. 길이 하나만 다른 요청부터 처리해 본다
 
@@ -144,7 +231,11 @@ inspect_execution_plan.py로 read_execution_plan(package)의 entries.forward.ste
 <details class="reader-review-item">
 <summary>새 query에서 K·V의 무엇을 재사용하고 무엇을 다시 계산하는가?</summary>
 
-새 query와 과거 key를 내적해 위치별 점수를 만들고, softmax로 합이 1인 비중을 얻어 같은 위치의 value를 가중합한다. Q=1, K=[0,1], V=[10,30]이면 점수 [0,1], 비중 약 [0.269,0.731], 출력 약 24.621이다. Q=0이면 같은 K·V로 출력 20을 얻는다. 과거 K·V의 재계산을 아낄 뿐 새 Q의 비교·가중합은 다시 필요하다. 새 토큰의 K·V도 추가하므로 새 입력이 하나여도 긴 문맥의 과거 위치들을 읽어야 한다.
+문장을 이어 쓰는 모델은 새 토큰을 만들 때 앞 토큰들을 다시 참고한다. 앞 토큰마다 ‘비교에 쓸 정보’인 **K(key)와** ‘전달할 내용’인 **V(value)를** 계산해 보관한 것이 KV Cache다.
+
+새 토큰은 이번에 무엇을 참고할지 나타내는 **Q(query)를** 만든다. 보관한 K와 Q를 비교해 각 과거 위치를 얼마나 참고할지 정하고, 그 비중으로 V를 섞는다. 새 Q가 달라지면 섞는 비중과 결과도 달라진다.
+
+아끼는 것은 과거 K·V를 다시 만드는 계산이다. 새 Q와 과거 위치를 비교하고 V를 읽는 일까지 사라지지는 않는다. 새 토큰의 K·V도 이후를 위해 추가한다.
 
 **이어서 읽기:** [Shape와 버킷 설계](06-buckets-shapes.md) — 4. Prefill과 decode를 값의 변화로 구분한다 / Key와 value는 무엇을 재사용하는가
 
@@ -153,7 +244,11 @@ inspect_execution_plan.py로 read_execution_plan(package)의 entries.forward.ste
 <details class="reader-review-item">
 <summary>BF16에서 256+1이 왜 256이 되며 중간 반올림은 왜 중요한가?</summary>
 
-BF16의 7-bit 소수 가수 때문에 [256,512)에서는 256·258처럼 간격 2로 표현한다. 257은 정확한 중간이며 round-to-nearest, ties-to-even에서 가수 정수 128(마지막 비트 0)의 256을 택한다. BF16로 매번 저장하는 경로는 256+1=257→256을 두 번 겪어 최종 256이다. FP32에서는 257→258을 유지하고 마지막 BF16 변환에서 정확히 표현 가능한 258을 저장한다. even은 256·258 자체의 십진 짝수성을 뜻하지 않으며, 이 CPU 변환 예를 NPU 내부 누산 규칙으로 단정하지 않는다.
+숫자 저장 공간이 제한되어 있으면 서로 가까운 수를 모두 구별하지 못할 수 있다. BF16이라는 형식은 256 근처에서 256과 258은 표현하지만 그 사이의 257은 표현하지 못한다.
+
+이 예제의 반올림 규칙에서는 257을 BF16으로 저장할 때 256이 된다. 따라서 `256+1`을 저장하고 다시 1을 더해 저장하면 두 번 모두 256으로 돌아갈 수 있다. 더 넓은 FP32 형식에서 두 덧셈을 끝낸 뒤 한 번만 BF16으로 바꾸면 258을 남길 수 있다.
+
+계산을 합칠 때 중간 저장을 없애면 속도뿐 아니라 답도 달라질 수 있다는 뜻이다. 이는 저장 형식을 설명하는 예이며 모든 NPU 내부 연산의 반올림 방식을 뜻하지 않는다.
 
 **이어서 읽기:** [최적화의 축과 우선순위](07-optimization.md) — 5. 연산 결합: 어떤 경계를 줄였는지 말한다 / 중간 반올림을 없애면 값도 바뀔 수 있다
 
@@ -162,7 +257,11 @@ BF16의 7-bit 소수 가수 때문에 [256,512)에서는 256·258처럼 간격 2
 <details class="reader-review-item">
 <summary>gated MLP·packed·3-program과 30개 측정 구간은 각각 무엇인가?</summary>
 
-유지한 계산은 g=x@Wg.T, u=x@Wu.T, p=SiLU(g)*u, y=p@Wd.T이며 특징 길이는 128→256→128이다. baseline은 g·u를 별도 Linear로 표현한 전체 gated MLP를 한 프로그램으로, packed는 두 weight를 [512,128]로 이어 한 Linear의 [1,512] 출력을 g·u로 나누는 한 프로그램으로 준비한다. 분할 대조군은 g·u 생성 / SiLU와 원소별 곱 / 출력 Linear를 세 프로그램으로 실행한다. 두 모델 block은 같은 가중치를 공유하는 gated MLP를 직렬로 두 번 적용한 모델이다. 30개 measurement block은 그 전체 모델의 반복 측정 구간이며 baseline 6,390회는 30×213회다. 4.18%는 두-block 모델의 172.19→164.99 μs 비교이고 resident 입력·dispatch·완료를 포함하되 compile·load·정적 packing·H2D·D2H·profiling은 제외한다. 5% 배포 기준 미달로 baseline을 유지했으며 저장소의 기존 실측이다.
+이 비교는 같은 작은 신경망을 **어떻게 묶어 실행할지** 바꾼 실험이다. 두 갈래 계산을 만든 뒤 한쪽으로 다른 쪽의 값을 조절해 합치는 구조를 gated MLP라고 부른다.
+
+기준 후보는 두 갈래의 계산을 따로 표현하고, packed 후보는 두 가중치 표를 이어 한 번에 계산한 뒤 결과를 나눈다. 세 프로그램 후보는 전체 계산을 세 번의 프로그램 호출로 나눈다. 계산할 답은 같게 유지하고 호출·배치 방법을 비교한다.
+
+저장된 결과에서 두 구간을 잇는 전체 모델 시간은 172.19μs에서 164.99μs로 4.18% 줄었다. 실험의 채택 기준 5%에는 못 미쳤다. ‘모델 구간 두 개’와 ‘통계를 얻기 위해 반복한 측정 구간 30개’는 서로 다른 개수다.
 
 **이어서 읽기:** [최적화의 축과 우선순위](07-optimization.md) — 6. 보존된 실측: 작은 영역의 개선을 전체로 다시 확인한다
 
@@ -171,18 +270,26 @@ BF16의 7-bit 소수 가수 때문에 [256,512)에서는 256·258처럼 간격 2
 <details class="reader-review-item">
 <summary>Time이 2일 때 저장 위치와 전달 순서의 좌표는 어떻게 다른가?</summary>
 
-교육용 4,096원소 배치에서 각 slice에 16원소를 두고 8개씩 두 번 전달한다. slice 4는 time 0에 64~71, time 1에 72~79를 읽는다. a=77은 slice 4의 Element 13이며 전달 시 time 1의 packet 위치 5다. Time 증가는 같은 물리 slice를 여러 전달에 재사용하는 시간 배치이고, slice 수 증가는 공간 자원의 배치 변경이다. 실제 자원 한도를 임의로 늘릴 수 있다는 뜻은 아니다. 이 모형은 유효한 NPU 커널을 컴파일·실행했다는 증거나 2 clock cycle이라는 성능 주장이 아니다.
+저장된 원소의 위치와 계산기로 보내는 순서는 따로 볼 수 있다. 예를 들어 한 slice에 숫자 16개를 저장하고, 한 번에 8개씩 두 차례 보낸다고 하자. slice는 장치 안의 작은 병렬 처리 단위다.
 
-**이어서 읽기:** [eISA 질문에서 vISA 실습으로](08-eisa-visa.md) — 4. 저장된 값이 계산 경로로 흘러가는 과정 / 한 slice에 16개가 있고 한 번에 8개씩 보낸다면
+이 slice가 64~79번 원소를 보관한다면 첫 전달은 64~71, 두 번째는 72~79다. 77번 원소는 저장 위치로는 이 slice의 13번, 전달할 때는 두 번째 묶음의 5번이다. 번호는 0부터 센다.
+
+`Time`은 이 전달 순서, `Packet`은 한 번에 전달할 묶음을 표현한다. 두 차례 전달한다고 정확히 두 clock cycle이 걸린다는 뜻은 아니다.
+
+**이어서 읽기:** [저수준 프로그래밍: vISA와 furiosa-opt](08-eisa-visa.md) — 4. 저장된 값이 계산 경로로 흘러가는 과정 / 한 slice에 16개가 있고 한 번에 8개씩 보낸다면
 
 </details>
 
 <details class="reader-review-item">
 <summary>SPM의 index 목록과 HBM에서 읽을 위치는 어떻게 구별하는가?</summary>
 
-table[I,P]에서 I는 선택할 위치 축, P는 그 위치에서 함께 읽을 특징 축이다. position[D]는 D개 조회 목록이며 position[d]가 I 좌표를 선택해 result[d,p]=table[position[d],p]를 만든다. 숫자 [3,1]의 index 목록을 SPM에 둔다는 것과 조회 대상 table이 HBM에 있다는 것은 별개다. BF16·P=128의 연속 행 배치에서 같은 조회의 byte offset은 [768,256]이며 그 API의 index는 HBM에 둔다. by_positions에는 gather의 I·P mapping, index Domain과 cluster·PE 배치가 필요하다. cluster별 목록이면 Domain=[CL,D], PE 0 배치는 m![1 # 4]로 표현한다. 따라서 3·384·768은 행 위치·원소 offset·byte offset이라는 서로 다른 단위이며 mapping 없이 교환할 수 없다.
+**Gather는 지정한 위치의 값들을 모아 읽는 작업**이다. `[10,20,30,40]`에서 위치 `[3,1]`을 읽으면 `[40,20]`이 된다. 인덱스 목록은 ‘어디를 읽을지’ 적은 것이지 읽어 올 데이터 자체가 아니다.
 
-**이어서 읽기:** [eISA 질문에서 vISA 실습으로](08-eisa-visa.md) — 9. 작은 구간부터 실험하는 네 가지 사례 / B. Gather·scatter의 인덱스 단위를 맞추기
+저수준 구현에서는 이 목록을 SPM이라는 보조 메모리에 둘 수 있다. 실제 데이터는 큰 장치 메모리인 HBM에 있고, 목록의 수로 읽을 위치를 정한다.
+
+중요한 것은 단위다. 3이 ‘세 번째 원소’를 뜻하는지 ‘시작에서 3바이트 떨어진 주소’를 뜻하는지는 사용하는 API가 정한다. 두 의미를 바꾸어 사용하면 전혀 다른 값을 읽는다.
+
+**이어서 읽기:** [저수준 프로그래밍: vISA와 furiosa-opt](08-eisa-visa.md) — 9. 작은 구간부터 실험하는 네 가지 사례 / B. Gather·scatter의 인덱스 단위를 맞추기
 
 </details>
 
@@ -191,7 +298,11 @@ table[I,P]에서 I는 선택할 위치 축, P는 그 위치에서 함께 읽을 
 <details class="reader-review-item">
 <summary>그래프의 인수와 입력 서명에서 Linear→ReLU 연결을 어떻게 찾는가?</summary>
 
-첫 Linear는 node.target이 aten.linear.default인 call_function 행으로 식별한다. 그 행의 node.args가 (x, w0, b0)이면 입력 x와 첫 weight·bias를 받아 h를 만들고, ReLU 행의 args=(h,)가 그 결과를 소비한다. 출력 표의 h[4,12] → a[4,12] → y[4,8]를 따라가면 작은 모델의 계산 연결을 읽을 수 있다. placeholder의 이름만으로 입력 역할을 추측하지 않고 ep.graph_signature.input_specs의 spec.arg.name, spec.kind.name, spec.target을 함께 본다. USER_INPUT은 실행 때 공급할 x이고 PARAMETER는 0.weight·0.bias·2.weight·2.bias에 연결할 입력 자리다. 따라서 사용자 인수는 하나여도 parameter 네 개가 분리되면 placeholder는 다섯 개다. ep.graph는 그 관계를 드러내며 ep.module()은 parameter를 다시 묶어 사용자 인수 하나로 호출하게 한다. 본문 표는 읽는 방법을 보여 주는 교육용 예이며, 실제 PyTorch 버전이나 decomposition에 따라 node 이름·연산 표현이 달라질 수 있음을 함께 이해했다.
+`입력 → Linear → ReLU → 출력`이라는 모델을 생각하자. Linear는 입력의 여러 값을 곱하고 더해 새 값을 만들고, ReLU는 그 결과의 음수를 0으로 바꾼다.
+
+함수 호출 관계를 기록한 그래프에서 Linear 결과의 이름이 ReLU의 입력에 들어 있으면 두 계산이 연결된 것이다. 함수의 앞쪽 인수에는 사용자 입력뿐 아니라 모델의 가중치가 함께 나타날 수 있다.
+
+그래서 노드 이름만 읽지 말고 입력 설명도 함께 본다. 어떤 인수가 사용자가 준 값이고 어떤 인수가 모델에 저장된 값인지 구분해야 연결을 올바르게 따라갈 수 있다.
 
 **이어서 읽기:** [PyTorch와 ATen 디스패처](09-torch-aten.md) — 설치본에서 재현하는 방법
 
@@ -200,7 +311,11 @@ table[I,P]에서 I는 선택할 위치 축, P는 그 위치에서 함께 읽을 
 <details class="reader-review-item">
 <summary>대표 입력의 숫자·shape·값에 따른 Python 분기는 각각 어떻게 취급되는가?</summary>
 
-캡처는 일반 tensor 입력의 모든 숫자를 결과에 고정하지 않는다. x*2+1이라면 x는 이후 호출에서 새 값을 받으며 2와 1이라는 Python 상수 및 정적으로 정해진 계산 관계가 그래프에 남는다. 같은 shape·dtype 등 계약을 유지한 x_second=x+0.25는 같은 계산에 새로운 값으로 들어갈 수 있다. 다른 shape는 별개의 문제다. 기본 정적 계약에서 x.shape[0]==4에 따라 선택한 경로는 첫 차원을 8로 바꾼 입력까지 자동 허용하지 않으며, PyTorch의 동적 shape 선언과 FuryNo5 커널의 지원 범위도 따로 확인해야 한다. x.sum()>0 같은 조건은 아직 들어오지 않은 원소 값에 따라 Python의 제어 흐름이 달라지므로 같은 보장을 바로 할 수 없다. 지원되는 제어 흐름 표현이나 호출 경계의 분리가 필요하며 strict=False는 이러한 문제를 해결한다는 보증이 아니다. 캡처된 관계, 이후 컴파일된 EDF, 실행 시 공급되는 tensor 값을 구분할 수 있게 되었다.
+대표 입력은 모델이 어떤 모양의 값을 받는지 분석할 때 사용하는 예다. `x*2+1`을 캡처했다고 해서 x의 모든 숫자가 고정되는 것은 아니다. 실행할 때 같은 조건의 새 값을 줄 수 있다.
+
+다만 크기 조건은 다르다. 길이 8을 기준으로 준비한 프로그램이 길이 16까지 받는지는 동적 크기 설정과 컴파일 지원에 달려 있다.
+
+Python 코드가 입력 값에 따라 `if` 분기를 선택한다면 그 분기가 어떻게 캡처되는지도 확인해야 한다. 예제 입력 한 번을 넣어 봤다는 사실만으로 모든 크기와 모든 분기가 지원되는 것은 아니다.
 
 **이어서 읽기:** [PyTorch와 ATen 디스패처](09-torch-aten.md) — 대표 입력의 숫자도 그래프에 고정되는가
 
@@ -209,7 +324,11 @@ table[I,P]에서 I는 선택할 위치 축, P는 그 위치에서 함께 읽을 
 <details class="reader-review-item">
 <summary>optimize로 준비한 Product를 실제 입력으로 호출하고 언제 닫는가?</summary>
 
-Product 모델과 CPU 대표 입력 a[2,3], b[3,2]를 tclmachine.optimize에 example_inputs=(a,b), target='furiosa:0', fallback='error'로 전달한다. 이때의 대표 입력은 그래프·shape·dtype·stride의 준비에 쓰이고 반환되는 prepared는 준비된 callable이다. 실제 호출 때는 a와 b를 지정 NPU 장치로 옮긴 a_device와 b_device를 prepared에 전달한다. Product.forward가 tensor 하나를 돌려주므로 prepared도 하나의 tensor를 반환한다. 결과를 CPU로 옮기고 stream의 완료를 확인한 뒤 CPU 기준과 비교한다. prepared의 custom-op 등록은 수명이 있으므로 finally에서 close하고 이후에는 다시 호출하지 않는다. example_inputs를 CPU에 두었다는 사실이 prepared(a,b)의 CPU 실행을 허용하지 않으며 공개 optimize는 CPU reference를 등록하지 않는다고 읽었다. prepared.report는 준비 기록이어서 실제 호출 뒤 자동으로 NPU 검증 증거가 되지 않는다. 또한 이 예제는 소스의 호출 계약을 대조한 것이며 이 환경에서 해당 shape의 EDF 컴파일·NPU 실행을 확인한 기록이 아님이 분명하다.
+`optimize`로 모델을 준비하면 **실제 입력을 받아 실행할 호출 객체**를 얻는다. 이 프로젝트에서는 그 결과를 Product라고 부른다. 준비 결과의 이름이며 새 모델 종류를 뜻하지 않는다.
+
+이후 입력 x를 전달해 호출하고 출력을 CPU 기준값과 비교한다. 같은 입력 조건으로 여러 번 실행할 때는 준비한 객체를 재사용한다. 매번 새로 준비하면 컴파일·적재 비용이 다시 들 수 있다.
+
+객체가 소유한 장치 자원은 더 이상 호출하지 않을 때 닫는다. 아직 실행 중인 입력·출력을 먼저 버려도 된다는 뜻은 아니다. 실제 호출과 정리 순서는 `run_prepared_product.py`에서 확인할 수 있다.
 
 **이어서 읽기:** [FuryNo5의 실제 구조](10-furyno5-architecture.md) — Product를 준비하고 한 번 실행하기
 
@@ -218,7 +337,11 @@ Product 모델과 CPU 대표 입력 a[2,3], b[3,2]를 tclmachine.optimize에 exa
 <details class="reader-review-item">
 <summary>측정 선택의 load_plan과 모델 실행계획은 같은 파일인가?</summary>
 
-본문의 plan에는 두 계통이 있다. export_model이 만드는 실행계획은 어떤 tensor를 어떤 EDF에 넘길지 기록하며 tiny.fxbx 패키지를 만든다. 같은 계획의 조사용 execution-plan.json은 tiny.fxbx.plan 디렉터리에 남는다. 패키지 안의 계획을 읽을 때는 read_execution_plan('tiny.fxbx'), 실행할 때는 GraphFXB('tiny.fxbx', weights=...)를 쓴다. tclmachine.load_plan은 이 패키지나 실행계획 JSON의 reader가 아니다. 측정 후 후보 선택 경로의 decision, prepared, environment 세 dictionary 또는 각 JSON 경로를 받으며 decision.schema는 tplmachine.measured-plan-selection.v1이어야 한다. 반환 SelectedRuntime은 준비 기록이 가리키는 serialized Runnable과 입력 계약을 사용한다. plan_regions의 비용 기반 제안도 확정된 측정 선택 기록과 같지 않으므로 바로 load_plan에 넘기지 않는다. 어느 생산자가 만든 어떤 기록인지 먼저 구분하는 이유를 이해했다.
+‘계획’이라는 말이 두 목적에 쓰인다. **모델 실행계획**은 ‘덧셈 결과를 ReLU 입력으로 보낸다’처럼 실제 계산 순서와 값 연결을 적는다.
+
+반면 후보 선택용 `load_plan`은 ‘이 입력 조건에서 측정 결과가 좋았던 구현을 고른다’는 선택 정보를 읽는 경로다. 어느 후보를 고를지 알려 주는 기록이 곧 모델 전체의 계산 연결을 담는 것은 아니다.
+
+파일 이름보다 누가 읽고 무엇을 반환하는지 확인하면 구분할 수 있다. 실행계획은 소비자가 계산을 연결할 때, 선택 기록은 후보를 선택할 때 사용한다.
 
 **이어서 읽기:** [FuryNo5의 실제 구조](10-furyno5-architecture.md) — 이름과 import 경로
 
@@ -227,7 +350,11 @@ Product 모델과 CPU 대표 입력 a[2,3], b[3,2]를 tclmachine.optimize에 exa
 <details class="reader-review-item">
 <summary>ATen node 하나가 어떤 중간 자료를 거쳐 TCL 컴파일 요청이 되는가?</summary>
 
-본문이 독립 region으로 가정한 bias 있는 Linear 하나를 따라가면 node.target=aten.linear.default, args=(x,weight,bias), 입력 meta['val']이 lower_aten_node에 들어간다. AtenCandidate에는 kind='linear'와 x[4,8], weight[12,8], bias[12], 출력[4,12]의 TensorSpec이 생긴다. group 요청은 BF16 dtype, stride [8,1]·[8,1]·[1], operand와 output 이름을 보관하며 이 단순 Linear에는 별도 attrs가 없다. specs는 값의 모양이고 operand 이름은 이후 실제 값을 연결할 자리다. 고정 버전에서 linear는 SEMANTIC_COMPILERS의 등록 항목이 아니어서 _compile_kernel의 기본 Region 경로를 사용한다. shape·dtype로 만든 임시 tensor로 functional.linear를 호출하는 작은 Region을 export하고 export_edf로 넘긴다. 이 임시 tensor에 실제 checkpoint의 숫자를 복사하지 않는다는 설명도 있다. export_edf는 native_common.compiler.compile을 import할 수 있으면 target_ir='edf'를 사용하고, 그 import를 사용할 수 없을 때만 tcl_edf.export_single_aten으로 간다. compiler 실패를 모두 TCL로 재시도하는 구조는 아니다. TCL 분기에서는 research.tcl_linear.linear_bias와 {'M':4,'K':8,'N':12}를 선택한다. tcl.specialize_kernel로 축 크기를 대입한 뒤 필요하면 Kernel.from_edsl을 거쳐 .dsl에서 문자열 source를 얻는다. compile_source에는 이 문자열과 (x,weight,bias) 순서를 보존한 base_contract를 전달한다. M·K·N은 값이 아니라 shape에서 얻으며, 전체 MLP에서는 fusion 선택에 따라 더 큰 region이 될 수 있다는 한계도 명확하다.
+예를 들어 ‘입력 8개를 받아 출력 12개를 만든다’는 Linear 연산이 있다고 하자. 준비 단계는 먼저 사용자 입력, 곱할 가중치, 더할 보정값을 구분한다.
+
+다음으로 각 배열의 크기와 자료형을 적고, 어떤 축을 곱해서 더할지 TCL로 표현한다. 그 소스와 컴파일 대상·옵션이 **컴파일 요청**이다. 컴파일러는 이 요청에서 EDF를 만든다.
+
+요청을 만들었다는 것, 컴파일이 끝났다는 것, 실제 값이 맞다는 것은 각각 다음 단계다. 전체 모델에서는 여러 연산이 하나로 합쳐질 수 있어 연산 하나당 EDF 하나가 항상 생기지는 않는다.
 
 **이어서 읽기:** [FuryNo5 컴파일 경로](11-furyno5-compiler.md) — node 하나가 컴파일 요청으로 바뀌는 중간 값
 
@@ -236,7 +363,11 @@ Product 모델과 CPU 대표 입력 a[2,3], b[3,2]를 tclmachine.optimize에 exa
 <details class="reader-review-item">
 <summary>사전검사에서 최초 원인과 뒤따른 의존성 실패를 어떻게 구별하는가?</summary>
 
-export_model 호출의 오른쪽에서 예외가 나면 report 변수가 생성되지 않으므로 report['status']부터 읽지 않는다. 예외 details 또는 출력 이름으로 preflight-only.fxbx.plan 같은 작업 디렉터리를 찾는다. preflight.json의 status·code·first_failures에서 node·operator·category·reason을 읽고, failure-groups.json에서 같은 원인 묶음과 발생 횟수를 본다. operator inventory의 node·operator·admission·admission_reason·입력 계약으로 대상 연산의 조건도 대조한다. rule_or_contract_gap은 직접적인 규칙·계약 문제이고 binding_dependency는 선행 값이 만들어지지 않아 후속 node가 막힌 경우다. 가상 n0 Linear가 h를 만들지 못해 n1 ReLU와 n2가 연쇄적으로 막힌 예라면 우선 n0를 조사하고, ReLU까지 각각 새 커널이 필요하다고 세지 않는다. first_failures는 첫 여덟 항목, 요약 failure_groups는 상위 32개까지이므로 전체 그룹 파일을 봐야 한다. 그룹 자체가 의존 그래프는 아니어서 node.args 또는 원본 graph에서 연결을 확인하고 첫 원인을 고친 뒤 재실행하여 독립 후속 문제가 남는지 확인한다. 진단 파일이 없으면 더 앞선 환경·캡처 단계에서 실패했을 수 있으며 통과로 해석하지 않는다.
+세 단계 A→B→C가 있고 A가 필요한 결과를 만들지 못했다고 하자. 그러면 B와 C도 입력을 받지 못해 실패할 수 있다. 오류가 세 개라도 새 구현이 세 개 필요한 것은 아니다.
+
+사전검사 보고서에서는 **그 단계 자체의 처리 규칙이 없는 경우**와 **앞 단계의 값이 없어 진행하지 못한 경우**를 구분한다. 먼저 A의 최초 원인을 고치고 다시 검사한다.
+
+환경·입력 분석에서 더 일찍 실패하면 보고서 자체가 없을 수 있다. 예외의 진단 경로와 생성된 파일부터 확인한다.
 
 **이어서 읽기:** [FuryNo5 컴파일 경로](11-furyno5-compiler.md) — 예외가 나서 report를 받지 못했을 때
 
@@ -245,7 +376,11 @@ export_model 호출의 오른쪽에서 예외가 나면 report 변수가 생성�
 <details class="reader-review-item">
 <summary>처음 받은 fxbX는 어느 형식이며 어떤 검사기로 열어야 하는가?</summary>
 
-파일 확장자만 보지 않고 표준 Python의 zipfile로 내부 manifest와 provenance 표식을 읽는다. manifest의 format='FXB_EX', 정수 schema_version=1이면 초기 FXB_EX 형식으로 분류하여 legacy fxbx inspect/validate --integrity-only 경로를 고른다. native 형식의 format_version=2이면 fxbex.provenance.json의 producer와 계획 필드를 추가로 본다. producer가 fxbex이고 execution_plan.schema가 tclmachine.execution-plan.v1 또는 v2이면 read_execution_plan 및 이후 GraphFXB의 실행계획 경로를 사용한다. graph_plan.schema가 fxbex.graph-plan.v1이면 과거 single-EDF graph 경로이므로 read_graph_plan으로 구분한다. 표식이 없거나 모르면 억지로 reader를 선택하지 않는다. identify_fxb.py는 Torch/SDK import, NPU 개방, 압축 내용 추출 없이 이러한 표식만 관찰한다. 이것은 알맞은 검사기를 선택하는 절차이며 내부 hash·ABI·수치 정확도나 공식 runtime 승인까지 검증한 것은 아니다.
+파일 확장자가 `.fxbx`라고 내부 형식이 하나로 정해지지는 않는다. 책의 판별 예제는 ZIP 안의 `manifest.json`을 읽어 형식과 버전 표식을 확인한다.
+
+초기 `FXB_EX` 형식은 그 형식용 검사기를 사용한다. 새 실행계획 형식은 producer 설명 안의 `execution_plan`을 확인하고 해당 reader로 읽는다. **Reader는 그 파일 구조를 해석하는 코드**다.
+
+`identify_fxb.py`는 이 첫 분기를 돕는다. 내부 표식을 읽었다고 모델 실행까지 성공한 것은 아니다. 이어서 파일 무결성, 가중치 연결, 장치 적재와 출력 비교를 확인한다.
 
 **이어서 읽기:** [fxbX의 포맷과 실행기](12-fxbx.md) — 처음 받은 파일의 내부 표식부터 읽는다
 
@@ -254,7 +389,11 @@ export_model 호출의 오른쪽에서 예외가 나면 report 변수가 생성�
 <details class="reader-review-item">
 <summary>GraphFXB는 CPU 입력 업로드·NPU 계산·반환·완료를 언제 처리하는가?</summary>
 
-GraphFXB 생성은 계획·계약을 읽는 단계이고 with 진입에서 EDF를 역직렬화하고 SDK/ABI를 확인하며 CPU 폴백을 끈 NPU Runnable을 만들고 외부 weight를 업로드한다. predict((x,))는 Python 관리 함수다. CPU 입력을 검사한 뒤 _upload에서 x.to(self.device)를 수행하고 NPU tensor를 준비된 sequence 또는 step의 NPU Runnable에 연결한다. 중간값도 NPU tensor로 다음 step에 전달한다. 기본 output_device='cpu'에서는 결과마다 .cpu()를 수행하고 현재 stream의 synchronize와 상태 갱신 후 출력 tuple을 반환하므로 actual은 CPU BF16[4,8] tensor다. output_device='furiosa'이면 NPU tensor tuple이지만 이 경로도 반환 전에 동기화한다. 따라서 CPU 입력을 받은 사실은 CPU 모델 폴백의 증거가 아니다. predict 앞뒤 벽시계 시간에는 잠금 대기, 입력 검사·업로드, 제출, NPU 계산, 기본 출력 CPU 복사와 완료 대기가 포함된다. with 진입이 측정 밖이면 처음 EDF 적재·weight 업로드는 제외된다. last_timing['request_s']는 잠금 대기를 제외하며 queue_wait_s는 별도다. 어느 시간도 장치 계산 task만의 시간으로 읽으면 안 된다. 수치 비교와 NPU task trace의 역할도 나누어 설명되어 있다.
+이 책의 작은 MLP 예제는 CPU 배열을 입력받고 CPU 배열로 답을 돌려받는다. 그 사이 소비자는 입력을 장치에 준비하고, 계획의 프로그램들을 호출하고, 결과를 CPU로 가져온다.
+
+`output_device="cpu"`를 쓰는 해당 실행계획 경로는 결과를 CPU에서 사용할 수 있는 완료 지점까지 처리한 뒤 반환한다. 그래서 호출 앞뒤의 시간에는 입력·출력 전송도 포함된다.
+
+이 시간을 순수 NPU 계산 시간이라고 부르면 안 된다. 다른 출력 장치나 비동기 API를 선택하면 완료를 확인하는 방법도 다시 읽어야 한다.
 
 **이어서 읽기:** [fxbX의 포맷과 실행기](12-fxbx.md) — CPU 입력이 NPU 계산을 거쳐 다시 돌아오는 경계
 
@@ -263,7 +402,11 @@ GraphFXB 생성은 계획·계약을 읽는 단계이고 with 진입에서 EDF�
 <details class="reader-review-item">
 <summary>keyword 입력·사전 출력을 tensor 호출 계약으로 어떻게 감싸는가?</summary>
 
-원래 keyword 입력과 dict 출력을 가진 module을 TensorAdapter라는 nn.Module의 자식 original로 보관한다. wrapper의 forward(features,mask)는 위치 인수를 받되 내부에서 original(features=features,mask=mask)로 원래 호출을 복원하고 result['logits']라는 tensor[2,3] 하나만 내보내도록 선택한다. 생산자에는 원본이 아니라 adapter와 (features,mask)라는 평평한 tensor tuple을 넘긴다. 이 순서가 계획의 입력 0·1 계약이고 GraphFXB.predict(args)의 출력 tuple 첫 tensor가 logits이며 dict로 자동 복원하지 않는다. wrapper의 자식 module 경로 때문에 원본 projection.weight는 adapter.state_dict()에서 original.projection.weight가 된다. 값은 같은 weight이지만 export한 module과 소비자에 제공하는 state_dict의 이름 계약을 맞춰야 한다. CPU 비교 예제는 wrapper의 호출 의미 보존을 검사하며 NPU 지원을 증명하지 않는다. FHA factory의 (module,args,kwargs)는 특징 조사에서 torch.export에 전달되는 형식일 뿐 생산자의 평평한 위치 인수 계약을 자동 변환하지 않는다. 같은 adapter와 args, 빈 kwargs를 factory에서도 반환하면 두 경로의 입력 순서를 맞출 수 있으나, preflight와 실제 NPU 지원 검증은 별도로 남는다.
+원래 함수가 `model(features=x, mask=m)`처럼 이름 붙은 입력을 받고 `{"logits": y}`를 돌려준다고 하자. 장치 쪽에서는 입력 두 개를 정해진 순서로 받고 배열 하나를 돌려주는 형태가 필요할 수 있다.
+
+**어댑터(adapter)는** 두 호출 형태를 연결하는 작은 함수다. `(x,m)`을 받으면 원래 이름으로 모델을 호출하고, 반환 사전에서 `logits`만 꺼낸다.
+
+계산과 가중치는 그대로 사용해야 한다. 빼 버린 다른 출력이 호출자에게 필요한지도 확인한다. 먼저 CPU에서 원본과 어댑터의 같은 출력을 비교한 뒤 컴파일을 시도한다.
 
 **이어서 읽기:** [모델 포팅과 FHA·FuryAwesome](13-porting-fha.md) — 실제 모델이 keyword 입력과 사전 출력을 쓸 때
 
@@ -272,7 +415,11 @@ GraphFXB 생성은 계획·계약을 읽는 단계이고 with 진입에서 EDF�
 <details class="reader-review-item">
 <summary>카탈로그 publication JSON의 각 값은 어디서 가져오는가?</summary>
 
-reviewed-publication.json은 바이너리 자체가 아니라 카탈로그 record(payload)에 넣을 한 항목이다. 최상위는 schema_version=1, model, release뿐이며 model/release 값은 모두 문자열이고 제시된 허용 필드를 정확히 맞춘다. model에는 이름·설명·사용 문서·분류·원본 저장소/커밋·라이선스·표지 주소를, release에는 버전·target·precision·SDK/runtime 버전·adapter='execution_plan'·weights_mode='external'·고정 artifact_url·최종 author_sha256을 기록한다. 본문의 MiniLM 값은 이미 존재하는 예시라 Tiny에 복사해 게시할 값이 아니다. Tiny의 tiny.fxbx 고정 URL과 hash는 release에 들어가지만 tiny-state.pt와 tiny-cases.pt에는 전용 필드가 없다. 두 파일의 경로·hash·검증 명령·weight target 이름을 함께 배포하는 고정 USAGE.md에 적고 model.readme로 연결해야 하며 메타데이터만으로 weight나 테스트 파일이 포함되지 않는다. legacy publish --prepare 결과는 hf_namespace·model·release·license_review·license_files를 포함하는 다른 형식이라 그대로 catalog_store.py add에 넣지 않는다. 검토한 실행계획 항목으로 로컬 add/check/validate와 diff를 확인하는 것은 카탈로그 정합성 확인이며 legacy 게시기 통과, 원격 공개 게시, NPU 실행 검증을 뜻하지 않는다.
+카탈로그에 모델을 올릴 때는 이름뿐 아니라 ‘어느 파일을 어떤 조건으로 검증했는가’를 전달해야 한다. 이를 적은 JSON이 publication이다.
+
+모델 식별자는 원본 모델에서, 다운로드 URL은 실제 게시한 파일에서 가져온다. 해시는 그 파일의 바이트로 계산하고, 지원 입력·가중치·사용법은 검증한 패키지와 맞춘다. 해시는 파일이 바뀌었는지 확인하는 값이지 성능 인증이 아니다.
+
+다른 모델의 예제 JSON에서 이름만 바꾸면 잘못된 파일과 검증 결과를 연결할 수 있다. 준비용 초안과 최종 카탈로그 입력의 필드도 서로 다르므로 해당 단계의 형식으로 작성한다.
 
 **이어서 읽기:** [모델 포팅과 FHA·FuryAwesome](13-porting-fha.md) — 실행 계획 패키지의 카탈로그 등록
 
@@ -283,7 +430,11 @@ reviewed-publication.json은 바이너리 자체가 아니라 카탈로그 recor
 <details class="reader-review-item">
 <summary>모아 놓은 토큰 행을 요청별 KV와 마지막 출력 행으로 어떻게 연결하는가?</summary>
 
-행 값만 합치지 않고 (요청 ID, 요청 안의 논리 위치, 유효성, KV block table)을 함께 대응시킨다. 4행 예에서 0번은 A의 위치 0, 1번은 A의 위치 1, 2번은 B의 위치 0, 3번은 무효 padding이다. A는 자신의 [2,7], B는 자신의 [4] block table을 사용하고 attention이 다른 요청의 위치를 읽지 않게 한다. 요청별 마지막 유효 논리 위치를 고르면 A는 행 1, B는 행 2다. 예제 logits의 argmax 결과는 A 후보 1, B 후보 0이며, 큰 padding logits는 무시된다. 이 대응표와 코드는 교육용 prefill 예로, 실제 엔진 ABI나 임의 prefill/decode 혼합 기능의 보장은 아니다.
+두 요청 A·B의 토큰을 한 번에 계산하려고 배열에 모았다고 하자. 계산 뒤에는 각 행이 어느 요청의 어느 토큰이었는지 알아야 답을 되돌릴 수 있다.
+
+새 토큰의 K·V도 A의 저장 공간과 B의 저장 공간을 구분해 기록해야 한다. **KV Cache는 앞 토큰을 다시 참고하기 위해 보관한 정보**다. 행을 섞어 계산해도 이 요청별 소속까지 섞으면 안 된다.
+
+서빙 연결부는 토큰 행의 소속, 각 요청이 쓸 KV 위치, 다음 토큰을 고를 출력 행을 함께 전달한다. EDF를 호출하는 함수 하나만으로 이 정보가 자동 생성되지는 않는다.
 
 **이어서 읽기:** [vLLM 서빙과 연결 과제](14-serving-vllm.md) — 모은 행을 다시 요청으로 돌려놓는다
 
@@ -292,7 +443,11 @@ reviewed-publication.json은 바이너리 자체가 아니라 카탈로그 recor
 <details class="reader-review-item">
 <summary>설치된 compiler가 요구 snapshot인지 어떤 관측값으로 대조하는가?</summary>
 
-모델 저장소 c982976...가 요구한 preview commit은 9481ae2...이고, 그 고정 commit의 manifest가 가리키는 compiler 배포 버전은 0.9.0+g3a4b00bb다. 두 문자열이 같아야 하는 것이 아니라 commit→manifest→배포 버전의 연결이 맞아야 한다. 예제는 preview를 고정 checkout한 뒤 cargo binstall --manifest-path로 그 manifest의 바이너리를 설치한다. git rev-parse로 두 checkout을, cargo install --list로 설치 기록의 버전을, command -v cargo-furiosa-opt로 실제 PATH 선택을 대조한다. 기록이 없거나 다른 바이너리라면 serving 전에 설치를 정리한다. plugin 빌드의 expansion revision 불일치는 compiler 쪽 문제이며 RNGD kernel driver 버전 오류와 다르다. 새 빌드와 import가 통과해도 NPU 실행 증거는 아니므로 지원 모델로 장치 실행을 별도 확인한다. 본문은 이 설치를 이번 편집 세션에서 실행했다고 주장하지 않는다.
+버전 숫자가 비슷해도 서로 다른 배포 파일일 수 있다. 필요한 compiler snapshot을 설치했는지 보려면 설치 기록과 실행 중인 명령의 위치를 함께 확인한다.
+
+그다음 프로젝트가 사용하는 Rust 도구와 라이브러리 버전을 확인한다. `Cargo.toml`은 허용 범위를 적고 `Cargo.lock`은 실제로 선택한 버전을 남긴다.
+
+예를 들어 라이브러리가 모두 0.10 계열이라고 compiler까지 같은 조합인 것은 아니다. 이 장의 설치 표에서 compiler 배포 식별자·template 커밋·라이브러리·toolchain을 각각 맞춘다.
 
 **이어서 읽기:** [vLLM 서빙과 연결 과제](14-serving-vllm.md) — 요구 commit과 설치 버전은 같은 문자열이 아니다
 
@@ -301,7 +456,11 @@ reviewed-publication.json은 바이너리 자체가 아니라 카탈로그 recor
 <details class="reader-review-item">
 <summary>부분합을 모으기 전에 각 장치에서 ReLU를 적용해도 되는가?</summary>
 
-동일 출력 원소의 부분합 -2와 3에는 먼저 합을 완성해야 한다. 합한 뒤 ReLU를 적용하면 max(0,1)=1이지만, 각 부분합에 먼저 ReLU를 적용하면 0+3=3으로 음수의 상쇄 기여를 잃는다. 반대로 -2와 3이 이미 완성된 서로 다른 출력 조각이면 각 조각에 원소별 ReLU를 적용한 뒤 연결해 [0,3]을 만들 수 있다. 다음 연산이 전체 벡터의 합·평균을 요구한다면 조각 간 정보가 다시 필요하다. 따라서 통신 위치는 분할 축, 부분 결과의 뜻, 다음 함수의 의존성으로 판단한다. 모든 TP 층에 같은 all-reduce 규칙을 붙이는 설명이 아니다.
+한 출력의 일부를 두 장치가 각각 -2와 3으로 계산했다고 하자. 정답은 먼저 더한 `-2+3=1`에 ReLU를 적용한 1이다. ReLU는 음수만 0으로 바꾼다.
+
+각 장치에서 먼저 ReLU를 하면 `0+3=3`이 되어 틀린다. -2가 3을 상쇄해야 한다는 정보를 너무 일찍 없앴기 때문이다.
+
+반면 두 값이 서로 다른 출력 칸의 완성된 답이라면 각 칸에 ReLU를 적용해 `[0,3]`을 만들어도 된다. 같은 모양의 배열이라도 ‘부분합’인지 ‘완성된 출력 조각’인지 구분해야 한다.
 
 **이어서 읽기:** [여러 NPU로 확장하기](15-multi-npu.md) — 부분합 뒤에 어떤 연산이 오는지 확인한다
 
@@ -310,7 +469,11 @@ reviewed-publication.json은 바이너리 자체가 아니라 카탈로그 recor
 <details class="reader-review-item">
 <summary>최초 요청 배정과 진행 중 decode의 장치 선택은 어떻게 다른가?</summary>
 
-choose_worker는 아직 요청 상태가 없는 신규 요청을 어느 모델 복제본에 처음 배정할지 정하는 설계용 함수다. A가 prefill한 뒤에는 A 내부 scheduler가 그 복제본에 이미 배정된 요청 중 다음 토큰 계산에 참여할 요청을 고른다. 입력 3위치 prefill 후 첫 decode까지 수행하면 A에는 KV 4위치와 다음 입력·위치가 있다. B에 공통 prefix 3위치만 있다는 이유로 같은 상태라고 볼 수 없으므로 B의 큐가 짧아졌다고 바로 넘기지 않는다. 진행 중 요청을 옮기려면 A의 쓰기 완료 확인, 최신 KV·길이·위치·생성 설정의 내보내기, B의 호환 배치로 복원, 단일 실행 소유권 이전이 필요하다. 이는 별도 migration 설계이며 현재 fxbX의 구현 완료 기능이 아니다.
+새 요청은 아직 상태가 없으므로 어느 복제본에 배정할지 선택할 수 있다. 한번 생성을 시작하면 그 요청의 KV Cache가 해당 장치에 쌓인다.
+
+다음 토큰을 다른 장치에서 만들려면 필요한 상태를 옮기거나 다시 계산해야 한다. 매번 가장 한가한 장치만 고르면 이 추가 비용이 커질 수 있다.
+
+따라서 첫 배정과 진행 중인 요청의 이동은 다른 결정이다. 이동으로 줄일 대기시간이 상태 전송·복원 비용보다 큰지도 확인한다.
 
 **이어서 읽기:** [여러 NPU로 확장하기](15-multi-npu.md) — 처음 고르는 복제본과 매번 고르는 실행 요청은 다르다
 
@@ -319,7 +482,11 @@ choose_worker는 아직 요청 상태가 없는 신규 요청을 어느 모델 �
 <details class="reader-review-item">
 <summary>두 트리 분할 후보의 손실과 gain을 실제 숫자로 어떻게 비교하는가?</summary>
 
-동일한 네 행, 제곱 손실 (예측−정답)^2/2, 정규화·분할 벌점 없음, 후보 평가 학습률 1이라는 조건을 먼저 고정한다. 분할하지 않으면 leaf 보정값 2로 손실 합 2가 된다. 경계 0.2는 [1]과 [1,3,3]으로 나누므로 보정값 1과 7/3, 손실 4/3, 부모 손실에서 줄인 gain 2/3이다. 경계 0.5는 [1,1]과 [3,3]으로 나누므로 보정값 1과 3, 손실 0, gain 2다. 따라서 0.5를 고른다. gradient 크기나 leaf 값 자체를 비교하는 선택이 아니다. 처음 예측 0의 손실 10과 부모를 최적으로 보정한 손실 2도 구별한다. 실제 FuryBoost에서는 많은 후보의 통계·gain 계산과 CPU 최종 선택의 경계를 따르며, 이 회귀 예를 HIGGS의 실제 목적함수로 쓰지 않는다.
+결정 트리는 ‘값이 이 경계보다 작은가?’를 반복해 답을 고른다. 학습 중에는 여러 경계 후보 중 어느 것이 예측 오차를 더 줄일지 비교한다.
+
+**손실(loss)은** 예측이 정답에서 얼마나 벗어났는지 나타내는 값이고, **gain**은 후보 분할을 선택했을 때 얻을 개선을 비교하는 점수다. 책의 작은 회귀 예는 같은 네 행을 두 후보로 나누어 각 그룹의 합과 개수를 먼저 구한다.
+
+그룹을 나누는 일이 끝나야 후보 점수를 비교할 수 있다. 서로 다른 손실식·규제 설정에서 나온 gain 숫자를 같은 기준처럼 비교하면 안 된다.
 
 **이어서 읽기:** [FuryBoost 학습 성능 분석](16-furyboost.md) — 후보를 실제로 비교해 분할 이득을 계산한다
 
@@ -328,7 +495,11 @@ choose_worker는 아직 요청 상태가 없는 신규 요청을 어느 모델 �
 <details class="reader-review-item">
 <summary>트리 수가 적은데 EDF 호출은 왜 수백만 번으로 늘어나는가?</summary>
 
-EDF 종류 수, 같은 EDF를 실행한 호출 수, 호출 내부 비교 원소 수는 각각 다른 개수다. 행 8개와 후보 6개를 각각 길이 2 타일로 나누면 행 타일 4개와 후보 타일 3개다. 한 타일 쌍당 한 호출이라는 가정에서는 4×3=12회, 각 호출은 2×2=4개 비교여서 전체 48개 비교다. 후보 타일 세 개를 같은 호출에 묶으면 4회 안에서 같은 48개 비교를 한다. 실제 학습에서는 round·깊이·통계 종류·라우팅·갱신·cache 정책이 함께 반복되므로 트리 30개라는 개수와 호출 수가 같지 않다. 본문은 이 교육용 곱셈으로 실제 2,317,884회를 역산했다고 주장하지 않으며, 실제 dev3/dev4 호출 수는 별도 과거 paired 측정 표로 제시한다.
+큰 배열을 나눠 처리하면 트리 한 번을 만드는 동안에도 같은 작은 프로그램을 여러 번 호출한다. **타일(tile)은** 이렇게 나눈 작업 조각이다.
+
+행 조각이 12개이고 후보 조각이 4개라면 모든 조합을 보려면 `12×4=48`회가 필요하다. 이 과정을 여러 층·트리에서 반복하면 호출 수가 빠르게 늘어난다.
+
+그래서 ‘트리가 30개뿐’이라는 말만으로 장치 제출이 적다고 판단할 수 없다. 한 호출의 크기, 조합 수, 완료 대기 횟수를 함께 세어야 한다.
 
 **이어서 읽기:** [FuryBoost 학습 성능 분석](16-furyboost.md) — 타일 조합 수가 EDF 호출 수로 이어지는 작은 예
 
@@ -337,7 +508,11 @@ EDF 종류 수, 같은 EDF를 실행한 호출 수, 호출 내부 비교 원소 
 <details class="reader-review-item">
 <summary>겹쳐 실행한 두 Task 중 어느 것을 줄여야 전체 지연이 줄어드는가?</summary>
 
-시작 시각 A=10μs, B=20μs와 마지막 복사 10μs를 고정하면 완료는 max(A끝,B끝)+10이다. 원래 A끝50, B끝60이라 완료70이다. A의 작업 시간만 40→20으로 줄여도 B끝60을 기다려 완료70이다. B만 줄이면 B끝40, A끝50이므로 완료60이며, B를 20 줄였지만 요청은 10만 줄어든다. 두 결과가 모두 필요한 의존성 때문에 최종 완료를 제한하는 임계 경로를 봐야 한다. 실제 자원 경쟁을 바꾸면 시작 시각도 달라질 수 있으므로 이 가정의 산술을 일반 trace의 성능 예측식으로 쓰지 않는다.
+A가 0~10ms, B가 5~15ms에 실행된다면 두 작업 시간의 합은 20ms지만 전체 완료는 15ms다. 서로 겹쳐 실행되었기 때문이다.
+
+A만 2ms 줄여도 B가 여전히 15ms에 끝난다면 전체 완료는 그대로일 수 있다. 반면 마지막 결과를 기다리게 만드는 B를 줄이면 전체 시간이 줄 가능성이 있다. 단, B의 시작 조건과 다른 자원 경합도 함께 봐야 한다.
+
+**임계경로(critical path)는** 최종 완료를 늦추는 의존 작업의 경로다. 긴 작업 목록만 보는 대신 무엇을 기다려 마지막 결과가 늦어지는지 따라간다.
 
 **이어서 읽기:** [측정과 디버깅 실습](17-debugging.md) — 가장 긴 Task를 줄이면 요청도 그만큼 짧아질까?
 
@@ -346,7 +521,11 @@ EDF 종류 수, 같은 EDF를 실행한 호출 수, 호출 내부 비교 원소 
 <details class="reader-review-item">
 <summary>상태 모델의 warm-up·reset·측정 구간을 어떻게 나누는가?</summary>
 
-measure_completed의 warm-up도 callable을 실행하므로 상태를 갱신한다. 실행물·가중치가 warm하다는 조건과 요청의 KV가 초기 상태라는 조건은 다르다. 독립 요청 비교라면 warm-up 뒤 각 표본 전에 같은 요청 초기 상태로 되돌리고 준비 완료를 확인한다. 실행 자체만 재면 이 초기화를 타이머 밖에서 끝내고 제외 비용을 보고하며, 초기화부터 결과까지가 목표라면 타이머 안에 넣는다. 한 세션의 연속 decode를 재는 목적이면 reset하지 않고 각 표본의 시작 KV 길이·위치·완료 조건을 기록해 서로 다른 작업량을 같은 반복으로 묶지 않는다. counter 예에서 독립 측정은 0→1 세 번, 연속 측정은 2→3→4→5다. reset_request는 교육용 counter 함수이며 실제 SDK API로 제시되지 않는다.
+이전 호출의 결과를 다음 호출에서 다시 쓰는 모델은 반복할 때 같은 일을 하지 않을 수 있다. 예를 들어 첫 호출 뒤 상태가 1, 다음에는 2로 늘어난다면 세 번째 호출은 새 요청의 첫 호출과 조건이 다르다.
+
+각 요청의 첫 호출을 비교하려면 매번 같은 초기 상태로 돌리는 **reset**이 필요하다. 이어지는 생성 속도를 비교하려면 이전 상태를 유지해야 한다.
+
+예열도 상태를 바꿀 수 있다. 무엇을 초기화하고 어느 시점부터 시간을 재는지 먼저 정한 뒤, 모든 후보에 같은 순서를 적용한다.
 
 **이어서 읽기:** [측정과 디버깅 실습](17-debugging.md) — 상태를 가진 함수를 반복해서 재는 경우
 
@@ -355,7 +534,11 @@ measure_completed의 warm-up도 callable을 실행하므로 상태를 갱신한�
 <details class="reader-review-item">
 <summary>사용자 model(x)와 backend 그래프의 인수·반환 구조는 어떻게 연결되는가?</summary>
 
-사용자 model(x)는 멤버 상태 weight·bias를 내부에서 읽지만, 캡처된 그래프는 예컨대 forward(weight,bias,x)로 이 상태를 명시적 인수로 받을 수 있다. backend가 반환할 callable은 실제 받은 그래프의 인수 순서와 반환 컨테이너를 보존한다. 설명용 x=3, weight=2, bias=1에서는 내부 결과가 (7,)이고, 바깥 wrapper가 이를 풀어 사용자에게 7을 반환한다. (y,)는 한 원소 tuple이고 (y)는 y 자체여서 값이 같아도 인터페이스는 다르다. 실제 예제는 graph_module.code의 forward와 return을 관찰해야 하며, 설명용 이름·순서·tuple을 모든 PyTorch 버전에 하드코딩하지 않는다. inspect_backend가 graph_module.forward를 반환하는 것은 받은 계약을 그대로 보존하는 CPU 예이며 NPU 가속 구현이 아니다.
+사용자는 `model(x)`처럼 입력 하나만 전달해도, 캡처된 그래프는 x 외에 가중치를 인수로 받을 수 있다. 모델 안에 숨겨져 있던 값들을 그래프의 앞쪽 입력으로 꺼내기 때문이다.
+
+반환값도 원래 tensor 하나였는데 그래프에서는 tensor 하나를 담은 tuple일 수 있다. `[결과]`와 결과 자체는 Python에서 다른 구조다.
+
+백엔드는 받은 그래프의 인수·반환 구조를 지켜야 한다. 무조건 원래 `model`의 호출 모양을 가정하지 말고 그래프의 입력 설명과 반환문을 함께 확인한다.
 
 **이어서 읽기:** [다른 NPU의 PyTorch 지원 방식](18-npu-ecosystems.md) — 원래 함수의 인수와 캡처한 함수의 인수를 연결한다
 
@@ -364,7 +547,11 @@ measure_completed의 warm-up도 callable을 실행하므로 상태를 갱신한�
 <details class="reader-review-item">
 <summary>관찰한 값으로 양자화 scale 후보를 어떻게 비교하는가?</summary>
 
-관측 activation 네 값 [-0.9,-0.2,0.3,0.9]와 정수 범위 -4~3, zero point 0을 고정하고 두 scale의 복원 MSE를 비교한다. scale 0.25는 [-1,-0.25,0.25,0.75]로 복원하여 제곱오차 합0.0375, MSE0.009375이며 clipping은 1개다. scale0.5는 [-1,0,0.5,1]로 복원하여 합0.1, MSE0.025이며 clipping은 0개다. 이 데이터·후보·MSE 기준에서는 0.25가 낫다. clipping 개수만 최소화하는 선택과 다르다. 이 기준은 모든 calibration 도구의 고정 알고리즘이 아니며, 작은 배열 MSE가 전체 모델 품질이나 RNGD 실행·성능을 보장하지 않는다. 실제 범위가 다른 평가 입력과 NPU의 scale·적용 단위 계약은 따로 확인한다.
+넓은 범위의 숫자를 작은 정수로 저장하려면 ‘정수 한 칸이 원래 숫자 얼마를 뜻할지’ 정해야 한다. 그 간격을 **scale**이라고 한다.
+
+간격을 작게 잡으면 작은 차이를 잘 구분하지만 큰 값을 담지 못해 범위 끝으로 잘릴 수 있다. 간격을 크게 잡으면 큰 값은 담아도 서로 가까운 값이 같은 정수로 바뀔 수 있다.
+
+관찰한 입력에 후보 scale을 각각 적용해 잘린 값의 수와 복원 오차를 비교한다. 표본에서 오차가 작았다는 결과 뒤에는 실제 모델 품질과 NPU 지원 여부를 별도로 확인해야 한다.
 
 **이어서 읽기:** [모델과 실행 방식을 함께 최적화하기](19-model-optimization.md) — 보정 데이터로 scale 후보를 비교한다
 
@@ -373,7 +560,11 @@ measure_completed의 warm-up도 callable을 실행하므로 상태를 갱신한�
 <details class="reader-review-item">
 <summary>Attention의 토큰 축·특징 축·행렬 shape·softmax 축은 무엇인가?</summary>
 
-batch·head를 생략한 한 attention에서 Q=[Lq,d], K=[Lk,d], V=[Lk,dv]다. 예제는 Q=[[1]]의 [1,1], K=[[1],[0]]의 [2,1], V=[[10],[20]]의 [2,1]이다. K의 2는 key 토큰 위치 수이고 비교 성분 길이 d는1이다. K.T는 [1,2]이므로 Q@K.T는 [1,2] 점수 [[1,0]]을 만든다. sqrt(d)=1이고 mask는 없으며, softmax를 각 질의 행의 key 위치 축으로 적용해 합1인 [0.7311,0.2689]를 만든다. 이 가중치 [1,2]와 V[2,1]을 곱하면 [1,1] 결과 약12.6894가 된다. 전체 self-attention의 Lq=Lk=L이면 점수 L×L이고, 한 토큰 decode의 Lq=1이면 1×Lk다. Q(K.T V)=10으로 바꾸는 것은 softmax를 삭제하므로 같은 함수가 아니다.
+Q는 ‘이번에 찾는 정보’, K는 ‘비교할 각 위치의 정보’, V는 ‘그 위치에서 가져올 내용’을 숫자 배열로 표현한 것이다. 행은 토큰 위치, 열은 한 토큰의 특징값이라고 읽는다.
+
+예를 들어 Q가 한 행, K·V가 두 행이면 한 위치가 두 위치를 참고한다. 점수 표에는 두 위치를 얼마나 참고할지 나타내는 숫자 두 개가 생긴다. **Softmax**는 이 점수들을 음수가 없고 합이 1인 비중으로 바꾸는 계산이다.
+
+점수가 `[1,0]`, 내용이 `[10,20]`이면 비중은 약 `[0.731,0.269]`, 결과는 `10×0.731+20×0.269≈12.689`다. 각 질의 행에서 참고할 위치 방향으로 비중의 합이 1이 되어야 한다.
 
 **이어서 읽기:** [모델과 실행 방식을 함께 최적화하기](19-model-optimization.md) — 행은 토큰 위치, 열은 벡터 성분이다
 
@@ -382,7 +573,11 @@ batch·head를 생략한 한 attention에서 Q=[Lq,d], K=[Lk,d], V=[Lk,dv]다. �
 <details class="reader-review-item">
 <summary>나중 조각의 최대 점수가 커지면 앞서 누적한 값을 어떻게 고치는가?</summary>
 
-score0·value20을 먼저 처리하면 m=0,l=1,o=20이다. 다음 score1을 만나면 새 기준 m=1이므로 기존 l과 o 모두 exp(0−1)=e^-1을 곱해 각각 약0.3679와7.3576으로 환산한다. 새 값의 가중치 exp(1−1)=1과 value10을 더하면 l≈1.3679,o≈17.3576, o/l≈12.6894가 된다. 이유는 각 기존 항 exp(s−새m)=exp(s−옛m)×exp(옛m−새m)이어서 공통 배율을 기존 합 전체에 적용할 수 있기 때문이다. 이 환산을 생략하면 (20+10)/(1+1)=15로 틀린다. 순서를 반대로 처리해도 실수 수학의 의미는 같지만 유한 정밀도의 누적 순서 차이는 허용오차로 확인하며, 이 순수 Python 예가 FlashAttention/RNGD 커널의 구현이나 성능 검증은 아니다.
+Softmax는 큰 지수 값을 다루기 위해 모든 점수에서 같은 기준값을 빼서 계산할 수 있다. 이 기준으로 현재까지 본 가장 큰 점수를 사용한다.
+
+점수 0·내용 20을 먼저 읽으면 분모 합은 1, 분자 합은 20이다. 뒤에서 더 큰 점수 1을 만나 기준을 0에서 1로 바꾸면, 앞의 기여분도 새 기준에 맞춰야 한다. 두 합 모두 `exp(0-1)≈0.368`을 곱한다.
+
+그 뒤 새 항을 더하면 분모는 약 1.368, 분자는 약 17.358, 둘을 나눈 답은 약 12.689다. 앞의 합을 환산하지 않고 단순 평균을 내면 15가 되어 다른 계산이 된다. 조각별 계산에서도 전체 softmax와 같은 의미를 유지해야 하는 이유다.
 
 **이어서 읽기:** [모델과 실행 방식을 함께 최적화하기](19-model-optimization.md) — 큰 점수가 뒤늦게 오면 앞서 더한 값을 새 기준으로 바꾼다
 

@@ -2,9 +2,7 @@
 
 > **전체 경로에서의 위치**
 >
-> Rust device 함수·mapping → **furiosa-opt 컴파일** → Image → opt-rt 실행
->
-> 공개 저수준 경로에서 메모리 배치와 계산 흐름을 표현한다. [04장의 TCL·SDK 경로](04-tcl-edf.md)와는 API와 적재 형식을 구분한다. 먼저 원소 하나의 위치를 따라간 뒤 컴파일·실행·스케줄 관찰로 넓힌다.
+> 개발자가 숫자의 저장 위치와 이동 순서를 더 직접 지정하는 경로다. 먼저 작은 배열을 배치해 보고 실제 도구의 표기로 넓힌다. [04장](04-tcl-edf.md)의 TCL 실습과는 사용하는 API를 구분한다.
 
 CPU(Central Processing Unit)에서 C의 2차원 배열을 사용하여 `a[row][col]`을 읽으면, 결국 한 저장 공간 안의 어느 위치를 읽을지 정해야 한다. NPU(Neural Processing Unit)에서도 같은 문제가 있지만, 값이 여러 chip·PE·slice의 메모리에 나뉘고 여러 차례에 걸쳐 계산 경로로 전달될 수 있다. **Mapping(매핑)은** 이 논리 좌표와 실제 저장·처리 위치의 관계를 표현한다.
 
@@ -52,7 +50,9 @@ pub type ColumnMajor = m![W, H]; // H가 안쪽: 물리 위치 p를 W=p/2, H=p%2
 
 ## 2. 논리 축과 물리 자원의 이름을 구분한다
 
-논리 축 A·H·W는 배열의 좌표다. **Chip·Cluster·PE·Slice·Lane은 그 배열을 저장하거나 계산에 배치하는 물리 단위**다. CPU의 스레드 ID나 Python의 차원 번호와 자동으로 일치하지 않는다.
+배열의 ‘몇 번째 행·열인가’와 장치의 ‘어느 처리 구획인가’는 다른 질문이다. A·H·W 같은 축 이름은 배열 안의 값을 찾는 데 쓰고, Chip·Cluster·PE·Slice·Lane은 그 값을 저장하거나 계산할 장치 위치를 구분한다.
+
+아래 표는 장치 위치의 포함 관계다. 배열의 0번 축을 장치의 0번 slice로 자동 대응시키는 규칙은 아니다. 개발자나 컴파일러가 대응 방법을 정해야 한다.
 
 | 단위 | 이 장에서 필요한 의미 | 고정 공개 문서의 관계 |
 |---|---|---|
@@ -62,11 +62,17 @@ pub type ColumnMajor = m![W, H]; // H가 안쪽: 물리 위치 p를 W=p/2, H=p%2
 | Slice | PE 안에서 데이터를 나누고 계산하는 더 작은 단위 | PE당 64개, cluster당 256개 |
 | Lane | 수축 연산과 TRF 배치에 쓰는 slice 내부의 세부 병렬 차원 | TRF의 slice당 8개 lane |
 
-**TRF(Tensor Register File)는** 반복 사용할 수축 연산 피연산자를 가까이 두는 레지스터 묶음이다. 그러나 모든 저장소에 Lane 차원이 붙는 것은 아니다. `DmTensor`는 `Chip·Cluster·Slice·Element`로 나뉘고, `TrfTensor`는 여기에 `Lane`이 추가된다. `Element`는 선택한 물리 단위 **안의 저장 위치**다. DM(Data Memory)의 원소 8개와 TRF의 lane 8개는 개수가 같아도 다른 개념이다. [공간·시간 차원의 공식 정의](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/mapping-tensors/spatial-temporal-dimensions.md)
+같은 수를 여러 번 곱한다면 계산기 가까이에 두고 다시 읽는 편이 유리할 수 있다. **TRF**는 이런 텐서 연산용 값을 보관하는 하드웨어 레지스터 묶음이다. 디스크 파일은 아니다.
+
+DM 배열에서는 Chip·Cluster·Slice·Element로 위치를 구분하고, TRF에는 Lane 차원도 있다. **Element는 선택한 구획 안의 저장 칸**, Lane은 더 작은 병렬 배치 차원이다. 둘 다 숫자가 8이라고 같은 대상을 뜻하지는 않는다. [공간·시간 차원의 공식 정의](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/mapping-tensors/spatial-temporal-dimensions.md)
 
 장치 tensor의 타입은 어느 물리 단위에 어떤 논리 좌표를 놓는지 표현한다. 실제 메모리를 소유하고 주소를 관리하는 것은 storage 객체와 런타임이다. 값을 놓는 규칙을 맞췄다고 저장 공간 할당까지 끝났다고 생각하면 안 된다.
 
 ## 3. 2,048개 정수를 256개 slice에 나누어 놓는다
+
+먼저 8개 값을 두 보관 구획에 네 개씩 놓는 작은 예를 생각하자. 0~3번은 첫 구획, 4~7번은 둘째 구획에 둔다. 5번 값의 위치는 ‘구획 1, 그 안의 칸 1’이다. `5//4=1`, `5%4=1`로 구한다.
+
+아래 실제 예제도 같은 나눗셈 원리를 사용하되 구획의 크기와 수가 다르다. 원소를 8개씩 묶어 256개 slice에 놓는다. 작은 예는 좌표 계산용이며 장치의 최소 저장 단위를 뜻하지 않는다.
 
 공식 `constant_add_kernel`은 모든 정수에 1을 더한다. 다음은 **설명 주석을 추가한 mapping 선언 발췌**다. 전체 실행 파일은 뒤의 공식 template에서 만든다.
 
@@ -92,7 +98,9 @@ pub type Slice = m![A / 8 # 256]; // 논리 인덱스 A를 8개씩 묶어 256 sl
 
 ### `#`는 0을 채우라는 명령이 아니다
 
-`#`는 mapping의 물리 범위를 padding으로 맞추는 표기다. `m![1 # 2]`는 유효한 배치 하나와 padding 위치 하나로 cluster 차원의 범위를 2로 맞춘다. 기본 padding 표기만으로 값이 0이라고 보장되지 않으며, 타입 표현을 적는 것만으로 메모리에 0을 쓰는 DMA(Direct Memory Access)가 실행되지 않는다. 필요한 중립값·마스크·읽기 규약을 실제 연산에 맞춰야 한다. [Padding의 의미](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/mapping-tensors/mapping-expressions.md)
+유효한 데이터는 한 구획만 쓰는데, 표현해야 할 장치 범위는 두 구획인 경우가 있다. `m![1 # 2]`는 이런 범위를 맞추는 표기다. 실제 값이 있는 위치 하나와 남는 위치 하나를 구분한다.
+
+여기서 `#`를 썼다고 남는 메모리에 0을 쓰는 작업이 실행되는 것은 아니다. 뒤 계산이 남는 위치를 읽는다면 무엇을 읽어야 하는지 별도로 정해야 한다. 예를 들어 합산에서 제외할 위치인지, 중립값을 채울 위치인지가 필요하다. [Padding의 의미](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/mapping-tensors/mapping-expressions.md)
 
 이 예에서 `A/8=256`이므로 `#256`으로 추가되는 slice는 없다. `Cluster`의 `#2`에서는 유효하지 않은 cluster 위치 하나를 표현한다.
 
@@ -100,7 +108,7 @@ pub type Slice = m![A / 8 # 256]; // 논리 인덱스 A를 8개씩 묶어 256 sl
 
 ## 4. 저장된 값이 계산 경로로 흘러가는 과정
 
-HBM(High Bandwidth Memory)은 큰 장치 메모리이고, DM은 계산에 가까운 칩 내부 메모리다. **DMA(Direct Memory Access)는** CPU가 각 원소를 복사하는 대신 전송 엔진이 데이터를 옮기는 방식이다. CPU↔HBM 전송과 HBM↔DM 전송을 구분한다. **Fetch**는 DM 값을 Tensor Unit의 계산 흐름으로 읽고, **Commit**은 계산 결과를 DM에 기록한다.
+HBM(High Bandwidth Memory)은 큰 장치 메모리이고, DM은 계산에 가까운 칩 내부 메모리다. **DMA는** CPU가 각 원소를 복사하는 대신 전송 엔진이 데이터를 옮기는 방식이다. CPU↔HBM 전송과 HBM↔DM 전송을 구분한다. **Fetch**는 DM 값을 Tensor Unit의 계산 흐름으로 읽고, **Commit**은 계산 결과를 DM에 기록한다.
 
 `constant_add_kernel`의 첫 이동은 HBM 입력을 앞 절의 DM mapping으로 옮기는 것이다. 아래는 해당 함수 안에서 사용하는 한 줄에 설명 주석을 추가한 발췌다. `input`, `device`, `Cluster`, `Slice`, `A`는 template의 선언을 사용한다.
 
@@ -159,7 +167,9 @@ Vector Engine은 패킷 원소에 정수·부동소수점 등의 벡터 연산�
 
 ## 5. TCL과 vISA가 컴파일러에 전달하는 정보
 
-TCL(Tensor Contraction Language)에서는 논리 축과 연산의 의미를 표현하고 컴파일러에 맡기는 부분이 많다. vISA에서는 텐서를 어느 메모리에 놓고, 축을 어느 하드웨어 차원에 배치하고, 어느 엔진 경로로 흘릴지를 더 구체적으로 쓴다. 모든 레지스터의 원시 바이트를 직접 관리해야 하는 수준과도 다르다. [TCL과 vISA의 공개 소개](https://furiosa.ai/developers), [vISA 소개](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/introduction.md)
+행렬곱을 작성할 때 ‘어느 축의 숫자를 곱해서 더할까’까지만 적고 구체적인 저장 위치는 컴파일러에 맡길 수 있다. TCL은 이런 방식에 가깝다.
+
+vISA 경로에서는 같은 계산을 어느 메모리에 두고, 어떻게 옮겨 계산기에 공급할지 더 직접 표현한다. 선택할 수 있는 부분이 늘지만, 그만큼 배치와 이동이 맞는지 확인할 책임도 늘어난다. NPU의 모든 원시 명령을 손으로 적는다는 뜻은 아니다. [TCL과 vISA의 공개 소개](https://furiosa.ai/developers) · [vISA 소개](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/introduction.md)
 
 | 결정 | TCL에서 읽는 지점 | vISA에서 읽는 지점 |
 |---|---|---|
@@ -173,7 +183,9 @@ vISA는 성능이 중요한 작은 구간의 가설을 직접 실험할 때 유�
 
 ### vISA에서 컴파일된 실행물까지
 
-**vISA는 컴파일 과정에서 다루는 중간 표현이며, 그 텍스트를 NPU에 전달해서 곧바로 실행하는 경로가 아니다.** 공식 도구는 중간 vISA를 dump하는 기능과 커널을 컴파일하는 기능을 구분하고, 검증 문서는 최종 장치 실행물을 EDF(Executable Device Format)라고 부른다. 공개 opt 소스에서는 이 실행 단계에 사용하는 구체적인 객체로 compiler image와 device executable을 확인할 수 있다. [중간 vISA 출력](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/tools/kernel-optimizer.md), [컴파일된 EDF의 실행](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/quick-start/kernel-validation.md), [공개 실행물 계약](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-abi/README.md)
+vISA는 계산과 이동을 컴파일러가 다루는 표현이다. 작성한 설명은 다시 컴파일되어 장치 실행물로 바뀌어야 한다. vISA 텍스트를 NPU에 바로 보내 실행하지는 않는다.
+
+따라서 ‘중간 vISA가 생성됨’과 ‘전체 컴파일이 끝남’, ‘장치에 적재됨’, ‘결과가 맞음’을 나누어 확인한다. 아래 그림은 이 순서와 각 산출물을 보여 준다. [중간 vISA 출력](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/tools/kernel-optimizer.md) · [컴파일된 EDF의 실행](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/quick-start/kernel-validation.md) · [공개 실행물 계약](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-abi/README.md)
 
 ```mermaid
 flowchart TB
@@ -413,7 +425,7 @@ assert byte_offset == 768                   # 기준 주소로부터 768 bytes �
 | 0 | 3 | `table[3,0:128]` | 768 |
 | 1 | 1 | `table[1,0:128]` | 256 |
 
-`by_positions`의 index tensor가 SPM(Scratchpad Memory)에 있다는 것은 **숫자 3·1을 저장한 목록의 위치**다. 조회 대상인 `table`은 여전히 HBM(High Bandwidth Memory)에 있다. 반면 `by_byte_offsets`는 HBM에 저장한 index tensor의 값으로 768·256을 받는다. offset의 기준은 해당 table 또는 view의 시작 주소이며, 그 값은 I축 byte stride의 정수배여야 한다. 즉 position과 byte offset은 같은 조회를 다른 단위와 다른 index 저장 위치로 표현한다. [인덱스 단위·형식의 공개 구현](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-std/src/tensor/memory/dma/gather.rs#L209-L334)
+`by_positions`의 index tensor가 SPM(Scratchpad Memory)에 있다는 것은 **숫자 3·1을 저장한 목록의 위치**다. 조회 대상인 `table`은 여전히 HBM에 있다. 반면 `by_byte_offsets`는 HBM에 저장한 index tensor의 값으로 768·256을 받는다. offset의 기준은 해당 table 또는 view의 시작 주소이며, 그 값은 I축 byte stride의 정수배여야 한다. 즉 position과 byte offset은 같은 조회를 다른 단위와 다른 index 저장 위치로 표현한다. [인덱스 단위·형식의 공개 구현](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-std/src/tensor/memory/dma/gather.rs#L209-L334)
 
 SPM 경로에는 추가 배치 계약이 있다. 이 버전에서 인덱스 목록은 각 사용 cluster의 PE 0에 모여 있어야 하며 `IdxPe=m![1 # 4]`로 표현한다. `Domain`은 index가 **정의된 좌표들**이다. index tensor의 cluster mapping에 이름 있는 축 CL이 있으면 cluster마다 다른 목록이므로 `Domain=m![CL,D]`; 이름 있는 cluster 축 없이 한 목록을 사용하면 `Domain=m![D]`다. PE 번호 자체는 Domain에 넣지 않는다. Domain은 인덱스 숫자가 선택하는 I축과도 다르다. [SPM domain과 PE 배치 계약](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/moving-tensors/dma-engine.md#a-gathers-domain-from-an-spm-index)
 
@@ -469,7 +481,11 @@ CPU 실행 파일도 기계어 명령만 있는 배열이 아니라 적재할 �
 
 ### 파일이 준비된 뒤 runtime이 추가하는 것
 
-`registry/load/mod.rs::load()`는 image를 읽은 뒤 실제 device topology와 맞는지 비교한다. 필요한 weight bytes가 있으면 장치 버퍼를 할당하고 올리며, compiler가 요청한 stack을 준비한다. 이어서 signature와 slot 관계를 보관하는 `Binder`를 만들고 `Function::load()`를 호출한다. **컴파일된 실행물이 있어도 현재 장치의 메모리와 인수는 여기서 구체화된다.** [컴파일 이미지 적재](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-rt/src/registry/load/mod.rs)
+파일을 읽었다고 실행 준비가 끝난 것은 아니다. 현재 장치의 메모리를 확보하고, 파일 안의 프로그램과 이번 호출의 입력을 연결해야 한다.
+
+공개 opt의 `registry/load/mod.rs::load()`는 먼저 실행 이미지가 현재 장치 구성과 맞는지 확인한다. 필요한 고정 데이터와 작업용 stack 공간을 준비한 다음 `Binder`와 `Function::load()`를 사용한다. 여기서 **Binder는 프로그램의 인수 자리에 실제 값을 연결하기 위한 정보**를 보관한다.
+
+예를 들어 ‘첫 인수는 입력 배열’이라는 파일 속 설명과 ‘이번 입력이 놓인 장치 버퍼’는 다르다. 런타임이 둘을 연결해야 호출할 수 있다. [컴파일 이미지 적재](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-rt/src/registry/load/mod.rs)
 
 다음은 원본의 `unsafe` 블록에 있는 호출 부분에 설명 주석을 추가한 발췌다. 독립 실행 코드가 아니다. `device`, `executable`, `sram_end`, `capacity`, `binder`는 위 로더에서 준비한 값이다. 실행 코드의 bytes와 **호출 인수를 연결할 함수**를 함께 전달하는 점을 읽으면 된다.
 
@@ -503,7 +519,9 @@ flowchart TB
 
 ### Relocation이라는 단어를 정확하게 사용하기
 
-Relocation은 미리 고정할 수 없었던 주소 참조를 실제 배치에 맞게 연결·수정하는 과정이다. 이 조사에서는 다음 세 가지를 구분한다.
+컴파일할 때는 나중에 어느 메모리 주소에 적재될지 모를 수 있다. 적재한 위치에 맞춰 주소 참조를 연결하거나 수정하는 처리를 **relocation**이라고 한다.
+
+다만 파일을 읽는 모든 일을 relocation이라고 부르지는 않는다. 아래에서는 파일 내용 해석, 실제 코드 적재, 주소 참조의 연결을 나누어 본다.
 
 | 경계 | 공개 근거에서 확인한 수준 |
 |---|---|

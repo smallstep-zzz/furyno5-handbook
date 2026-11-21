@@ -2,15 +2,17 @@
 
 > **전체 경로에서의 위치**
 >
-> 학습 데이터 → **binning·histogram·분할 선택** → 트리 모델
->
-> 추론 중심의 앞 장과 달리 트리 학습을 사례로 비용을 분석한다. CPU 준비, NPU 작업, 반복 호출의 크기를 나누어 [07장](07-optimization.md)의 최적화 원칙을 적용하고 [17장](17-debugging.md)의 재현 기록과 연결한다.
+> 트리를 학습하는 실제 실험으로 CPU 준비와 NPU 계산의 시간을 비교한다. [07장](07-optimization.md)에서 배운 전체 비용의 관점을 적용하는 사례다.
 
-큰 배열의 합계를 빠르게 구하는 장치가 있어도, 작은 합계 요청을 수백만 번 보내고 매번 완료를 기다리면 프로그램 전체는 느릴 수 있다. DB(Database)에서 행마다 원격 질의를 보내는 경우와, 데이터를 묶어 한 번에 집계하는 경우를 떠올리면 된다. **FuryBoost는 RNGD에서 학습을 실행했고 여러 구조 개선도 했지만, 기록된 HIGGS 비교에서는 멀티코어 XGBoost·LightGBM보다 느렸다.** 이 결과에서 다음 최적화의 병목을 찾을 수 있다. 전체 비용을 CPU(Central Processing Unit) 전처리, host 호출, EDF(컴파일된 장치 실행 파일) 실행, 동기화, 반복 상태로 나눠 보면 “큰 배열의 곱과 합을 잘 처리하는 장치”와 “빠른 tree boosting 학습기” 사이에 무엇이 남는지 알 수 있다. 이 장은 커밋 `62faf49`에 저장된 2026-11-19 측정기록을 재검토했다. [FuryBoost README](https://github.com/smallstep-zzz/FuryBoost/blob/62faf49a29cc40230ee3df271b8f91ad8488eb5d/README.md)
+한 번에 큰 배열을 처리할 때 빠른 장치도, 작은 일을 수백만 번 보내고 매번 기다리면 전체 프로그램은 느릴 수 있다. 이 장은 실제 학습 기록에서 그 차이를 살펴본다.
+
+FuryBoost는 RNGD에서 학습을 실행하고 여러 개선을 적용했지만, 기록된 HIGGS 비교에서는 멀티코어 XGBoost·LightGBM보다 느렸다. CPU 전처리, 장치 호출, 계산, 완료 대기 중 어디에 시간이 쓰였는지 나누어 다음 개선을 고른다. 사용한 자료는 커밋 `62faf49`에 저장된 2026-11-19 기록이다. [FuryBoost README](https://github.com/smallstep-zzz/FuryBoost/blob/62faf49a29cc40230ee3df271b8f91ad8488eb5d/README.md)
 
 ## 1. 무엇을 만들었는가
 
-FuryBoost는 수치형 입력으로 두 범주를 구별하는 **이진분류** 또는 숫자 값을 예측하는 **회귀**를 위한 대칭 트리 Gradient Boosting 실험이다. **결정 트리**는 `특성 값 ≤ 경계값` 같은 질문을 따라가 최종 leaf(잎)에 저장된 값을 출력하는 모델이다. **Gradient Boosting**은 앞 모델의 오차를 줄이는 작은 트리를 차례로 더하는 학습 방법이다. XGBoost를 감싼 wrapper가 아니라 별도의 training loop와 NumPy 기준 구현, RNGD backend를 가진다. 한 깊이의 모든 leaf에 같은 특성·threshold를 적용하는 대칭 트리라는 점도 비교 해석에 중요하다. [설계](https://github.com/smallstep-zzz/FuryBoost/blob/62faf49a29cc40230ee3df271b8f91ad8488eb5d/docs/ARCHITECTURE.md) · [학습 루프](https://github.com/smallstep-zzz/FuryBoost/blob/62faf49a29cc40230ee3df271b8f91ad8488eb5d/furyboost/training.py)
+‘이 값이 0.5 이하인가?’처럼 조건을 따라가 답을 고르는 모델이 **결정 트리**다. 조건 끝에 도착한 칸을 leaf라고 한다. 사람이나 물건을 두 부류로 나누면 이진분류, 숫자를 예측하면 회귀 문제다.
+
+FuryBoost는 앞 모델의 오차를 줄이는 트리를 차례로 더하는 Gradient Boosting 학습 실험이다. 한 깊이에서 같은 조건을 적용하는 대칭 트리를 사용한다. 별도 학습 루프와 NumPy 기준 구현, RNGD 계산 경로를 가진다. 아래에서는 먼저 네 행의 숫자로 트리 하나의 선택을 따라간다. [설계](https://github.com/smallstep-zzz/FuryBoost/blob/62faf49a29cc40230ee3df271b8f91ad8488eb5d/docs/ARCHITECTURE.md) · [학습 루프](https://github.com/smallstep-zzz/FuryBoost/blob/62faf49a29cc40230ee3df271b8f91ad8488eb5d/furyboost/training.py)
 
 ### 네 행으로 학습 한 단계를 따라간다
 
@@ -23,7 +25,11 @@ FuryBoost는 수치형 입력으로 두 범주를 구별하는 **이진분류** 
 | 2 | 0.6 | 3 | 0 | −3 | 1 |
 | 3 | 0.9 | 3 | 0 | −3 | 1 |
 
-한 행의 손실을 `L = (예측−정답)² / 2`로 놓으면 **gradient(기울기)는** 예측을 바꿀 때 손실이 어느 방향으로 변하는지 나타내는 미분값 `g=예측−정답`이다. **Hessian(헤시안)은** 그 기울기의 변화율이며 이 예에서는 `h=1`이다. 실제 HIGGS 이진분류는 그 목적함수에 맞는 값을 사용한다. 여기의 회귀 식을 HIGGS 구현 식으로 바꿔 읽지 않는다.
+예측이 정답과 얼마나 다른지 수치로 잰 것이 **손실(loss)이다**. 이 예는 차이를 제곱하고 2로 나눈 `L=(예측−정답)²/2`를 쓴다. 정답이 1인데 0으로 예측했다면 손실은 0.5다.
+
+어느 방향으로 예측을 고칠지 계산할 때 쓰는 기울기가 **gradient**다. 이 손실식에서는 `g=예측−정답`이므로 방금 예는 -1이다. 기울기가 얼마나 변하는지를 나타내는 **Hessian**은 이 예에서 1이다. 미분을 직접 계산하지 않아도 아래 표에서는 이 두 값의 합을 사용해 후보를 비교할 수 있다.
+
+실제 HIGGS 분류 실험은 그 문제의 손실식을 사용한다. 여기의 회귀 예와 같은 식이라고 바꿔 읽지는 않는다.
 
 후보 질문 `x≤0.5`를 적용하면 앞 두 행과 뒤 두 행으로 갈린다. 각 쪽의 기울기 합 G와 헤시안 합 H를 모으면 왼쪽은 `G=−1+(−1)=−2, H=1+1=2`, 오른쪽은 `G=−3+(−3)=−6, H=1+1=2`다. 수식으로 쓰는 `G=Σ g_i`의 **Σ(시그마)는** 해당 행들을 순회하며 g 값을 모두 더하라는 뜻으로, 코드의 `sum(...)`과 같다.
 
@@ -133,7 +139,9 @@ CPU가 제어와 명시된 후보 선택을 맡는 것 자체는 fallback 증거
 
 HIGGS는 앞 1,050만 행을 학습하고 마지막 50만 행을 평가한 기록이다. 입력은 28개 특성의 FP32(Float32)이며 원본 CSV 순서를 유지했다. 서버 CPU는 AMD EPYC 9354이고 벤치마크에 물리 코어 8개·논리 thread 16개가 허용됐다. RNGD는 한 장이었다. SDK는 furiosa-torch 2026.4.0, TCC 2026.4.1, CPU 비교는 XGBoost 3.2.0과 LightGBM 4.7.0이다. [데이터·환경·분할 원본](https://github.com/smallstep-zzz/FuryBoost/blob/62faf49a29cc40230ee3df271b8f91ad8488eb5d/reports/rngd-server3/higgs-dev2/README.md)
 
-초기 비교는 tree 5개, 최대 depth 3, 최대 16 bins다. FuryBoost는 대칭 트리, XGBoost는 CPU hist, LightGBM은 leaf 제한과 column-wise histogram 설정을 사용했다. **따라서 시간·AUC·loss를 함께 보는 실용 비교이지, 동일 수학 연산만 바꾼 하드웨어 대결은 아니다.** AUC(Area Under the ROC(Receiver Operating Characteristic) Curve)는 분류 threshold 전체에서 양성과 음성의 순위 구별을 요약하며, accuracy와 다른 지표다.
+초기 기록은 트리 5개, 최대 깊이 3, 값 구간 최대 16개로 학습했다. FuryBoost·XGBoost·LightGBM은 같은 데이터를 사용했지만 트리를 만드는 방식과 CPU 설정까지 완전히 같은 것은 아니다. 따라서 시간과 예측 품질을 함께 비교한다.
+
+표의 accuracy는 정답을 맞힌 비율, log loss는 예측 확률이 정답에 얼마나 맞는지 보는 손실이다. AUC는 양성 사례가 음성보다 높은 점수를 받는 경향을 요약한다. 어느 하나의 값만으로 모든 품질을 대표하지는 않는다.
 
 표를 읽기 전에 지표의 방향을 정하자. **Accuracy(정확도)는** 정해진 판정 기준으로 맞힌 비율, **AUC**는 양성 표본에 음성보다 높은 점수를 주는 순위 구별 능력, **log loss(로그 손실)는** 정답에 얼마나 높은 확률을 줬는지 평가하는 손실이며 작을수록 좋다. 예를 들어 실제 양성에 0.9, 실제 음성에 0.8을 출력하면 순위는 맞지만 기준 0.5에서 둘 다 양성으로 판정하므로 정확도는 50%다. 이 두 표본의 순위 AUC는 1이 된다. 따라서 한 지표만 읽어 모델이 더 좋다고 결론 내리지 않는다. 이 두 표본은 지표 설명용이며 아래 HIGGS 평가값과 무관하다.
 

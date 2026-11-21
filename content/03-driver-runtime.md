@@ -2,9 +2,7 @@
 
 > **전체 경로에서의 위치**
 >
-> 모델·커널 → 컴파일 산출물 → **런타임·드라이버·펌웨어** → RNGD
->
-> 각 계층의 책임을 나누는 장이다. 컴파일러는 프로그램을 준비하고 런타임은 이번 입력을 연결하며 드라이버는 장치 접근을 제공한다. [04장](04-tcl-edf.md)에서는 이 관계를 실제 TCL·EDF 호출로 확인한다.
+> 계산 방법을 장치 프로그램으로 바꾸는 일, 이번 입력으로 실행하는 일, 운영체제를 통해 장치에 접근하는 일을 구분한다. 실제 호출은 [04장](04-tcl-edf.md)에서 이어진다.
 
 C에서 배열의 각 원소에 1을 더하는 함수를 만들었다고 하자. 함수를 **컴파일하는 일**, 실행할 때 **배열을 준비하는 일**, 함수를 **호출하고 결과를 받는 일**은 서로 다르다. NPU(Neural Processing Unit, 신경망 처리 장치)에서도 이 구분은 그대로 남는다. 여기에 CPU(Central Processing Unit)가 쓰는 메모리와 NPU가 쓰는 메모리 사이의 데이터 이동, 장치 접근 권한, 비동기 실행의 완료 확인이 추가된다.
 
@@ -49,7 +47,9 @@ CPU 프로그램은 보통 운영체제가 제공한 가상 주소를 사용한�
 | 계산 | `[4,8]` 생성 | `[12,16]` 생성 | 어떤 계산 엔진에 일을 배치할지 정한다. |
 | 결과 이동 | 첫 출력 구간에 기록 | 둘째 출력 구간에 기록 | 아직 사용 중인 입력·출력을 덮어쓰지 않는다. |
 
-**IR(Intermediate Representation, 중간 표현)은** 이 계산을 컴파일러가 검사·변환하기 좋은 자료구조로 나타낸 것이다. 소스 문자열을 그대로 실행하는 대신, 입력 값·덧셈·출력 값과 그 연결을 표현한다고 생각하면 된다. **Lowering**은 이 표현을 더 구체적인 장치 연산과 이동으로 바꾸는 과정이다. **Mapping**은 논리 원소를 어느 장치 자원과 처리 순서에 대응시킬지 정하는 일이다. 이 정의는 일반적인 컴파일러 원리이며, 아래의 공개 근거와 구분해 읽는다.
+컴파일러는 소스의 글자만 보관하지 않고 ‘어떤 입력을 어떤 계산에 넣어 어느 값을 만드는가’를 구조로 만든다. 이 컴파일러용 표현이 **IR(중간 표현)이다**.
+
+처음에는 덧셈이라는 계산만 보일 수 있다. 이후 실제 데이터를 어디로 옮기고 어느 장치에서 더할지까지 정해 더 구체적인 표현으로 바꾼다. 이 과정을 **lowering**이라고 한다. **매핑(mapping)은** 그중 값과 작업을 장치의 어느 위치·순서에 놓을지 대응시키는 일이다.
 
 그 자료구조를 한 번 눈으로 보자. 다음은 `x + 1`의 연결만 드러낸 **교육용 IR 표기**다. 실제 TCL·vISA 문법, Furiosa 내부 pass의 출력, 실행 가능한 코드는 아니다. `%`로 시작하는 이름은 메모리 주소가 아니라 계산 값의 식별자다.
 
@@ -94,7 +94,9 @@ TCL(Tensor Contraction Language)은 텐서 계산을 기술하는 언어다. 공
 
 ### 행렬곱에서는 무엇이 추가되는가
 
-`left[M,K] × right[K,N] → output[M,N]`에서 M은 왼쪽 행 수, K는 두 입력이 공유하는 곱셈·합산 길이, N은 오른쪽 열 수다. 출력 한 칸은 K개의 곱을 더한다. 이 표기는 계산 의미를 정한다. 개발자가 `M=32, K=128, N=64`를 정하면 입력과 출력의 크기를 알 수 있지만, 그 사실만으로 **어느 메모리에서 어느 타일을 읽고, 언제 부분합을 저장하며, 어떤 전송을 겹칠지**까지 결정된 것은 아니다. 이것이 컴파일러에 맡기는 부분이다. 반대로 사용자가 vISA로 메모리와 mapping을 이미 지정한 경우에는 컴파일러가 선택할 수 있는 범위와 검사해야 할 제약이 달라진다. [TCL과 vISA의 역할](https://furiosa.ai/developers), [mapping의 공간·시간 차원](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/mapping-tensors/spatial-temporal-dimensions.md)
+출력 한 칸을 만들 때 여러 곱을 더해야 하는 행렬곱에서는 준비할 일이 더 생긴다. 예를 들어 세 항의 합을 두 작업이 나누면 두 부분합이 모두 준비된 뒤 합쳐야 한다. 입력을 몇 개씩 가져올지도 정해야 한다.
+
+`left[M,K] × right[K,N] → output[M,N]`에서 M·N은 출력의 행·열 수, K는 한 칸을 만들 때 곱해 더할 항의 수다. 이 크기를 알아도 데이터 이동과 작업 순서까지 정해지는 것은 아니다. TCL 경로는 많은 선택을 컴파일러에 맡기고, vISA 경로는 배치·이동을 더 직접 지정한다. [TCL과 vISA의 역할](https://furiosa.ai/developers) · [mapping의 공간·시간 차원](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/mapping-tensors/spatial-temporal-dimensions.md)
 
 예를 들어 입력을 읽기 전에 계산을 시작할 수 없고, 누산이 끝나기 전에 최종 결과를 내보낼 수도 없다. 그러나 의존성이 없는 다음 타일의 전송은 현재 타일 계산과 겹칠 여지가 있다. 다음 그림은 **이런 결정 관계를 설명하는 모형**이며 특정 compiler pass의 출력 순서를 복제한 것이 아니다.
 
@@ -111,7 +113,9 @@ flowchart TB
 
 ### 공개된 검증과 공개되지 않은 선택 알고리즘
 
-공개 저장소가 있다고 해서 전체 compiler 구현까지 모두 읽을 수 있는 것은 아니다. `furiosa-opt-lower/src/lib.rs`는 엔진의 제약 검증 함수는 공개하지만, 일부 lowering 알고리즘은 미리 빌드한 비공개 `furiosa-opt-lower-impl` 정적 라이브러리를 호출하는 wrapper라고 명시한다. 따라서 “이 mapping을 왜 거절하는가”를 공개 코드로 설명할 수 있는 부분과 “가능한 mapping 중 왜 이 결과를 선택했는가”를 확인할 수 없는 부분이 공존한다. [공개·비공개 구현 경계](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-lower/src/lib.rs)
+공개 소스로 확인할 수 있는 동작과 배포된 라이브러리 안에서 수행되는 동작이 함께 있다. 예를 들어 공개 opt 코드는 일부 잘못된 배치를 거절하는 조건을 보여 주지만, 일부 lowering은 미리 빌드된 라이브러리를 호출한다.
+
+따라서 ‘왜 이 입력을 거절하는가’와 ‘가능한 여러 배치 중 왜 이 배치를 골랐는가’를 모두 같은 수준으로 설명할 수는 없다. 이 장은 확인 가능한 역할과 조건을 기준으로 읽는다. [공개·비공개 구현 경계](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-lower/src/lib.rs)
 
 구체적으로 `verify/engine/contraction/time.rs`의 `config_contract_time()`은 축약 후 남는 축의 순서와 padding 보존을 검사하고 구분된 오류를 낸다. 이런 오류는 장치가 실행하다 발견할 문제를 컴파일·검증 단계에서 드러내는 예다. 이 코드 하나로 TCL의 전체 shape checker나 모든 최적화 pass가 공개됐다고 확대하지 않는다. [Time Reducer 제약 검증](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-lower/src/verify/engine/contraction/time.rs)
 
@@ -166,7 +170,7 @@ flowchart TB
 | 컴파일러 | 그래프·TCL → 실행 산출물 | 분해, fusion, 배치, 메모리·명령 스케줄 | 컴파일 성공을 수치 정확성 증명으로 보기 |
 | 호스트 런타임 | 실행 산출물·버퍼 → 제출·완료 | 로딩, 자원 배치, 입출력 바인딩, 수명·오류 관리 | 실행 산출물이 없으면 모든 모델을 자동 CPU 실행한다고 보기 |
 | 커널 드라이버 | 장치 노드·시스템 호출 | 장치 발견·권한·매핑·전송 인터페이스 | Python 레이어나 토크나이저를 처리한다고 보기 |
-| 펌웨어·PERT(PE Runtime, Processing Element 실행 계층) | 장치 명령·메시지 | PE(Processing Element) 실행·자원·호스트 통신 | 호스트의 서비스 스케줄러와 동일하다고 보기 |
+| 펌웨어·PERT(PE Runtime, Processing Element 실행 계층) | 장치 명령·메시지 | PE 실행·자원·호스트 통신 | 호스트의 서비스 스케줄러와 동일하다고 보기 |
 
 공식 스택 문서는 이 책임을 개념적으로 설명한다. `furiosa-llm` 네이티브 구현의 모든 내부 함수가 공개되어 있지는 않으므로, 아래에서 **공개 소스로 따라갈 수 있는 Rust 경로**와 **공식 문서로 확인하는 SDK 경로**를 구분한다. [공식 스택](https://developer.furiosa.ai/v2026.4.0/en/overview/software_stack.html)
 
@@ -256,7 +260,7 @@ nix::ioctl_readwrite!(dma_map, b'N', 1, DmaMap);
 
 Furiosa-LLM은 LLM(Large Language Model, 대규모 언어 모델) 추론을 위한 엔진이다. 글을 입력하면 tokenizer가 이를 토큰이라는 정수 단위로 바꾼다. **Prefill**은 받은 입력 토큰들을 처리하여 첫 출력을 만들 준비를 하는 단계이고, **decode**는 이미 계산한 상태를 재사용하며 이후 토큰을 생성하는 단계다. **KV(Key–Value) cache**는 attention 계산에 다시 필요한 이전 토큰의 key·value 값을 보관하는 저장 공간이다.
 
-예를 들어 길이 3의 입력을 처리한 뒤 한 토큰을 생성했다고 하자. 다음 계산에서는 입력 전체를 처음부터 다시 처리하기보다 이전 세 토큰의 KV를 사용하고 새 토큰의 계산을 더할 수 있다. 여러 사용자에게서 이런 요청이 동시에 들어오면, 어떤 요청들을 함께 실행하고 각 요청의 KV를 어디에 둘지 결정해야 한다. Furiosa-LLM은 요청 묶기, prefill·decode 진행, KV 관리, 토큰 선택, API(Application Programming Interface) 응답 생성을 담당한다. 장치가 계산하는 컴파일 커널과, 다음에 어떤 요청을 실행할지 결정하는 서비스 정책이 함께 필요하다. [Furiosa-LLM 개요](https://developer.furiosa.ai/v2026.4.0/en/overview/software_stack.html)
+예를 들어 길이 3의 입력을 처리한 뒤 한 토큰을 생성했다고 하자. 다음 계산에서는 입력 전체를 처음부터 다시 처리하기보다 이전 세 토큰의 KV를 사용하고 새 토큰의 계산을 더할 수 있다. 여러 사용자에게서 이런 요청이 동시에 들어오면, 어떤 요청들을 함께 실행하고 각 요청의 KV를 어디에 둘지 결정해야 한다. Furiosa-LLM은 요청 묶기, prefill·decode 진행, KV 관리, 토큰 선택, API 응답 생성을 담당한다. 장치가 계산하는 컴파일 커널과, 다음에 어떤 요청을 실행할지 결정하는 서비스 정책이 함께 필요하다. [Furiosa-LLM 개요](https://developer.furiosa.ai/v2026.4.0/en/overview/software_stack.html)
 
 공식 FXB(Furiosa Executable Bundle)는 compiled kernels를 제공하고, 모델 디렉터리는 설정·토크나이저·가중치를 제공한다. `--fxb`는 모델 전체를 대체하는 인수가 아니다. [공식 FXB 사용](https://developer.furiosa.ai/v2026.4.0/en/furiosa_llm/fxb.html)
 

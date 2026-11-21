@@ -13,17 +13,6 @@
     "access": "public"
   },
   {
-    "url": "https://developer.furiosa.ai/furiosa-opt/book/quick-start/kernel-validation.html",
-    "chapters": [
-      "00-reading-map",
-      "04-tcl-edf",
-      "12-fxbx"
-    ],
-    "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
-    "access": "public"
-  },
-  {
     "url": "https://developer.furiosa.ai/v2026.4.0/en/furiosa_llm/fxb.html",
     "chapters": [
       "00-reading-map",
@@ -41,9 +30,10 @@
     "access": "public"
   },
   {
-    "url": "https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-rt/DESIGN.md",
+    "url": "https://github.com/furiosa-ai/furiosa-opt/tree/3d43bc9d20f324af60e3006c3f1541938d7f5097",
     "chapters": [
-      "00-reading-map"
+      "00-reading-map",
+      "sources"
     ],
     "source_baseline_on": "2026-11-19",
     "catalog_updated_on": "2026-11-20",
@@ -58,16 +48,6 @@
     "source_baseline_on": "2026-11-19",
     "catalog_updated_on": "2026-11-20",
     "access": "repository permission required"
-  },
-  {
-    "url": "https://github.com/furiosa-ai/furiosa-opt/tree/3d43bc9d20f324af60e3006c3f1541938d7f5097",
-    "chapters": [
-      "00-reading-map",
-      "sources"
-    ],
-    "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-20",
-    "access": "public"
   },
   {
     "url": "https://numpy.org/doc/stable/reference/generated/numpy.matmul.html",
@@ -587,6 +567,16 @@
   },
   {
     "url": "https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py#L307-L422",
+    "chapters": [
+      "04-tcl-edf",
+      "12-fxbx"
+    ],
+    "source_baseline_on": "2026-11-19",
+    "catalog_updated_on": "2026-11-20",
+    "access": "public"
+  },
+  {
+    "url": "https://developer.furiosa.ai/furiosa-opt/book/quick-start/kernel-validation.html",
     "chapters": [
       "04-tcl-edf",
       "12-fxbx"

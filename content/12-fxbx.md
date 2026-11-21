@@ -2,9 +2,7 @@
 
 > **전체 경로에서의 위치**
 >
-> 패키지 + 동일 가중치 → **형식 판별·계약 검사·적재** → 반복 호출
->
-> FuryNo5가 만든 실행물을 다음 프로세스에서 사용하는 소비자 경로다. 파일 형식 판별과 모델 실행 가능 여부는 다른 검사다. 생산부터 새 프로세스 검증까지의 실습은 [13장](13-porting-fha.md), 요청 서비스 연결은 [14장](14-serving-vllm.md)에 있다.
+> 미리 만든 실행 파일을 다른 프로세스에서 읽어 실제 입력으로 실행하는 단계다. 파일을 만드는 실습은 [13장](13-porting-fha.md), 서비스 연결은 [14장](14-serving-vllm.md)에 있다.
 
 Python에서 모델을 만든 프로세스를 종료하면 `model` 객체, 중간 tensor, 장치 메모리 주소, 준비된 호출 객체도 함께 사라진다. 디스크에 컴파일 결과만 남겼다면 다른 프로세스는 무엇을 해야 할까? **fxbX는 저장한 실행 파일과 연결 설명을 읽고, 현재 프로세스의 가중치·입력·장치 객체를 연결해 실행하는 프로젝트**다.
 
@@ -14,7 +12,9 @@ Python에서 모델을 만든 프로세스를 종료하면 `model` 객체, 중�
 
 ## 먼저 같은 작은 모델을 다시 실행하는 상황을 보자
 
-예제는 `Linear(8,12) → ReLU → Linear(12,8)`이다. 길이 8의 입력 4개를 담은 `x[4,8]`을 주면 첫 Linear와 ReLU가 `[4,12]` 중간값을 만들고 마지막 Linear가 `y[4,8]`을 반환한다. Linear는 weight와의 행렬곱에 bias를 더하고, ReLU(Rectified Linear Unit)는 음수를 0으로 바꾼다.
+실행 파일을 다른 프로세스로 옮겨 같은 답을 얻으려면 무엇을 함께 넘겨야 할까? 이 장의 예제는 숫자 8개짜리 입력을 네 개 받아 같은 길이의 출력 네 개를 돌려준다. 첫 층에서 길이 12로 바꾸고 ReLU로 음수를 0으로 만든 뒤, 마지막 층에서 길이 8로 되돌린다.
+
+이 연결이 `Linear(8,12) → ReLU → Linear(12,8)`이다. 지금 실행할 입력 외에, 파일을 만들 때 사용한 것과 맞는 가중치도 필요하다. 모델의 작은 계산은 10장에서, 실제 파일 생산은 13장에서 다룬다.
 
 행렬곱 `@`는 왼쪽 행과 오른쪽 열의 대응 원소를 곱해 더한다. 첫 층의 가중치 `W[12,8]`은 출력 특징 12개 각각의 계수 8개를 담으므로, `W.T`로 축을 맞바꾼 `[8,12]`를 사용한다. 결과 `x[4,8] @ W.T[8,12]`의 shape는 `[4,12]`이고, bias `[12]`를 모든 행에 똑같이 더한다. 이 **broadcasting**을 포함한 계산이 `Linear(8,12)`의 계약이다. 두 번째 층도 같은 방식으로 12개 특징을 8개로 바꾼다. 패키지를 읽는 쪽이 weight의 행·열 의미를 바꾸거나 bias를 다른 축에 연결하면 파일이 정상이어도 잘못된 모델을 실행한다. [Linear의 계산과 weight shape](https://docs.pytorch.org/docs/2.10/generated/torch.nn.Linear.html)
 
@@ -35,13 +35,21 @@ FuryNo5는 그래프를 분석해 이러한 EDF와 연결 계획을 생산한다
 
 ## 1. 공식 FXB가 부족했다는 말의 정확한 뜻
 
-공식 FXB는 모델 가중치, tokenizer, configuration과 분리된 컴파일 결과 묶음이다. 여기서 architecture fingerprint는 hidden size·head 수·정밀도처럼 컴파일된 프로그램의 구조를 결정하는 설정을 요약한 식별자다. checkpoint의 모든 weight 값과 같은 개념이 아니다. 가중치가 달라도 이 식별자와 실행 조건이 맞으면 재사용할 수 있다. 그러므로 “공식 FXB는 여러 EDF를 담지 못한다”거나 “가중치를 넣을 수 없어 쓸모없다”는 것이 프로젝트의 출발점은 아니다. **커스텀 그래프의 호출 순서와 상태 관리 방법을 공식 모델 런타임이 이해하는가**가 실제 경계다. 호스트는 NPU를 제어하는 CPU 측 프로그램이며, 모델 런타임은 요청을 받아 계산·상태·반환을 관리하는 실행기다. [공식 FXB 설명](https://developer.furiosa.ai/v2026.4.0/en/furiosa_llm/fxb.html)
+공식 FXB는 컴파일 결과를 보관·전달하는 묶음이다. 모델 가중치, 문장을 숫자로 바꾸는 tokenizer, 모델 설정 파일은 별도로 사용한다. 실행에 필요한 파일이 모두 FXB 안에 들어 있다고 생각하면 안 된다.
 
-예를 들어 임의 Torch 모델을 `linear → relu → linear`로 분리해 EDF를 만들었다고 하자. 실행기는 첫 커널의 출력이 두 번째 커널의 어느 입력인지, 가중치를 언제 올리는지, 마지막 결과를 어느 이름으로 돌려줄지 알아야 한다. LLM(Large Language Model)이라면 여기에 prefill(입력 토큰을 처음 처리), decode(다음 토큰을 순차 생성), KV(Key–Value) cache(앞 토큰의 attention 계산에 쓸 key·value tensor를 저장), 요청별 상태, 토큰 선택 정책까지 더해진다. 커널 파일을 ZIP에 넣는 것만으로 이 의미가 생성되지는 않는다. FuryNo5는 그래프를 해석하고 실행 계획을 만들며, fxbX는 그 계획을 검사·적재·실행한다. [실행 계획 생산자](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/execution_plan.py) · [소비자](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py)
+컴파일 결과를 재사용할 때는 모델의 구조와 숫자 형식 등 준비 조건이 맞는지 확인한다. 그 조건을 요약한 식별자가 architecture fingerprint다. 이는 가중치의 모든 숫자를 그대로 요약한 값과는 다르다. 조건이 맞으면 다른 가중치로 재사용할 수 있는 경우가 있다.
+
+따라서 fxbX를 설명하려고 ‘공식 FXB는 EDF를 여러 개 담지 못한다’거나 ‘가중치를 분리할 수 없다’고 전제할 필요는 없다. [공식 FXB 설명](https://developer.furiosa.ai/v2026.4.0/en/furiosa_llm/fxb.html)
+
+예를 들어 ‘첫 Linear → ReLU → 마지막 Linear’를 각각 EDF로 만들었다고 하자. 실행기는 첫 결과를 ReLU에 넣고 그 답을 마지막 Linear로 보내야 한다. 가중치를 언제 준비하고 어느 입력 자리에 넣을지도 알아야 한다.
+
+언어 모델이라면 앞 토큰의 KV를 보관하고 다음 호출로 넘기는 방법도 필요하다. 공식 실행기가 모르는 모델 구조라면 이 연결이 파일 확장자만으로 생기지는 않는다. fxbX의 실행계획은 이런 커스텀 연결을 전달하기 위한 경로다. [실행 계획 생산자](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/execution_plan.py) · [소비자](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py)
 
 ## 2. 현재 공존하는 세 가지 산출물
 
-**schema(스키마)는** 파일의 필드·자료형·버전 규칙이다. 데이터베이스의 테이블 정의처럼 reader와 writer가 같은 규칙을 알아야 한다. 확장자는 사람이 파일을 구분하는 이름의 일부이고 schema는 내부 구조다. 이름을 `.fxb`로 바꾸었다고 공식 실행계약으로 변환되지는 않는다.
+파일 안에 ‘형식 이름’, ‘버전’, ‘포함된 프로그램 목록’을 어떤 이름과 자료형으로 적을지 정한 규칙이 **스키마(schema)다**. 쓰는 코드와 읽는 코드가 이 규칙에 동의해야 한다.
+
+파일 이름을 `.fxbx`에서 `.fxb`로 바꾸어도 내부 내용은 그대로다. 형식이 바뀌는 것이 아니므로 다른 실행기가 읽을 수 있게 되지는 않는다. 아래 표는 실제로 공존하는 형식을 구분한다.
 
 | 산출물 | 핵심 내용 | 실행 주체 | 공식 Furiosa-LLM에 바로 전달 가능한가 |
 |---|---|---|---|
@@ -49,7 +57,7 @@ FuryNo5는 그래프를 분석해 이러한 EDF와 연결 계획을 생산한다
 | 초기 `.fxbx` 또는 `.fxbex` | `FXB_EX` schema 1, 실행·메모리 계획, 호출을 연결하는 adapter, SDK Runnable 등이 가능 | fxbX `Session`과 adapter | 이 포맷 자체는 공식 FXB가 아님 |
 | FuryNo5 커스텀 execution-plan 패키지 | 실제 EDF, 공식 컨테이너 구조를 따르는 manifest, `fxbex.provenance.json` 안의 계획 | `GraphFXB`가 선택하는 `ExecutionFXB` | fxbX 전용 의미 계약이므로 임의 모델 자동 지원을 뜻하지 않음 |
 
-표의 SDK(Software Development Kit) Runnable은 SDK가 관리하는 실행 객체다. adapter는 패키지의 입력·실행 방법을 해당 runtime 호출로 연결하는 코드다. 초기 `FXB_EX`의 version 1과 최신 `tclmachine.execution-plan.v1`의 숫자 1도 서로 다른 schema의 버전이므로 같은 포맷으로 읽으면 안 된다.
+표의 SDK Runnable은 SDK가 관리하는 실행 객체다. adapter는 패키지의 입력·실행 방법을 해당 runtime 호출로 연결하는 코드다. 초기 `FXB_EX`의 version 1과 최신 `tclmachine.execution-plan.v1`의 숫자 1도 서로 다른 schema의 버전이므로 같은 포맷으로 읽으면 안 된다.
 
 현 생산자는 커스텀 계획의 출력에 `.fxb`와 `.fxbx`를 모두 허용한다. 따라서 **파일 내부 schema와 해당 consumer를 확인하는 것이 확장자 확인보다 중요하다.** 내부 `fxbex`, `tplmachine`, `tclmachine` 문자열은 호환성과 소스 위치를 보존한 이름이다. 사용자에게 보이는 프로젝트 이름은 fxbX와 FuryNo5를 사용한다. [출력 suffix 검사](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/fxb_export/model_export.py) · [초기 schema 검사](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/package.py)
 
@@ -102,7 +110,9 @@ REQUIRED = (
 
 ## 5. loader가 실제로 하는 일
 
-`GraphFXB`는 사용자가 부르는 생성 API다. Python의 `__new__`는 객체를 만드는 단계에서 어떤 종류의 객체를 반환할지 고를 수 있다. `GraphFXB.__new__`는 producer metadata에 `execution_plan`이 있는지 보고 `ExecutionFXB`로 보낸다. 여기서는 그래프 안에 어떤 모델 이름이 적혔는지보다 저장된 계획 형식을 본다. `execution_plan`이 있으면 그 계약을 해석하는 `ExecutionFXB` 객체를 만든다. 모델 이름으로 YOLO나 Qwen을 특별 대우하는 분기는 아니다. 이후 외부 가중치와 tensor metadata를 검사하고, 장치 설정을 맞추고, EDF를 SDK loader로 읽는다. [분기 코드](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/graph_fxb.py#L137-L159)
+사용자는 `GraphFXB(path, weights=...)`로 패키지를 연다. 이 이름 아래에서 파일이 어떤 계획을 담았는지 확인해 맞는 소비자를 고른다.
+
+Python의 `__new__`는 객체를 만들 때 실제로 돌려줄 객체 종류를 선택할 수 있다. `GraphFXB.__new__`는 producer 설명에 `execution_plan`이 있으면 `ExecutionFXB`로 연결한다. 파일에 적힌 모델 이름만 보고 모든 모델을 실행하는 구조가 아니다. 이후 reader가 그 계획의 내용과 파일 연결을 검사한다. [분기 코드](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/graph_fxb.py#L137-L159)
 
 아래는 `ExecutionFXB._load`의 핵심 호출에 설명 주석을 추가한 발췌다. `sdk`는 `furiosa.torch`, `raw`는 검사한 EDF bytes다. `from_serialized_edf`가 반환하는 `program`은 파일 내용을 SDK가 해석한 실행 표현이며, 이 세 줄만으로 요청 입력을 계산한 결과가 생기는 것은 아니다. 이 몇 줄만 독립 실행하면 앞뒤 검증과 가중치 바인딩이 빠지므로, 사용자 코드는 다음 절의 `GraphFXB` API를 사용한다.
 
@@ -134,7 +144,11 @@ flowchart TB
 
 **last use(마지막 사용 위치)를** 작은 모델에 적용해 보자. 설명용 세 단계에서는 `h`가 ReLU에 전달된 뒤 더 이상 필요하지 않고, `a`는 마지막 Linear 이후 필요하지 않다. 다른 분기에서 다시 쓰지 않는다는 것을 계획에서 알면 논리적으로 임시 객체를 놓을 시점을 정할 수 있다. 실제 장치 버퍼 재사용·해제 시점은 SDK 실행·완료 계약도 따라야 하므로 이 표만으로 물리 메모리 사용량이 결정되지는 않는다.
 
-**stateless**는 호출을 마친 뒤 다음 호출로 넘길 내부 상태 갱신이 없는 경우다. 이번 MLP가 그런 예다. 현재 소스에는 stateless entry를 SDK `RunnableSequence`로 묶는 최적화가 있다. 이는 준비된 여러 호출의 연결을 SDK 실행 객체 하나에 구성하는 방법이다. 상태 update가 있거나 논리 예산으로 전체 중간 tensor 보유를 감당할 수 없으면 해당 sequence 경로를 건너뛴다. sidecar는 주 패키지에 덧붙는 보조 산출물이다. 호환되는 merged-runnable sidecar, 즉 여러 실행 구간을 미리 결합해 둔 보조 파일이 있으면 연속 구간을 더 묶을 수 있고, 없거나 해시·ABI가 달라지면 기본 EDF 경로를 사용한다. 이 선택에서 `_RunnableSequenceBuilder`, `_inner` 같은 내부 API를 사용하므로 안정된 공개 ABI라고 설명해서는 안 된다. [sequence 구성](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py#L423-L474) · [sidecar 검사](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py#L476-L520)
+이번 MLP는 호출을 끝낸 뒤 다음 호출로 넘길 내부 상태를 바꾸지 않는다. 이런 호출을 **stateless**라고 한다. 현재 소비자는 조건이 맞는 stateless 실행계획을 SDK의 `RunnableSequence`로 준비할 수 있다. 여러 프로그램의 호출 연결을 한 실행 객체로 묶는 방식이다.
+
+상태 갱신이 있거나 중간 배열을 함께 보관할 예산이 부족하면 이 경로를 건너뛴다. 호환되는 merged-runnable sidecar가 있으면 연속 구간을 더 묶을 수 있다. **Sidecar는 주 패키지와 함께 쓰는 보조 파일**이다. 내용이나 호출 조건이 맞지 않으면 기본 EDF 경로를 사용한다.
+
+이 구현은 `_RunnableSequenceBuilder`, `_inner` 같은 내부 API를 사용한다. 모든 SDK 버전에서 유지되는 공개 API로 가정해서는 안 된다. 또 호출을 묶었다고 EDF들을 새 EDF 하나로 컴파일한 것은 아니다. [sequence 구성](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py#L423-L474) · [sidecar 검사](https://github.com/smallstep-zzz/fxbX/blob/03d993b4d1b36cdda209d61bbf447434c174b401/fxbex/execution_fxb.py#L476-L520)
 
 **Python 호출을 줄이는 sequence 구성과 컴파일러가 연산을 융합하는 kernel fusion도 다르다.** 예를 들어 Python이 kernel 세 개를 차례로 호출하던 부분을 SDK sequence 한 번으로 제출한다고 해서 세 EDF가 자동으로 하나의 새로운 EDF가 되는 것은 아니다. 전자는 호스트 호출의 반복을 줄일 수 있고, 후자는 장치 실행·중간 데이터 이동 자체를 바꾼다. 성능 결과는 둘을 구분해 측정해야 한다.
 
@@ -233,7 +247,7 @@ torch.testing.assert_close(actual, expected, atol=0.02, rtol=0.02)
 
 지금까지의 순서를 다시 작은 모델에 적용하면, `패키지 bytes가 맞음`, `weight·bias 네 tensor가 올바른 입력에 연결됨`, `x[4,8]로 실행됨`, `y[4,8]의 수치가 맞음`은 각각 다른 확인이다. 수치가 같아도 CPU에서 계산했다면 목표한 NPU 실행을 증명한 것이 아니므로, 장치의 계산 task와 계획 step을 연결한 실행 기록이 필요하다.
 
-무결성 통과 → SDK·ABI 일치 → 가중치 계약 통과 → 변경 입력의 수치 대조 → 공식 NPU(Neural Processing Unit)의 Task 증거 → 새로운 프로세스에서 재적재 → 상태 reset·반복 요청 → 전체 모델 품질·성능 순서로 근거를 쌓는다. 아카이브 생성 성공을 이 모든 항목의 대체 증거로 쓰지 않는다. 이것은 FuryNo5/fxbX의 개발 권장 절차이며 애플리케이션의 신뢰도·지연 요구에 따라 검사 강도는 달라질 수 있다. [검증을 분리하는 생산자](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/fxb_export/model_export.py)
+무결성 통과 → SDK·ABI 일치 → 가중치 계약 통과 → 변경 입력의 수치 대조 → 공식 NPU의 Task 증거 → 새로운 프로세스에서 재적재 → 상태 reset·반복 요청 → 전체 모델 품질·성능 순서로 근거를 쌓는다. 아카이브 생성 성공을 이 모든 항목의 대체 증거로 쓰지 않는다. 이것은 FuryNo5/fxbX의 개발 권장 절차이며 애플리케이션의 신뢰도·지연 요구에 따라 검사 강도는 달라질 수 있다. [검증을 분리하는 생산자](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/fxb_export/model_export.py)
 
 ## 출처
 

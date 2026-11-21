@@ -2,11 +2,11 @@
 
 > **전체 경로에서의 위치**
 >
-> PyTorch 모델 → **FuryNo5의 준비·생산 경로** → SDK 또는 fxbX 소비자
->
-> 앞에서 배운 계층을 프로젝트의 파일·함수와 대응시킨다. 이 장은 호출 관계를, [11장](11-furyno5-compiler.md)은 컴파일 단계의 내부를 설명한다. 파일을 읽어 실행하는 쪽은 [12장](12-fxbx.md)이다.
+> 작은 PyTorch 모델 하나가 FuryNo5 안에서 어떤 객체와 파일로 바뀌는지 따라간다. 자세한 컴파일은 [11장](11-furyno5-compiler.md), 파일을 받아 실행하는 쪽은 [12장](12-fxbx.md)에서 다룬다.
 
-Python 모델을 NPU(Neural Processing Unit)에서 실행하려면 `forward()`의 계산을 장치용 프로그램으로 만들고, 그 프로그램에 입력·가중치를 연결해야 한다. **FuryNo5는 이 준비를 맡는 생산자(producer)다**. 실제 RNGD 코드 생성은 Furiosa의 compiler에 맡기고, 만들어진 파일을 읽어 실행하는 소비자(consumer)는 SDK(Software Development Kit) 런타임이나 fxbX다. C 소스를 컴파일한 뒤 별도 실행기가 바이너리를 적재하는 흐름과 비슷하지만, 여기서는 여러 텐서 프로그램의 연결 계획도 함께 필요하다.
+Python의 모델은 계산 방법과 그 계산에 쓸 가중치를 알고 있다. NPU에서 실행하려면 이 계산을 장치 프로그램으로 바꾸고 실제 입력을 넣을 수 있게 준비해야 한다. **FuryNo5는 이 준비를 맡는다.**
+
+이 책에서는 파일을 만드는 쪽을 생산자(producer), 만들어진 파일을 읽어 실행하는 쪽을 소비자(consumer)라고 부른다. 최종 NPU 코드 생성은 Furiosa 컴파일러가 맡고, 소비자는 선택한 경로의 SDK 실행기나 fxbX가 된다.
 
 먼저 작은 모델이 어떤 자료구조와 파일로 바뀌는지 따라가자. 그다음 실제 파일·함수와 지원 범위를 읽으면, “후보를 만들었다”, “컴파일했다”, “NPU에서 정답을 확인했다”가 서로 다른 결과라는 점도 자연스럽게 드러난다. FuryNo5는 모든 ATen(A Tensor Library) 연산을 완성한 범용 backend가 아니며 README도 전체 모델 자동 이식 완료를 주장하지 않는다. [프로젝트의 현재 범위](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/README.md)
 
@@ -14,9 +14,15 @@ Python 모델을 NPU(Neural Processing Unit)에서 실행하려면 `forward()`�
 
 ## 공통 예제: 8개 특징을 받아 8개 값을 돌려주는 모델
 
-여기서 사용할 모델은 `Linear(8,12) → ReLU → Linear(12,8)`이다. Linear는 각 입력 행에 행렬곱과 bias 덧셈을 적용한다. ReLU(Rectified Linear Unit)는 음수 값을 0으로 바꾼다. 입력 `x`의 shape `[4,8]`은 8개 특징으로 이루어진 사례 4개를 한 번에 처리한다는 뜻이다. shape는 축별 길이이며 dtype은 원소 자료형이다. 이 예제는 BF16(BFloat16)을 사용한다.
+먼저 숫자 두 개를 받아 새 숫자 세 개를 만드는 층을 생각하자. 입력이 `[1,2]`일 때 첫 출력은 첫 값만 골라 1, 둘째는 둘째 값만 골라 2, 셋째는 둘을 더하고 1을 더해 4로 만들 수 있다. 각 출력에 곱할 수와 더할 수를 따로 둔다. 이것이 **Linear 층**의 작은 예다.
 
-행렬곱 `A @ B`는 A의 행과 B의 열에서 대응 원소를 곱해 더한다. `[M,K] @ [K,N]`에서 합쳐지는 K가 같아야 결과 `[M,N]`을 얻는다. `Linear(8,12)`의 weight `W[12,8]`에는 출력 특징 하나당 계수 8개가 한 행에 있다. 이를 전치한 `W.T[8,12]`를 사용하므로 `x[4,8] @ W.T[8,12]`는 `[4,12]`다. `bias[12]`는 각 출력 행에 같은 12개 값을 더하는 **broadcasting**으로 적용한다. 예를 들어 첫 원소는 `x[0,0]*W[0,0] + … + x[0,7]*W[0,7] + bias[0]`이다. 이 전치는 숫자 위치의 의미를 바꾸는 축 교환이다. `reshape`는 원소 수를 유지하며 같은 논리적 원소열을 새 shape로 읽는 연산이므로 이 전치를 대체할 수 없다. [Linear의 규격](https://docs.pytorch.org/docs/2.10/generated/torch.nn.Linear.html)
+이 장의 실제 모델은 그 크기를 늘린 `Linear(8,12) → ReLU → Linear(12,8)`이다. 한 입력의 숫자 8개를 12개로 바꾸고, 음수를 0으로 바꾸는 ReLU를 적용한 뒤 다시 8개로 바꾼다. 입력을 네 개 모으므로 `x`의 shape는 `[4,8]`이다. 숫자 저장 형식은 BF16을 사용한다.
+
+Linear의 출력 하나는 입력의 각 수에 계수를 곱해 더하고 보정값을 더한 것이다. 곱할 계수를 모은 것이 **weight**, 마지막에 더할 값이 **bias**다.
+
+`Linear(8,12)`는 입력 여덟 개로 출력 하나를 만드는 계수 줄을 열두 개 가진다. 그래서 weight의 shape는 `[12,8]`이다. 코드에서는 입력 `[4,8]`과 곱하기 위해 weight의 행·열을 바꾼 `W.T[8,12]`를 사용하고, 결과는 `[4,12]`가 된다.
+
+보정값 열두 개는 네 입력 행에 각각 반복해서 더한다. 이 반복 적용이 broadcasting이다. 행·열 교환은 transpose이며 원소 수만 유지해 모양을 다시 읽는 reshape로 대체할 수 없다. [Linear의 규격](https://docs.pytorch.org/docs/2.10/generated/torch.nn.Linear.html)
 
 | 논리 값 | shape | 계산 또는 공급자 | 파일을 다시 읽을 때 필요한가 |
 |---|---|---|---|
@@ -27,13 +33,17 @@ Python 모델을 NPU(Neural Processing Unit)에서 실행하려면 `forward()`�
 | 마지막 weight·bias | `[8,12]`, `[8]` | `2.weight`, `2.bias` | 예, 외부 가중치 |
 | `y` | `[4,8]` | 마지막 Linear 결과 | 호출자에게 반환 |
 
-**parameter**는 weight·bias처럼 모델이 보유한 학습 대상 tensor다. 추론용으로 frozen한다는 것은 이번 준비·실행에서 학습과 gradient 계산을 요구하지 않도록 고정한다는 뜻이다. `eval()`은 dropout·BatchNorm 같은 층을 평가 모드로 바꾸고, `requires_grad_(False)`는 parameter의 미분 추적을 끈다. 두 호출은 목적이 다르다. `.bfloat16()`은 자료형 변경이므로 실제 모델에서는 그 변경에 따른 정확도도 검증해야 한다.
+모델이 가지고 있는 weight·bias 같은 조정 가능한 배열을 **parameter(매개변수)라고** 한다. 이 실습은 학습이 아니라 이미 정한 값으로 답을 구하므로 값을 갱신하는 데 필요한 계산 기록을 요구하지 않는다. `requires_grad_(False)`가 이 설정에 해당한다.
+
+`eval()`은 학습할 때와 추론할 때 동작이 다른 층을 평가 모드로 바꾼다. 미분 기록을 끄는 설정과 목적이 다르다. `.bfloat16()`은 숫자의 저장 형식을 바꾸므로, 실제 모델에서는 이 변경 뒤 답의 오차도 확인해야 한다.
 
 같은 shape의 tensor라도 메모리 해석이 다를 수 있다. **stride**는 한 축에서 원소 하나 이동할 때 저장소에서 건너뛰는 원소 수다. 행이 연속으로 저장된 `[4,8]` 입력의 stride는 `[8,1]`이다. **contiguous**는 해당 순서로 빈틈없이 이어진 배치를 뜻한다. 전치된 view처럼 메모리를 공유하되 stride가 다른 입력을 같은 커널에 무조건 넣을 수는 없다. FuryNo5 규칙은 이런 조건도 함께 검사한다. [입력 계약 검사](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/edf_export.py#L33-L109)
 
 ## 이 모델이 어떤 객체와 파일로 바뀌는가
 
-**capture(캡처)는** 모델의 호출 관계를 graph라는 자료구조로 얻는 과정이다. graph node는 계산이나 입력을 나타내고, 간선은 앞 계산의 결과를 뒤 계산이 사용한다는 뜻이다. **region(영역)은** 함께 컴파일할 연산 묶음이다. **kernel(커널)은** 그 계산을 실행할 구현 단위이며, 같은 계약의 kernel 하나를 여러 위치에서 재사용할 수 있다. 아래 단계의 이름은 저장소가 하는 일을 설명하며, 예제에서 region이나 EDF가 항상 3개 생긴다는 뜻은 아니다.
+모델의 연결을 종이에 적는다고 생각하자. ‘입력을 첫 Linear에 넣고, 그 결과를 ReLU에 넣고, 다음 Linear의 답을 반환한다’는 관계를 프로그램 안의 자료구조로 얻는 일이 **캡처(capture)다**.
+
+이 구조에서 계산·입력 하나를 표시한 점이 node, 앞 결과가 다음 계산으로 간다는 선이 연결이다. 함께 컴파일할 계산 묶음은 region(영역)이라고 한다. 아래 표는 이 연결에서 파일까지 무엇을 만드는지 보여 준다. 연산 세 개가 반드시 EDF 세 개가 된다는 뜻은 아니다.
 
 | 단계 | 입력 → 결과 | 이번 모델에서 의미하는 것 |
 |---|---|---|
@@ -115,13 +125,15 @@ library.impl(name, meta, 'Meta')  # 계산 없이 출력 shape·dtype만 설명�
 
 위 네 줄은 내부 함수의 발췌이며 독립 실행 예제가 아니다. `name`은 준비 과정에서 만든 고유 연산명, `schema_args`는 입력 tensor들의 함수 선언, `implementation`은 준비된 장치 프로그램을 호출하는 함수, `meta`는 출력 정보만 만드는 함수다. `Library(..., 'FRAGMENT')`는 같은 namespace에 구현 조각을 추가할 때 사용하는 등록 객체다.
 
-그다음 `optimize`가 복사한 graph에서 해당 node의 target, 즉 호출 대상을 새 op로 바꾼다. 예컨대 원래 `aten.mm(a,b)`를 가리키던 node가 이 입력 계약으로 준비한 `tclmachine` 연산을 가리키게 된다. 원래 Python의 모든 `torch.mm` 호출을 바꾸는 작업은 아니다. 준비 시 컴파일 결과와 입력 조건을 저장하지만, `PreparedGraph.__call__`은 준비된 module만 호출한다. 같은 계약은 준비 중 cache(이미 준비한 결과를 다시 쓰는 저장소)로 공유하며, close하면 소유한 등록을 해제한다. [등록과 rewrite 구현](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/aten_runtime.py#L104-L119) · [준비 과정](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/aten_runtime.py#L210-L276)
+준비가 끝나면 `optimize`는 모델 그래프의 복사본에서 호출할 함수를 바꾼다. 예를 들어 원래 `aten.mm(a,b)`를 호출하던 점이, 이 입력 조건으로 미리 준비한 `tclmachine` 연산을 호출하도록 바뀐다. 여기서 **target**은 그 점이 호출하는 함수다.
+
+프로그램 안의 모든 `torch.mm`를 전역으로 바꾸는 것은 아니다. 선택한 그래프와 지원 입력 조건의 호출을 준비하는 경로다. 실제 실행 때는 저장된 실행 객체에 현재 입력을 전달한다. [등록과 rewrite 구현](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/aten_runtime.py#L104-L119) · [준비 과정](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/aten_runtime.py#L210-L276)
 
 이 방식은 “일반적인 Torch의 모든 함수를 호출하기만 하면 FuryNo5가 자동 개입한다”와 다르다. 사용자가 지원 범위의 그래프에 `optimize`를 명시적으로 적용해야 한다.
 
 ### Product를 준비하고 한 번 실행하기
 
-앞의 `Product`를 실제 callable로 만드는 완성 예제는 [run_prepared_product.py](../examples/run_prepared_product.py)다. 호환 SDK(Software Development Kit), FuryNo5와 NPU가 필요하다. **이 shape의 실제 지원 여부는 컴파일과 장치 수치 비교로 확인해야 한다.** 사전 규칙을 통과하는 입력이라는 사실과 설치된 compiler의 성공은 별도다.
+앞의 `Product`를 실제 callable로 만드는 완성 예제는 [run_prepared_product.py](../examples/run_prepared_product.py)다. 호환 SDK, FuryNo5와 NPU가 필요하다. **이 shape의 실제 지원 여부는 컴파일과 장치 수치 비교로 확인해야 한다.** 사전 규칙을 통과하는 입력이라는 사실과 설치된 compiler의 성공은 별도다.
 
 ```python
 import torch
@@ -270,7 +282,9 @@ flowchart TB
 
 ## 새 연산을 추가할 때 지켜야 할 경계
 
-가장 먼저 실패 이유를 **모델 이름 대신 의미 계약**으로 표현한다. alias는 서로 다른 tensor가 같은 저장소를 공유하는 관계이고, mutation은 기존 값을 제자리에서 바꾸는 동작이다. shape만 맞춰 복사하면 이런 의미가 사라질 수 있어 별도 검토한다. “모델 A가 실패한다”를 “FP32의 비연속 마지막 축을 가진 reduction에서 출력 stride 계약이 없다”로 바꾸면 다른 모델에도 쓰이는 수정을 할 수 있다.
+모델 전체가 실패했다면 처음 막힌 작은 계산과 입력을 찾는다. ‘모델 A가 안 된다’보다 ‘이 모양의 배열을 전치해 더할 때 입력 검사가 실패한다’가 고칠 곳을 찾기 쉽다.
+
+크기만 맞추면 끝나는 것은 아니다. 서로 다른 배열 이름이 같은 저장 공간을 가리키는 alias, 원래 배열의 값을 직접 바꾸는 mutation도 결과에 영향을 준다. 새 연산을 추가할 때는 값뿐 아니라 이런 동작도 보존해야 한다.
 
 1. `graph_capture`에서 이미 의미가 틀렸는지 확인한다.
 2. 바인딩·alias·layout 문제라면 그 경계를 고친다.

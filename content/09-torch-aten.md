@@ -2,9 +2,7 @@
 
 > **전체 경로에서의 위치**
 >
-> PyTorch 호출 → **ATen schema·Dispatcher 또는 캡처 그래프** → 백엔드
->
-> 모델 코드가 하위 구현에 계산을 요구하는 입구다. eager 호출의 구현 선택과 그래프 전체의 컴파일을 나누어 읽는다. FuryNo5가 사용하는 실제 준비·변환 경로는 [10장](10-furyno5-architecture.md)과 [11장](11-furyno5-compiler.md)에 있다.
+> PyTorch의 덧셈 같은 호출이 어느 장치의 구현으로 전달되는지 살펴본다. FuryNo5가 이 계산을 준비하는 코드는 [10장](10-furyno5-architecture.md)에서 이어 읽는다.
 
 Python에서 `torch.add(x, y)`를 호출했을 때 CPU 코드가 실행될지 NPU 코드가 실행될지는 누가 결정할까? 이 장은 **함수 이름, 함수의 호출 계약, 실제 구현, 모델 전체의 컴파일**을 나누어 답한다. C의 함수 포인터 표를 떠올려도 좋다. 호출할 계산의 이름은 같아도 인수의 장치에 따라 다른 구현을 선택할 수 있다. 다만 PyTorch는 자동 미분 같은 부가 처리도 선택하므로 실제 과정은 단순한 장치별 `switch`보다 복잡하다.
 
@@ -14,7 +12,9 @@ NPU(Neural Processing Unit)는 신경망 계산용 장치이고, 이 책의 대�
 
 ## 먼저 두 개의 작은 배열을 더해 보자
 
-텐서(tensor)는 값의 배열과 그 배열을 해석하는 정보를 함께 가진 객체다. `shape`는 축별 길이, `dtype`은 원소 자료형, `device`는 값이 놓인 장치를 뜻한다. 아래 `x`와 `y`는 길이 2인 FP32(Floating Point 32-bit) CPU 텐서다.
+PyTorch에서는 숫자 배열을 tensor 객체로 다룬다. 예를 들어 `[1,2]`는 길이 2인 배열이고, 아래 예제의 x·y는 CPU에 놓인 실수 배열이다.
+
+배열에는 값 외에도 길이 정보인 **shape**, 숫자 저장 형식인 **dtype**, 어느 장치에 있는지 나타내는 **device**가 붙는다. 같은 `torch.add(x,y)`라도 어느 장치의 구현이 필요한지 판단하는 데 이 정보가 쓰인다.
 
 ```python
 import torch
@@ -37,7 +37,9 @@ print(z)  # 식의 예상값: tensor([22., 44.]); 원래 x와 y는 바꾸지 않
 
 ## schema와 overload는 함수 선언을 읽듯 이해한다
 
-**schema(스키마)는** 연산의 함수 선언에 해당한다. 이름, 인수 이름·자료형·기본값, 반환 자료형을 적고, 필요한 경우 어느 인수를 변경하는지와 결과가 기존 메모리를 공유하는지도 표현한다. 데이터베이스 schema가 저장할 데이터의 구조를 정하듯, 여기서는 호출이 지켜야 할 구조를 정한다.
+함수를 호출하려면 인수가 몇 개이고 무슨 자료형인지 알아야 한다. ATen도 이름만 있는 목록이 아니라 인수와 반환값의 규칙을 갖는다. 이 함수 선언에 해당하는 설명이 **스키마(schema)다**.
+
+예를 들어 덧셈도 ‘배열과 배열을 더하기’와 ‘배열에 숫자 하나를 더하기’는 받는 인수가 다르다. 같은 기본 이름 아래 이런 호출 형태를 구분한 것이 **오버로드(overload)다**. 아래 실제 이름에서 어느 호출을 뜻하는지 읽어 보자.
 
 `add.Tensor(Tensor self, Tensor other, *, Scalar alpha=1) -> Tensor`를 왼쪽부터 읽으면, tensor 두 개를 받고 `alpha`라는 스칼라 옵션을 가진 뒤 tensor 하나를 반환한다는 뜻이다. Python의 `*` 뒤 인수는 이름을 붙여 전달한다. 여기의 `Tensor`와 `Scalar`는 특정 하드웨어의 자료형이 아니라 호출 인수의 종류다.
 
@@ -55,6 +57,8 @@ print(z)  # 식의 예상값: tensor([22., 44.]); 원래 x와 y는 바꾸지 않
 
 
 ## eager 실행에서 Dispatcher가 고르는 것
+
+eager는 모델을 먼저 하나의 장치 프로그램으로 묶기보다, 호출한 연산을 그때그때 처리하는 실행 방식이다. Dispatcher는 그 연산을 어느 구현에 보낼지 고르는 PyTorch의 전달 계층이다. 먼저 아래 덧셈이 어떤 연산 이름으로 전달되는지 본다.
 
 ```mermaid
 flowchart TB
@@ -75,7 +79,9 @@ flowchart TB
 
 ## 장치별 구현은 어떻게 등록하는가
 
-등록(registration)은 “이 연산과 처리 표식이 선택되면 이 함수를 호출하라”는 연결을 dispatcher의 표에 넣는 작업이다. C++ backend의 등록 모양은 다음과 같다. **설명 주석을 추가한 등록 구조의 예이며, 이것만으로 새로운 장치를 완성하는 코드는 아니다.** 실제 backend에는 텐서 할당, 복사, 장치 guard, 스트림, 수명 처리 등도 필요하다.
+등록은 ‘이 조건의 덧셈이 오면 이 함수를 사용한다’는 연결을 표에 넣는 작업이다. 새 장치용 함수를 작성하는 일과, PyTorch가 그 함수를 찾도록 연결하는 일은 구분된다.
+
+아래 C++ 코드는 그 연결 모양을 보여 준다. 이것만으로 새 장치가 완성되지는 않는다. 배열 저장 공간을 만들고, 값을 복사하고, 실행 완료까지 안전하게 보관하는 구현도 필요하다.
 
 ```cpp
 // aten 연산 중 외부 장치용 PrivateUse1 key가 선택될 때의 구현을 등록한다.
@@ -198,7 +204,7 @@ FuryNo5도 두 경로를 구분한다. `optimize`는 제한된 연산을 준비�
 
 ## 왜 ATen이 만들어졌는가
 
-초기 Torch 계열에는 CPU용 TH(TorcH), CUDA(Compute Unified Device Architecture)용 THC(TorcH Cuda) 등 여러 저수준 라이브러리가 있었다. PyTorch 팀은 내부 구조를 재설계하면서 Python API(Application Programming Interface)와 닮은 C++ 텐서 API를 제공하는 ATen을 만들었다. 2018년 회고는 ATen을 독립 사용도 가능한 C++11 라이브러리로 설명한다. 따라서 “여러 하드웨어가 동일한 연산 의미에 대응할 수 있게 한다”는 설명은 오늘날의 역할에 맞지만, **새 하드웨어용 명령어 표만 만들기 위해 탄생했다는 역사 설명은 지나친 단순화**다. [초기 저수준 라이브러리 설명](https://github.com/zdevito/ATen/blob/master/aten/src/README.md) · [PyTorch 팀의 2018년 회고](https://pytorch.org/blog/a-year-in/)
+초기 Torch 계열에는 CPU용 TH(TorcH), CUDA(Compute Unified Device Architecture)용 THC(TorcH Cuda) 등 여러 저수준 라이브러리가 있었다. PyTorch 팀은 내부 구조를 재설계하면서 Python API와 닮은 C++ 텐서 API를 제공하는 ATen을 만들었다. 2018년 회고는 ATen을 독립 사용도 가능한 C++11 라이브러리로 설명한다. 따라서 “여러 하드웨어가 동일한 연산 의미에 대응할 수 있게 한다”는 설명은 오늘날의 역할에 맞지만, **새 하드웨어용 명령어 표만 만들기 위해 탄생했다는 역사 설명은 지나친 단순화**다. [초기 저수준 라이브러리 설명](https://github.com/zdevito/ATen/blob/master/aten/src/README.md) · [PyTorch 팀의 2018년 회고](https://pytorch.org/blog/a-year-in/)
 
 지금은 `native_functions.yaml`에 연산의 스키마와 관련 정보가 들어가고, 코드 생성기가 C++ 선언·Python 바인딩·dispatch 연결 코드를 만든다. 모델 개발자는 `torch.add`를 사용하고, 장치 개발자는 그 연산의 의미를 지키는 backend 구현을 연결한다. 등록 경계가 있으므로 Python 함수마다 하드웨어별 분기를 넣지 않아도 된다. [Dispatcher 내부 구조](https://docs.pytorch.org/devlogs/dispatcher/2026-04-16-how-does-the-dispatcher-work/)
 

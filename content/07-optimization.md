@@ -2,9 +2,7 @@
 
 > **전체 경로에서의 위치**
 >
-> 정확한 실행·측정 → **병목 선택과 변경** → 같은 조건의 재측정
->
-> 계층을 새로 추가하는 장이 아니라 전체 경로의 비용을 줄이는 장이다. 컴파일·적재·전송·제출·연산을 나누어 어느 경계를 바꿀지 정한다. 저수준 스케줄은 [08장](08-eisa-visa.md), 모델 구조를 바꾸는 방법은 [19장](19-model-optimization.md)에서 이어간다.
+> 실행은 되지만 느릴 때, 준비·전송·계산 중 어느 시간을 먼저 줄일지 찾는다. 측정 방법은 [17장](17-debugging.md), 모델 자체를 바꾸는 방법은 [19장](19-model-optimization.md)에 있다.
 
 CPU(Central Processing Unit) 함수의 앞뒤에 타이머를 놓으면 경과 시간을 잴 수 있다. 그러나 NPU(Neural Processing Unit) 호출은 **일을 제출한 뒤 CPU로 먼저 돌아올 수 있다.** 이때 함수가 돌아온 시간만 재면 장치 계산이 끝나기 전까지의 일부 시간만 측정하게 된다. 또한 첫 호출에는 컴파일·파일 읽기·가중치 적재가 포함될 수 있어 반복 호출과 같은 조건이 아니다.
 
@@ -206,14 +204,20 @@ flowchart TB
     F --> G
 ```
 
-FuryNo5의 작은 BF16 영역 생성기는 원래 연산마다 있던 반올림 경계를 남긴다. 중간 write 경계를 없애면 단순한 수학적 결합도 원본과 다른 수치를 만들 수 있기 때문이다. 영역 admission 상한과 compiler ABI 검사를 통과한 경우에만 결합 후보를 사용하고, 거절되면 개별 NPU 경로를 유지한다. [tcl_region.py](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/tcl_region.py) · [영역 검증](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/NATIVE_REGION_VALIDATION.md)
+덧셈 뒤 결과를 BF16으로 저장하고 다음 계산에 넘기던 모델을 한 커널로 묶는다고 하자. 이때 중간 저장을 없애면 반올림하는 시점도 달라질 수 있다. 계산식이 같아 보여도 답이 달라지는 이유다.
+
+FuryNo5의 작은 BF16 영역 생성기는 원래 연산 사이의 반올림을 남긴다. 묶은 후보가 크기 제한과 호출 조건 검사를 통과하지 못하면, 개별 NPU 프로그램으로 실행하는 경로를 유지한다. 아래 예는 반올림 시점의 차이만 숫자로 확인한다. [tcl_region.py](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/tcl_region.py) · [영역 검증](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/docs/NATIVE_REGION_VALIDATION.md)
 
 
 ### 중간 반올림을 없애면 값도 바뀔 수 있다
 
 실수 수학에서 `256+1+1`은 258이다. 그러나 BF16은 모든 정수를 이 구간에서 구분하지 못하므로 연산마다 저장 형식으로 반올림하는 경우와 마지막에 한 번 반올림하는 경우가 달라질 수 있다.
 
-왜 하필 256에서 차이가 나는지 수를 놓고 보자. BF16은 가수의 소수 부분에 7비트를 사용한다. 따라서 `[256,512)` 구간의 인접한 표현 가능 값은 2씩 떨어져 있어 `256, 258, 260, …`은 저장할 수 있지만 257은 그대로 저장할 수 없다. PyTorch의 기본 CPU BF16 변환은 **가까운 값으로 반올림하되 정확히 중간이면 보존할 가수의 마지막 비트가 0인 쪽을 고르는 규칙(round to nearest, ties to even)을** 사용한다. 256과 258을 같은 지수로 쓰면 각각 `128×2`, `129×2`이므로 257은 가수 정수 128인 256 쪽으로 반올림된다. 여기서 even은 256·258이라는 십진 정수의 짝수 여부가 아니라 **보존되는 가수 비트**를 가리킨다. [PyTorch BF16 정의와 기본 변환](https://github.com/pytorch/pytorch/blob/449b1768410104d3ed79d3bcfe4ba1d65c7f22c0/torch/headeronly/util/BFloat16.h#L1-L139)
+먼저 저장할 수 있는 숫자를 보자. BF16은 256 근처에서 `256,258,260,…`은 표현하지만 257은 그대로 저장하지 못한다. 이 예의 변환 규칙에서는 257을 저장할 때 256으로 반올림한다.
+
+그래서 `256+1`을 저장하고 다시 1을 더해 저장하면 두 번 모두 256으로 돌아갈 수 있다. 더 넓은 FP32에서 258까지 계산한 다음 한 번만 저장하면 258을 남길 수 있다. 아래 표에서 두 경로를 비교한다.
+
+세부적으로 BF16은 유효 숫자를 기록하는 **가수**의 소수 부분에 7비트를 쓴다. PyTorch의 기본 CPU 변환은 두 표현 값의 정확한 중간에서 가수의 마지막 비트가 0인 쪽을 고른다. 이 규칙이 round-to-nearest, ties-to-even이다. 십진수 256·258이 둘 다 짝수라는 사실을 기준으로 고르는 것은 아니다. [PyTorch BF16 정의와 기본 변환](https://github.com/pytorch/pytorch/blob/449b1768410104d3ed79d3bcfe4ba1d65c7f22c0/torch/headeronly/util/BFloat16.h#L1-L139)
 
 | 계산 순서 | 반올림 전 값 | 이번 저장 형식 | 저장 뒤 값 |
 |---|---:|---|---:|
@@ -223,7 +227,7 @@ FuryNo5의 작은 BF16 영역 생성기는 원래 연산마다 있던 반올림 
 | FP32 값에 다시 `+1` | 258 | FP32 | 258 |
 | 마지막에만 BF16로 변환 | 258 | BF16 | 258 |
 
-FP32(Floating Point 32-bit)는 이 작은 정수들을 모두 구분할 수 있다. 아래 코드는 위 두 경로를 CPU tensor로 비교한다. 이 예의 BF16 반올림 규칙을 모든 NPU 명령의 내부 누산 방식으로 일반화하지 않는다.
+FP32는 이 작은 정수들을 모두 구분할 수 있다. 아래 코드는 위 두 경로를 CPU tensor로 비교한다. 이 예의 BF16 반올림 규칙을 모든 NPU 명령의 내부 누산 방식으로 일반화하지 않는다.
 
 ```python
 import torch
@@ -276,11 +280,13 @@ Packed는 원소 수를 버리는 압축이 아니라 **같은 두 계산의 가
 
 ## 7. 최적화 요인을 한 표에서 비교한다
 
-첫째는 **tensor axis**다. `[B,M,K]`의 배치 축 B, 행 축 M, 수축 축 K처럼 계산 의미를 설명한다. 둘째는 **성능을 바꾸는 요인**이다. 전송, 배치, fusion, 병렬성, cache 등이 이에 해당한다. 물리 mapping은 논리 축을 장치의 계산·저장 자원과 처리 순서에 배치한다. 입력 형상만으로 유효한 배치나 좋은 성능이 자동 보장되는 것은 아니다. 어떤 순서로 읽고 어디에서 합산하는지가 비용을 바꾼다. [공식 mapping 설명](https://developer.furiosa.ai/furiosa-opt/book/mapping-tensors/index.html)
+‘최적화의 축’이라는 말은 두 뜻으로 쓰일 수 있다. 배열의 행·열처럼 좌표를 구분하는 **텐서 축**과, 전송·호출 수·메모리 사용처럼 성능을 바꾸는 **요인**이다.
+
+예를 들어 입력을 여러 행 모으면 같은 가중치를 함께 읽을 기회가 생긴다. 하지만 요청을 모으는 동안 기다리는 시간도 늘 수 있다. 아래 표는 이런 이득과 비용을 함께 보도록 정리한 것이다. [공식 mapping 설명](https://developer.furiosa.ai/furiosa-opt/book/mapping-tensors/index.html)
 
 | 성능 요인 | 잘 설계했을 때 | 흔히 느려지는 형태 | 관측할 것 |
 |---|---|---|---|
-| 의미·정밀도 | 필요한 계산만 정확히 수행 | FP32(Floating Point 32-bit)를 몰래 BF16(BFloat16)로 바꿔 속도만 비교 | 원본 기준 오차, 중간 dtype |
+| 의미·정밀도 | 필요한 계산만 정확히 수행 | FP32를 몰래 BF16로 바꿔 속도만 비교 | 원본 기준 오차, 중간 dtype |
 | 입력 shape·bucket | 실제 요청 분포에 맞는 준비된 형상 | 작은 입력도 큰 bucket에 과도한 padding | 유효 원소/처리 원소 비율 |
 | layout·축 순서 | 다음 연산에 맞는 연속 접근 | 반복 transpose·packing·gather | 전송 bytes, layout kernel 시간 |
 | 메모리 상주·재사용 | weight·중간값을 가능한 범위에서 유지 | 요청/레이어마다 Host↔Device 왕복 | H2D/D2H 횟수·bytes |

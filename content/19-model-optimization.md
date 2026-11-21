@@ -2,9 +2,7 @@
 
 > **전체 경로에서의 위치**
 >
-> 기준 모델·품질 기준 → **계산 표현·정밀도·구조 변환** → 재컴파일·검증
->
-> 07장의 실행 경로 최적화보다 앞단인 모델 표현을 바꾼다. 같은 함수를 보존하는 변환과 품질 평가가 필요한 압축을 나누어 다룬다. 변환 후에는 [11장](11-furyno5-compiler.md)의 컴파일과 [17장](17-debugging.md)의 수치·성능 확인을 다시 거친다.
+> 실행 방법뿐 아니라 모델의 계산 표현·숫자 저장 방식·크기를 바꾸는 방법을 다룬다. 바꾼 뒤에는 [17장](17-debugging.md)의 방법으로 답과 속도를 다시 확인한다.
 
 DB의 질의 계획에서 연산 하나를 지웠어도 전체 질의가 빨라지는지는 디스크 읽기와 다른 연산의 비용을 함께 봐야 한다. 모델 최적화도 같다. 계산할 숫자를 줄이는 방법, 같은 계산의 표현을 바꾸는 방법, 호출 사이의 메모리 이동을 줄이는 방법은 서로 다른 효과를 낸다.
 
@@ -16,7 +14,11 @@ DB의 질의 계획에서 연산 하나를 지웠어도 전체 질의가 빨라�
 
 ## 1. 같은 계산을 빠르게 하는 연구와 모델을 줄이는 연구
 
-두 연구는 합격 기준이 다르다. 첫째는 같은 모델의 계산 의미를 보존하면서 표현을 바꾸는 것이다. 앞 계산의 출력에 적용하는 상수 배율·덧셈을 앞 계산의 계수로 흡수하는 **folding(계수 접기)**, 불필요한 변환 제거, 입력에 따라 바뀌지 않는 부분의 사전 계산이 여기에 속한다. 뒤의 Conv–BN(Convolution–Batch Normalization) 실습에서 숫자로 확인한다. 둘째는 모델 자체를 바꾸는 것이다. **Pruning(가지치기)은** 가중치나 채널·층 일부를 제거하고, **distillation(지식 증류)은** 큰 교사 모델의 출력을 이용해 작은 학생 모델을 학습시키며, **quantization(양자화)은** 숫자를 더 적은 표현값으로 근사한다. 이 경우 원본과 모든 출력이 같아야 한다는 기준을 사용할 수 없고, 사전에 정한 실제 작업의 품질 한도를 만족해야 한다. [추론용 folding 조건](https://docs.pytorch.org/docs/2.10/generated/torch.nn.utils.fusion.fuse_conv_bn_eval.html), [구조적 pruning](https://openaccess.thecvf.com/content/CVPR2023/html/Fang_DepGraph_Towards_Any_Structural_Pruning_CVPR_2023_paper.html), [지식 증류](https://arxiv.org/abs/1503.02531)
+같은 답을 더 적은 작업으로 구하는 것과, 모델을 작게 바꾸면서 약간의 품질 차이를 허용하는 것은 다른 실험이다.
+
+예를 들어 `y=(x×2)×3`을 `y=x×6`으로 바꾸면 실수 수학에서는 같은 규칙이다. 변하지 않는 두 배율을 미리 합친 것이다. 이런 변환은 원래 답을 보존하는지 확인한다. 실제 컴퓨터에서는 중간 반올림 때문에 차이가 생길 수 있어 수치 비교도 필요하다.
+
+반면 모델의 층이나 특징 수를 줄이면 계산하는 함수 자체가 바뀔 수 있다. 이 경우 숫자가 원본과 같은지만 보지 않고 실제 과제의 품질이 허용 범위인지 평가해야 한다. 아래에서 두 종류의 후보를 나누어 다룬다. [추론용 folding 조건](https://docs.pytorch.org/docs/2.10/generated/torch.nn.utils.fusion.fuse_conv_bn_eval.html) · [구조적 pruning](https://openaccess.thecvf.com/content/CVPR2023/html/Fang_DepGraph_Towards_Any_Structural_Pruning_CVPR_2023_paper.html) · [지식 증류](https://arxiv.org/abs/1503.02531)
 
 | 비교 계열 | 허용하는 변경 | 합격 기준 | 결과를 부르는 방법 |
 |---|---|---|---|
@@ -85,7 +87,9 @@ flowchart TB
 
 **Tensor**는 다차원 배열, **shape**는 각 축의 길이다. 예를 들어 영상 입력 `[1,3,24,24]`는 배치 1개·색상 채널 3개·높이 24·너비 24를 뜻하는 NCHW(Number, Channel, Height, Width) 순서다. **Axis(축)는** 이 네 방향 중 하나이고, **channel(채널)은** 같은 위치에서 구별하는 특징 묶음이다. 입력에서는 RGB 세 값일 수 있고, 중간 층에서는 모델이 만든 특징 여러 개다. 이 배열에는 `1×3×24×24=1,728`개 원소가 있다. **Dtype(자료형)이** FP32(Floating Point 32-bit)면 원소당 4바이트이므로 원소 데이터는 6,912바이트다.
 
-**Weight(가중치)는** 학습으로 정해져 추론 중 반복 사용하는 계수이고, **activation(활성값)은** 현재 입력으로 계산한 중간 배열이다. **Layout(배치)은** 논리적인 축의 값들을 메모리에 어떤 순서로 저장하는지 뜻한다. shape가 같아도 축별 주소 간격인 stride가 다르면 커널에 전달하는 주소 계산이 달라진다. **Padding**은 실행 규격을 맞추려고 빈 원소를 채우는 일이며, **bucket**은 여러 입력 크기에 맞춰 준비한 실행 규격 묶음이다. 이 때문에 “FP8 모델”이라는 이름만으로 가중치·중간값·상태의 형식과 비용을 알 수는 없다.
+같은 ‘FP8 모델’이라도 무엇을 그 형식으로 저장했는지 봐야 한다. 모델이 반복 사용하는 **가중치**와 이번 입력에서 생기는 **중간값(activation)은** 다른 배열이다. 언어 모델이 다음 호출까지 남기는 KV Cache도 별도다.
+
+입력과 출력의 크기만 같아도 메모리의 읽는 순서가 다르면 변환 비용이 생길 수 있다. 이 저장 순서가 layout이고, 축별로 얼마나 건너뛰는지가 stride다. 아래 비교에서는 가중치·중간값·상태의 숫자 형식을 각각 기록한다.
 
 기준선은 공식 지원 모델과 권장 설정에서 시작한다. 예를 들어 공식 Qwen3 문서는 FP8(Floating Point 8-bit) weight, 동적 FP8 activation, 16-bit KV(Key–Value) cache를 구분한다. KV cache는 이전 입력 토큰들의 attention 계산에 쓸 K(Key, 비교용 벡터)·V(Value, 내용 벡터)를 보관한 상태다. 출력 생성 때 다시 계산하지 않으려고 유지하므로 가중치와도, 잠깐 쓰고 버리는 중간값과도 수명이 다르다. 단순히 두 결과에 모두 ‘FP8’이라고 적어 두어서는 같은 정밀도 계약인지 알 수 없다. [공식 Qwen3 실행·양자화 조건](https://developer.furiosa.ai/v2026.4.1/en/furiosa_llm/models/qwen3.html)
 
@@ -230,9 +234,11 @@ NAS(Neural Architecture Search)는 층의 종류·폭·깊이 같은 신경망 �
 
 ## 5. 작은 실습: 추론용 Conv–BN folding
 
-**Convolution(합성곱)은** 작은 가중치 창을 입력 위치에 적용하며 곱한 값을 더해 특징을 만드는 계산이다. **BatchNorm(Batch Normalization)은** 채널별 값을 평균·분산으로 정규화한 뒤 학습한 배율 gamma와 이동값 beta를 적용한다. 추론에서는 학습 중 보관한 **running mean·variance(누적 평균·분산 추정값)를** 고정해 쓴다. 이 값이 고정되어 있기 때문에 앞 convolution의 계수에 합칠 수 있다.
+앞 계산의 결과를 뒤 계산에서 다시 보정하는 경우, 그 보정을 앞 계산의 계수에 합쳐 한 번에 계산할 수 있을까? **Conv–BN folding**은 추론에서 조건이 맞을 때 이런 변환을 하는 예다. 먼저 작은 숫자로 왜 같은 답이 나오는지 확인하자.
 
 평균과 분산부터 계산해 보자. 값 `[1,5]`의 평균은 `(1+5)/2=3`이다. 평균에서의 차이는 `[−2,2]`이고, 그 제곱의 평균인 분산은 `(4+4)/2=4`다. 분산의 제곱근인 표준편차는 2다. 이 계산은 용어 설명용이며 PyTorch가 학습 중 누적 통계를 갱신하는 전체 규칙을 대신하지 않는다. 아래 예에서는 **저장된 평균이 3, 분산이 4**라고 가정한다.
+
+여기서 **합성곱(Convolution)은** 입력의 작은 영역에 계수를 곱해 더하는 계산이다. 한 위치에서 여러 종류의 결과를 만들 수 있는데 그 종류를 채널이라고 부른다. **BatchNorm**은 채널별로 평균을 빼고 표준편차로 나눈 뒤 배율과 더할 값을 적용한다. 추론에서는 저장된 평균·분산을 사용하므로 이 보정을 고정된 식으로 정리할 수 있다.
 
 한 출력 채널만 보면서 convolution 결과를 `z=2x+1`로 놓자. 여기서 2는 입력에 곱하는 weight, 1은 더하는 **bias(편향)다**. 이어서 BatchNorm의 gamma를 2, beta를 0.5로 놓자. 계산을 간단하게 보이기 위해 여기서만 epsilon을 0으로 생략한다.
 
@@ -247,7 +253,7 @@ NAS(Neural Architecture Search)는 층의 종류·폭·깊이 같은 신경망 �
 
 일반 식에서는 출력 채널마다 `a = gamma / sqrt(variance + epsilon)`를 만들고 `W_new=a×W`, `b_new=a×(b−mean)+beta`로 바꾼다. `sqrt`는 제곱근이고, 식의 곱은 해당 출력 채널의 모든 convolution 가중치에 같은 배율을 적용한다는 뜻이다. 학습 모드에서는 입력 batch에 따라 통계가 달라지므로 이 고정 계수 변환을 그대로 사용할 수 없다. [PyTorch 2.10 구현](https://github.com/pytorch/pytorch/blob/449b1768410104d3ed79d3bcfe4ba1d65c7f22c0/torch/nn/utils/fusion.py#L20-L53)
 
-다음은 CPU(Central Processing Unit) 예제이며 [fold_conv_bn.py](../examples/fold_conv_bn.py)로 내려받을 수 있다. PyTorch 2.10 API에 맞췄다. 합성 입력으로 running statistics를 채우는 부분은 실습 준비이며 실제 모델을 학습하거나 제품 품질을 검증하는 과정은 아니다.
+다음은 CPU 예제이며 [fold_conv_bn.py](../examples/fold_conv_bn.py)로 내려받을 수 있다. PyTorch 2.10 API에 맞췄다. 합성 입력으로 running statistics를 채우는 부분은 실습 준비이며 실제 모델을 학습하거나 제품 품질을 검증하는 과정은 아니다.
 
 아래는 [fold_conv_bn.py](../examples/fold_conv_bn.py)의 `main()`을 세 단계로 나눈 발췌다. 전체 파일에서 `torch`, `nn`, `fuse_conv_bn_eval`을 import한다. 먼저 실습용 모델의 통계를 준비하고 평가 모드로 고정한다.
 
@@ -296,7 +302,7 @@ python -m pip show torch
 python fold_conv_bn.py
 ```
 
-출력 수치는 실행한 독자의 환경에서 얻는 값이다. 이 책은 통과 결과를 미리 적지 않는다. 이 예제의 합격은 시험한 FP32(Floating Point 32-bit) 입력에서의 수치 확인이다. BF16(BFloat16)·FP8로 바꾸면 다시 검사하고, 분기에서 원래 convolution 출력을 따로 사용하는 모델은 연결 관계도 확인한다. 원본과 folding 모델을 각각 같은 Furiosa 경로로 컴파일한 뒤 EDF 수·실측 시간에 차이가 있는지를 확인해야 최적화 실험이 완성된다.
+출력 수치는 실행한 독자의 환경에서 얻는 값이다. 이 책은 통과 결과를 미리 적지 않는다. 이 예제의 합격은 시험한 FP32 입력에서의 수치 확인이다. BF16(BFloat16)·FP8로 바꾸면 다시 검사하고, 분기에서 원래 convolution 출력을 따로 사용하는 모델은 연결 관계도 확인한다. 원본과 folding 모델을 각각 같은 Furiosa 경로로 컴파일한 뒤 EDF 수·실측 시간에 차이가 있는지를 확인해야 최적화 실험이 완성된다.
 
 ## 6. ONNX 단순화는 별도 후보로 보관한다
 
@@ -352,7 +358,11 @@ print({"before_nodes": len(model.graph.node),
 
 ## 7. 구조를 줄일 때는 하드웨어가 좋아하는 크기도 다시 찾는다
 
-구조적 pruning은 weight를 0으로 표시하는 것과 다르다. 채널이나 hidden dimension을 실제로 제거하면 뒤따르는 연산의 텐서 크기도 바뀐다. DepGraph는 연동된 층을 함께 줄이기 위한 의존 관계를 만든다. 반면 mask만 적용한 dense 텐서는 shape가 그대로일 수 있으므로, 별도의 sparse 실행 지원을 확인하지 않은 상태에서 계산량 감소를 주장하지 않는다. [DepGraph의 문제 정의](https://openaccess.thecvf.com/content/CVPR2023/html/Fang_DepGraph_Towards_Any_Structural_Pruning_CVPR_2023_paper.html)
+출력 특징이 12개인 층에서 두 개를 실제로 없애면 결과 길이는 10이 된다. 그 결과를 받는 다음 층도 입력 열을 12개에서 10개로 바꿔야 한다. 이처럼 연결된 구조를 함께 줄이는 방식이 **구조적 가지치기(structured pruning)다**.
+
+단순히 두 특징의 가중치를 0으로 표시하고 배열 크기는 12로 유지하면, 실행기는 여전히 열두 자리의 계산을 수행할 수 있다. 0인 부분을 건너뛰는 별도 실행 지원이 있어야 비용이 줄어드는 경우도 있다.
+
+DepGraph는 함께 바꿔야 할 층의 연결을 찾는 도구다. 크기를 실제로 줄인 뒤에도 장치가 처리하는 묶음과 맞는지, 품질이 유지되는지는 다시 확인한다. [DepGraph의 문제 정의](https://openaccess.thecvf.com/content/CVPR2023/html/Fang_DepGraph_Towards_Any_Structural_Pruning_CVPR_2023_paper.html)
 
 ### 중간 채널 하나를 지우면 다음 층도 바뀐다
 
