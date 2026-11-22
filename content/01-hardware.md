@@ -184,6 +184,52 @@ flowchart TB
 
 **그림의 한계:** 위 도식은 앞서 대화에서 설명한 저장소·엔진 관계를 학습용으로 재구성한 것으로, 칩 내부 배선이나 연산 단계별 지연시간을 그대로 그린 것은 아니다. 모든 연산이 반드시 TRF와 VRF를 거치는 것도 아니다. 예를 들어 Contraction Engine의 결과를 Vector Engine으로 바로 전달할 수 있다. [공식 Tensor Unit 파이프라인](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/computing-tensors/index.md) · [TRF·VRF 설명](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/computing-tensors/register-files.md)
 
+### DM 데이터를 연산기로 전달하는 것은 Control Core일까?
+
+**아니다. Control Core(제어 코어)는 데이터의 전달 순서와 연산을 제어하지만, 자신이 DM의 숫자를 하나씩 읽어 Contraction Engine으로 전달하지는 않는다.** 실제 데이터는 Fetch·Switch·Collect 등의 전용 하드웨어 경로를 통과한다.
+
+```mermaid
+flowchart TB
+  CC["Control Core: 명령 발행·실행 순서 관리"]
+  DMA["DMA Engine: HBM과 DM 사이 데이터 이동"]
+  HBM["HBM: 모델 가중치·입력 등 저장"]
+  DM["DM: Slice에 대응하는 온칩 데이터 저장소"]
+  FE["Fetch Engine: DM에서 데이터를 읽어 스트림 생성"]
+  SW["Switch Engine: 필요할 때 Slice 사이 데이터 이동"]
+  CO["Collect Engine: 연산용 패킷 형태로 정리"]
+  TRF["TRF: 수축 연산에 쓸 피연산자"]
+  CE["Contraction Engine: 스트림과 TRF 피연산자로 곱·합산"]
+  VE["Vector Engine: 원소별 연산·축약"]
+  HBM --> DMA
+  DMA --> DM
+  DM --> FE
+  FE --> SW
+  SW --> CO
+  CO --> CE
+  CO --> TRF
+  TRF --> CE
+  CE --> VE
+  CC --> DMA
+  CC --> FE
+  CC --> CE
+```
+
+위 그림에서 **Control Core → 엔진**으로 향하는 화살표는 **명령·실행 제어 관계**를 뜻한다. 반면 **HBM → DMA → DM → Fetch → Switch → Collect → Contraction Engine** 방향의 화살표는 **실제 데이터가 이동하는 경로**다. 두 종류의 화살표를 같은 데이터 전송으로 해석하면 안 된다. Switch는 파이프라인의 구성 요소지만 모든 커널에서 실제 Slice 간 이동이 발생하는 것은 아니다. 그림은 VRF의 준비 경로와 결과 저장 경로를 생략한 **대표적인 수축 연산 예시**다.
+
+| 역할 | 하드웨어 | 실제로 하는 일 |
+|---|---|---|
+| **명령 제어** | Control Core | 데이터 이동·계산·저장의 실행 순서 및 의존성 관리 |
+| **HBM ↔ DM 이동** | DMA Engine | 장치 메모리 계층 간 텐서 전송. Tensor Unit을 통과할 필요가 없는 이동 |
+| **DM → 연산 스트림** | Fetch Engine | DM을 읽어 Tensor Unit의 스트림으로 공급 |
+| **Slice 간 이동** | Switch Engine | 필요한 경우 다른 Slice로 데이터를 이동·재배치 |
+| **연산용 묶음 준비** | Collect Engine | 계산 엔진이 소비할 수 있는 패킷·플릿으로 정리 |
+| **곱셈과 합산** | Contraction Engine | 스트림 입력과 TRF의 피연산자로 실제 수축 연산 수행 |
+
+예를 들어 XW를 계산하려면, 필요한 가중치 W와 입력 X를 먼저 준비한 뒤, W의 일부를 TRF에 유지하면서 바뀌는 X 데이터를 Fetch·Collect 경로로 공급할 수 있다. **Control Core가 수천 개의 곱셈을 직접 수행하는 것도 아니고, 입력값을 매번 직접 복사하는 것도 아니다.**
+
+**원문 링크:** [Tensor Unit의 엔진별 데이터 경로](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/computing-tensors/index.md) · [DMA Engine과 Fetch의 구분](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/moving-tensors/dma-engine.md) · [TCP 논문 제어 코어·명령 큐](https://furiosa.ai/download/FuriosaAI-tensor-contraction-processor-isca24)
+
+
 
 
 ## 5. 행렬곱을 여러 계산기에 나누면 무엇이 달라질까
