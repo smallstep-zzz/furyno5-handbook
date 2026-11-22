@@ -154,6 +154,47 @@ flowchart TB
 
 이것은 포함 관계와 데이터 역할을 그린 개념도다. 실제 프로그램이 항상 자원을 전부 유효하게 사용하는 것은 아니다. 한쪽에 일이 몰리면 나머지 계산기가 기다릴 수 있다. SDK(Software Development Kit)의 PE 설정과 Rust 저수준 API의 chip·cluster 설정도 서로 다른 호출 계약이므로, 숫자가 같다는 이유로 같은 옵션으로 바꿔 쓰면 안 된다.
 
+### Slice 하나를 확대하면: DM·TRF·VRF와 두 연산 엔진의 관계
+
+앞의 큰 계층도에서 **Slice 하나**만 확대해 보자. Slice는 DM이라는 저장 공간뿐 아니라 연산 스트림과 연결되는 처리 경로를 갖는다. 수축 연산에 사용할 피연산자를 담는 **TRF(Tensor Register File, 텐서 레지스터 파일)**와 벡터 연산용 **VRF(Vector Register File, 벡터 레지스터 파일)**도 여기에 대응한다.
+
+```mermaid
+flowchart TB
+  subgraph PE["PE (64개 Slice 중 하나를 확대)"]
+    direction TB
+    subgraph SL["Slice: 저장소와 계산 경로"]
+      direction TB
+      DM["DM · 512 KiB / Slice<br/>온칩 데이터 저장"]
+      FC["Fetch → Collect<br/>데이터를 연산 스트림으로 공급"]
+      DM --> FC
+
+      TRF[("TRF · Tensor Register File<br/>수축 연산 피연산자 저장")]
+      VRF[("VRF · Vector Register File<br/>벡터 연산 피연산자 저장")]
+
+      CE["Contraction Engine<br/>곱셈과 수축 합산<br/>Slice당 최대 8 Lane"]
+      VE["Vector Engine · Intra-Slice 연산<br/>활성화 함수·원소별 계산"]
+
+      FC -->|"스트림 입력"| CE
+      FC -.->|"벡터 연산 스트림"| VE
+      FC -.->|"피연산자 준비"| TRF
+      FC -.->|"피연산자 준비"| VRF
+      TRF -->|"보관한 피연산자"| CE
+      VRF -->|"보관한 피연산자"| VE
+      CE -->|"계산 결과 스트림"| VE
+      VE --> OUT["결과 스트림 → Commit → DM"]
+      OUT --> DM
+    end
+  end
+```
+
+**읽는 방법:** DM은 계산할 데이터를 보관하는 SRAM이다. Fetch·Collect가 이를 스트림으로 공급하고, **Contraction Engine은 스트림 한쪽과 TRF에 준비된 다른 피연산자**를 받아 행렬곱 같은 수축 연산을 처리한다. **Vector Engine은 스트림과 필요할 때 VRF의 피연산자**를 이용해 원소별 연산·활성화 함수 등을 수행한다. 따라서 TRF와 VRF는 계산 회로가 아니라 **각 엔진에 데이터를 공급하는 별도 저장소**다.
+
+이 그림의 **Lane**은 DM의 별도 메모리 구획을 뜻하는 것이 아니라, Slice의 수축 연산에 사용하는 병렬 계산 차원이다. 한 Slice에 최대 8개 Lane이 매핑되며 TRF 데이터도 Lane별로 배치한다. 반면 Vector Engine에는 Slice **안에서** 계산하는 경로뿐 아니라 여러 Slice에 걸쳐 결과를 합치는 **Inter-Slice Reducer**도 있으므로, 모든 Vector Engine 기능이 Slice 내부에 완전히 독립적으로 갇혀 있다고 생각하면 안 된다.
+
+**그림의 한계:** 위 도식은 앞서 대화에서 설명한 저장소·엔진 관계를 학습용으로 재구성한 것으로, 칩 내부 배선이나 연산 단계별 지연시간을 그대로 그린 것은 아니다. 모든 연산이 반드시 TRF와 VRF를 거치는 것도 아니다. 예를 들어 Contraction Engine의 결과를 Vector Engine으로 바로 전달할 수 있다. [공식 Tensor Unit 파이프라인](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/computing-tensors/index.md) · [TRF·VRF 설명](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/computing-tensors/register-files.md)
+
+
+
 ## 5. 행렬곱을 여러 계산기에 나누면 무엇이 달라질까
 
 큰 행렬곱을 계산할 때 한 계산 자원만 쓰는 대신 여러 계산 자원에 **서로 다른 부분을 맡길 수 있다.** 다만 어느 부분을 나누느냐에 따라 준비해야 할 입력과 마지막 결과 처리 방법이 달라진다.
