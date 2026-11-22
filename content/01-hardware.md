@@ -160,31 +160,22 @@ flowchart TB
 
 ```mermaid
 flowchart TB
-  subgraph PE["PE (64개 Slice 중 하나를 확대)"]
-    direction TB
-    subgraph SL["Slice: 저장소와 계산 경로"]
-      direction TB
-      DM["DM · 512 KiB / Slice<br/>온칩 데이터 저장"]
-      FC["Fetch → Collect<br/>데이터를 연산 스트림으로 공급"]
-      DM --> FC
-
-      TRF[("TRF · Tensor Register File<br/>수축 연산 피연산자 저장")]
-      VRF[("VRF · Vector Register File<br/>벡터 연산 피연산자 저장")]
-
-      CE["Contraction Engine<br/>곱셈과 수축 합산<br/>Slice당 최대 8 Lane"]
-      VE["Vector Engine · Intra-Slice 연산<br/>활성화 함수·원소별 계산"]
-
-      FC -->|"스트림 입력"| CE
-      FC -.->|"벡터 연산 스트림"| VE
-      FC -.->|"피연산자 준비"| TRF
-      FC -.->|"피연산자 준비"| VRF
-      TRF -->|"보관한 피연산자"| CE
-      VRF -->|"보관한 피연산자"| VE
-      CE -->|"계산 결과 스트림"| VE
-      VE --> OUT["결과 스트림 → Commit → DM"]
-      OUT --> DM
-    end
-  end
+  DM["Slice의 DM: 512 KiB / Slice · 온칩 데이터 저장"]
+  FC["Fetch → Collect: 연산 스트림으로 데이터 공급"]
+  TRF["TRF: 수축 연산용 피연산자 저장"]
+  VRF["VRF: 벡터 연산용 피연산자 저장"]
+  CE["Contraction Engine: 곱셈·합산 · Slice당 최대 8 Lane"]
+  VE["Vector Engine: 원소별 연산·활성화 함수"]
+  OUT["결과 스트림 → Commit → DM"]
+  DM --> FC
+  FC --> CE
+  FC --> VE
+  FC --> TRF
+  FC --> VRF
+  TRF --> CE
+  VRF --> VE
+  CE --> VE
+  VE --> OUT
 ```
 
 **읽는 방법:** DM은 계산할 데이터를 보관하는 SRAM이다. Fetch·Collect가 이를 스트림으로 공급하고, **Contraction Engine은 스트림 한쪽과 TRF에 준비된 다른 피연산자**를 받아 행렬곱 같은 수축 연산을 처리한다. **Vector Engine은 스트림과 필요할 때 VRF의 피연산자**를 이용해 원소별 연산·활성화 함수 등을 수행한다. 따라서 TRF와 VRF는 계산 회로가 아니라 **각 엔진에 데이터를 공급하는 별도 저장소**다.
