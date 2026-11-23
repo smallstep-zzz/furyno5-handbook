@@ -138,3 +138,8 @@ TCL은 Tensor Contraction Language, EDF는 공식 검증 문서에서 Executable
 | [Python vISA 연결 포럼](https://forums.furiosa.ai/t/furiosa-opt-compile-from-visa-furiosa-torch/487) | 공개 API 확인 범위 |
 | [FuryNo5 exporter](https://github.com/smallstep-zzz/FuryNo5/blob/bba9efea8201aec48150514a35d0b637d29d107e/tplmachine/execution_plan.py) | 코드 검토로 확인한 병렬 프로세스 실행 전제 |
 | [전체 출처 색인](data/source-index.json) | 각 장의 개별 인용 URL 목록 |
+
+
+## 2026-11-23 공식 SDK 실행 기록 추가
+
+[20장](20-official-sdk-practice.md)은 SDK 2026.4.0·Torch 2.10.0+cpu·Python 3.11에서 수행한 RNGD 실험을 정리했습니다. 작은 모델·TCL·Runnable·HTTP와 공식 LLM FXB 빌드·생성·서빙은 통과했고, vISA Python 경로는 opt 0.10.0과 래퍼의 0.5.x 요구 불일치로 차단됐습니다. 공개 예제의 환경 경로를 이식한 뒤에는 정적 검사만 수행했습니다. 이전 장의 조사 기준일과 이 실험의 날짜를 구분합니다.

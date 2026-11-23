@@ -141,6 +141,13 @@
     "summary": "계산 표현·숫자 저장 방식·모델 크기를 바꿀 때 답과 속도를 어떻게 확인할지 다룹니다."
   },
   {
+    "id": "20-official-sdk-practice",
+    "title": "공식 SDK 컴파일·실행·서빙 실습",
+    "short": "공식 SDK 터미널 실습",
+    "part": "VII. 실행 명령 실습",
+    "summary": "FuryNo5 없이 공식 SDK를 사용해 모델·TCL·vISA·FXB를 다루고, 실제 통과와 차단 결과를 구분합니다."
+  },
+  {
     "id": "glossary",
     "title": "용어 사전",
     "short": "약어와 용어 사전",

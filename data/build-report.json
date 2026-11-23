@@ -1,8 +1,8 @@
 {
-  "chapters": 24,
-  "diagrams": 37,
-  "code_blocks": 170,
-  "source_urls": 421,
+  "chapters": 25,
+  "diagrams": 42,
+  "code_blocks": 190,
+  "source_urls": 422,
   "generated_pages": [
     "index.html",
     "chapter/01-hardware.html",
@@ -24,6 +24,7 @@
     "chapter/17-debugging.html",
     "chapter/18-npu-ecosystems.html",
     "chapter/19-model-optimization.html",
+    "chapter/20-official-sdk-practice.html",
     "glossary.html",
     "sources.html",
     "review.html",

@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="작은 행렬곱을 계산한 뒤, 그 일을 여러 장치 자원에 나누는 방법을 살펴봅니다."><meta name="color-scheme" content="dark"><meta name="theme-color" content="#111417"><title>RNGD 하드웨어 · FuryNo5 개발 핸드북</title><link rel="icon" href="../assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="../assets/site.css?v=e91cad038c9a"><script defer src="../assets/site.js?v=c9a152506172"></script></head>
-<body data-root="../" data-chapter="01-hardware" data-search-version="84c28885b389"><a class="skip" href="#content">본문으로 이동</a><header class="topbar"><button class="menu-toggle" type="button" aria-label="전체 목차 열기" aria-controls="sidebar" aria-expanded="false">☰</button><a class="brand" href="../index.html"><span class="brand-mark">Nº5</span>FuryNo5<small>DEVELOPER HANDBOOK</small></a><div class="top-actions"><a class="top-link" href="../sources.html">출처와 버전</a><button class="search-open" type="button" aria-label="핸드북 전체 검색"><span>전체 문서 검색</span><kbd>⌘ K</kbd></button></div></header><div class="progress" aria-hidden="true"></div><div class="mobile-shade"></div><aside class="sidebar" id="sidebar" aria-label="전체 목차"><nav><div class="nav-caption">시작하기</div><a class="nav-link"  href="../index.html"><span class="num">00</span><span>전체 지도와 읽는 방법</span></a><div class="nav-caption">I. 디바이스를 이해하기</div><a class="nav-link active" aria-current="page" href="../chapter/01-hardware.html"><span class="num">01</span><span>RNGD · TCP · PE</span></a><a class="nav-link"  href="../chapter/02-memory-dma.html"><span class="num">02</span><span>메모리 · DMA · 배치</span></a><a class="nav-link"  href="../chapter/03-driver-runtime.html"><span class="num">03</span><span>드라이버와 공식 런타임</span></a><div class="nav-caption">II. 프로그램을 만들고 실행하기</div><a class="nav-link"  href="../chapter/04-tcl-edf.html"><span class="num">04</span><span>TCL 작성 · 컴파일 · 실행</span></a><a class="nav-link"  href="../chapter/05-graphs-fallback.html"><span class="num">05</span><span>실행그래프 · 오류 · 폴백</span></a><a class="nav-link"  href="../chapter/06-buckets-shapes.html"><span class="num">06</span><span>Shape · 버킷 · 컴파일 비용</span></a><a class="nav-link"  href="../chapter/07-optimization.html"><span class="num">07</span><span>최적화의 축과 우선순위</span></a><a class="nav-link"  href="../chapter/08-eisa-visa.html"><span class="num">08</span><span>eISA · vISA · furiosa-opt</span></a><div class="nav-caption">III. FuryNo5를 해부하기</div><a class="nav-link"  href="../chapter/09-torch-aten.html"><span class="num">09</span><span>PyTorch · ATen · 등록</span></a><a class="nav-link"  href="../chapter/10-furyno5-architecture.html"><span class="num">10</span><span>FuryNo5 구조와 지원 범위</span></a><a class="nav-link"  href="../chapter/11-furyno5-compiler.html"><span class="num">11</span><span>FuryNo5 컴파일과 캐시</span></a><div class="nav-caption">IV. 모델 포팅과 서빙</div><a class="nav-link"  href="../chapter/12-fxbx.html"><span class="num">12</span><span>fxbX 포맷과 실행계획</span></a><a class="nav-link"  href="../chapter/13-porting-fha.html"><span class="num">13</span><span>포팅 · FHA · FuryAwesome</span></a><a class="nav-link"  href="../chapter/14-serving-vllm.html"><span class="num">14</span><span>vLLM · 서빙 브리지</span></a><a class="nav-link"  href="../chapter/15-multi-npu.html"><span class="num">15</span><span>PE · 여러 카드 · 여러 서버</span></a><div class="nav-caption">V. 검증과 다음 개발</div><a class="nav-link"  href="../chapter/16-furyboost.html"><span class="num">16</span><span>FuryBoost 학습 성능</span></a><a class="nav-link"  href="../chapter/17-debugging.html"><span class="num">17</span><span>측정 · 추적 · 실패 재현</span></a><div class="nav-caption">VI. 생태계 비교와 최적화 연구</div><a class="nav-link"  href="../chapter/18-npu-ecosystems.html"><span class="num">18</span><span>다른 NPU의 지원 방식</span></a><a class="nav-link"  href="../chapter/19-model-optimization.html"><span class="num">19</span><span>모델 사전 최적화 · 연구</span></a><div class="nav-caption">참고와 검증</div><a class="nav-link"  href="../glossary.html"><span class="num">·</span><span>약어와 용어 사전</span></a><a class="nav-link"  href="../sources.html"><span class="num">·</span><span>출처 · 버전 · 접근 범위</span></a><a class="nav-link"  href="../review.html"><span class="num">·</span><span>실행 전 확인사항</span></a><a class="nav-link"  href="../reader-review.html"><span class="num">·</span><span>핵심 질문과 해설</span></a></nav><div class="side-foot">비공식 개발 핸드북<br>공식 SDK와 프로젝트 구현을 구분합니다.<br><a href="https://github.com/smallstep-zzz/furyno5-handbook">원고와 변경 이력 ↗</a></div></aside><div class="shell"><main class="page" id="content"><div class="eyebrow">I. 디바이스를 이해하기 / CHAPTER 01</div><h1>RNGD 하드웨어</h1><p class="dek">작은 행렬곱을 계산한 뒤, 그 일을 여러 장치 자원에 나누는 방법을 살펴봅니다.</p><div class="page-meta"><span>SDK 2026.4 계열 / 버전별 표기</span><span class="readtime">약 23분</span><span><a href="https://github.com/smallstep-zzz/furyno5-handbook/blob/main/content/01-hardware.md">원고</a></span></div><details class="mobile-toc"><summary>이 장의 목차</summary><div><a class="" href="#1-먼저-장치-없이-계산해-보자">1. 먼저 장치 없이 계산해 보자</a><a class="minor" href="#스칼라-벡터-행렬은-숫자를-담는-모양이다">스칼라·벡터·행렬은 숫자를 담는 모양이다</a><a class="" href="#2-np-einsum-은-반복문의-계산-규칙을-짧게-쓰는-함수다">2. np.einsum 은 반복문의 계산 규칙을 짧게 쓰는 함수다</a><a class="" href="#3-shape와-메모리-배치는-서로-다른-질문이다">3. shape와 메모리 배치는 서로 다른 질문이다</a><a class="" href="#4-pe-slice-lane은-계산-자원의-어느-크기를-말하는가">4. PE, slice, lane은 계산 자원의 어느 크기를 말하는가</a><a class="" href="#5-같은-계산을-나눠-맡기는-세-가지-방법">5. 같은 계산을 나눠 맡기는 세 가지 방법</a><a class="minor" href="#m을-나누기-서로-다른-입력-행을-맡긴다">M을 나누기: 서로 다른 입력 행을 맡긴다</a><a class="minor" href="#n을-나누기-같은-입력에서-서로-다른-출력-열을-맡긴다">N을 나누기: 같은 입력에서 서로 다른 출력 열을 맡긴다</a><a class="minor" href="#k를-나누기-같은-출력의-일부를-계산하므로-더해야-한다">K를 나누기: 같은 출력의 일부를 계산하므로 더해야 한다</a><a class="minor" href="#두-작업에-어떤-값을-각각-준비해야-하는가">두 작업에 어떤 값을 각각 준비해야 하는가</a><a class="minor" href="#이제-논리-축과-물리-축을-구분할-수-있다">이제 논리 축과 물리 축을 구분할 수 있다</a><a class="" href="#6-데이터를-저장하는-곳과-계산하는-곳을-구분하자">6. 데이터를 저장하는 곳과 계산하는 곳을 구분하자</a><a class="" href="#7-데이터는-연산-파이프라인을-통과한다">7. 데이터는 연산 파이프라인을 통과한다</a><a class="minor" href="#첫-입력-행이-결과가-되는-과정">첫 입력 행이 결과가 되는 과정</a><a class="minor" href="#공식-도식의-엔진-이름을-여기에서-해석하자">공식 도식의 엔진 이름을 여기에서 해석하자</a><a class="minor" href="#계산과-다음-데이터-준비를-겹친다는-뜻">계산과 다음 데이터 준비를 겹친다는 뜻</a><a class="" href="#8-제어-코어는-무엇을-하는가">8. 제어 코어는 무엇을 하는가</a><a class="" href="#9-사양표와-관측-도구를-이제-읽어-보자">9. 사양표와 관측 도구를 이제 읽어 보자</a><a class="" href="#cpu에서-기초-계산을-직접-실행하기">CPU에서 기초 계산을 직접 실행하기</a><a class="" href="#출처">출처</a></div></details><noscript><p class="noscript">본문과 그림은 JavaScript 없이 읽을 수 있습니다. 검색과 조절 실험에는 JavaScript가 필요합니다.</p></noscript><article class="article"><p>한 번의 곱셈이 아니라 많은 곱셈을 나눠 맡기는 것이 NPU의 출발점이다. 먼저 같은 행렬곱을 손으로 계산하고, 그 일을 RNGD의 여러 계산 자원이 어떻게 나누는지 보자. 숫자가 저장되는 위치는 다음 <a href="../chapter/02-memory-dma.html">02장</a>에서 이어 살펴본다.</p>
+<body data-root="../" data-chapter="01-hardware" data-search-version="7832288f3e43"><a class="skip" href="#content">본문으로 이동</a><header class="topbar"><button class="menu-toggle" type="button" aria-label="전체 목차 열기" aria-controls="sidebar" aria-expanded="false">☰</button><a class="brand" href="../index.html"><span class="brand-mark">Nº5</span>FuryNo5<small>DEVELOPER HANDBOOK</small></a><div class="top-actions"><a class="top-link" href="../sources.html">출처와 버전</a><button class="search-open" type="button" aria-label="핸드북 전체 검색"><span>전체 문서 검색</span><kbd>⌘ K</kbd></button></div></header><div class="progress" aria-hidden="true"></div><div class="mobile-shade"></div><aside class="sidebar" id="sidebar" aria-label="전체 목차"><nav><div class="nav-caption">시작하기</div><a class="nav-link"  href="../index.html"><span class="num">00</span><span>전체 지도와 읽는 방법</span></a><div class="nav-caption">I. 디바이스를 이해하기</div><a class="nav-link active" aria-current="page" href="../chapter/01-hardware.html"><span class="num">01</span><span>RNGD · TCP · PE</span></a><a class="nav-link"  href="../chapter/02-memory-dma.html"><span class="num">02</span><span>메모리 · DMA · 배치</span></a><a class="nav-link"  href="../chapter/03-driver-runtime.html"><span class="num">03</span><span>드라이버와 공식 런타임</span></a><div class="nav-caption">II. 프로그램을 만들고 실행하기</div><a class="nav-link"  href="../chapter/04-tcl-edf.html"><span class="num">04</span><span>TCL 작성 · 컴파일 · 실행</span></a><a class="nav-link"  href="../chapter/05-graphs-fallback.html"><span class="num">05</span><span>실행그래프 · 오류 · 폴백</span></a><a class="nav-link"  href="../chapter/06-buckets-shapes.html"><span class="num">06</span><span>Shape · 버킷 · 컴파일 비용</span></a><a class="nav-link"  href="../chapter/07-optimization.html"><span class="num">07</span><span>최적화의 축과 우선순위</span></a><a class="nav-link"  href="../chapter/08-eisa-visa.html"><span class="num">08</span><span>eISA · vISA · furiosa-opt</span></a><div class="nav-caption">III. FuryNo5를 해부하기</div><a class="nav-link"  href="../chapter/09-torch-aten.html"><span class="num">09</span><span>PyTorch · ATen · 등록</span></a><a class="nav-link"  href="../chapter/10-furyno5-architecture.html"><span class="num">10</span><span>FuryNo5 구조와 지원 범위</span></a><a class="nav-link"  href="../chapter/11-furyno5-compiler.html"><span class="num">11</span><span>FuryNo5 컴파일과 캐시</span></a><div class="nav-caption">IV. 모델 포팅과 서빙</div><a class="nav-link"  href="../chapter/12-fxbx.html"><span class="num">12</span><span>fxbX 포맷과 실행계획</span></a><a class="nav-link"  href="../chapter/13-porting-fha.html"><span class="num">13</span><span>포팅 · FHA · FuryAwesome</span></a><a class="nav-link"  href="../chapter/14-serving-vllm.html"><span class="num">14</span><span>vLLM · 서빙 브리지</span></a><a class="nav-link"  href="../chapter/15-multi-npu.html"><span class="num">15</span><span>PE · 여러 카드 · 여러 서버</span></a><div class="nav-caption">V. 검증과 다음 개발</div><a class="nav-link"  href="../chapter/16-furyboost.html"><span class="num">16</span><span>FuryBoost 학습 성능</span></a><a class="nav-link"  href="../chapter/17-debugging.html"><span class="num">17</span><span>측정 · 추적 · 실패 재현</span></a><div class="nav-caption">VI. 생태계 비교와 최적화 연구</div><a class="nav-link"  href="../chapter/18-npu-ecosystems.html"><span class="num">18</span><span>다른 NPU의 지원 방식</span></a><a class="nav-link"  href="../chapter/19-model-optimization.html"><span class="num">19</span><span>모델 사전 최적화 · 연구</span></a><div class="nav-caption">VII. 실행 명령 실습</div><a class="nav-link"  href="../chapter/20-official-sdk-practice.html"><span class="num">20</span><span>공식 SDK 터미널 실습</span></a><div class="nav-caption">참고와 검증</div><a class="nav-link"  href="../glossary.html"><span class="num">·</span><span>약어와 용어 사전</span></a><a class="nav-link"  href="../sources.html"><span class="num">·</span><span>출처 · 버전 · 접근 범위</span></a><a class="nav-link"  href="../review.html"><span class="num">·</span><span>실행 전 확인사항</span></a><a class="nav-link"  href="../reader-review.html"><span class="num">·</span><span>핵심 질문과 해설</span></a></nav><div class="side-foot">비공식 개발 핸드북<br>공식 SDK와 프로젝트 구현을 구분합니다.<br><a href="https://github.com/smallstep-zzz/furyno5-handbook">원고와 변경 이력 ↗</a></div></aside><div class="shell"><main class="page" id="content"><div class="eyebrow">I. 디바이스를 이해하기 / CHAPTER 01</div><h1>RNGD 하드웨어</h1><p class="dek">작은 행렬곱을 계산한 뒤, 그 일을 여러 장치 자원에 나누는 방법을 살펴봅니다.</p><div class="page-meta"><span>SDK 2026.4 계열 / 버전별 표기</span><span class="readtime">약 35분</span><span><a href="https://github.com/smallstep-zzz/furyno5-handbook/blob/main/content/01-hardware.md">원고</a></span></div><details class="mobile-toc"><summary>이 장의 목차</summary><div><a class="" href="#1-먼저-장치-없이-계산해-보자">1. 먼저 장치 없이 계산해 보자</a><a class="minor" href="#스칼라-벡터-행렬은-숫자를-담는-모양이다">스칼라·벡터·행렬은 숫자를 담는 모양이다</a><a class="" href="#2-np-einsum-은-반복문의-계산-규칙을-짧게-쓰는-함수다">2. np.einsum 은 반복문의 계산 규칙을 짧게 쓰는 함수다</a><a class="" href="#3-shape는-배열의-형태-메모리-배치는-값의-저장-위치를-나타낸다">3. Shape는 배열의 형태, 메모리 배치는 값의 저장 위치를 나타낸다</a><a class="" href="#4-pe-slice-lane은-계산-자원의-어느-크기를-말하는가">4. PE, slice, lane은 계산 자원의 어느 크기를 말하는가</a><a class="minor" href="#slice-하나를-확대하면-dm-trf-vrf와-두-연산-엔진의-관계">Slice 하나를 확대하면: DM·TRF·VRF와 두 연산 엔진의 관계</a><a class="minor" href="#dm-데이터를-연산기로-전달하는-것은-control-core일까">DM 데이터를 연산기로 전달하는 것은 Control Core일까?</a><a class="" href="#5-행렬곱을-여러-계산기에-나누면-무엇이-달라질까">5. 행렬곱을 여러 계산기에 나누면 무엇이 달라질까</a><a class="minor" href="#방법-1-m을-나누면-출력-행을-나눠-만든다">방법 1. M을 나누면: 출력 행을 나눠 만든다</a><a class="minor" href="#방법-2-n을-나누면-출력-열을-나눠-만든다">방법 2. N을 나누면: 출력 열을 나눠 만든다</a><a class="minor" href="#방법-3-k를-나누면-같은-결과의-계산을-나눠-맡는다">방법 3. K를 나누면: 같은 결과의 계산을 나눠 맡는다</a><a class="minor" href="#한눈에-비교-나눈-뒤-무엇을-해야-할까">한눈에 비교: 나눈 뒤 무엇을 해야 할까</a><a class="minor" href="#공간과-시간에-축을-배치한다는-뜻">공간과 시간에 축을 배치한다는 뜻</a><a class="minor" href="#왜-수축-연산기-contraction-engine-가-필요한가">왜 수축 연산기(Contraction Engine)가 필요한가</a><a class="minor" href="#이제-논리-축과-물리-축을-구분할-수-있다">이제 논리 축과 물리 축을 구분할 수 있다</a><a class="" href="#6-데이터를-저장하는-곳과-계산하는-곳을-구분하자">6. 데이터를 저장하는 곳과 계산하는 곳을 구분하자</a><a class="" href="#7-데이터는-연산-파이프라인을-통과한다">7. 데이터는 연산 파이프라인을 통과한다</a><a class="minor" href="#첫-입력-행이-결과가-되는-과정">첫 입력 행이 결과가 되는 과정</a><a class="minor" href="#공식-도식의-엔진-이름을-여기에서-해석하자">공식 도식의 엔진 이름을 여기에서 해석하자</a><a class="minor" href="#계산과-다음-데이터-준비를-겹친다는-뜻">계산과 다음 데이터 준비를 겹친다는 뜻</a><a class="" href="#8-제어-코어는-무엇을-하는가">8. 제어 코어는 무엇을 하는가</a><a class="" href="#9-사양표와-관측-도구를-이제-읽어-보자">9. 사양표와 관측 도구를 이제 읽어 보자</a><a class="" href="#cpu에서-기초-계산을-직접-실행하기">CPU에서 기초 계산을 직접 실행하기</a><a class="" href="#출처">출처</a></div></details><noscript><p class="noscript">본문과 그림은 JavaScript 없이 읽을 수 있습니다. 검색과 조절 실험에는 JavaScript가 필요합니다.</p></noscript><article class="article"><p>한 번의 곱셈이 아니라 많은 곱셈을 나눠 맡기는 것이 NPU의 출발점이다. 먼저 같은 행렬곱을 손으로 계산하고, 그 일을 RNGD의 여러 계산 자원이 어떻게 나누는지 보자. 숫자가 저장되는 위치는 다음 <a href="../chapter/02-memory-dma.html">02장</a>에서 이어 살펴본다.</p>
 <p>RNGD(Renegade)는 많은 숫자의 곱셈·덧셈을 병렬로 처리하는 NPU다. 호스트 프로그램이 계산 방법과 데이터를 준비하면 장치가 계산을 수행한다. 한 행렬곱을 직접 계산한 뒤, 같은 일을 여러 자원에 나누어 맡겨 보겠다.</p>
 <p>아래 숫자는 손으로 계산할 수 있도록 작게 잡았다. 이 크기의 연산을 NPU에 보내는 것이 CPU보다 빠르다는 예는 아니다. 제품 사양표는 계산 원리를 익힌 뒤 읽는다. 사양의 명목 성능과 실제 프로그램의 속도가 다른 이유도 그때 살펴본다.</p>
 <h2 id="1-먼저-장치-없이-계산해-보자"><a class="heading-anchor" href="#1-먼저-장치-없이-계산해-보자">1. 먼저 장치 없이 계산해 보자</a></h2>
@@ -9,7 +9,7 @@
 <p>이런 배열을 통틀어 <strong>텐서(tensor)라고</strong> 부른다. 행렬에서 값을 찾으려면 행과 열을 고른다. 이 두 방향이 <strong>축(axis)이다</strong>. <code>A[0,1]</code>은 0번 행의 1번 열이며, Python처럼 번호를 0부터 센다.</p>
 <p>벡터의 <strong>내적(dot product)은</strong> 같은 위치의 값을 곱한 뒤 더해 숫자 하나를 만드는 계산이다. <code>[1,2,3]</code>과 <code>[1,0,1]</code>의 내적은 <code>1×1 + 2×0 + 3×1 = 4</code>다. 수학에서 <code>Σ</code>는 여러 항을 더하라는 합산 기호다. 이 예의 <code>Σₖ A[0,k]×W[k,0]</code>는 <code>k</code>를 0부터 2까지 바꾸며 곱을 더하라는 뜻으로, 아래의 <code>total += ...</code> 반복문과 같은 계산이다.</p>
 <p><strong>행렬곱(matrix multiplication)은</strong> 왼쪽 행렬의 각 행과 오른쪽 행렬의 각 열에 대해 이 내적을 반복하는 것이다. 왼쪽 한 행의 값 개수와 오른쪽 한 열의 값 개수가 같아야 짝지을 수 있다. 그래서 <code>(M,K)</code>와 <code>(K,N)</code>을 곱하면 결과가 <code>(M,N)</code>이 된다. 사라지는 <code>K</code>는 단순히 버리는 것이 아니라 곱들을 더해 결과 안에 반영하는 축이다.</p>
-<p>두 사람이 각각 세 개의 입력값을 갖고 있고, 각 사람에 대해 두 개의 결과값을 만든다고 생각하자. 이 예에서는 입력을 <code>A</code>, 입력값에 곱할 계수를 <code>W</code>, 결과를 <code>C</code>라고 부른다. 신경망에서 학습으로 정하는 계수도 이런 배열에 담으며 <strong>가중치(weight)라고</strong> 한다.</p>
+<p>입력 데이터가 두 개 있고, 각 데이터가 세 개의 숫자로 이루어졌다고 하자. 이를 2행 3열 행렬 <code>A</code>에 담는다. 각 입력에서 두 개의 출력값을 계산하기 위해 3행 2열의 계수 행렬 <code>W</code>를 사용한다. <code>A @ W</code>의 결과 <code>C</code>는 2행 2열이며, <code>C</code>의 각 행은 <code>A</code>의 해당 입력 행에서 계산한 두 출력값이다. 신경망에서는 학습으로 정하는 이런 계수를 <strong>가중치(weight)</strong> 라고 부른다.</p>
 <p>배열의 <strong>shape(형상)는</strong> 각 축의 길이다. <code>(2,3)</code>은 2행 3열, <code>(3,2)</code>는 3행 2열이라는 뜻이다. 아래 코드 주석의 <code>(2,3) @ (3,2) → (2,2)</code>는 값의 내용이 아니라 입력 두 개와 출력의 모양을 적은 것이다. 저장 순서와의 차이는 3절에서 실제 주소 위치와 함께 살펴본다.</p>
 <div class="codebox"><div class="codebar"><span>python</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-python">import numpy as np  # 숫자 배열을 계산하는 NumPy를 np라는 짧은 이름으로 사용한다.
 
@@ -143,7 +143,7 @@ np.testing.assert_allclose(C_einsum, C)  # 문자열로 적은 계산도 앞의 
 </tbody></table>
 </div><p><strong>같은 글자가 보인다고 무조건 없애는 것이 아니다.</strong> 이 명시적 표기에서는 출력에 어떤 축을 남겼는지까지 읽는다. 같은 입력 안에서 글자를 반복하는 대각선 표기 등 추가 문법도 있지만, 위 세 예와 행렬곱을 이해하는 데 필요하지 않다. <a href="https://numpy.org/doc/stable/reference/generated/numpy.einsum.html">명시적 출력 표기와 합산 규칙</a></p>
 <p>이처럼 여러 곱을 합쳐 어떤 축을 없애는 계산을 <strong>텐서 수축(tensor contraction)이라고</strong> 한다. <strong>텐서(tensor)는</strong> 여기서는 다차원 숫자 배열이라고 이해하면 된다. 행렬은 2차원 텐서이고, 행렬곱은 텐서 수축의 한 예다. RNGD의 TCP(Tensor Contraction Processor)라는 이름은 이런 계산을 중심으로 설계했다는 뜻이다. <a href="https://furiosa.ai/download/FuriosaAI-tensor-contraction-processor-isca24">TCP 논문 I–II절</a></p>
-<h2 id="3-shape와-메모리-배치는-서로-다른-질문이다"><a class="heading-anchor" href="#3-shape와-메모리-배치는-서로-다른-질문이다">3. shape와 메모리 배치는 서로 다른 질문이다</a></h2>
+<h2 id="3-shape는-배열의-형태-메모리-배치는-값의-저장-위치를-나타낸다"><a class="heading-anchor" href="#3-shape는-배열의-형태-메모리-배치는-값의-저장-위치를-나타낸다">3. Shape는 배열의 형태, 메모리 배치는 값의 저장 위치를 나타낸다</a></h2>
 <p><strong>Shape(형상)는 각 축의 길이를 적은 목록</strong>이다. <code>A.shape == (2,3)</code>은 “행이 두 개이고 각 행에 값이 세 개”라는 뜻이다. 입력과 결과의 shape는 <code>A:(2,3)</code>, <code>W:(3,2)</code>, <code>C:(2,2)</code>다. <code>M=2,K=3,N=2</code>는 이 길이에 이름을 붙인 것이다.</p>
 <p>Shape는 값이 저장된 주소나 병렬 실행 방법까지 말해 주지 않는다. 같은 <code>A</code>를 메모리의 한 줄에 펼칠 때 행부터 적으면 <code>[1,2,3,4,5,6]</code>, 열부터 적으면 <code>[1,4,2,5,3,6]</code>이다. 둘 다 “0행 1열의 값은 2”라는 논리적 배열을 표현할 수 있지만, 그 값을 찾을 주소 계산은 달라진다.</p>
 <div class="table-wrap"><table>
@@ -223,78 +223,352 @@ np.testing.assert_allclose(C_einsum, C)  # 문자열로 적은 계산도 앞의 
   S --&gt; E[&quot;수축 연산기의 8개 lane&quot;]
   M --&gt; E
   E --&gt; R[&quot;결과를 slice 쪽 메모리에 저장&quot;]</pre></details></figure><p>이것은 포함 관계와 데이터 역할을 그린 개념도다. 실제 프로그램이 항상 자원을 전부 유효하게 사용하는 것은 아니다. 한쪽에 일이 몰리면 나머지 계산기가 기다릴 수 있다. SDK(Software Development Kit)의 PE 설정과 Rust 저수준 API의 chip·cluster 설정도 서로 다른 호출 계약이므로, 숫자가 같다는 이유로 같은 옵션으로 바꿔 쓰면 안 된다.</p>
-<h2 id="5-같은-계산을-나눠-맡기는-세-가지-방법"><a class="heading-anchor" href="#5-같은-계산을-나눠-맡기는-세-가지-방법">5. 같은 계산을 나눠 맡기는 세 가지 방법</a></h2>
-<p>앞의 행렬곱으로 돌아가자. 작업을 병렬로 나눌 때 중요한 것은 <strong>다른 출력 칸을 만드는 일</strong>과 <strong>같은 출력 칸의 일부를 만드는 일</strong>의 차이다.</p>
-<p>아래는 이해를 위해 두 작업 단위만 그린 예다. 실제 RNGD 커널의 최소 활성 slice 수나 패딩·정렬 조건을 그대로 나타낸 설정은 아니다. 그림의 두 단위를 실제 Rust 타입에 그대로 넣는 예제로 사용하지 않는다.</p>
-<h3 id="m을-나누기-서로-다른-입력-행을-맡긴다"><a class="heading-anchor" href="#m을-나누기-서로-다른-입력-행을-맡긴다">M을 나누기: 서로 다른 입력 행을 맡긴다</a></h3>
-<p>첫 작업은 입력의 첫 행 <code>[1,2,3]</code>으로 답 <code>[4,5]</code>를 만든다. 둘째 작업은 두 번째 행 <code>[4,5,6]</code>으로 답 <code>[10,11]</code>을 만든다. 답의 행이 서로 다르므로 제자리에 놓으면 끝이다. 둘을 더할 필요가 없다.</p>
-<p>이 작업을 서로 다른 장치 위치에 맡기는 것을 ‘행 축을 공간에 나눈다’고 표현한다. 여기서 공간은 배열의 빈칸이 아니라 일을 맡는 하드웨어 위치를 뜻한다.</p>
-<h3 id="n을-나누기-같은-입력에서-서로-다른-출력-열을-맡긴다"><a class="heading-anchor" href="#n을-나누기-같은-입력에서-서로-다른-출력-열을-맡긴다">N을 나누기: 같은 입력에서 서로 다른 출력 열을 맡긴다</a></h3>
-<p>첫 입력 행을 계산할 때 작업 0은 <code>W</code>의 첫 열 <code>[1,0,1]</code>을, 작업 1은 둘째 열 <code>[0,1,1]</code>을 사용한다. 두 작업 모두 입력 <code>[1,2,3]</code>이 필요하다. 입력을 한 번 공급해 여러 계산 경로가 함께 쓰도록 구성하면 반복해서 가져오는 일을 줄일 기회가 생긴다. 이를 <strong>브로드캐스트(broadcast), 같은 값의 여러 소비자에 대한 공급</strong>라고 한다. lane들에 다른 출력 열의 계산을 맡기는 선택을 이렇게 이해할 수 있다. 실제 공급·재사용 방식은 컴파일된 매핑에 달려 있다.</p>
-<h3 id="k를-나누기-같은-출력의-일부를-계산하므로-더해야-한다"><a class="heading-anchor" href="#k를-나누기-같은-출력의-일부를-계산하므로-더해야-한다">K를 나누기: 같은 출력의 일부를 계산하므로 더해야 한다</a></h3>
-<p><code>C[0,0]</code>의 세 곱을 나눠 보자. 작업 0이 앞의 두 항 <code>1×1 + 2×0 = 1</code>을, 작업 1이 마지막 항 <code>3×1 = 3</code>을 계산하면, 마지막에 <code>1+3=4</code>를 만들어야 한다. 이때 각각이 만든 값은 <strong>부분합(partial sum)이다</strong>. 여러 부분합을 하나로 합치는 처리를 <strong>리덕션(reduction, 축약)이라고</strong> 한다.</p>
-<figure class="diagram"><img src="../assets/diagrams/01-hardware-5508b4cb4b89.svg?v=c17bb43cc7c7" alt="RNGD 하드웨어 · 도식 2" loading="lazy"><figcaption>도식 2 · RNGD 하드웨어</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
-  A[&quot;C의 0행 0열 계산&quot;] --&gt; L[&quot;k=0,1 담당: 1×1 + 2×0 = 1&quot;]
-  A --&gt; R[&quot;k=2 담당: 3×1 = 3&quot;]
-  L --&gt; S[&quot;부분합을 합침: 1+3&quot;]
-  R --&gt; S
-  S --&gt; C[&quot;C의 0행 0열 = 4&quot;]</pre></details></figure><div class="table-wrap"><table>
+<h3 id="slice-하나를-확대하면-dm-trf-vrf와-두-연산-엔진의-관계"><a class="heading-anchor" href="#slice-하나를-확대하면-dm-trf-vrf와-두-연산-엔진의-관계">Slice 하나를 확대하면: DM·TRF·VRF와 두 연산 엔진의 관계</a></h3>
+<p>앞의 큰 계층도에서 <strong>Slice 하나</strong>만 확대해 보자. Slice는 DM이라는 저장 공간뿐 아니라 연산 스트림과 연결되는 처리 경로를 갖는다. 수축 연산에 사용할 피연산자를 담는 **TRF(Tensor Register File, 텐서 레지스터 파일)**와 벡터 연산용 **VRF(Vector Register File, 벡터 레지스터 파일)**도 여기에 대응한다.</p>
+<figure class="diagram"><img src="../assets/diagrams/01-hardware-f43d012e2ca8.svg?v=1a7ec30d9081" alt="RNGD 하드웨어 · 도식 2" loading="lazy"><figcaption>도식 2 · RNGD 하드웨어</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
+  DM[&quot;Slice의 DM: 512 KiB / Slice · 온칩 데이터 저장&quot;]
+  FC[&quot;Fetch → Collect: 연산 스트림으로 데이터 공급&quot;]
+  TRF[&quot;TRF: 수축 연산용 피연산자 저장&quot;]
+  VRF[&quot;VRF: 벡터 연산용 피연산자 저장&quot;]
+  CE[&quot;Contraction Engine: 곱셈·합산 · Slice당 최대 8 Lane&quot;]
+  VE[&quot;Vector Engine: 원소별 연산·활성화 함수&quot;]
+  OUT[&quot;결과 스트림 → Commit → DM&quot;]
+  DM --&gt; FC
+  FC --&gt; CE
+  FC --&gt; VE
+  FC --&gt; TRF
+  FC --&gt; VRF
+  TRF --&gt; CE
+  VRF --&gt; VE
+  CE --&gt; VE
+  VE --&gt; OUT</pre></details></figure><p><strong>읽는 방법:</strong> DM은 계산할 데이터를 보관하는 SRAM이다. Fetch·Collect가 이를 스트림으로 공급하고, <strong>Contraction Engine은 스트림 한쪽과 TRF에 준비된 다른 피연산자</strong>를 받아 행렬곱 같은 수축 연산을 처리한다. <strong>Vector Engine은 스트림과 필요할 때 VRF의 피연산자</strong>를 이용해 원소별 연산·활성화 함수 등을 수행한다. 따라서 TRF와 VRF는 계산 회로가 아니라 <strong>각 엔진에 데이터를 공급하는 별도 저장소</strong>다.</p>
+<p>이 그림의 <strong>Lane</strong>은 DM의 별도 메모리 구획을 뜻하는 것이 아니라, Slice의 수축 연산에 사용하는 병렬 계산 차원이다. 한 Slice에 최대 8개 Lane이 매핑되며 TRF 데이터도 Lane별로 배치한다. 반면 Vector Engine에는 Slice <strong>안에서</strong> 계산하는 경로뿐 아니라 여러 Slice에 걸쳐 결과를 합치는 <strong>Inter-Slice Reducer</strong>도 있으므로, 모든 Vector Engine 기능이 Slice 내부에 완전히 독립적으로 갇혀 있다고 생각하면 안 된다.</p>
+<p><strong>그림의 한계:</strong> 위 도식은 앞서 대화에서 설명한 저장소·엔진 관계를 학습용으로 재구성한 것으로, 칩 내부 배선이나 연산 단계별 지연시간을 그대로 그린 것은 아니다. 모든 연산이 반드시 TRF와 VRF를 거치는 것도 아니다. 예를 들어 Contraction Engine의 결과를 Vector Engine으로 바로 전달할 수 있다. <a href="https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/computing-tensors/index.md">공식 Tensor Unit 파이프라인</a> · <a href="https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/computing-tensors/register-files.md">TRF·VRF 설명</a></p>
+<h3 id="dm-데이터를-연산기로-전달하는-것은-control-core일까"><a class="heading-anchor" href="#dm-데이터를-연산기로-전달하는-것은-control-core일까">DM 데이터를 연산기로 전달하는 것은 Control Core일까?</a></h3>
+<p><strong>아니다. Control Core(제어 코어)는 데이터의 전달 순서와 연산을 제어하지만, 자신이 DM의 숫자를 하나씩 읽어 Contraction Engine으로 전달하지는 않는다.</strong> 실제 데이터는 Fetch·Switch·Collect 등의 전용 하드웨어 경로를 통과한다.</p>
+<figure class="diagram"><img src="../assets/diagrams/01-hardware-2d96f86dc221.svg?v=1eb8cbea335c" alt="RNGD 하드웨어 · 도식 3" loading="lazy"><figcaption>도식 3 · RNGD 하드웨어</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
+  CC[&quot;Control Core: 명령 발행·실행 순서 관리&quot;]
+  DMA[&quot;DMA Engine: HBM과 DM 사이 데이터 이동&quot;]
+  HBM[&quot;HBM: 모델 가중치·입력 등 저장&quot;]
+  DM[&quot;DM: Slice에 대응하는 온칩 데이터 저장소&quot;]
+  FE[&quot;Fetch Engine: DM에서 데이터를 읽어 스트림 생성&quot;]
+  SW[&quot;Switch Engine: 필요할 때 Slice 사이 데이터 이동&quot;]
+  CO[&quot;Collect Engine: 연산용 패킷 형태로 정리&quot;]
+  TRF[&quot;TRF: 수축 연산에 쓸 피연산자&quot;]
+  CE[&quot;Contraction Engine: 스트림과 TRF 피연산자로 곱·합산&quot;]
+  VE[&quot;Vector Engine: 원소별 연산·축약&quot;]
+  HBM --&gt; DMA
+  DMA --&gt; DM
+  DM --&gt; FE
+  FE --&gt; SW
+  SW --&gt; CO
+  CO --&gt; CE
+  CO --&gt; TRF
+  TRF --&gt; CE
+  CE --&gt; VE
+  CC --&gt; DMA
+  CC --&gt; FE
+  CC --&gt; CE</pre></details></figure><p>위 그림에서 <strong>Control Core → 엔진</strong>으로 향하는 화살표는 <strong>명령·실행 제어 관계</strong>를 뜻한다. 반면 <strong>HBM → DMA → DM → Fetch → Switch → Collect → Contraction Engine</strong> 방향의 화살표는 <strong>실제 데이터가 이동하는 경로</strong>다. 두 종류의 화살표를 같은 데이터 전송으로 해석하면 안 된다. Switch는 파이프라인의 구성 요소지만 모든 커널에서 실제 Slice 간 이동이 발생하는 것은 아니다. 그림은 VRF의 준비 경로와 결과 저장 경로를 생략한 <strong>대표적인 수축 연산 예시</strong>다.</p>
+<div class="table-wrap"><table>
 <thead>
 <tr>
-<th>나눈 축</th>
-<th>각 작업이 만드는 것</th>
-<th>결과를 모으는 일</th>
+<th>역할</th>
+<th>하드웨어</th>
+<th>실제로 하는 일</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>명령 제어</strong></td>
+<td>Control Core</td>
+<td>데이터 이동·계산·저장의 실행 순서 및 의존성 관리</td>
+</tr>
+<tr>
+<td><strong>HBM ↔ DM 이동</strong></td>
+<td>DMA Engine</td>
+<td>장치 메모리 계층 간 텐서 전송. Tensor Unit을 통과할 필요가 없는 이동</td>
+</tr>
+<tr>
+<td><strong>DM → 연산 스트림</strong></td>
+<td>Fetch Engine</td>
+<td>DM을 읽어 Tensor Unit의 스트림으로 공급</td>
+</tr>
+<tr>
+<td><strong>Slice 간 이동</strong></td>
+<td>Switch Engine</td>
+<td>필요한 경우 다른 Slice로 데이터를 이동·재배치</td>
+</tr>
+<tr>
+<td><strong>연산용 묶음 준비</strong></td>
+<td>Collect Engine</td>
+<td>계산 엔진이 소비할 수 있는 패킷·플릿으로 정리</td>
+</tr>
+<tr>
+<td><strong>곱셈과 합산</strong></td>
+<td>Contraction Engine</td>
+<td>스트림 입력과 TRF의 피연산자로 실제 수축 연산 수행</td>
+</tr>
+</tbody></table>
+</div><p>예를 들어 XW를 계산하려면, 필요한 가중치 W와 입력 X를 먼저 준비한 뒤, W의 일부를 TRF에 유지하면서 바뀌는 X 데이터를 Fetch·Collect 경로로 공급할 수 있다. <strong>Control Core가 수천 개의 곱셈을 직접 수행하는 것도 아니고, 입력값을 매번 직접 복사하는 것도 아니다.</strong></p>
+<p><strong>원문 링크:</strong> <a href="https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/computing-tensors/index.md">Tensor Unit의 엔진별 데이터 경로</a> · <a href="https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/moving-tensors/dma-engine.md">DMA Engine과 Fetch의 구분</a> · <a href="https://furiosa.ai/download/FuriosaAI-tensor-contraction-processor-isca24">TCP 논문 제어 코어·명령 큐</a></p>
+<h2 id="5-행렬곱을-여러-계산기에-나누면-무엇이-달라질까"><a class="heading-anchor" href="#5-행렬곱을-여러-계산기에-나누면-무엇이-달라질까">5. 행렬곱을 여러 계산기에 나누면 무엇이 달라질까</a></h2>
+<p>큰 행렬곱을 계산할 때 한 계산 자원만 쓰는 대신 여러 계산 자원에 <strong>서로 다른 부분을 맡길 수 있다.</strong> 다만 어느 부분을 나누느냐에 따라 준비해야 할 입력과 마지막 결과 처리 방법이 달라진다.</p>
+<p>먼저 1절에서 사용한 행렬곱을 다시 적어 보자.</p>
+<div class="codebox"><div class="codebar"><span>text</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-text">입력 A (2행 3열)     가중치 W (3행 2열)     결과 C (2행 2열)
+
+[1 2 3]              [1 0]                  [ 4  5]
+[4 5 6]       ×      [0 1]          =       [10 11]
+                     [1 1]
+</code></pre></div>
+<p>여기서 <code>C[0,0]=4</code>는 **A의 첫 행 <code>[1,2,3]</code>**과 **W의 첫 열 <code>[1,0,1]</code>**을 짝지어 <code>1×1 + 2×0 + 3×1 = 4</code>로 계산한 것이다.</p>
+<p>앞으로 사용할 <code>M·N·K</code>는 하드웨어 이름이 아니라 <strong>이 행렬곱의 세 방향에 붙인 이름</strong>이다.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>축</th>
+<th align="right">이 예의 크기</th>
+<th>무엇을 나타내는가</th>
 </tr>
 </thead>
 <tbody><tr>
 <td><code>M</code></td>
-<td>서로 다른 출력 행</td>
-<td>정해진 행 위치에 배치</td>
+<td align="right">2</td>
+<td>입력 A의 <strong>행</strong> 수. 결과 C에도 행으로 남는다.</td>
 </tr>
 <tr>
 <td><code>N</code></td>
-<td>서로 다른 출력 열</td>
-<td>정해진 열 위치에 배치</td>
+<td align="right">2</td>
+<td>가중치 W의 <strong>열</strong> 수. 결과 C에도 열로 남는다.</td>
 </tr>
 <tr>
 <td><code>K</code></td>
-<td>같은 출력 칸의 부분합</td>
-<td>대응하는 부분합끼리 더함</td>
+<td align="right">3</td>
+<td>한 결과를 계산하려고 <strong>곱한 뒤 더하는 항</strong>의 수.</td>
 </tr>
 </tbody></table>
-</div><h3 id="두-작업에-어떤-값을-각각-준비해야-하는가"><a class="heading-anchor" href="#두-작업에-어떤-값을-각각-준비해야-하는가">두 작업에 어떤 값을 각각 준비해야 하는가</a></h3>
-<p>이번에는 두 작업이 사용할 값을 <strong>각자 따로 받고, 서로 저장소를 공유하지 않는다</strong>고 가정하자. 이 가정은 데이터 중복을 세기 위한 교육용 조건이며 실제 RNGD의 전송 횟수나 바이트 수를 예측하는 규칙은 아니다. 원래 <code>A</code>는 6개, <code>W</code>도 6개, 최종 <code>C</code>는 4개 원소다.</p>
+</div><p>이제 <strong>계산을 두 부분으로 나누는 방법 세 가지</strong>를 같은 숫자로 비교하자. 아래의 ‘계산 ①·②’는 일을 나눠 설명하기 위한 이름이다. <strong>각각이 반드시 서로 다른 PE 한 개를 차지한다는 뜻은 아니다.</strong></p>
+<h3 id="방법-1-m을-나누면-출력-행을-나눠-만든다"><a class="heading-anchor" href="#방법-1-m을-나누면-출력-행을-나눠-만든다">방법 1. M을 나누면: 출력 행을 나눠 만든다</a></h3>
+<p><strong>A의 첫째 행과 둘째 행을 각각 계산</strong>한다. 두 계산 모두 W 전체를 사용한다.</p>
+<figure class="diagram"><img src="../assets/diagrams/01-hardware-85b24c802e37.svg?v=dd297f5a2685" alt="RNGD 하드웨어 · 도식 4" loading="lazy"><figcaption>도식 4 · RNGD 하드웨어</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
+  A[&quot;A 첫째 행: [1,2,3]&quot;] --&gt; B[&quot;계산 ①: W와 곱하기&quot;]
+  D[&quot;A 둘째 행: [4,5,6]&quot;] --&gt; E[&quot;계산 ②: W와 곱하기&quot;]
+  B --&gt; F[&quot;C 첫째 행: [4,5]&quot;]
+  E --&gt; G[&quot;C 둘째 행: [10,11]&quot;]</pre></details></figure><p>두 계산의 결과는 <strong>서로 다른 행</strong>이다. <code>[4,5]</code>를 첫째 행에, <code>[10,11]</code>을 둘째 행에 놓으면 C가 완성된다. <strong>두 계산 결과를 서로 더할 필요가 없다.</strong> 다만 W가 양쪽 계산에 필요하므로 W를 어떻게 공급·재사용할지 결정해야 한다.</p>
+<h3 id="방법-2-n을-나누면-출력-열을-나눠-만든다"><a class="heading-anchor" href="#방법-2-n을-나누면-출력-열을-나눠-만든다">방법 2. N을 나누면: 출력 열을 나눠 만든다</a></h3>
+<p>이번에는 <strong>W의 첫째 열과 둘째 열을 각각 계산</strong>한다. 두 계산 모두 A 전체를 사용한다.</p>
+<figure class="diagram"><img src="../assets/diagrams/01-hardware-4ede77cb4848.svg?v=ada6929065a6" alt="RNGD 하드웨어 · 도식 5" loading="lazy"><figcaption>도식 5 · RNGD 하드웨어</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
+  A[&quot;W 첫째 열: [1,0,1]&quot;] --&gt; B[&quot;계산 ①: A와 곱하기&quot;]
+  D[&quot;W 둘째 열: [0,1,1]&quot;] --&gt; E[&quot;계산 ②: A와 곱하기&quot;]
+  B --&gt; F[&quot;C 첫째 열: [4,10]&quot;]
+  E --&gt; G[&quot;C 둘째 열: [5,11]&quot;]</pre></details></figure><p>첫째 계산의 결과 <code>[4,10]</code>은 C의 왼쪽 열, 둘째 계산의 결과 <code>[5,11]</code>은 C의 오른쪽 열이다. 이 경우에도 <strong>두 결과를 더하지 않고, 각 열의 위치에 놓으면 끝난다.</strong></p>
+<p>다만 두 계산 모두 A의 값을 필요로 한다. 하나의 입력을 여러 계산 경로에 공급하는 방법을 **브로드캐스트(Broadcast)**라고 한다. N을 나누면 입력 A를 여러 곳에서 재사용할 <strong>기회</strong>가 생기지만, 실제로 한 번 읽은 데이터를 공유할 수 있는지는 메모리 위치와 하드웨어 매핑에 달려 있다. 이 예만으로 데이터 이동이 반드시 한 번이라고 결론 내릴 수는 없다.</p>
+<h3 id="방법-3-k를-나누면-같은-결과의-계산을-나눠-맡는다"><a class="heading-anchor" href="#방법-3-k를-나누면-같은-결과의-계산을-나눠-맡는다">방법 3. K를 나누면: 같은 결과의 계산을 나눠 맡는다</a></h3>
+<p>M과 N은 <strong>서로 다른 결과 위치</strong>를 만들었다. 하지만 K는 다르다. K의 각 항은 <strong>같은 결과값을 완성하기 위해 더해야 하는 항</strong>이다.</p>
+<p><code>C[0,0]</code> 한 칸만 보면 <code>1×1 + 2×0 + 3×1</code>을 다음처럼 나눌 수 있다.</p>
+<figure class="diagram"><img src="../assets/diagrams/01-hardware-c47ef67c7b43.svg?v=6c02b1d35315" alt="RNGD 하드웨어 · 도식 6" loading="lazy"><figcaption>도식 6 · RNGD 하드웨어</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
+  A[&quot;C[0,0]에 필요한 세 곱&quot;] --&gt; B[&quot;계산 ①: 1×1 + 2×0 = 1&quot;]
+  A --&gt; D[&quot;계산 ②: 3×1 = 3&quot;]
+  B --&gt; E[&quot;두 부분합을 더하기: 1 + 3 = 4&quot;]
+  D --&gt; E
+  E --&gt; F[&quot;완성된 C[0,0] = 4&quot;]</pre></details></figure><p>여기서 <code>1</code>과 <code>3</code>은 각각 **부분합(Partial Sum)**이다. 두 부분합을 더해 최종값을 만드는 것을 **리덕션(Reduction, 합산·축약)**이라고 한다. 이후 등장하는 <strong>Packet Reducer</strong>와 <strong>Time Reducer</strong>는 바로 이런 합산을 하드웨어에서 처리하는 단계다.</p>
+<p>전체 C에 대해 K를 똑같이 나누면 계산 ①의 부분 결과는 <code>[[1,2],[4,5]]</code>, 계산 ②의 부분 결과는 <code>[[3,3],[6,6]]</code>이 된다. 두 행렬을 <strong>같은 위치끼리 더해야</strong> 최종 결과 <code>[[4,5],[10,11]]</code>이 나온다. 부분합을 서로 합쳐야 한다는 점이 M·N 분할과 가장 큰 차이다.</p>
+<h3 id="한눈에-비교-나눈-뒤-무엇을-해야-할까"><a class="heading-anchor" href="#한눈에-비교-나눈-뒤-무엇을-해야-할까">한눈에 비교: 나눈 뒤 무엇을 해야 할까</a></h3>
 <div class="table-wrap"><table>
 <thead>
 <tr>
-<th>분할</th>
-<th align="right">두 작업에 준비하는 A</th>
-<th align="right">두 작업에 준비하는 W</th>
-<th>각 작업이 내놓는 결과</th>
+<th>나눈 방향</th>
+<th>계산 ①</th>
+<th>계산 ②</th>
+<th>최종 결과를 만드는 방법</th>
 </tr>
 </thead>
 <tbody><tr>
-<td>M: 입력 행 하나씩</td>
-<td align="right">3개 + 3개 = 6개</td>
-<td align="right">같은 전체 W가 각각 필요: 6개 + 6개 = 12개</td>
-<td>서로 다른 행, 합계 4개 값</td>
+<td><strong>M: 행</strong></td>
+<td>첫 출력 행 <code>[4,5]</code></td>
+<td>둘째 출력 행 <code>[10,11]</code></td>
+<td><strong>행을 위아래로 배치</strong></td>
 </tr>
 <tr>
-<td>N: 출력 열 하나씩</td>
-<td align="right">같은 전체 A가 각각 필요: 6개 + 6개 = 12개</td>
-<td align="right">필요한 열만 각각 준비: 3개 + 3개 = 6개</td>
-<td>서로 다른 열, 합계 4개 값</td>
+<td><strong>N: 열</strong></td>
+<td>첫 출력 열 <code>[4,10]</code></td>
+<td>둘째 출력 열 <code>[5,11]</code></td>
+<td><strong>열을 좌우로 배치</strong></td>
 </tr>
 <tr>
-<td>K: 앞 두 항 / 마지막 한 항</td>
-<td align="right">4개 + 2개 = 6개</td>
-<td align="right">4개 + 2개 = 6개</td>
-<td>각각 2×2 부분합, 합계 8개 값</td>
+<td><strong>K: 합산 항</strong></td>
+<td>부분합 <code>1</code></td>
+<td>부분합 <code>3</code></td>
+<td><strong>같은 결과 칸의 부분합을 더함</strong></td>
 </tr>
 </tbody></table>
-</div><p>K 분할의 두 결과는 <code>[[1,2],[4,5]]</code>와 <code>[[3,3],[6,6]]</code>이다. 같은 좌표끼리 더해야 최종 <code>[[4,5],[10,11]]</code>이 된다. 합산이 마지막 별도 단계로 남고 그 단계에 부분합을 공급해야 한다. 이것이 전체 수식의 덧셈 횟수가 언제나 늘어난다는 뜻은 아니다.</p>
-<p>이제 재사용의 이득도 구체적으로 보인다. M 분할에서 두 작업이 W를 함께 공급받을 수 있다면 중복 준비를 줄일 기회가 있고, N 분할에서는 A를 함께 공급하는 것이 중요하다. 실제 하드웨어의 broadcast·가까운 저장소·스케줄이 이 기회를 실현할 수 있는지는 별도로 확인한다. <strong>어느 축을 나누는가와 어느 값을 재사용할 수 있는가는 연결된 선택</strong>이다.</p>
-<p>어떤 선택이 유리한지는 “병렬 계산기를 많이 켜는가”만으로 정해지지 않는다. <code>M</code>이 작으면 행별 분담의 일감이 부족할 수 있고, <code>K</code>를 쪼개면 마지막 합산과 데이터 이동이 추가된다. <code>N</code>을 나눌 때 입력을 공유할 수 있는지는 저장 위치와 공급 경로가 영향을 준다. 이 판단을 컴파일러가 장치의 제약에 맞춰 수행한다. <a href="https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/mapping-tensors/spatial-temporal-dimensions.md">축의 공간·시간 분배</a>, <a href="https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/computing-tensors/contraction-engine/index.md">수축 연산기의 매핑</a></p>
+</div><p>이제 하드웨어 성능에 연결할 수 있다. <strong>M 분할</strong>에서는 양쪽 계산에 필요한 W를 얼마나 효율적으로 공급하는지가 중요하고, <strong>N 분할</strong>에서는 양쪽에 필요한 A의 재사용이 중요하다. <strong>K 분할</strong>에서는 부분 결과를 어떻게 모아 더하는지가 중요하다. 이것이 데이터 이동·저장소·합산 회로를 함께 고려해야 하는 이유다.</p>
+<p>마지막으로 ‘나눈다’는 말에는 <strong>두 가지 실행 방법</strong>이 있다. 실제로 서로 다른 <code>Slice</code>나 <code>Lane</code> 등에서 <strong>동시에 처리</strong>하도록 배치하는 것을 공간 분할(spatial mapping)이라고 하고, 같은 계산 자원에 <strong>여러 차례 나누어 공급</strong>하는 것을 시간 분할(temporal mapping)이라고 한다. 행렬의 <code>M·N·K</code>와 하드웨어의 <code>Slice·Lane·Time</code>은 같은 종류의 축이 아니다. 다음 절에서 이 둘을 연결한다.</p>
+<h3 id="공간과-시간에-축을-배치한다는-뜻"><a class="heading-anchor" href="#공간과-시간에-축을-배치한다는-뜻">공간과 시간에 축을 배치한다는 뜻</a></h3>
+<p>수학식 <code>C[m,n] = Σₖ A[m,k] × W[k,n]</code>에서 <code>M·N·K</code>는 <strong>계산할 값의 좌표</strong>다. 반면 RNGD의 <code>Chip·Cluster·Slice·Lane</code>은 <strong>동시에 계산하거나 저장할 하드웨어 위치</strong>, <code>Time</code>은 <strong>여러 차례에 걸쳐 데이터를 공급하는 반복 순서</strong>다. <code>Packet</code>은 한 차례에 각 slice로 공급되는 데이터 묶음 안의 위치를 나타낸다. 이처럼 수학의 축을 하드웨어 위치와 전달 차례에 연결하는 규칙이 <strong>물리 매핑(physical mapping)</strong> 이다.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>물리 차원</th>
+<th>무엇을 결정하는가</th>
+<th>앞의 행렬곱에서 생각할 예</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>Chip</code></td>
+<td>어느 칩에 값을 분산하는가</td>
+<td>여러 칩에 다른 배치를 배치</td>
+</tr>
+<tr>
+<td><code>Cluster</code></td>
+<td>칩 안의 어느 클러스터에 맡기는가</td>
+<td>서로 다른 출력 행 묶음 배정</td>
+</tr>
+<tr>
+<td><code>Slice</code></td>
+<td>클러스터 안의 어느 slice에 맡기는가</td>
+<td>서로 다른 입력 행 또는 배치 요소 분담</td>
+</tr>
+<tr>
+<td><code>Lane</code></td>
+<td>한 slice 안에서 어느 병렬 곱셈 경로를 쓰는가</td>
+<td>서로 다른 출력 열 <code>N</code> 분담</td>
+</tr>
+<tr>
+<td><code>Time</code></td>
+<td>몇 번째 차례에 데이터를 공급하는가</td>
+<td>입력 행 <code>M</code>을 순서대로 처리</td>
+</tr>
+<tr>
+<td><code>Packet</code></td>
+<td>한 차례에 공급되는 묶음 안의 어느 원소인가</td>
+<td>같은 출력의 <code>K</code> 항 여러 개를 동시에 곱하고 합산</td>
+</tr>
+</tbody></table>
+</div><p>여기서 <code>Time</code>을 선택했다고 <strong>CPU가 반복문을 실행한다는 뜻은 아니다.</strong> NPU 연산 스트림에 데이터를 여러 차례 흘려보내는 하드웨어 차원의 반복이다. <code>Packet</code>은 <code>Time</code>과 달리 한 차례 내의 병렬 묶음이므로, 같은 <code>K</code>축이라도 어디에 놓느냐에 따라 처리 방식이 달라진다.</p>
+<p>예를 들어 <code>M=4, N=2, K=8</code>인 행렬곱을 생각하자. 설명을 위해 네 입력 행을 각각 다른 slice에 맡기고, 각 slice의 두 lane이 두 출력 열을 맡으며, 여덟 개 <code>K</code> 항을 한 번의 <code>Packet</code>으로 공급한다고 가정할 수 있다. 그러면 서로 다른 출력 좌표는 동시에 계산하고, 같은 출력의 여덟 곱은 묶음 안에서 합산한다. 실제로 이 배치를 쓸 수 있는지는 자료형, Packet 크기, 패딩과 장치 제약을 만족해야 하며, 예시가 곧 실행 가능한 TCL 코드는 아니다.</p>
+<p>공식 자료에는 <code>Cluster</code>가 칩당 2개, <code>Slice</code>가 클러스터당 256개, <code>Pe</code>가 클러스터당 4개라고 명시되어 있다. 한 PE가 64개 slice를 포함한다. 공간 차원 타입은 이 물리 자원 수와 크기를 맞춰야 하고, 일부 차원은 패딩으로 채울 수 있다. 그러나 <strong>패딩했다고 런타임이 원하는 PE나 클러스터만 독립적으로 할당해 준다는 뜻은 아니다.</strong> 해당 공개 문서는 런타임이 칩 단위로 동작하며 부분 칩·클러스터 사용은 아직 지원하지 않는다고 명시한다. 따라서 매핑상의 활성 연산 자원과 런타임 자원 점유를 구별해야 한다.</p>
+<h3 id="왜-수축-연산기-contraction-engine-가-필요한가"><a class="heading-anchor" href="#왜-수축-연산기-contraction-engine-가-필요한가">왜 수축 연산기(Contraction Engine)가 필요한가</a></h3>
+<p>앞에서 행렬곱을 <code>C[m,n] = Σₖ A[m,k] × W[k,n]</code>으로 계산했다. 한 출력값을 만들려면 <strong>서로 대응하는 수를 곱하고, 그 곱들을 합쳐야 한다.</strong> 출력값이 수천 개라면 이 일을 반복해야 한다. 일반적인 계산기처럼 곱셈 하나를 끝내고 다음 숫자를 기다리는 방식만으로는 NPU에 있는 많은 계산 자원을 충분히 활용하기 어렵다.</p>
+<p>그래서 RNGD의 **수축 연산기(Contraction Engine)**는 많은 곱셈을 병렬로 처리하고, 결과를 필요한 축에 따라 합산하도록 구성되어 있다. 여기서 **수축(contraction)**은 텐서의 여러 축 중 일부를 곱해 더하는 연산을 뜻한다. 행렬곱에서는 <code>K</code>가 합산되는 축이다. 수축 연산기는 특정 모델 하나를 위한 기능이 아니라 행렬곱(MatMul), 벡터 내적(Dot Product), 합성곱(Convolution) 등에 공통으로 나타나는 곱셈과 합산을 효율적으로 처리하기 위한 하드웨어다.</p>
+<h4 id="1-먼저-mac을-이해하자-곱하고-합계에-누적하기"><a class="heading-anchor" href="#1-먼저-mac을-이해하자-곱하고-합계에-누적하기">1. 먼저 MAC을 이해하자: 곱하고 합계에 누적하기</a></h4>
+<p>**MAC(Multiply–Accumulate, 곱셈-누산)**은 곱셈 결과를 지금까지의 합계에 더하는 계산이다. <code>합계 += a × w</code>라고 쓰면 된다. 예를 들어 입력 <code>[1,2,3,4]</code>와 가중치 <code>[2,3,4,5]</code>의 내적은 다음과 같다.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>순서</th>
+<th>곱셈</th>
+<th>누적된 합</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>첫째</td>
+<td><code>1×2=2</code></td>
+<td><code>2</code></td>
+</tr>
+<tr>
+<td>둘째</td>
+<td><code>2×3=6</code></td>
+<td><code>2+6=8</code></td>
+</tr>
+<tr>
+<td>셋째</td>
+<td><code>3×4=12</code></td>
+<td><code>8+12=20</code></td>
+</tr>
+<tr>
+<td>넷째</td>
+<td><code>4×5=20</code></td>
+<td><code>20+20=40</code></td>
+</tr>
+</tbody></table>
+</div><p>이 예제의 최종 결과는 <code>40</code>이다. 네 곱셈을 하나씩 처리해도 되고, 여러 곱셈을 동시에 처리한 뒤 부분합을 더해도 <strong>수학적으로 같은 결과</strong>를 만든다. 부동소수점에서는 더하는 순서가 달라지면 반올림 때문에 마지막 비트가 조금 달라질 수 있다.</p>
+<p><strong>MAC 연산 능력</strong>은 곱하고 더하는 계산을 얼마나 많이 처리할 수 있는가에 관한 말이다. **MAC 활용률(utilization)**은 해당 실행 구간에서 사용할 수 있는 계산 능력 가운데 유효한 계산에 쓰인 몫이다. 여러 계산 위치를 갖고 있어도 실제로 한 위치만 일을 한다면 활용률이 낮다. 이 개념을 먼저 이해해야 뒤의 <code>1/32</code>라는 숫자가 무슨 뜻인지 읽을 수 있다.</p>
+<h4 id="2-곱셈에-사용할-두-입력은-어디에서-오는가-스트림과-trf"><a class="heading-anchor" href="#2-곱셈에-사용할-두-입력은-어디에서-오는가-스트림과-trf">2. 곱셈에 사용할 두 입력은 어디에서 오는가: 스트림과 TRF</a></h4>
+<p>행렬곱에는 <code>A</code>의 값과 <code>W</code>의 값이 모두 필요하다. RNGD의 수축 연산 경로에서는 일반적으로 **한 피연산자는 앞쪽 Collect Engine에서 흘러오는 스트림(stream)**으로 받고, **다른 피연산자는 TRF(Tensor Register File, 텐서 레지스터 파일)**에 준비한다.</p>
+<p>TRF는 <strong>곱셈 연산기에 가까운 작은 하드웨어 저장소</strong>다. 출력값을 합산하는 장치가 아니라, 반복해서 사용할 피연산자를 가까이 두는 곳이다. 예컨대 같은 <code>W</code>를 여러 입력 행에 적용한다면 <code>W</code>의 필요한 부분을 TRF에 준비해 두고 입력 <code>A</code>의 여러 행을 차례로 공급하는 방식을 생각할 수 있다. 이것이 **데이터 재사용(data reuse)**이다. 어떤 값이 실제로 TRF에 얼마나 오래 유지되는지는 커널의 매핑과 스케줄에 달려 있다.</p>
+<p>다음 그림은 공식 Contraction Engine의 핵심 처리 순서를 <strong>학습용으로 단순화</strong>한 것이다. 바깥의 HBM·DM 이동과 별도 실행 컨텍스트의 세부 명령은 생략했다.</p>
+<figure class="diagram"><img src="../assets/diagrams/01-hardware-5972038cf0ea.svg?v=1b881f9e95da" alt="RNGD 하드웨어 · 도식 7" loading="lazy"><figcaption>도식 7 · RNGD 하드웨어</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
+  A[&quot;입력 A: Collect에서 흘러온 스트림&quot;] --&gt; O[&quot;Outer: 두 피연산자를 맞추고 곱하기&quot;]
+  W[&quot;가중치 W: TRF에 보관&quot;] --&gt; O
+  O --&gt; P[&quot;Packet Reducer: 이번 묶음의 곱들을 합산&quot;]
+  P --&gt; T[&quot;Time Reducer: 여러 차례의 부분합을 누적&quot;]
+  T --&gt; L[&quot;Lane Folder: lane 결과를 출력 형태로 정리&quot;]
+  L --&gt; C[&quot;후속 엔진 및 출력 스트림&quot;]</pre></details></figure><div class="table-wrap"><table>
+<thead>
+<tr>
+<th>구성 요소</th>
+<th>종류</th>
+<th>이 단계가 필요한 이유</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>TRF (Tensor Register File)</strong></td>
+<td>저장소</td>
+<td>곱셈에 쓰는 값 중 한쪽을 가까이 보관하고 재사용</td>
+</tr>
+<tr>
+<td><strong>Outer</strong></td>
+<td>곱셈 단계</td>
+<td>스트림과 TRF의 값을 대응시켜 병렬 곱셈</td>
+</tr>
+<tr>
+<td><strong>Packet Reducer</strong></td>
+<td>합산 단계</td>
+<td><strong>한 번 공급된 묶음 안에서</strong> 여러 곱의 결과를 합침</td>
+</tr>
+<tr>
+<td><strong>Time Reducer</strong></td>
+<td>누산 단계</td>
+<td><strong>여러 번 공급된 묶음 사이에서</strong> 부분합을 합침</td>
+</tr>
+<tr>
+<td><strong>Lane Folder</strong></td>
+<td>출력 정리 단계</td>
+<td>여러 lane의 결과를 다음 단계가 사용할 순서·형태로 내보냄</td>
+</tr>
+</tbody></table>
+</div><p>여기서 Reducer는 <strong>여러 값을 정해진 연산으로 하나 또는 더 적은 수의 값으로 합치는 회로</strong>라는 뜻이다. Packet Reducer와 Time Reducer는 둘 다 합산에 쓰일 수 있지만 <strong>합산하는 대상의 범위</strong>가 다르다.</p>
+<h4 id="3-packet-reducer와-time-reducer는-왜-둘-다-필요한가"><a class="heading-anchor" href="#3-packet-reducer와-time-reducer는-왜-둘-다-필요한가">3. Packet Reducer와 Time Reducer는 왜 둘 다 필요한가</a></h4>
+<p>같은 <code>[1,2,3,4]</code>와 <code>[2,3,4,5]</code>를 곱해 <code>40</code>을 얻는 계산을 다시 보자. 설명을 위해 <strong>한 번에 두 항씩</strong> 보낸다고 가정하자.</p>
+<div class="table-wrap"><table>
+<thead>
+<tr>
+<th>NPU에 공급하는 차례(Time)</th>
+<th>그 차례의 Packet 안에 들어온 곱</th>
+<th>Packet Reducer의 부분합</th>
+<th>Time Reducer의 누적 결과</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0번째</td>
+<td><code>1×2</code>, <code>2×3</code></td>
+<td><code>2+6=8</code></td>
+<td><code>8</code></td>
+</tr>
+<tr>
+<td>1번째</td>
+<td><code>3×4</code>, <code>4×5</code></td>
+<td><code>12+20=32</code></td>
+<td><code>8+32=40</code></td>
+</tr>
+</tbody></table>
+</div><p><strong>Packet</strong>은 <em>같은 차례에 들어온 값의 묶음</em>이고, <strong>Time</strong>은 <em>몇 번째 묶음을 처리하는가</em>를 나타내는 차원이다. 여기서 Time은 초·밀리초 같은 경과시간을 저장하는 변수가 아니다. <strong>하드웨어 스트림에서 데이터를 공급하는 순서</strong>라는 뜻이다.</p>
+<ul>
+<li>**Packet Reducer(패킷 리듀서)**는 0번째 묶음의 <code>2+6</code>, 1번째 묶음의 <code>12+20</code>처럼 <strong>같은 차례의 병렬 곱</strong>을 합친다.</li>
+<li>**Time Reducer(타임 리듀서)**는 먼저 나온 <code>8</code>을 보관했다가 다음 차례에 나온 <code>32</code>와 더해 <strong>서로 다른 차례의 부분합을 누적</strong>한다.</li>
+</ul>
+<p>왜 굳이 구별할까? 한 차례에 공급할 수 있는 Packet 크기는 제한되기 때문이다. <code>K</code>축이 작으면 여러 항을 동시에 처리하기 편하지만, <code>K</code>가 크면 여러 차례로 나누어 공급해야 할 수 있다. 이때 Packet Reducer만 있으면 각 차례의 부분합은 얻지만, <strong>차례를 가로질러 최종 결과를 완성하는 누적</strong>이 남는다. 따라서 Time Reducer가 필요하다. 위의 2개씩 공급하는 예는 개념을 위한 것이며 실제 한 Packet의 크기·명령 사이클 수를 뜻하지 않는다.</p>
+<h4 id="4-outer와-lane-folder는-언제-필요한가"><a class="heading-anchor" href="#4-outer와-lane-folder는-언제-필요한가">4. Outer와 Lane Folder는 언제 필요한가</a></h4>
+<p>**Outer(곱셈 준비·수행 단계)**는 입력 스트림과 TRF의 데이터를 같은 출력 좌표의 계산에 맞춰 **브로드캐스트(broadcast, 필요한 계산 경로로 값을 공급)**한 뒤 원소별로 곱한다. 가령 입력값 <code>3</code>을 서로 다른 두 출력 열의 가중치 <code>4</code>, <code>5</code>와 곱해야 한다면, 계산 경로에 맞게 <code>3×4</code>와 <code>3×5</code>를 준비하는 것이다. 실제 Outer 내부에는 Stream Adapter, TRF Sequencer, Multiplier가 있다.</p>
+<p>**Lane(레인)**은 한 slice 안의 병렬 계산 경로다. 예컨대 lane 0이 결과의 0열, lane 1이 결과의 1열을 계산하도록 나누었다면 서로 다른 결과값이 각 lane에서 만들어진다. **Lane Folder(레인 폴더)**는 이 결과를 다음 연산 단계가 읽을 <strong>출력 패킷이나 출력 시간 차례</strong>로 정리한다. &#39;Folder&#39;라는 이름 때문에 모든 lane 값을 한 숫자로 더한다고 생각하면 안 된다. 공식 문서의 Lane Folder는 매핑 모드에 따라 lane 차원을 출력 <code>Packet</code>이나 <code>Time</code>으로 접어 넣는 단계다. 여러 출력 열을 유지해야 한다면 별개의 값으로 남아야 한다.</p>
+<p>따라서 세 단계의 역할은 다르다. <strong>Outer는 곱할 값을 준비하고 계산하며, 두 Reducer는 정해진 축의 값들을 합치고, Lane Folder는 계산된 값의 출력 배열 방식을 정한다.</strong> 실제 하드웨어에서는 각 단계의 경계와 지원 가능한 매핑이 명령·자료형에 따라 제한된다.</p>
+<h4 id="5-왜-k축-배치에-따라-mac-활용률이-달라지는가"><a class="heading-anchor" href="#5-왜-k축-배치에-따라-mac-활용률이-달라지는가">5. 왜 K축 배치에 따라 MAC 활용률이 달라지는가</a></h4>
+<p><code>K</code>는 곱한 후 <strong>더해서 하나의 출력으로 만들 축</strong>이다. <code>K</code>의 여러 항을 같은 Packet에 실으면 Packet Reducer의 병렬 합산을 사용할 수 있다. 반대로 매 차례 Packet에 항 하나만 실어 <code>K</code>를 Time으로 길게 반복하면, 하드웨어의 병렬 곱셈 자리를 충분히 사용하지 못할 수 있다.</p>
+<p>공식 Furiosa-opt의 <strong>BF16(Brain Floating Point 16, 16비트 부동소수점)</strong> 배치 행렬곱 예제는 이 차이를 보여주려고 일부러 비효율적인 배치를 제시한다. 그 예에서는 한 차례에 사용할 수 있는 곱셈 위치 32개 중 유효한 것이 1개여서 **MAC 활용률이 <code>1/32 = 3.125%</code>**라고 설명한다. 이것은 <strong>그 배치의 유효 계산 위치 활용률</strong>이지, 전체 NPU 사용률이 3.125%라거나 실제 실행시간이 반드시 32배 증가한다는 뜻은 아니다.</p>
+<h4 id="6-배치-축-v는-하드웨어인가-사용자가-정할-수-있는가"><a class="heading-anchor" href="#6-배치-축-v는-하드웨어인가-사용자가-정할-수-있는가">6. 배치 축 V는 하드웨어인가, 사용자가 정할 수 있는가</a></h4>
+<p><strong>배치 축(Batch Axis) <code>V</code>는 하드웨어 부품이 아니라 데이터의 논리적 축이다.</strong> 여러 입력 행렬에 같은 가중치를 적용할 때 <strong>몇 번째 입력인가</strong>를 나타낸다. 예를 들어 <code>V=2, M=2, K=3, N=2</code>라면 입력 <code>A</code>의 shape는 <code>(2,2,3)</code>, 공통 가중치 <code>W</code>는 <code>(3,2)</code>, 결과 <code>C</code>는 <code>(2,2,2)</code>다. <code>C[v,m,n] = Σₖ A[v,m,k] × W[k,n]</code>이며 이를 **배치 행렬곱(Batched Matrix Multiplication)**이라고 한다.</p>
+<p><strong>입력의 배치 크기를 정하는 것</strong>과 <strong>그 배치 축을 NPU에서 어디에 배치하는 것</strong>은 별개다. 모델·API가 허용하면 입력의 <code>V</code> 크기를 정할 수 있다. 매핑을 작성하는 단계에서는 이미 존재하는 <code>V</code>를 여러 slice에 나누거나 <code>Time</code>에 넣어 순서대로 처리하도록 설계할 수 있다. 새로운 하드웨어 축을 만드는 것은 아니다. 공식 예제에서는 <code>M</code>을 Time에 놓는 방법과 <code>V</code>를 Time에 놓는 방법을 비교한다. 그러나 실제 지원되는 배치·크기는 TCL 작성 방식과 컴파일러 제약에 따라 다르다.</p>
+<p><strong>FuryNo5에서 확인할 기준:</strong> TCL 코드의 길이나 EDF 수만 보지 말고, 각 커널의 <strong>(1) TRF에 보관하는 값, (2) 동시에 실어 보내는 Packet의 유효한 원소 수, (3) Time에 따른 누적 횟수, (4) Lane 결과의 배치, (5) 실제 측정한 전체 지연시간</strong>을 함께 확인해야 한다. 공식 Furiosa-opt의 설명을 FuryNo5가 자동으로 선택하는 최적 배치와 동일시해서는 안 된다.</p>
+<p><strong>원문 링크:</strong> <a href="https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/mapping-tensors/spatial-temporal-dimensions.md">공간·시간 차원과 저장소 매핑</a> · <a href="https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/computing-tensors/contraction-engine/index.md">Contraction Engine 구조와 배치 행렬곱 예제</a></p>
 <section class="lab" data-lab="axes"><div class="lab-top"><span class="lab-tag">INTERACTIVE · 설명용 모델</span></div><h3>행렬의 한 칸을 직접 계산해 보기</h3><p class="explain">출력 C에서 한 칸을 고르면, 그 값을 만드는 A의 행과 W의 열이 표시됩니다. 인덱스는 Python처럼 0부터 셉니다.</p><div class="lab-controls matrix-controls"><label>출력 행 m<select aria-label="출력 행 선택" data-key="row"><option value="0">0행 · 입력 [1, 2, 3]</option><option value="1">1행 · 입력 [4, 5, 6]</option></select></label><label>출력 열 n<select aria-label="출력 열 선택" data-key="col"><option value="0">0열 · 가중치 [1, 0, 1]</option><option value="1">1열 · 가중치 [0, 1, 1]</option></select></label><label>일을 나누는 방법<select aria-label="행렬곱 분할 방법" data-key="split"><option value="none">한 칸을 끝까지 계산</option><option value="M">M · 출력 행을 나눔</option><option value="N">N · 출력 열을 나눔</option><option value="K">K · 더할 항을 나눔</option></select></label></div><div class="matrix-panels"><table class="matrix-table" data-matrix="A"><caption>A · 2행 × 3열</caption><thead><tr><th scope="col">행 / 열</th><th scope="col">0열</th><th scope="col">1열</th><th scope="col">2열</th></tr></thead><tbody><tr><th scope="row">0행</th><td data-row="0" data-col="0" class="matrix-selected">1</td><td data-row="0" data-col="1" class="matrix-selected">2</td><td data-row="0" data-col="2" class="matrix-selected">3</td></tr><tr><th scope="row">1행</th><td data-row="1" data-col="0" class="">4</td><td data-row="1" data-col="1" class="">5</td><td data-row="1" data-col="2" class="">6</td></tr></tbody></table><table class="matrix-table" data-matrix="W"><caption>W · 3행 × 2열</caption><thead><tr><th scope="col">행 / 열</th><th scope="col">0열</th><th scope="col">1열</th></tr></thead><tbody><tr><th scope="row">0행</th><td data-row="0" data-col="0" class="matrix-selected">1</td><td data-row="0" data-col="1" class="">0</td></tr><tr><th scope="row">1행</th><td data-row="1" data-col="0" class="matrix-selected">0</td><td data-row="1" data-col="1" class="">1</td></tr><tr><th scope="row">2행</th><td data-row="2" data-col="0" class="matrix-selected">1</td><td data-row="2" data-col="1" class="">1</td></tr></tbody></table><table class="matrix-table" data-matrix="C"><caption>C · 2행 × 2열</caption><thead><tr><th scope="col">행 / 열</th><th scope="col">0열</th><th scope="col">1열</th></tr></thead><tbody><tr><th scope="row">0행</th><td data-row="0" data-col="0" class="matrix-selected">4</td><td data-row="0" data-col="1" class="">5</td></tr><tr><th scope="row">1행</th><td data-row="1" data-col="0" class="">10</td><td data-row="1" data-col="1" class="">11</td></tr></tbody></table></div><div class="matrix-result" aria-live="polite" aria-atomic="true"><p data-matrix-selection>A의 0행 [1, 2, 3]과 W의 0열 [1, 0, 1]을 곱합니다.</p><p class="matrix-formula" data-matrix-formula>C[0, 0] = 1×1 + 2×0 + 3×1 = 4</p><p data-split-result>같은 위치의 숫자를 곱한 뒤 세 항을 모두 더하면 출력 한 칸이 됩니다.</p></div><p class="explain">분할 선택은 작업의 의미를 보여줍니다. 실제 RNGD의 slice·lane 개수, 최소 실행 단위, 동작 시간이나 최적 배치를 재현하는 시뮬레이터는 아닙니다. 특히 K를 나누면 각 작업의 부분합을 마지막에 합쳐야 합니다.</p></section>
 
 <h3 id="이제-논리-축과-물리-축을-구분할-수-있다"><a class="heading-anchor" href="#이제-논리-축과-물리-축을-구분할-수-있다">이제 논리 축과 물리 축을 구분할 수 있다</a></h3>
@@ -343,7 +617,7 @@ np.testing.assert_allclose(C_einsum, C)  # 문자열로 적은 계산도 앞의 
 </tr>
 </tbody></table>
 </div><p><strong>Register File의 file은 디스크 파일이라는 뜻이 아니다.</strong> 작은 값을 빠르게 읽어 연산기에 공급하는 하드웨어 저장소의 묶음이다. HBM·DM·레지스터를 전부 같은 “NPU 메모리”로 부르면, 큰 모델이 카드에 올라간 것과 현재 연산기에 값이 준비된 것을 구분하기 어렵다. <a href="https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/moving-tensors/index.md">공식 메모리 이동 경계</a>, <a href="https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/computing-tensors/register-files.md">레지스터의 역할</a></p>
-<figure class="diagram"><img src="../assets/diagrams/01-hardware-9b85eb19845c.svg?v=e94b379ae74d" alt="RNGD 하드웨어 · 도식 3" loading="lazy"><figcaption>도식 3 · RNGD 하드웨어</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
+<figure class="diagram"><img src="../assets/diagrams/01-hardware-9b85eb19845c.svg?v=e94b379ae74d" alt="RNGD 하드웨어 · 도식 8" loading="lazy"><figcaption>도식 8 · RNGD 하드웨어</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
   H[&quot;호스트 RAM: 입력 생성과 결과 사용&quot;] --&gt; B[&quot;장치 HBM: 큰 배열 보관&quot;]
   B --&gt; D[&quot;DM: 계산할 부분 준비&quot;]
   D --&gt; F[&quot;Fetch: DM 값을 연산 경로로 읽기&quot;]
@@ -405,7 +679,7 @@ np.testing.assert_allclose(C_einsum, C)  # 문자열로 적은 계산도 앞의 
 </div><p><code>W</code>를 계속 사용할 수 있는 배치라면 두 번째 행을 계산할 때 같은 계수를 다시 준비하는 일을 줄일 수 있다. 이것이 <strong>재사용(reuse)의</strong> 구체적인 뜻이다. 단, 레지스터 공간과 다음 연산의 요구에 따라 언제까지 유지할지는 달라진다. “같은 모델의 가중치이므로 영구히 TRF에 남는다”는 뜻은 아니다. <a href="https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/computing-tensors/index.md">수축 연산의 stream·TRF 입력</a>, <a href="https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/computing-tensors/register-files.md">TRF 준비와 소비</a></p>
 <h3 id="공식-도식의-엔진-이름을-여기에서-해석하자"><a class="heading-anchor" href="#공식-도식의-엔진-이름을-여기에서-해석하자">공식 도식의 엔진 이름을 여기에서 해석하자</a></h3>
 <p>다음은 공식 <strong>Computing Tensors</strong>의 파이프라인을 앞·뒤 두 부분으로 나눠 재구성한 것이다. 연결 순서는 보존하되, 한 그림에 모든 세부사항을 넣지 않았다. 엔진(engine)은 여기서 특정 일을 하는 하드웨어 블록을 뜻한다.</p>
-<figure class="diagram"><img src="../assets/diagrams/01-hardware-3db603d915cd.svg?v=652405977e42" alt="RNGD 하드웨어 · 도식 4" loading="lazy"><figcaption>도식 4 · RNGD 하드웨어</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
+<figure class="diagram"><img src="../assets/diagrams/01-hardware-3db603d915cd.svg?v=652405977e42" alt="RNGD 하드웨어 · 도식 9" loading="lazy"><figcaption>도식 9 · RNGD 하드웨어</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
   D[&quot;DM: 저장된 값&quot;] --&gt; F[&quot;Fetch: 값 읽기&quot;]
   F --&gt; A[&quot;Fetch Adapter: 읽은 값의 형식 보정&quot;]
   A --&gt; S[&quot;Switch: 필요한 slice로 전달&quot;]
@@ -449,7 +723,7 @@ np.testing.assert_allclose(C_einsum, C)  # 문자열로 적은 계산도 앞의 
 </tbody></table>
 </div><p>공식 문서는 Collect 뒤의 기본 전달 묶음을 <strong>flit</strong>이라고 부르고 32바이트로 설명한다. 지금은 “뒤 엔진이 약속한 크기의 숫자 묶음을 받는다”는 점을 이해하면 된다. 한 묶음의 값 개수는 자료형의 바이트 수에 따라 달라진다. <a href="https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/computing-tensors/index.md">공식 엔진 역할과 패킷 규칙</a></p>
 <p>단위를 직접 바꾸어 보자. 32바이트를 같은 자료형의 값으로 채운다면 float32는 값 하나가 4바이트여서 <code>32÷4=8개</code>, BF16은 값 하나가 2바이트여서 <code>32÷2=16개</code>다. 앞의 논리 행 <code>[1,2,3]</code>에 원소가 3개 있다는 사실과 하드웨어의 전달 묶음 크기는 다른 정보다. 한 논리 행이 반드시 flit 하나와 일치하지는 않는다. 실제로 어느 값을 함께 묶고 어느 위치가 유효한지는 물리 매핑·반복·패딩 계약으로 정하므로, shape만 보고 전송 횟수를 확정할 수 없다. 패딩은 실행 단위에 맞추기 위해 추가한 위치이며, 값이 자동으로 0이라는 뜻도 아니다.</p>
-<figure class="diagram"><img src="../assets/diagrams/01-hardware-1eae3f5f646f.svg?v=7524d5a9c832" alt="RNGD 하드웨어 · 도식 5" loading="lazy"><figcaption>도식 5 · RNGD 하드웨어</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
+<figure class="diagram"><img src="../assets/diagrams/01-hardware-1eae3f5f646f.svg?v=7524d5a9c832" alt="RNGD 하드웨어 · 도식 10" loading="lazy"><figcaption>도식 10 · RNGD 하드웨어</figcaption><details><summary>그림의 구조 보기</summary><pre>flowchart TB
   S[&quot;앞 단계에서 온 값&quot;] --&gt; C[&quot;Contraction: 곱하고 합치기&quot;]
   T[&quot;TRF의 피연산자&quot;] --&gt; C
   C --&gt; V[&quot;Vector: 원소별 연산·축약&quot;]
@@ -597,4 +871,4 @@ furiosa-smi topo
 </tr>
 </tbody></table>
 </div><p>Furiosa-opt 문서의 근거는 commit <code>3d43bc9d20f324af60e3006c3f1541938d7f5097</code>에 고정했다. 이 장의 NumPy 계산은 CPU에서 확인할 수 있으며, 실제 NPU 매핑·성능 검증을 대신하지 않는다.</p>
-</article><nav class="next-prev" aria-label="이전과 다음 장"><a href="../index.html"><small>← 이전 장</small><b>이 책을 읽는 방법</b></a><a href="../chapter/02-memory-dma.html"><small>다음 장 →</small><b>메모리와 DMA</b></a></nav><footer class="footer">FuryNo5 개발 핸드북 · 비공식 자료<br>공식 문서와 소스의 권리는 각 프로젝트에 있습니다. 코드 인용은 출처와 함께 표시합니다.<br><a href="../reader-review.html">핵심 질문과 해설</a> · <a href="../review.html">실행 전 확인사항</a> · <a href="../sources.html">출처와 버전</a> · <a href="../glossary.html">용어 사전</a></footer></main></div><aside class="right-toc" aria-label="이 장의 목차"><h2>이 장에서 다루는 내용</h2><a class="" href="#1-먼저-장치-없이-계산해-보자">1. 먼저 장치 없이 계산해 보자</a><a class="minor" href="#스칼라-벡터-행렬은-숫자를-담는-모양이다">스칼라·벡터·행렬은 숫자를 담는 모양이다</a><a class="" href="#2-np-einsum-은-반복문의-계산-규칙을-짧게-쓰는-함수다">2. np.einsum 은 반복문의 계산 규칙을 짧게 쓰는 함수다</a><a class="" href="#3-shape와-메모리-배치는-서로-다른-질문이다">3. shape와 메모리 배치는 서로 다른 질문이다</a><a class="" href="#4-pe-slice-lane은-계산-자원의-어느-크기를-말하는가">4. PE, slice, lane은 계산 자원의 어느 크기를 말하는가</a><a class="" href="#5-같은-계산을-나눠-맡기는-세-가지-방법">5. 같은 계산을 나눠 맡기는 세 가지 방법</a><a class="minor" href="#m을-나누기-서로-다른-입력-행을-맡긴다">M을 나누기: 서로 다른 입력 행을 맡긴다</a><a class="minor" href="#n을-나누기-같은-입력에서-서로-다른-출력-열을-맡긴다">N을 나누기: 같은 입력에서 서로 다른 출력 열을 맡긴다</a><a class="minor" href="#k를-나누기-같은-출력의-일부를-계산하므로-더해야-한다">K를 나누기: 같은 출력의 일부를 계산하므로 더해야 한다</a><a class="minor" href="#두-작업에-어떤-값을-각각-준비해야-하는가">두 작업에 어떤 값을 각각 준비해야 하는가</a><a class="minor" href="#이제-논리-축과-물리-축을-구분할-수-있다">이제 논리 축과 물리 축을 구분할 수 있다</a><a class="" href="#6-데이터를-저장하는-곳과-계산하는-곳을-구분하자">6. 데이터를 저장하는 곳과 계산하는 곳을 구분하자</a><a class="" href="#7-데이터는-연산-파이프라인을-통과한다">7. 데이터는 연산 파이프라인을 통과한다</a><a class="minor" href="#첫-입력-행이-결과가-되는-과정">첫 입력 행이 결과가 되는 과정</a><a class="minor" href="#공식-도식의-엔진-이름을-여기에서-해석하자">공식 도식의 엔진 이름을 여기에서 해석하자</a><a class="minor" href="#계산과-다음-데이터-준비를-겹친다는-뜻">계산과 다음 데이터 준비를 겹친다는 뜻</a><a class="" href="#8-제어-코어는-무엇을-하는가">8. 제어 코어는 무엇을 하는가</a><a class="" href="#9-사양표와-관측-도구를-이제-읽어-보자">9. 사양표와 관측 도구를 이제 읽어 보자</a><a class="" href="#cpu에서-기초-계산을-직접-실행하기">CPU에서 기초 계산을 직접 실행하기</a><a class="" href="#출처">출처</a></aside><dialog class="search-dialog" aria-label="문서 검색"><div class="search-head"><input type="search" aria-label="검색어" placeholder="DMA, EDF, 폴백, 버킷…" autocomplete="off"><button class="close-search" type="button">닫기</button></div><div class="search-status" role="status">용어나 함수 이름을 입력하세요.</div><div class="search-results"></div></dialog></body></html>
+</article><nav class="next-prev" aria-label="이전과 다음 장"><a href="../index.html"><small>← 이전 장</small><b>이 책을 읽는 방법</b></a><a href="../chapter/02-memory-dma.html"><small>다음 장 →</small><b>메모리와 DMA</b></a></nav><footer class="footer">FuryNo5 개발 핸드북 · 비공식 자료<br>공식 문서와 소스의 권리는 각 프로젝트에 있습니다. 코드 인용은 출처와 함께 표시합니다.<br><a href="../reader-review.html">핵심 질문과 해설</a> · <a href="../review.html">실행 전 확인사항</a> · <a href="../sources.html">출처와 버전</a> · <a href="../glossary.html">용어 사전</a></footer></main></div><aside class="right-toc" aria-label="이 장의 목차"><h2>이 장에서 다루는 내용</h2><a class="" href="#1-먼저-장치-없이-계산해-보자">1. 먼저 장치 없이 계산해 보자</a><a class="minor" href="#스칼라-벡터-행렬은-숫자를-담는-모양이다">스칼라·벡터·행렬은 숫자를 담는 모양이다</a><a class="" href="#2-np-einsum-은-반복문의-계산-규칙을-짧게-쓰는-함수다">2. np.einsum 은 반복문의 계산 규칙을 짧게 쓰는 함수다</a><a class="" href="#3-shape는-배열의-형태-메모리-배치는-값의-저장-위치를-나타낸다">3. Shape는 배열의 형태, 메모리 배치는 값의 저장 위치를 나타낸다</a><a class="" href="#4-pe-slice-lane은-계산-자원의-어느-크기를-말하는가">4. PE, slice, lane은 계산 자원의 어느 크기를 말하는가</a><a class="minor" href="#slice-하나를-확대하면-dm-trf-vrf와-두-연산-엔진의-관계">Slice 하나를 확대하면: DM·TRF·VRF와 두 연산 엔진의 관계</a><a class="minor" href="#dm-데이터를-연산기로-전달하는-것은-control-core일까">DM 데이터를 연산기로 전달하는 것은 Control Core일까?</a><a class="" href="#5-행렬곱을-여러-계산기에-나누면-무엇이-달라질까">5. 행렬곱을 여러 계산기에 나누면 무엇이 달라질까</a><a class="minor" href="#방법-1-m을-나누면-출력-행을-나눠-만든다">방법 1. M을 나누면: 출력 행을 나눠 만든다</a><a class="minor" href="#방법-2-n을-나누면-출력-열을-나눠-만든다">방법 2. N을 나누면: 출력 열을 나눠 만든다</a><a class="minor" href="#방법-3-k를-나누면-같은-결과의-계산을-나눠-맡는다">방법 3. K를 나누면: 같은 결과의 계산을 나눠 맡는다</a><a class="minor" href="#한눈에-비교-나눈-뒤-무엇을-해야-할까">한눈에 비교: 나눈 뒤 무엇을 해야 할까</a><a class="minor" href="#공간과-시간에-축을-배치한다는-뜻">공간과 시간에 축을 배치한다는 뜻</a><a class="minor" href="#왜-수축-연산기-contraction-engine-가-필요한가">왜 수축 연산기(Contraction Engine)가 필요한가</a><a class="minor" href="#이제-논리-축과-물리-축을-구분할-수-있다">이제 논리 축과 물리 축을 구분할 수 있다</a><a class="" href="#6-데이터를-저장하는-곳과-계산하는-곳을-구분하자">6. 데이터를 저장하는 곳과 계산하는 곳을 구분하자</a><a class="" href="#7-데이터는-연산-파이프라인을-통과한다">7. 데이터는 연산 파이프라인을 통과한다</a><a class="minor" href="#첫-입력-행이-결과가-되는-과정">첫 입력 행이 결과가 되는 과정</a><a class="minor" href="#공식-도식의-엔진-이름을-여기에서-해석하자">공식 도식의 엔진 이름을 여기에서 해석하자</a><a class="minor" href="#계산과-다음-데이터-준비를-겹친다는-뜻">계산과 다음 데이터 준비를 겹친다는 뜻</a><a class="" href="#8-제어-코어는-무엇을-하는가">8. 제어 코어는 무엇을 하는가</a><a class="" href="#9-사양표와-관측-도구를-이제-읽어-보자">9. 사양표와 관측 도구를 이제 읽어 보자</a><a class="" href="#cpu에서-기초-계산을-직접-실행하기">CPU에서 기초 계산을 직접 실행하기</a><a class="" href="#출처">출처</a></aside><dialog class="search-dialog" aria-label="문서 검색"><div class="search-head"><input type="search" aria-label="검색어" placeholder="DMA, EDF, 폴백, 버킷…" autocomplete="off"><button class="close-search" type="button">닫기</button></div><div class="search-status" role="status">용어나 함수 이름을 입력하세요.</div><div class="search-results"></div></dialog></body></html>

@@ -123,3 +123,8 @@ opt 경로에서는 compiler가 장치 코드와 메모리 연결 정보를 Imag
 | [furiosa-opt 고정 소스](https://github.com/furiosa-ai/furiosa-opt/tree/3d43bc9d20f324af60e3006c3f1541938d7f5097) | 공개 저수준 경로 |
 | [FuryNo5 고정 소스](https://github.com/smallstep-zzz/FuryNo5/tree/bba9efea8201aec48150514a35d0b637d29d107e) | 프로젝트 구현. 접근 권한 필요 |
 | [출처와 버전 기록](sources.md), [실행 전 확인사항](review.md) | 세부 근거와 미해결 항목 |
+
+
+## 명령부터 실행해 보고 싶다면
+
+[공식 SDK 실습](20-official-sdk-practice.md)에서 성공·실패 표를 고른 뒤 컴파일, 실행, HTTP 서빙 순서로 따라갈 수 있습니다. FuryNo5나 fxbX 설치 없이 공식 SDK를 사용하는 경로입니다.

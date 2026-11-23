@@ -572,3 +572,8 @@ host registry의 section과 참조는 [registry.rs](https://github.com/furiosa-a
 | [Schedule](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/scheduling/schedule.md) | context·자원 경쟁·메모리 의존성 |
 | [DMA Gather·Scatter](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/moving-tensors/dma-engine.md#gather-and-scatter) | position·byte offset·Domain·index 저장 배치 |
 | [Gather 구현](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-std/src/tensor/memory/dma/gather.rs) | HBM·SPM 인덱스 타입과 단위·배치 검사 |
+
+
+## 공식 SDK로 직접 실행해 보기
+
+[20장: 공식 SDK 컴파일·실행·서빙 실습](20-official-sdk-practice.md)에서 SDK 2026.4.0으로 실제 통과한 터미널 명령과 차단된 조합을 확인할 수 있습니다. 모델·TCL·PyTorch backend·공식 LLM 서버의 재현용 샘플을 함께 제공합니다.

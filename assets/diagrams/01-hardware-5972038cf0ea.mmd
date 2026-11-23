@@ -1,0 +1,7 @@
+flowchart TB
+  A["입력 A: Collect에서 흘러온 스트림"] --> O["Outer: 두 피연산자를 맞추고 곱하기"]
+  W["가중치 W: TRF에 보관"] --> O
+  O --> P["Packet Reducer: 이번 묶음의 곱들을 합산"]
+  P --> T["Time Reducer: 여러 차례의 부분합을 누적"]
+  T --> L["Lane Folder: lane 결과를 출력 형태로 정리"]
+  L --> C["후속 엔진 및 출력 스트림"]

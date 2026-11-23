@@ -1,0 +1,8 @@
+[package]
+name = "official_sdk_identity"
+version = "0.1.0"
+edition = "2024"
+[package.metadata.furiosa-opt]
+[dependencies]
+furiosa-opt-std = "0.5.1"
+[workspace]

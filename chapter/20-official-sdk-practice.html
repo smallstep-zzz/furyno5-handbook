@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="FuryNo5 없이 공식 SDK를 사용해 모델·TCL·vISA·FXB를 다루고, 실제 통과와 차단 결과를 구분합니다."><meta name="color-scheme" content="dark"><meta name="theme-color" content="#111417"><title>공식 SDK 컴파일·실행·서빙 실습 · FuryNo5 개발 핸드북</title><link rel="icon" href="../assets/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="../assets/site.css?v=e91cad038c9a"><script defer src="../assets/site.js?v=c9a152506172"></script></head>
+<body data-root="../" data-chapter="20-official-sdk-practice" data-search-version="7832288f3e43"><a class="skip" href="#content">본문으로 이동</a><header class="topbar"><button class="menu-toggle" type="button" aria-label="전체 목차 열기" aria-controls="sidebar" aria-expanded="false">☰</button><a class="brand" href="../index.html"><span class="brand-mark">Nº5</span>FuryNo5<small>DEVELOPER HANDBOOK</small></a><div class="top-actions"><a class="top-link" href="../sources.html">출처와 버전</a><button class="search-open" type="button" aria-label="핸드북 전체 검색"><span>전체 문서 검색</span><kbd>⌘ K</kbd></button></div></header><div class="progress" aria-hidden="true"></div><div class="mobile-shade"></div><aside class="sidebar" id="sidebar" aria-label="전체 목차"><nav><div class="nav-caption">시작하기</div><a class="nav-link"  href="../index.html"><span class="num">00</span><span>전체 지도와 읽는 방법</span></a><div class="nav-caption">I. 디바이스를 이해하기</div><a class="nav-link"  href="../chapter/01-hardware.html"><span class="num">01</span><span>RNGD · TCP · PE</span></a><a class="nav-link"  href="../chapter/02-memory-dma.html"><span class="num">02</span><span>메모리 · DMA · 배치</span></a><a class="nav-link"  href="../chapter/03-driver-runtime.html"><span class="num">03</span><span>드라이버와 공식 런타임</span></a><div class="nav-caption">II. 프로그램을 만들고 실행하기</div><a class="nav-link"  href="../chapter/04-tcl-edf.html"><span class="num">04</span><span>TCL 작성 · 컴파일 · 실행</span></a><a class="nav-link"  href="../chapter/05-graphs-fallback.html"><span class="num">05</span><span>실행그래프 · 오류 · 폴백</span></a><a class="nav-link"  href="../chapter/06-buckets-shapes.html"><span class="num">06</span><span>Shape · 버킷 · 컴파일 비용</span></a><a class="nav-link"  href="../chapter/07-optimization.html"><span class="num">07</span><span>최적화의 축과 우선순위</span></a><a class="nav-link"  href="../chapter/08-eisa-visa.html"><span class="num">08</span><span>eISA · vISA · furiosa-opt</span></a><div class="nav-caption">III. FuryNo5를 해부하기</div><a class="nav-link"  href="../chapter/09-torch-aten.html"><span class="num">09</span><span>PyTorch · ATen · 등록</span></a><a class="nav-link"  href="../chapter/10-furyno5-architecture.html"><span class="num">10</span><span>FuryNo5 구조와 지원 범위</span></a><a class="nav-link"  href="../chapter/11-furyno5-compiler.html"><span class="num">11</span><span>FuryNo5 컴파일과 캐시</span></a><div class="nav-caption">IV. 모델 포팅과 서빙</div><a class="nav-link"  href="../chapter/12-fxbx.html"><span class="num">12</span><span>fxbX 포맷과 실행계획</span></a><a class="nav-link"  href="../chapter/13-porting-fha.html"><span class="num">13</span><span>포팅 · FHA · FuryAwesome</span></a><a class="nav-link"  href="../chapter/14-serving-vllm.html"><span class="num">14</span><span>vLLM · 서빙 브리지</span></a><a class="nav-link"  href="../chapter/15-multi-npu.html"><span class="num">15</span><span>PE · 여러 카드 · 여러 서버</span></a><div class="nav-caption">V. 검증과 다음 개발</div><a class="nav-link"  href="../chapter/16-furyboost.html"><span class="num">16</span><span>FuryBoost 학습 성능</span></a><a class="nav-link"  href="../chapter/17-debugging.html"><span class="num">17</span><span>측정 · 추적 · 실패 재현</span></a><div class="nav-caption">VI. 생태계 비교와 최적화 연구</div><a class="nav-link"  href="../chapter/18-npu-ecosystems.html"><span class="num">18</span><span>다른 NPU의 지원 방식</span></a><a class="nav-link"  href="../chapter/19-model-optimization.html"><span class="num">19</span><span>모델 사전 최적화 · 연구</span></a><div class="nav-caption">VII. 실행 명령 실습</div><a class="nav-link active" aria-current="page" href="../chapter/20-official-sdk-practice.html"><span class="num">20</span><span>공식 SDK 터미널 실습</span></a><div class="nav-caption">참고와 검증</div><a class="nav-link"  href="../glossary.html"><span class="num">·</span><span>약어와 용어 사전</span></a><a class="nav-link"  href="../sources.html"><span class="num">·</span><span>출처 · 버전 · 접근 범위</span></a><a class="nav-link"  href="../review.html"><span class="num">·</span><span>실행 전 확인사항</span></a><a class="nav-link"  href="../reader-review.html"><span class="num">·</span><span>핵심 질문과 해설</span></a></nav><div class="side-foot">비공식 개발 핸드북<br>공식 SDK와 프로젝트 구현을 구분합니다.<br><a href="https://github.com/smallstep-zzz/furyno5-handbook">원고와 변경 이력 ↗</a></div></aside><div class="shell"><main class="page" id="content"><div class="eyebrow">VII. 실행 명령 실습 / CHAPTER 20</div><h1>공식 SDK 컴파일·실행·서빙 실습</h1><p class="dek">FuryNo5 없이 공식 SDK를 사용해 모델·TCL·vISA·FXB를 다루고, 실제 통과와 차단 결과를 구분합니다.</p><div class="page-meta"><span>SDK 2026.4 계열 / 버전별 표기</span><span class="readtime">약 8분</span><span><a href="https://github.com/smallstep-zzz/furyno5-handbook/blob/main/content/20-official-sdk-practice.md">원고</a></span></div><details class="mobile-toc"><summary>이 장의 목차</summary><div><a class="" href="#준비">준비</a><a class="" href="#컴파일-성공한-방법">컴파일: 성공한 방법</a><a class="minor" href="#1-모델-파일-공식-pytorch-컴파일">1. 모델 파일 → 공식 PyTorch 컴파일</a><a class="minor" href="#2-모델의-해당-연산을-tcl로-명시적-연결">2. 모델의 해당 연산을 TCL로 명시적 연결</a><a class="minor" href="#3-공식-등록-llm-fxb">3. 공식 등록 LLM → FXB</a><a class="" href="#컴파일-현재-안-되는-방법">컴파일: 현재 안 되는 방법</a><a class="" href="#실행-성공한-명령">실행: 성공한 명령</a><a class="minor" href="#공식-fxb-원본-hf-모델-furiosa-llm-python">공식 FXB + 원본 HF 모델 → Furiosa-LLM Python</a><a class="minor" href="#pytorch-backend">PyTorch backend</a><a class="minor" href="#모델-연산-tcl">모델 연산 + TCL</a><a class="minor" href="#저장한-공식-runnable-재적재">저장한 공식 Runnable 재적재</a><a class="" href="#서빙">서빙</a><a class="minor" href="#일반-pytorch-tcl-재적재-실행물">일반 PyTorch / TCL / 재적재 실행물</a><a class="minor" href="#공식-llm-서버">공식 LLM 서버</a><a class="" href="#증거와-한계">증거와 한계</a><a class="" href="#출처와-검증-기준">출처와 검증 기준</a></div></details><noscript><p class="noscript">본문과 그림은 JavaScript 없이 읽을 수 있습니다. 검색과 조절 실험에는 JavaScript가 필요합니다.</p></noscript><article class="article"><p>검증일: 2026-11-23(KST). 검증 장비: RNGD 1대. 장치 번호는 실행 환경에 맞게 선택한다.
+SDK: furiosa-torch/tcc/llm 2026.4.0, Torch 2.10.0+cpu, Python 3.11.
+FuryNo5·fxbX·FHA를 import하거나 실행하지 않았다. <code>PYTHONPATH</code>를 해제하고 기존 공식 SDK 환경만 사용했다.</p>
+<h2 id="준비"><a class="heading-anchor" href="#준비">준비</a></h2>
+<p>아래 명령은 호환 SDK·드라이버가 설치된 Linux RNGD 서버에서 실행한다. 기존 SDK Python 환경을 먼저 활성화한다. SDK·드라이버 설치 절차는 <a href="../chapter/03-driver-runtime.html">3장</a>을 참고한다.</p>
+<p>핸드북 소스에 재현용 샘플을 함께 보관했다. 처음 한 번 내려받는다.</p>
+<div class="codebox"><div class="codebar"><span>bash</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-bash">git clone --depth 1 https://github.com/smallstep-zzz/furyno5-handbook.git
+cd furyno5-handbook/examples/official-sdk
+source env.sh
+</code></pre></div>
+<p><code>SDK_PY</code>는 현재 환경의 Python이다. <code>python -m pip show furiosa-torch furiosa-tcc furiosa-llm torch</code>로 버전을 확인한다. 아래 시험 기록은 SDK 2026.4.0 기준이며, 최신 버전으로 자동 치환해 검증한 결과가 아니다. <code>SAMPLE_LLM_DEVICE</code>에는 배정받은 NPU를 지정한다.</p>
+<div class="codebox"><div class="codebar"><span>bash</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-bash">export SAMPLE_LLM_DEVICE=npu:0
+</code></pre></div>
+<p>일반 PyTorch 샘플의 <code>furiosa:0</code>은 SDK의 논리 장치 번호이고, LLM의 <code>npu:0</code>은 LLM 장치 주소다. 같은 숫자라도 표기 체계가 다르므로 사용 가능한 장치를 먼저 확인한다.</p>
+<div class="codebox"><div class="codebar"><span>bash</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-bash">furiosa-smi status
+furiosa-smi ps
+</code></pre></div>
+<p>공식 경로는 두 가지다. 일반 그래프/직접 커널은 <code>furiosa.torch</code>의 CompileModule·TclModule·Runnable을 사용한다. 공식 등록 LLM은 <code>fxb build</code>와 <code>furiosa_llm.LLM</code> 또는 <code>furiosa-llm serve</code>를 사용한다. 임의의 그래프 실행물을 <code>.fxb</code>로 이름만 바꿔 공식 LLM 실행기로 넘길 수는 없다. 모델 자산(config/tokenizer/weights)과 공식 FXB는 별개다.</p>
+<h2 id="컴파일-성공한-방법"><a class="heading-anchor" href="#컴파일-성공한-방법">컴파일: 성공한 방법</a></h2>
+<h3 id="1-모델-파일-공식-pytorch-컴파일"><a class="heading-anchor" href="#1-모델-파일-공식-pytorch-컴파일">1. 모델 파일 → 공식 PyTorch 컴파일</a></h3>
+<div class="codebox"><div class="codebar"><span>bash</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-bash">&quot;$SDK_PY&quot; sample.py make
+&quot;$SDK_PY&quot; sample.py torch
+</code></pre></div>
+<p><code>model.pt2</code>는 torch.export로 저장한 실제 모델 파일이다. 입력은 BF16 [1,128,64]와 [1,64,128], 출력은 [1,128,128]인 작은 bmm 모델이다. <code>torch</code>는 파일을 읽어 <code>CompileModule.from_module</code>로 컴파일하고 <code>torch.runnable</code>에 공식 직렬화 실행물을 저장한 다음 실제 NPU에서 검사한다. 가중치 없는 행렬곱 예제이며 대형 체크포인트나 임의 연산 지원을 증명하지 않는다.</p>
+<h3 id="2-모델의-해당-연산을-tcl로-명시적-연결"><a class="heading-anchor" href="#2-모델의-해당-연산을-tcl로-명시적-연결">2. 모델의 해당 연산을 TCL로 명시적 연결</a></h3>
+<div class="codebox"><div class="codebar"><span>bash</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-bash">&quot;$SDK_PY&quot; sample.py tcl
+</code></pre></div>
+<p>이 샘플 모델의 유일한 bmm를 같은 입출력 계약의 <code>TclModule(matmul.tc)</code>로 명시적으로 대체한다. 원본 model.pt2의 결과도 확인하고 공식 CompileModule로 컴파일·실행한다. 모델 파일 옆에 TCL을 두면 자동 매칭된다는 뜻이 아니다. 일반 모델은 적용할 연산과 forward 연결을 직접 작성해야 한다.</p>
+<p>고정 크기 TCL만 EDF로 컴파일하는 별도 공식 CLI도 통과했다:</p>
+<div class="codebox"><div class="codebar"><span>bash</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-bash">furiosa-tcc matmul-fixed.tc --target-npu renegade-8pe --output matmul.edf
+</code></pre></div>
+<p>CLI 컴파일 35.1초. 기호 축(B/M/K/N)이 남은 matmul.tc를 그대로 주면 shape 변환 단계에서 실패했다. make는 동일한 커널의 축을 실제 크기로 특수화해 matmul-fixed.tc도 만든다.</p>
+<p>주의: 이 CLI EDF를 <code>from_serialized_edf</code>로 직접 로드한 추가 시험은 <code>kernel size per cluster ... must equal chunk_size * num_chunks</code> 경고 후 완료되지 않아 시험 프로세스를 종료했다. 따라서 <strong>EDF 컴파일 성공만 확인했으며 이 EDF의 직접 실행은 승인하지 않는다.</strong> 위 TclModule 경로의 실행과 torch.runnable 재적재는 별도 경로로 성공했다. EDF, 직렬화 Runnable, 공식 LLM FXB는 서로 다른 형식이다.</p>
+<h3 id="3-공식-등록-llm-fxb"><a class="heading-anchor" href="#3-공식-등록-llm-fxb">3. 공식 등록 LLM → FXB</a></h3>
+<p>실제로 통과한 최소 프로필:</p>
+<div class="codebox"><div class="codebar"><span>bash</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-bash">fxb build Qwen/Qwen3-8B-FP8 ./qwen-small.fxb \
+  --max-model-len 128 --tokenwise-buckets 1,128 \
+  --attention-buckets '(1,128,128),(1,128,1)' \
+  --no-enable-sampler --concurrency 2 --build-report --dump-tc ./official-tcl
+fxb show ./qwen-small.fxb
+fxb inspect ./qwen-small.fxb
+</code></pre></div>
+<p>O3(기본값), 커널 8개 모두 성공, 약 74초, 결과 약 3.6MiB. 마지막 생성 완료 로그까지 확인했다. 제한된 테스트용이며 chunked prefill·prefix caching용 extend bucket은 없다. 생성 도중 KV 상태는 사용하지만 이 최소 FXB는 128토큰 밖의 작업에 사용하지 않는다.</p>
+<p>일반 배포는 모델의 공식 기본 bucket을 유지해 빌드한다. 다음 기본 프로필 전체 빌드는 이번에 새로 시험하지 않았다:</p>
+<div class="codebox"><div class="codebar"><span>bash</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-bash">fxb build Qwen/Qwen3-8B-FP8 ./qwen-default.fxb --concurrency 2 --build-report
+</code></pre></div>
+<h2 id="컴파일-현재-안-되는-방법"><a class="heading-anchor" href="#컴파일-현재-안-되는-방법">컴파일: 현재 안 되는 방법</a></h2>
+<p>공식 <code>fxb build</code>에는 모델과 함께 임의 TCL/vISA 파일을 주는 옵션이 없다. 다음 세 명령은 실제 실행 시 모두 인자 오류(exit 2)였다:</p>
+<div class="codebox"><div class="codebar"><span>bash</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-bash">fxb build Qwen/Qwen3-8B-FP8 invalid.fxb --tcl matmul.tc
+fxb build Qwen/Qwen3-8B-FP8 invalid.fxb --visa visa
+fxb build Qwen/Qwen3-8B-FP8 invalid.fxb --tcl matmul.tc --visa visa
+</code></pre></div>
+<p>직접 vISA 커널을 컴파일하는 공식 Python API는 존재한다:</p>
+<div class="codebox"><div class="codebar"><span>bash</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-bash">&quot;$SDK_PY&quot; sample.py visa
+# 내부 호출: furiosa.torch.compile_from_visa('./visa', 'identity')
+</code></pre></div>
+<p>하지만 검증 환경의 cargo-furiosa-opt는 0.10.0, SDK 2026.4.0 Python 래퍼 허용 범위는 &gt;=0.5.0,&lt;0.6.0이다. 실제 결과는 <code>Incompatible furiosa-opt version 0.10.0; expected it to be compatible with 0.5.0</code>였다. 버전 검사를 강제로 건너뛰지 않았고 전역 툴체인을 변경하지 않았다. visa/ 소스는 검사 전에 차단되어 소스 컴파일·수치 정확성도 미검증이다.</p>
+<p>모델+vISA, 모델+TCL+vISA는 호환 툴체인을 별도 준비하고 각 커널의 ABI/forward 연결을 직접 작성한 뒤 검증해야 한다. 이 환경에서 조합 완료·실행 성공으로 주장하지 않는다. TCL과 vISA가 무조건 하나의 컴파일에 함께 들어갈 수 없다는 의미도 아니다.</p>
+<h2 id="실행-성공한-명령"><a class="heading-anchor" href="#실행-성공한-명령">실행: 성공한 명령</a></h2>
+<h3 id="공식-fxb-원본-hf-모델-furiosa-llm-python"><a class="heading-anchor" href="#공식-fxb-원본-hf-모델-furiosa-llm-python">공식 FXB + 원본 HF 모델 → Furiosa-LLM Python</a></h3>
+<div class="codebox"><div class="codebar"><span>bash</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-bash">&quot;$SDK_PY&quot; llm_generate.py
+</code></pre></div>
+<p>실제 코드는 <code>LLM(&#39;Qwen/Qwen3-8B-FP8&#39;,fxb=&#39;./qwen-small.fxb&#39;,devices=장치주소,max_model_len=128)</code>와 <code>SamplingParams(temperature=0,max_tokens=8)</code>를 사용한다. 요청 <code>The capital of France is</code>에 <code> Paris. The capital of Italy is Rome</code>을 생성했다. FXB만으로 실행하는 범용 <code>fxb run</code> 명령은 없고, 원본 가중치·config·tokenizer와 실행 엔진이 필요하다. LLM 장치 주소에는 <code>npu:번호</code> 표기를 사용한다. 공개 예제는 <code>SAMPLE_LLM_DEVICE</code>를 읽는다.</p>
+<h3 id="pytorch-backend"><a class="heading-anchor" href="#pytorch-backend">PyTorch backend</a></h3>
+<div class="codebox"><div class="codebar"><span>bash</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-bash">&quot;$SDK_PY&quot; sample.py backend
+</code></pre></div>
+<p>실제 내부는 <code>torch.compile(model,backend=furiosa.torch.backend,fullgraph=True)</code>다. <code>backend_eager_fallback</code>을 사용하지 않았다.</p>
+<h3 id="모델-연산-tcl"><a class="heading-anchor" href="#모델-연산-tcl">모델 연산 + TCL</a></h3>
+<div class="codebox"><div class="codebar"><span>bash</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-bash">&quot;$SDK_PY&quot; sample.py tcl
+</code></pre></div>
+<h3 id="저장한-공식-runnable-재적재"><a class="heading-anchor" href="#저장한-공식-runnable-재적재">저장한 공식 Runnable 재적재</a></h3>
+<div class="codebox"><div class="codebar"><span>bash</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-bash">&quot;$SDK_PY&quot; sample.py reload
+</code></pre></div>
+<p>공식 <code>Runnable.serialize/deserialize</code>로 읽으며 FXB/EDF로 이름을 바꾸지 않는다. 이 예제에는 가중치가 없다. 가중치 있는 모델은 별도 원본 가중치 공급과 입출력 복원이 필요하다.</p>
+<h2 id="서빙"><a class="heading-anchor" href="#서빙">서빙</a></h2>
+<h3 id="일반-pytorch-tcl-재적재-실행물"><a class="heading-anchor" href="#일반-pytorch-tcl-재적재-실행물">일반 PyTorch / TCL / 재적재 실행물</a></h3>
+<p>다음 중 하나를 첫 번째 터미널에서 실행한다. 작은 bmm 고정 입력을 받는 <strong>샘플 HTTP 래퍼</strong>이며 Furiosa가 제공하는 범용 모델 서버 CLI가 아니다.</p>
+<div class="codebox"><div class="codebar"><span>bash</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-bash">&quot;$SDK_PY&quot; serve.py backend --port 18085
+# 또는
+&quot;$SDK_PY&quot; serve.py torch --port 18085
+# 또는
+&quot;$SDK_PY&quot; serve.py tcl --port 18085
+# 또는
+&quot;$SDK_PY&quot; serve.py reload --port 18085
+</code></pre></div>
+<p>다른 터미널에서:</p>
+<div class="codebox"><div class="codebar"><span>bash</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-bash">curl -sS http://127.0.0.1:18085/predict \
+  -H 'Content-Type: application/json' -d '{&quot;sample&quot;:true}'
+</code></pre></div>
+<p>네 방식 모두 HTTP 200, 출력 shape [1,128,128], CPU 최대 절대오차 0을 확인했다. 샘플은 동시에 하나의 요청을 처리하고 호출을 실제로 NPU로 보내며 결과 이미지를 캐싱하지 않는다. 실제 모델 서비스에는 별도 입력 검증·전후처리·동시성 설계가 필요하다.</p>
+<h3 id="공식-llm-서버"><a class="heading-anchor" href="#공식-llm-서버">공식 LLM 서버</a></h3>
+<p>첫 번째 터미널:</p>
+<div class="codebox"><div class="codebar"><span>bash</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-bash">furiosa-llm serve Qwen/Qwen3-8B-FP8 \
+  --fxb ./qwen-small.fxb --devices &quot;$SAMPLE_LLM_DEVICE&quot; --max-model-len 128 \
+  --host 127.0.0.1 --port 18090 --served-model-name qwen-test
+</code></pre></div>
+<p>다른 터미널:</p>
+<div class="codebox"><div class="codebar"><span>bash</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-bash">curl -sS http://127.0.0.1:18090/v1/chat/completions \
+  -H 'Content-Type: application/json' \
+  -d '{&quot;model&quot;:&quot;qwen-test&quot;,&quot;messages&quot;:[{&quot;role&quot;:&quot;user&quot;,&quot;content&quot;:&quot;What is 2 + 2? Answer briefly.&quot;}],&quot;max_tokens&quot;:16,&quot;temperature&quot;:0,&quot;chat_template_kwargs&quot;:{&quot;enable_thinking&quot;:false}}'
+</code></pre></div>
+<p>실제 HTTP 200, 응답 <code>4.</code>. 호출 자동 재현은 <code>python3 test_llm_http.py</code>; 일반 4경로 자동 재현은 <code>python3 test_http.py</code>. 각 자동 시험은 자기 서버만 종료한다.</p>
+<p>내 컴퓨터에서 원격 서버에 접속하려면 로컬 터미널에서:</p>
+<div class="codebox"><div class="codebar"><span>bash</span><button type="button" class="copy-code" aria-label="코드 복사">복사</button></div><pre><code class="language-bash">ssh -N -L 18090:127.0.0.1:18090 USER@NPU_SERVER
+</code></pre></div>
+<p>이후 내 컴퓨터에서도 같은 curl URL을 쓴다. 터널링 명령 자체는 이번 시험에서 실행하지 않았다.</p>
+<h2 id="증거와-한계"><a class="heading-anchor" href="#증거와-한계">증거와 한계</a></h2>
+<ul>
+<li>sample 모드(torch/tcl/reload/backend)와 각 HTTP 요청에서 공식 trace <code>::Task</code> NPU 이벤트 1개씩, DfgExecutor 이벤트 0개. 공식 SDK CPU fallback 설정 false, CPU 기준 atol=rtol=0.05; 관찰된 최대 절대오차는 0.</li>
+<li>LLM은 공식 native engine의 NPU 적재·KV cache·실제 생성과 HTTP 응답을 확인했다. LLM의 연산별 profiler trace/수치 기준 비교는 이번 작업 범위에서 수행하지 않았다.</li>
+<li>샘플 elapsed_seconds는 import 제외, 컴파일/적재/실행을 포함하므로 순수 NPU 지연시간으로 비교하지 않는다.</li>
+<li>이번 테스트 서버는 모두 종료했고 마지막 furiosa-smi ps는 비어 있었다. 원래 서비스·환경·SDK 버전은 변경하지 않았다.</li>
+<li>원시 trace·JSON·로그는 실험 환경에 보존했으며 공개 예제에는 포함하지 않는다. 명령을 다시 실행하면 현재 폴더에 새 결과가 생성된다. 공개 예제는 Python 경로와 장치 선택을 환경변수로 바꾼 이식본이며, 이 문서 편집 중 NPU 실행을 반복하지 않았다.</li>
+</ul>
+<h2 id="출처와-검증-기준"><a class="heading-anchor" href="#출처와-검증-기준">출처와 검증 기준</a></h2>
+<p><a href="https://developer.furiosa.ai/v2026.4.0/en/furiosa_llm/fxb.html">공식 FXB 문서</a></p>
+<p><a href="https://developer.furiosa.ai/stable/en/furiosa_llm/furiosa-llm-serve.html">공식 서버 문서</a>
+설치된 공식 TCL 예제: <code>python -m furiosa.tcl.examples.contract --target furiosa</code></p>
+<p>설치된 SDK의 <code>furiosa/torch/_module/{dfg,runnable,visa}.py</code>, <code>furiosa/torch/_C/{ir,profiler}/__init__.pyi</code>, <code>furiosa/tcl/examples/contract.py</code>와 실제 CLI 도움말을 대조했다. <code>compile_from_visa</code>가 조사 당시 미확인이었던 <a href="../chapter/08-eisa-visa.html">8장</a>과 달리, 이번 설치본에는 API가 있지만 버전 검사에서 차단됨을 확인했다. 공식 API·직렬화 형식·공개 opt image를 같은 형식으로 취급하지 않는다.</p>
+</article><nav class="next-prev" aria-label="이전과 다음 장"><a href="../chapter/19-model-optimization.html"><small>← 이전 장</small><b>모델과 실행 방식을 함께 최적화하기</b></a><a href="../glossary.html"><small>다음 장 →</small><b>용어 사전</b></a></nav><footer class="footer">FuryNo5 개발 핸드북 · 비공식 자료<br>공식 문서와 소스의 권리는 각 프로젝트에 있습니다. 코드 인용은 출처와 함께 표시합니다.<br><a href="../reader-review.html">핵심 질문과 해설</a> · <a href="../review.html">실행 전 확인사항</a> · <a href="../sources.html">출처와 버전</a> · <a href="../glossary.html">용어 사전</a></footer></main></div><aside class="right-toc" aria-label="이 장의 목차"><h2>이 장에서 다루는 내용</h2><a class="" href="#준비">준비</a><a class="" href="#컴파일-성공한-방법">컴파일: 성공한 방법</a><a class="minor" href="#1-모델-파일-공식-pytorch-컴파일">1. 모델 파일 → 공식 PyTorch 컴파일</a><a class="minor" href="#2-모델의-해당-연산을-tcl로-명시적-연결">2. 모델의 해당 연산을 TCL로 명시적 연결</a><a class="minor" href="#3-공식-등록-llm-fxb">3. 공식 등록 LLM → FXB</a><a class="" href="#컴파일-현재-안-되는-방법">컴파일: 현재 안 되는 방법</a><a class="" href="#실행-성공한-명령">실행: 성공한 명령</a><a class="minor" href="#공식-fxb-원본-hf-모델-furiosa-llm-python">공식 FXB + 원본 HF 모델 → Furiosa-LLM Python</a><a class="minor" href="#pytorch-backend">PyTorch backend</a><a class="minor" href="#모델-연산-tcl">모델 연산 + TCL</a><a class="minor" href="#저장한-공식-runnable-재적재">저장한 공식 Runnable 재적재</a><a class="" href="#서빙">서빙</a><a class="minor" href="#일반-pytorch-tcl-재적재-실행물">일반 PyTorch / TCL / 재적재 실행물</a><a class="minor" href="#공식-llm-서버">공식 LLM 서버</a><a class="" href="#증거와-한계">증거와 한계</a><a class="" href="#출처와-검증-기준">출처와 검증 기준</a></aside><dialog class="search-dialog" aria-label="문서 검색"><div class="search-head"><input type="search" aria-label="검색어" placeholder="DMA, EDF, 폴백, 버킷…" autocomplete="off"><button class="close-search" type="button">닫기</button></div><div class="search-status" role="status">용어나 함수 이름을 입력하세요.</div><div class="search-results"></div></dialog></body></html>

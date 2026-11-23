@@ -1,0 +1,91 @@
+<svg role="img" aria-label="Slice의 DM: 512 KiB / Slice · 온칩 데이터 저장 · Fetch → Collect: 연산 스트림으로 데이터 공급 · TRF: 수축 연산용 피연산자 저장 · VRF: 벡터 연산용 피연산자 저장 · Contraction Engine: 곱셈·합산 · Slice당 최대 8 Lane · Vector Engine: 원소별 연산·활성화 함수 · 결과 스트림 → Commit → DM" width="426pt" height="513pt"
+ viewBox="0.00 0.00 426.00 513.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(14.4 498.29)">
+<title>handbook</title>
+<g id="edge1" class="edge">
+<title>DM&#45;&gt;FC</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M249.65,-433.15C249.65,-423.73 249.65,-412.83 249.65,-402.73"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="252.1,-402.93 249.65,-395.93 247.2,-402.93 252.1,-402.93"/>
+</g>
+<g id="edge4" class="edge">
+<title>FC&#45;&gt;TRF</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M201.39,-342.39C179.66,-331.19 154.26,-318.1 133.37,-307.33"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="134.56,-305.18 127.21,-304.15 132.31,-309.54 134.56,-305.18"/>
+</g>
+<g id="edge5" class="edge">
+<title>FC&#45;&gt;VRF</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M254.67,-342.22C261.05,-310.35 272.02,-255.58 278.47,-223.34"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="280.84,-224 279.81,-216.66 276.03,-223.04 280.84,-224"/>
+</g>
+<g id="edge2" class="edge">
+<title>FC&#45;&gt;CE</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M240.41,-342.42C231.42,-320.66 216.13,-289.14 195.65,-266.82 183.64,-253.73 168.66,-242 153.77,-232.07"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="155.21,-230.09 148.01,-228.33 152.55,-234.2 155.21,-230.09"/>
+</g>
+<g id="edge3" class="edge">
+<title>FC&#45;&gt;VE</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M287.39,-342.38C321.13,-317.65 368.3,-276.32 388.65,-226.82 398.9,-201.89 401.84,-189.67 388.65,-166.16 380.6,-151.81 367.87,-140.29 354.03,-131.2"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="355.49,-129.22 348.25,-127.62 352.91,-133.39 355.49,-129.22"/>
+</g>
+<g id="edge6" class="edge">
+<title>TRF&#45;&gt;CE</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M91.25,-266.35C91.04,-257.57 90.79,-246.57 90.54,-235.95"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="92.99,-235.93 90.38,-228.99 88.09,-236.05 92.99,-235.93"/>
+</g>
+<g id="edge7" class="edge">
+<title>VRF&#45;&gt;VE</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M283.65,-177.92C283.65,-165.93 283.65,-149.67 283.65,-135.28"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="286.1,-135.44 283.65,-128.44 281.2,-135.44 286.1,-135.44"/>
+</g>
+<g id="edge8" class="edge">
+<title>CE&#45;&gt;VE</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M151.57,-165.68C175.08,-154.36 201.77,-141.51 224.97,-130.33"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="225.82,-132.65 231.06,-127.4 223.69,-128.23 225.82,-132.65"/>
+</g>
+<g id="edge9" class="edge">
+<title>VE&#45;&gt;OUT</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M283.65,-75.75C283.65,-66.04 283.65,-54.84 283.65,-44.97"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="286.1,-45.17 283.65,-38.17 281.2,-45.17 286.1,-45.17"/>
+</g>
+<g id="node1" class="node">
+<title>DM</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M309.8,-483.89C309.8,-483.89 189.5,-483.89 189.5,-483.89 183.5,-483.89 177.5,-477.89 177.5,-471.89 177.5,-471.89 177.5,-445.73 177.5,-445.73 177.5,-439.73 183.5,-433.73 189.5,-433.73 189.5,-433.73 309.8,-433.73 309.8,-433.73 315.8,-433.73 321.8,-439.73 321.8,-445.73 321.8,-445.73 321.8,-471.89 321.8,-471.89 321.8,-477.89 315.8,-483.89 309.8,-483.89"/>
+<text xml:space="preserve" text-anchor="middle" x="249.65" y="-462.41" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">Slice의 DM: 512 KiB /</text>
+<text xml:space="preserve" text-anchor="middle" x="249.65" y="-447.41" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">Slice · 온칩 데이터 저장</text>
+</g>
+<g id="node2" class="node">
+<title>FC</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M308.3,-393.73C308.3,-393.73 191,-393.73 191,-393.73 185,-393.73 179,-387.73 179,-381.73 179,-381.73 179,-354.82 179,-354.82 179,-348.82 185,-342.82 191,-342.82 191,-342.82 308.3,-342.82 308.3,-342.82 314.3,-342.82 320.3,-348.82 320.3,-354.82 320.3,-354.82 320.3,-381.73 320.3,-381.73 320.3,-387.73 314.3,-393.73 308.3,-393.73"/>
+<text xml:space="preserve" text-anchor="middle" x="249.65" y="-372.25" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">Fetch → Collect: 연산</text>
+<text xml:space="preserve" text-anchor="middle" x="249.65" y="-356.5" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">스트림으로 데이터 공급</text>
+</g>
+<g id="node3" class="node">
+<title>TRF</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M171.3,-302.82C171.3,-302.82 12,-302.82 12,-302.82 6,-302.82 0,-296.82 0,-290.82 0,-290.82 0,-278.82 0,-278.82 0,-272.82 6,-266.82 12,-266.82 12,-266.82 171.3,-266.82 171.3,-266.82 177.3,-266.82 183.3,-272.82 183.3,-278.82 183.3,-278.82 183.3,-290.82 183.3,-290.82 183.3,-296.82 177.3,-302.82 171.3,-302.82"/>
+<text xml:space="preserve" text-anchor="middle" x="91.65" y="-280.92" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">TRF: 수축 연산용 피연산자 저장</text>
+</g>
+<g id="node4" class="node">
+<title>VRF</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M363.67,-214.49C363.67,-214.49 203.62,-214.49 203.62,-214.49 197.62,-214.49 191.62,-208.49 191.62,-202.49 191.62,-202.49 191.62,-190.49 191.62,-190.49 191.62,-184.49 197.62,-178.49 203.62,-178.49 203.62,-178.49 363.67,-178.49 363.67,-178.49 369.67,-178.49 375.67,-184.49 375.67,-190.49 375.67,-190.49 375.67,-202.49 375.67,-202.49 375.67,-208.49 369.67,-214.49 363.67,-214.49"/>
+<text xml:space="preserve" text-anchor="middle" x="283.65" y="-192.59" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">VRF: 벡터 연산용 피연산자 저장</text>
+</g>
+<g id="node5" class="node">
+<title>CE</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M154.68,-226.82C154.68,-226.82 24.62,-226.82 24.62,-226.82 18.62,-226.82 12.62,-220.82 12.62,-214.82 12.62,-214.82 12.62,-178.16 12.62,-178.16 12.62,-172.16 18.62,-166.16 24.62,-166.16 24.62,-166.16 154.68,-166.16 154.68,-166.16 160.68,-166.16 166.68,-172.16 166.68,-178.16 166.68,-178.16 166.68,-214.82 166.68,-214.82 166.68,-220.82 160.68,-226.82 154.68,-226.82"/>
+<text xml:space="preserve" text-anchor="middle" x="89.65" y="-205.34" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">Contraction Engine:</text>
+<text xml:space="preserve" text-anchor="middle" x="89.65" y="-192.59" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">곱셈·합산 · Slice당 최대 8</text>
+<text xml:space="preserve" text-anchor="middle" x="89.65" y="-177.59" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">Lane</text>
+</g>
+<g id="node6" class="node">
+<title>VE</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M341.92,-126.16C341.92,-126.16 225.37,-126.16 225.37,-126.16 219.37,-126.16 213.37,-120.16 213.37,-114.16 213.37,-114.16 213.37,-88 213.37,-88 213.37,-82 219.37,-76 225.37,-76 225.37,-76 341.92,-76 341.92,-76 347.92,-76 353.92,-82 353.92,-88 353.92,-88 353.92,-114.16 353.92,-114.16 353.92,-120.16 347.92,-126.16 341.92,-126.16"/>
+<text xml:space="preserve" text-anchor="middle" x="283.65" y="-104.68" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">Vector Engine: 원소별</text>
+<text xml:space="preserve" text-anchor="middle" x="283.65" y="-89.68" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">연산·활성화 함수</text>
+</g>
+<g id="node7" class="node">
+<title>OUT</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M362.55,-36C362.55,-36 204.75,-36 204.75,-36 198.75,-36 192.75,-30 192.75,-24 192.75,-24 192.75,-12 192.75,-12 192.75,-6 198.75,0 204.75,0 204.75,0 362.55,0 362.55,0 368.55,0 374.55,-6 374.55,-12 374.55,-12 374.55,-24 374.55,-24 374.55,-30 368.55,-36 362.55,-36"/>
+<text xml:space="preserve" text-anchor="middle" x="283.65" y="-14.13" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">결과 스트림 → Commit → DM</text>
+</g>
+</g>
+</svg>

@@ -1,0 +1,74 @@
+<svg role="img" aria-label="입력 A: Collect에서 흘러온 스트림 · Outer: 두 피연산자를 맞추고 곱하기 · 가중치 W: TRF에 보관 · Packet Reducer: 이번 묶음의 곱들을 합산 · Time Reducer: 여러 차례의 부분합을 누적 · Lane Folder: lane 결과를 출력 형태로 정리 · 후속 엔진 및 출력 스트림" width="388pt" height="487pt"
+ viewBox="0.00 0.00 388.00 487.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(14.4 472.88)">
+<title>handbook</title>
+<g id="edge1" class="edge">
+<title>A&#45;&gt;O</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M120.03,-421.94C133.18,-411.81 149.86,-398.94 163.99,-388.06"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="165.2,-390.21 169.25,-384 162.21,-386.33 165.2,-390.21"/>
+</g>
+<g id="edge3" class="edge">
+<title>O&#45;&gt;P</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M193.28,-345.89C193.28,-337.01 193.28,-325.94 193.28,-315.54"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="195.73,-315.85 193.28,-308.85 190.83,-315.85 195.73,-315.85"/>
+</g>
+<g id="edge2" class="edge">
+<title>W&#45;&gt;O</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M266.52,-421.94C253.37,-411.81 236.69,-398.94 222.56,-388.06"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="224.34,-386.33 217.3,-384 221.35,-390.21 224.34,-386.33"/>
+</g>
+<g id="edge4" class="edge">
+<title>P&#45;&gt;T</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M193.28,-255.84C193.28,-246.39 193.28,-235.43 193.28,-225.3"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="195.73,-225.48 193.28,-218.48 190.83,-225.48 195.73,-225.48"/>
+</g>
+<g id="edge5" class="edge">
+<title>T&#45;&gt;L</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M193.28,-165.68C193.28,-156.23 193.28,-145.27 193.28,-135.14"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="195.73,-135.32 193.28,-128.32 190.83,-135.32 195.73,-135.32"/>
+</g>
+<g id="edge6" class="edge">
+<title>L&#45;&gt;C</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M193.28,-75.75C193.28,-66.04 193.28,-54.84 193.28,-44.97"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="195.73,-45.17 193.28,-38.17 190.83,-45.17 195.73,-45.17"/>
+</g>
+<g id="node1" class="node">
+<title>A</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M182.55,-458.48C182.55,-458.48 12,-458.48 12,-458.48 6,-458.48 0,-452.48 0,-446.48 0,-446.48 0,-434.48 0,-434.48 0,-428.48 6,-422.48 12,-422.48 12,-422.48 182.55,-422.48 182.55,-422.48 188.55,-422.48 194.55,-428.48 194.55,-434.48 194.55,-434.48 194.55,-446.48 194.55,-446.48 194.55,-452.48 188.55,-458.48 182.55,-458.48"/>
+<text xml:space="preserve" text-anchor="middle" x="97.28" y="-436.58" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">입력 A: Collect에서 흘러온 스트림</text>
+</g>
+<g id="node2" class="node">
+<title>O</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M280.8,-382.48C280.8,-382.48 105.75,-382.48 105.75,-382.48 99.75,-382.48 93.75,-376.48 93.75,-370.48 93.75,-370.48 93.75,-358.48 93.75,-358.48 93.75,-352.48 99.75,-346.48 105.75,-346.48 105.75,-346.48 280.8,-346.48 280.8,-346.48 286.8,-346.48 292.8,-352.48 292.8,-358.48 292.8,-358.48 292.8,-370.48 292.8,-370.48 292.8,-376.48 286.8,-382.48 280.8,-382.48"/>
+<text xml:space="preserve" text-anchor="middle" x="193.28" y="-360.58" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">Outer: 두 피연산자를 맞추고 곱하기</text>
+</g>
+<g id="node3" class="node">
+<title>W</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M346.8,-458.48C346.8,-458.48 231.75,-458.48 231.75,-458.48 225.75,-458.48 219.75,-452.48 219.75,-446.48 219.75,-446.48 219.75,-434.48 219.75,-434.48 219.75,-428.48 225.75,-422.48 231.75,-422.48 231.75,-422.48 346.8,-422.48 346.8,-422.48 352.8,-422.48 358.8,-428.48 358.8,-434.48 358.8,-434.48 358.8,-446.48 358.8,-446.48 358.8,-452.48 352.8,-458.48 346.8,-458.48"/>
+<text xml:space="preserve" text-anchor="middle" x="289.27" y="-436.58" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">가중치 W: TRF에 보관</text>
+</g>
+<g id="node4" class="node">
+<title>P</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M269.18,-306.48C269.18,-306.48 117.38,-306.48 117.38,-306.48 111.37,-306.48 105.38,-300.48 105.38,-294.48 105.38,-294.48 105.38,-268.32 105.38,-268.32 105.38,-262.32 111.38,-256.32 117.38,-256.32 117.38,-256.32 269.18,-256.32 269.18,-256.32 275.18,-256.32 281.18,-262.32 281.18,-268.32 281.18,-268.32 281.18,-294.48 281.18,-294.48 281.18,-300.48 275.18,-306.48 269.18,-306.48"/>
+<text xml:space="preserve" text-anchor="middle" x="193.28" y="-285" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">Packet Reducer: 이번 묶음의</text>
+<text xml:space="preserve" text-anchor="middle" x="193.28" y="-270" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">곱들을 합산</text>
+</g>
+<g id="node5" class="node">
+<title>T</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M263.55,-216.32C263.55,-216.32 123,-216.32 123,-216.32 117,-216.32 111,-210.32 111,-204.32 111,-204.32 111,-178.16 111,-178.16 111,-172.16 117,-166.16 123,-166.16 123,-166.16 263.55,-166.16 263.55,-166.16 269.55,-166.16 275.55,-172.16 275.55,-178.16 275.55,-178.16 275.55,-204.32 275.55,-204.32 275.55,-210.32 269.55,-216.32 263.55,-216.32"/>
+<text xml:space="preserve" text-anchor="middle" x="193.28" y="-194.84" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">Time Reducer: 여러 차례의</text>
+<text xml:space="preserve" text-anchor="middle" x="193.28" y="-179.84" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">부분합을 누적</text>
+</g>
+<g id="node6" class="node">
+<title>L</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M259.8,-126.16C259.8,-126.16 126.75,-126.16 126.75,-126.16 120.75,-126.16 114.75,-120.16 114.75,-114.16 114.75,-114.16 114.75,-88 114.75,-88 114.75,-82 120.75,-76 126.75,-76 126.75,-76 259.8,-76 259.8,-76 265.8,-76 271.8,-82 271.8,-88 271.8,-88 271.8,-114.16 271.8,-114.16 271.8,-120.16 265.8,-126.16 259.8,-126.16"/>
+<text xml:space="preserve" text-anchor="middle" x="193.28" y="-104.68" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">Lane Folder: lane 결과를</text>
+<text xml:space="preserve" text-anchor="middle" x="193.28" y="-89.68" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">출력 형태로 정리</text>
+</g>
+<g id="node7" class="node">
+<title>C</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M254.18,-36C254.18,-36 132.38,-36 132.38,-36 126.38,-36 120.38,-30 120.38,-24 120.38,-24 120.38,-12 120.38,-12 120.38,-6 126.38,0 132.38,0 132.38,0 254.18,0 254.18,0 260.18,0 266.18,-6 266.18,-12 266.18,-12 266.18,-24 266.18,-24 266.18,-30 260.18,-36 254.18,-36"/>
+<text xml:space="preserve" text-anchor="middle" x="193.28" y="-14.1" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">후속 엔진 및 출력 스트림</text>
+</g>
+</g>
+</svg>

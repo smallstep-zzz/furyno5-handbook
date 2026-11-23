@@ -8,6 +8,7 @@
       "05-graphs-fallback",
       "06-buckets-shapes",
       "12-fxbx",
+      "20-official-sdk-practice",
       "glossary",
       "sources",
       "review"
@@ -171,6 +172,35 @@
     "access": "public"
   },
   {
+    "url": "https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/computing-tensors/index.md",
+    "chapters": [
+      "01-hardware",
+      "sources"
+    ],
+    "source_baseline_on": "2026-11-19",
+    "catalog_updated_on": "2026-11-21",
+    "access": "public"
+  },
+  {
+    "url": "https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/computing-tensors/register-files.md",
+    "chapters": [
+      "01-hardware"
+    ],
+    "source_baseline_on": "2026-11-19",
+    "catalog_updated_on": "2026-11-21",
+    "access": "public"
+  },
+  {
+    "url": "https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/moving-tensors/dma-engine.md",
+    "chapters": [
+      "01-hardware",
+      "02-memory-dma"
+    ],
+    "source_baseline_on": "2026-11-19",
+    "catalog_updated_on": "2026-11-21",
+    "access": "public"
+  },
+  {
     "url": "https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/computing-tensors/contraction-engine/index.md",
     "chapters": [
       "01-hardware"
@@ -193,28 +223,9 @@
     "access": "public"
   },
   {
-    "url": "https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/computing-tensors/register-files.md",
-    "chapters": [
-      "01-hardware"
-    ],
-    "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-21",
-    "access": "public"
-  },
-  {
     "url": "https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/moving-tensors/index.md#engine-boundaries",
     "chapters": [
       "01-hardware"
-    ],
-    "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-21",
-    "access": "public"
-  },
-  {
-    "url": "https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/computing-tensors/index.md",
-    "chapters": [
-      "01-hardware",
-      "sources"
     ],
     "source_baseline_on": "2026-11-19",
     "catalog_updated_on": "2026-11-21",
@@ -309,15 +320,6 @@
     "chapters": [
       "02-memory-dma",
       "glossary"
-    ],
-    "source_baseline_on": "2026-11-19",
-    "catalog_updated_on": "2026-11-21",
-    "access": "public"
-  },
-  {
-    "url": "https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/docs/src/moving-tensors/dma-engine.md",
-    "chapters": [
-      "02-memory-dma"
     ],
     "source_baseline_on": "2026-11-19",
     "catalog_updated_on": "2026-11-21",
@@ -3829,6 +3831,15 @@
     "url": "https://github.com/pytorch/ao/blob/a791dcb26432500f99d40271c81ee8e2753cf99a/README.md",
     "chapters": [
       "19-model-optimization"
+    ],
+    "source_baseline_on": "2026-11-19",
+    "catalog_updated_on": "2026-11-21",
+    "access": "public"
+  },
+  {
+    "url": "https://developer.furiosa.ai/stable/en/furiosa_llm/furiosa-llm-serve.html",
+    "chapters": [
+      "20-official-sdk-practice"
     ],
     "source_baseline_on": "2026-11-19",
     "catalog_updated_on": "2026-11-21",

@@ -1,0 +1,17 @@
+flowchart TB
+  DM["Slice의 DM: 512 KiB / Slice · 온칩 데이터 저장"]
+  FC["Fetch → Collect: 연산 스트림으로 데이터 공급"]
+  TRF["TRF: 수축 연산용 피연산자 저장"]
+  VRF["VRF: 벡터 연산용 피연산자 저장"]
+  CE["Contraction Engine: 곱셈·합산 · Slice당 최대 8 Lane"]
+  VE["Vector Engine: 원소별 연산·활성화 함수"]
+  OUT["결과 스트림 → Commit → DM"]
+  DM --> FC
+  FC --> CE
+  FC --> VE
+  FC --> TRF
+  FC --> VRF
+  TRF --> CE
+  VRF --> VE
+  CE --> VE
+  VE --> OUT

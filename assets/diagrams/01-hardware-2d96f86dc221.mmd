@@ -1,0 +1,23 @@
+flowchart TB
+  CC["Control Core: 명령 발행·실행 순서 관리"]
+  DMA["DMA Engine: HBM과 DM 사이 데이터 이동"]
+  HBM["HBM: 모델 가중치·입력 등 저장"]
+  DM["DM: Slice에 대응하는 온칩 데이터 저장소"]
+  FE["Fetch Engine: DM에서 데이터를 읽어 스트림 생성"]
+  SW["Switch Engine: 필요할 때 Slice 사이 데이터 이동"]
+  CO["Collect Engine: 연산용 패킷 형태로 정리"]
+  TRF["TRF: 수축 연산에 쓸 피연산자"]
+  CE["Contraction Engine: 스트림과 TRF 피연산자로 곱·합산"]
+  VE["Vector Engine: 원소별 연산·축약"]
+  HBM --> DMA
+  DMA --> DM
+  DM --> FE
+  FE --> SW
+  SW --> CO
+  CO --> CE
+  CO --> TRF
+  TRF --> CE
+  CE --> VE
+  CC --> DMA
+  CC --> FE
+  CC --> CE

@@ -333,3 +333,8 @@ Rust vISA의 `cargo furiosa-opt compile --dump-schedule`은 별도 컴파일 경
 | [공개 opt image 정의](https://github.com/furiosa-ai/furiosa-opt/blob/3d43bc9d20f324af60e3006c3f1541938d7f5097/furiosa-opt-abi/src/image.rs) | 다른 공개 경로의 선택적 weight·메타데이터 존재 |
 
 FuryNo5 소스 링크는 비공개 저장소 권한이 필요할 수 있다. 이 장의 예제는 실제 코드를 읽어 구성한 재현 절차이며 이 핸드북에서 NPU 실행 결과를 새로 얻은 것은 아니다.
+
+
+## 공식 SDK로 직접 실행해 보기
+
+[20장: 공식 SDK 컴파일·실행·서빙 실습](20-official-sdk-practice.md)에서 SDK 2026.4.0으로 실제 통과한 터미널 명령과 차단된 조합을 확인할 수 있습니다. 모델·TCL·PyTorch backend·공식 LLM 서버의 재현용 샘플을 함께 제공합니다.

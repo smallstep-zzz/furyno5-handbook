@@ -1,0 +1,124 @@
+<svg role="img" aria-label="Control Core: 명령 발행·실행 순서 관리 · DMA Engine: HBM과 DM 사이 데이터 이동 · HBM: 모델 가중치·입력 등 저장 · DM: Slice에 대응하는 온칩 데이터 저장소 · Fetch Engine: DM에서 데이터를 읽어 스트림 생성 · Switch Engine: 필요할 때 Slice 사이 데이터 이동 · Collect Engine: 연산용 패킷 형태로 정리 · TRF: 수축 연산에 쓸 피연산자 · Contraction Engine: 스트림과 TRF 피연산자로 곱·합산 · Vector Engine: 원소별 연산·축약" width="404pt" height="784pt"
+ viewBox="0.00 0.00 404.00 784.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(14.4 769.43)">
+<title>handbook</title>
+<g id="edge10" class="edge">
+<title>CC&#45;&gt;DMA</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M244.55,-704.39C224.83,-693.6 201.54,-680.84 181.01,-669.6"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="182.2,-667.45 174.88,-666.24 179.84,-671.75 182.2,-667.45"/>
+</g>
+<g id="edge11" class="edge">
+<title>CC&#45;&gt;FE</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M288.2,-704.36C285.2,-663.9 274.75,-582.05 238.4,-524.55 230.26,-511.67 218.65,-500.15 206.87,-490.55"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="208.39,-488.63 201.37,-486.24 205.37,-492.49 208.39,-488.63"/>
+</g>
+<g id="edge12" class="edge">
+<title>CC&#45;&gt;CE</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M295.07,-704.29C302.45,-670.02 314.4,-605.96 314.4,-550.63 314.4,-550.63 314.4,-550.63 314.4,-278.15 314.4,-230.44 294.26,-178.31 279.29,-146.16"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="281.62,-145.34 276.4,-140.07 277.19,-147.44 281.62,-145.34"/>
+</g>
+<g id="edge2" class="edge">
+<title>DMA&#45;&gt;DM</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M128.4,-614.23C128.4,-604.78 128.4,-593.82 128.4,-583.69"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="130.85,-583.87 128.4,-576.87 125.95,-583.87 130.85,-583.87"/>
+</g>
+<g id="edge1" class="edge">
+<title>HBM&#45;&gt;DMA</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M97.11,-711.53C101.96,-700.56 108.37,-686.06 114.13,-673.05"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="116.28,-674.23 116.88,-666.84 111.8,-672.25 116.28,-674.23"/>
+</g>
+<g id="edge3" class="edge">
+<title>DM&#45;&gt;FE</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M137.31,-524.07C140.82,-514.42 144.89,-503.21 148.62,-492.91"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="150.83,-494.02 150.91,-486.6 146.22,-492.35 150.83,-494.02"/>
+</g>
+<g id="edge4" class="edge">
+<title>FE&#45;&gt;SW</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M160.4,-433.91C160.4,-424.46 160.4,-413.5 160.4,-403.37"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="162.85,-403.55 160.4,-396.55 157.95,-403.55 162.85,-403.55"/>
+</g>
+<g id="edge5" class="edge">
+<title>SW&#45;&gt;CO</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M160.4,-343.75C160.4,-334.3 160.4,-323.34 160.4,-313.21"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="162.85,-313.39 160.4,-306.39 157.95,-313.39 162.85,-313.39"/>
+</g>
+<g id="edge7" class="edge">
+<title>CO&#45;&gt;TRF</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M154.1,-253.82C151.56,-244.01 148.62,-232.68 146.05,-222.74"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="148.48,-222.35 144.35,-216.18 143.73,-223.58 148.48,-222.35"/>
+</g>
+<g id="edge6" class="edge">
+<title>CO&#45;&gt;CE</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M199.91,-253.48C213.93,-242.92 228.64,-229.46 238.4,-214.07 251.21,-193.87 257.47,-167.45 260.51,-146.99"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="262.93,-147.4 261.43,-140.14 258.07,-146.75 262.93,-147.4"/>
+</g>
+<g id="edge8" class="edge">
+<title>TRF&#45;&gt;CE</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M166.61,-177.52C182.35,-167.38 202.5,-154.38 220.34,-142.88"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="221.22,-145.22 225.78,-139.37 218.57,-141.11 221.22,-145.22"/>
+</g>
+<g id="edge9" class="edge">
+<title>CE&#45;&gt;VE</title>
+<path fill="none" stroke="#a92d35" stroke-width="1.2" d="M263.4,-89.79C263.4,-80.44 263.4,-69.5 263.4,-59.35"/>
+<polygon fill="#a92d35" stroke="#a92d35" stroke-width="1.2" points="265.85,-59.5 263.4,-52.5 260.95,-59.5 265.85,-59.5"/>
+</g>
+<g id="node1" class="node">
+<title>CC</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M363.42,-755.03C363.42,-755.03 215.37,-755.03 215.37,-755.03 209.37,-755.03 203.37,-749.03 203.37,-743.03 203.37,-743.03 203.37,-716.87 203.37,-716.87 203.37,-710.87 209.37,-704.87 215.37,-704.87 215.37,-704.87 363.42,-704.87 363.42,-704.87 369.42,-704.87 375.42,-710.87 375.42,-716.87 375.42,-716.87 375.42,-743.03 375.42,-743.03 375.42,-749.03 369.42,-755.03 363.42,-755.03"/>
+<text xml:space="preserve" text-anchor="middle" x="289.4" y="-733.55" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">Control Core: 명령 발행·실행</text>
+<text xml:space="preserve" text-anchor="middle" x="289.4" y="-718.55" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">순서 관리</text>
+</g>
+<g id="node2" class="node">
+<title>DMA</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M209.18,-664.87C209.18,-664.87 47.63,-664.87 47.63,-664.87 41.62,-664.87 35.62,-658.87 35.62,-652.87 35.62,-652.87 35.62,-626.71 35.62,-626.71 35.62,-620.71 41.62,-614.71 47.62,-614.71 47.62,-614.71 209.18,-614.71 209.18,-614.71 215.18,-614.71 221.18,-620.71 221.18,-626.71 221.18,-626.71 221.18,-652.87 221.18,-652.87 221.18,-658.87 215.18,-664.87 209.18,-664.87"/>
+<text xml:space="preserve" text-anchor="middle" x="128.4" y="-643.39" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">DMA Engine: HBM과 DM 사이</text>
+<text xml:space="preserve" text-anchor="middle" x="128.4" y="-628.39" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">데이터 이동</text>
+</g>
+<g id="node3" class="node">
+<title>HBM</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M166.8,-747.95C166.8,-747.95 12,-747.95 12,-747.95 6,-747.95 0,-741.95 0,-735.95 0,-735.95 0,-723.95 0,-723.95 0,-717.95 6,-711.95 12,-711.95 12,-711.95 166.8,-711.95 166.8,-711.95 172.8,-711.95 178.8,-717.95 178.8,-723.95 178.8,-723.95 178.8,-735.95 178.8,-735.95 178.8,-741.95 172.8,-747.95 166.8,-747.95"/>
+<text xml:space="preserve" text-anchor="middle" x="89.4" y="-726.05" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">HBM: 모델 가중치·입력 등 저장</text>
+</g>
+<g id="node4" class="node">
+<title>DM</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M213.68,-574.71C213.68,-574.71 43.12,-574.71 43.12,-574.71 37.12,-574.71 31.12,-568.71 31.12,-562.71 31.12,-562.71 31.12,-536.55 31.12,-536.55 31.12,-530.55 37.12,-524.55 43.12,-524.55 43.12,-524.55 213.68,-524.55 213.68,-524.55 219.68,-524.55 225.68,-530.55 225.68,-536.55 225.68,-536.55 225.68,-562.71 225.68,-562.71 225.68,-568.71 219.68,-574.71 213.68,-574.71"/>
+<text xml:space="preserve" text-anchor="middle" x="128.4" y="-553.23" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">DM: Slice에 대응하는 온칩 데이터</text>
+<text xml:space="preserve" text-anchor="middle" x="128.4" y="-538.23" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">저장소</text>
+</g>
+<g id="node5" class="node">
+<title>FE</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M243.8,-484.55C243.8,-484.55 77,-484.55 77,-484.55 71,-484.55 65,-478.55 65,-472.55 65,-472.55 65,-446.39 65,-446.39 65,-440.39 71,-434.39 77,-434.39 77,-434.39 243.8,-434.39 243.8,-434.39 249.8,-434.39 255.8,-440.39 255.8,-446.39 255.8,-446.39 255.8,-472.55 255.8,-472.55 255.8,-478.55 249.8,-484.55 243.8,-484.55"/>
+<text xml:space="preserve" text-anchor="middle" x="160.4" y="-463.07" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">Fetch Engine: DM에서 데이터를</text>
+<text xml:space="preserve" text-anchor="middle" x="160.4" y="-448.07" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">읽어 스트림 생성</text>
+</g>
+<g id="node6" class="node">
+<title>SW</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M226.93,-394.39C226.93,-394.39 93.88,-394.39 93.88,-394.39 87.88,-394.39 81.88,-388.39 81.88,-382.39 81.88,-382.39 81.88,-356.23 81.88,-356.23 81.88,-350.23 87.88,-344.23 93.88,-344.23 93.88,-344.23 226.93,-344.23 226.93,-344.23 232.93,-344.23 238.93,-350.23 238.93,-356.23 238.93,-356.23 238.93,-382.39 238.93,-382.39 238.93,-388.39 232.93,-394.39 226.93,-394.39"/>
+<text xml:space="preserve" text-anchor="middle" x="160.4" y="-372.91" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">Switch Engine: 필요할 때</text>
+<text xml:space="preserve" text-anchor="middle" x="160.4" y="-357.91" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">Slice 사이 데이터 이동</text>
+</g>
+<g id="node7" class="node">
+<title>CO</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M232.93,-304.23C232.93,-304.23 87.87,-304.23 87.87,-304.23 81.88,-304.23 75.88,-298.23 75.88,-292.23 75.88,-292.23 75.88,-266.07 75.88,-266.07 75.88,-260.07 81.88,-254.07 87.88,-254.07 87.88,-254.07 232.93,-254.07 232.93,-254.07 238.93,-254.07 244.93,-260.07 244.93,-266.07 244.93,-266.07 244.93,-292.23 244.93,-292.23 244.93,-298.23 238.93,-304.23 232.93,-304.23"/>
+<text xml:space="preserve" text-anchor="middle" x="160.4" y="-282.75" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">Collect Engine: 연산용 패킷</text>
+<text xml:space="preserve" text-anchor="middle" x="160.4" y="-267.75" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">형태로 정리</text>
+</g>
+<g id="node8" class="node">
+<title>TRF</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M213.8,-214.07C213.8,-214.07 65,-214.07 65,-214.07 59,-214.07 53,-208.07 53,-202.07 53,-202.07 53,-190.07 53,-190.07 53,-184.07 59,-178.07 65,-178.07 65,-178.07 213.8,-178.07 213.8,-178.07 219.8,-178.07 225.8,-184.07 225.8,-190.07 225.8,-190.07 225.8,-202.07 225.8,-202.07 225.8,-208.07 219.8,-214.07 213.8,-214.07"/>
+<text xml:space="preserve" text-anchor="middle" x="139.4" y="-192.17" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">TRF: 수축 연산에 쓸 피연산자</text>
+</g>
+<g id="node9" class="node">
+<title>CE</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M346.8,-138.07C346.8,-138.07 180,-138.07 180,-138.07 174,-138.07 168,-132.07 168,-126.07 168,-126.07 168,-102.16 168,-102.16 168,-96.16 174,-90.16 180,-90.16 180,-90.16 346.8,-90.16 346.8,-90.16 352.8,-90.16 358.8,-96.16 358.8,-102.16 358.8,-102.16 358.8,-126.07 358.8,-126.07 358.8,-132.07 352.8,-138.07 346.8,-138.07"/>
+<text xml:space="preserve" text-anchor="middle" x="263.4" y="-116.59" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">Contraction Engine:</text>
+<text xml:space="preserve" text-anchor="middle" x="263.4" y="-103.84" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">스트림과 TRF 피연산자로 곱·합산</text>
+</g>
+<g id="node10" class="node">
+<title>VE</title>
+<path fill="#f8f7f3" stroke="#c9ccc9" stroke-width="1.2" d="M321.67,-50.16C321.67,-50.16 205.12,-50.16 205.12,-50.16 199.12,-50.16 193.12,-44.16 193.12,-38.16 193.12,-38.16 193.12,-12 193.12,-12 193.12,-6 199.12,0 205.12,0 205.12,0 321.67,0 321.67,0 327.67,0 333.67,-6 333.67,-12 333.67,-12 333.67,-38.16 333.67,-38.16 333.67,-44.16 327.67,-50.16 321.67,-50.16"/>
+<text xml:space="preserve" text-anchor="middle" x="263.4" y="-28.68" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">Vector Engine: 원소별</text>
+<text xml:space="preserve" text-anchor="middle" x="263.4" y="-13.68" font-family="Noto Sans CJK KR" font-size="12.00" fill="#283330">연산·축약</text>
+</g>
+</g>
+</svg>

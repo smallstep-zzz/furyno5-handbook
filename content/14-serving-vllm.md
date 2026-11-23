@@ -346,3 +346,8 @@ TTFT(Time To First Token)는 요청 접수부터 첫 토큰까지의 시간이�
 | [cargo-binstall args](https://github.com/cargo-bins/cargo-binstall/blob/17717041b8b8d177fd061e56dc8c40abe41120f2/crates/bin/src/args.rs), [버전 선택](https://github.com/cargo-bins/cargo-binstall/blob/17717041b8b8d177fd061e56dc8c40abe41120f2/crates/binstalk/src/ops/resolve.rs) | 로컬 manifest를 사용하는 설치 계약 |
 | [Cargo install](https://doc.rust-lang.org/cargo/commands/cargo-install.html), [uv CLI](https://docs.astral.sh/uv/reference/cli/) | 설치 기록·경로·cache 검증 경계 |
 
+
+
+## 공식 SDK로 직접 실행해 보기
+
+[20장: 공식 SDK 컴파일·실행·서빙 실습](20-official-sdk-practice.md)에서 SDK 2026.4.0으로 실제 통과한 터미널 명령과 차단된 조합을 확인할 수 있습니다. 모델·TCL·PyTorch backend·공식 LLM 서버의 재현용 샘플을 함께 제공합니다.
